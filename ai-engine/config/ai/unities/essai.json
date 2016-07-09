@@ -1,0 +1,36 @@
+{
+  "lu": [
+    {
+      "i": {
+        "t": "TypeInput1",
+        "v": "Je m'appelle (${nom}[nom]) et j'aime la couleur ({couleur}[couleur]) et mon ami s'appelle ({nomAmi}[nom])"
+      },
+      "lr": [
+        {
+          "t": "TypeResponse11",
+          "v": "Bonjour {nom} et bienvenue à ton ami {nomAmi}. Moi aussi, j'aime le {couleur}"
+        },
+        {
+          "t": "TypeResponse12",
+          "v": "Salut {nom} et ami {nomAmi}. Je déteste le {couleur}"
+        }
+      ]
+    },
+    {
+      "i": {
+        "t": "TypeInput2",
+        "v": "Comment je m'appelle ?"
+      },
+      "lr": [
+        {
+          "t": "TypeResponse21",
+          "v": "Tu t'appelles {nom}"
+        },
+        {
+          "t": "TypeResponse22",
+          "v": "Il se peut que ton nom soit {nom}"
+        }
+      ]
+    }
+  ]
+}
