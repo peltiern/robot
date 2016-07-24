@@ -23,6 +23,8 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Program Files/Phidgets/phidget21.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Nicolas/Documents/Robot/Programme/programAB/lib/Ab.jar"/>
+	<classpathentry kind="lib" path="lib/grpc/grpc-sample-1.0-jar-with-dependencies.jar"/>
+	<classpathentry kind="lib" path="lib/programAB/Ab.jar"/>
+	<classpathentry kind="lib" path="lib/tarsos/TarsosDSP-latest.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
