@@ -25,7 +25,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     /** Constructeur. */
     public OrganeParoleGoogle(MBassador<RobotEvent> systemeNerveux) {
         super(systemeNerveux);
-        fichierSyntheseVocale = System.getProperty("robot.dir") + File.separator + "synthese-vocale" + File.separator + "synthese.sh";
+//        fichierSyntheseVocale = System.getProperty("robot.dir") + File.separator + "synthese-vocale" + File.separator + "synthese.sh";
     }
 
     /**
@@ -67,6 +67,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
      */
     @Handler
     public void handleParoleEvent(ParoleEvent paroleEvent) {
+    	System.out.println("ParoleEvent = " + paroleEvent);
         if (paroleEvent.getTexte() != null && !paroleEvent.getTexte().trim().equals("")) {
             lire(paroleEvent.getTexte().trim());
         }

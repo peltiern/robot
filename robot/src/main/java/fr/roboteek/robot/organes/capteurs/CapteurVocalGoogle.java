@@ -150,7 +150,7 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 				public void handlePitch(PitchDetectionResult result,AudioEvent e) {
 					double actualTimeStamp = e.getTimeStamp();
 //					System.out.println("SPL = " + silenceDetector.currentSPL() + ", temps = " + actualTimeStamp);
-					if (silenceDetector.currentSPL() > SilenceDetector.DEFAULT_SILENCE_THRESHOLD) {
+					if (silenceDetector.currentSPL() > SilenceDetector.DEFAULT_SILENCE_THRESHOLD - 20) {
 						final float pitchInHz = result.getPitch();
 						if (pitchInHz > 0) {
 //							System.out.println("Pitch = " + pitchInHz + "\ttime = " + e.getTimeStamp());
@@ -316,6 +316,9 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 		final CapteurVocalGoogle capteurVocal = new CapteurVocalGoogle(systeme);
 		capteurVocal.initialiser();
 		systeme.subscribe(capteurVocal);
+		final ParoleEvent paroleEvent = new ParoleEvent();
+	     paroleEvent.setTexte("test");
+	     systeme.post(paroleEvent).now();
 
 	}
 
@@ -325,19 +328,19 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 	 */
 	private void dire(String texte) {
 		System.out.println("Dire = " + texte);
-		//     final ParoleEvent paroleEvent = new ParoleEvent();
-		//     paroleEvent.setTexte(texte);
-		//     systemeNerveux.post(paroleEvent).now();
-		try {
-			Process p = Runtime.getRuntime().exec("C:/Program Files (x86)/eSpeak/command_line/espeak.exe -v fr -p 80 \"" + texte + "\"");
-			p.waitFor();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		     final ParoleEvent paroleEvent = new ParoleEvent();
+		     paroleEvent.setTexte(texte);
+		     systemeNerveux.post(paroleEvent).now();
+//		try {
+//			Process p = Runtime.getRuntime().exec("C:/Program Files (x86)/eSpeak/command_line/espeak.exe -v fr -p 80 \"" + texte + "\"");
+//			p.waitFor();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 
 }
