@@ -3,13 +3,16 @@ package fr.roboteek.robot;
 import org.apache.log4j.Logger;
 
 import fr.roboteek.robot.decisionnel.Cerveau;
-import fr.roboteek.robot.organes.actionneurs.OrganeParole3;
+import fr.roboteek.robot.organes.actionneurs.OrganeParoleEspeak;
+import fr.roboteek.robot.organes.actionneurs.Tete;
+import fr.roboteek.robot.organes.actionneurs.Visage;
+import fr.roboteek.robot.organes.actionneurs.VisageDoubleBuffering;
 import fr.roboteek.robot.organes.capteurs.CapteurVision;
-import fr.roboteek.robot.organes.capteurs.CapteurVocal3;
+import fr.roboteek.robot.organes.capteurs.CapteurVocalGoogle;
+import fr.roboteek.robot.server.RobotServer;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -18,20 +21,23 @@ import net.engio.mbassy.listener.Handler;
  */
 public class Robot {
 
-    /** Système nerveux (bus d'évènements). */
-    private MBassador<RobotEvent> systemeNerveux;
-
     /** Cerveau du robot. */
     private Cerveau cerveau;
 
     /** Tête du robot. */
-//    private Tete tete;
+    private Tete tete;
+    
+    /** Visage. */
+    private VisageDoubleBuffering visage;
 
     /** Organe de la parole. */
 //    private OrganeParole organeParole;
     
     /** Organe de la parole. */
-    private OrganeParole3 organeParole;
+//    private OrganeParole3 organeParole;
+    
+    /** Organe de la parole. */
+    private OrganeParoleEspeak organeParole;
 
     /** Capteur de vision (oeil du robot). Thread ? */
     private CapteurVision capteurVision;
@@ -43,7 +49,10 @@ public class Robot {
 //    private CapteurVocal2 capteurVocal;
     
     /** Capteur vocal. */
-    private CapteurVocal3 capteurVocal;
+    //private CapteurVocal3 capteurVocal;
+    
+    /** Capteur vocal. */
+//    private CapteurVocalGoogle capteurVocal;
 
     /** Flag d'arrêt du robot. */
     private boolean stopper = false;
@@ -67,39 +76,43 @@ public class Robot {
         
         System.setProperty("robot.dir", "/home/npeltier/Robot/Programme");
         
-        // Instanciation du système nerveux
-        systemeNerveux = new MBassador<RobotEvent>();
-        
         // Instanciation des différents organes du robot
-        cerveau = new Cerveau(systemeNerveux);
+        cerveau = new Cerveau();
         
         // Actionneurs
-//        tete =  new Tete(systemeNerveux);
-        organeParole = new OrganeParole3(systemeNerveux);
+//        tete =  new Tete();
+        organeParole = new OrganeParoleEspeak();
+        visage = VisageDoubleBuffering.getInstance();
         // Initialisation des actionneurs
 //        tete.initialiser();
         organeParole.initialiser();
+        visage.initialiser();
+        
         
         // Abonnement aux évènements du système nerveux
-        systemeNerveux.subscribe(this);
-        systemeNerveux.subscribe(cerveau);
-//        systemeNerveux.subscribe(tete);
-        systemeNerveux.subscribe(organeParole);
+        RobotEventBus.getInstance().subscribe(this);
+        RobotEventBus.getInstance().subscribe(cerveau);
+//        RobotEventBus.getInstance().subscribe(tete);
+        RobotEventBus.getInstance().subscribe(organeParole);
+        RobotEventBus.getInstance().subscribe(visage);
 
         // Capteurs
-        capteurVision = new CapteurVision(systemeNerveux);
-        capteurVocal = new CapteurVocal3(systemeNerveux);
+        capteurVision = new CapteurVision();
+//        capteurVocal = new CapteurVocalGoogle();
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
         
         // Initialisation des capteurs
         capteurVision.initialiser();
-        capteurVocal.initialiser();
+//        capteurVocal.initialiser();
         
-        systemeNerveux.subscribe(capteurVocal);
+//        RobotEventBus.getInstance().subscribe(capteurVocal);
+        
+        // Démarrage du serveur
+        RobotServer.getInstance().run();
         
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte("J'ai terminé de m'initialiser");
-        systemeNerveux.publish(paroleEvent);
+        RobotEventBus.getInstance().publish(paroleEvent);
         logger.debug("Fin de l'initialisation");
     }
 
@@ -113,19 +126,20 @@ public class Robot {
                 logger.debug("Début de l'arrêt du robot");
                 
                 // Désabonnement des organes au système nerveux
-                systemeNerveux.unsubscribe(capteurVocal);
+                RobotEventBus.getInstance().unsubscribe(visage);
+//                RobotEventBus.getInstance().unsubscribe(capteurVocal);
                 logger.debug("arrêt du robot 1");
-                systemeNerveux.unsubscribe(organeParole);
+                RobotEventBus.getInstance().unsubscribe(organeParole);
                 logger.debug("arrêt du robot 2");
 //                systemeNerveux.unsubscribe(tete);
                 logger.debug("arrêt du robot 3");
-                systemeNerveux.unsubscribe(cerveau);
+                RobotEventBus.getInstance().unsubscribe(cerveau);
                 logger.debug("arrêt du robot 4");
-                systemeNerveux.unsubscribe(Robot.this);
+                RobotEventBus.getInstance().unsubscribe(Robot.this);
                 logger.debug("arrêt du robot 5");
                 
                 // Arrêt des organes
-                capteurVocal.arreter();
+//                capteurVocal.arreter();
                 logger.debug("arrêt du robot 6");
                 capteurVision.arreter();
                 logger.debug("arrêt du robot 7");

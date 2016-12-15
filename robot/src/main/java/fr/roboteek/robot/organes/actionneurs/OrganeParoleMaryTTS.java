@@ -6,8 +6,8 @@ import net.engio.mbassy.bus.MBassador;
 
 public class OrganeParoleMaryTTS extends AbstractOrgane {
 
-	public OrganeParoleMaryTTS(MBassador<RobotEvent> systemeNerveux) {
-		super(systemeNerveux);
+	public OrganeParoleMaryTTS() {
+		super();
 		// TODO Auto-generated constructor stub
 	}
 

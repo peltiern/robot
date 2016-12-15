@@ -8,8 +8,7 @@ import fr.roboteek.robot.server.WebSpeechServerListener;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import net.engio.mbassy.bus.MBassador;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -24,8 +23,8 @@ public class CapteurVocal3 extends AbstractOrgane implements WebSpeechServerList
     /** Logger. */
     private Logger logger = Logger.getLogger(CapteurVocal3.class);
 
-    public CapteurVocal3(MBassador<RobotEvent> systemeNerveux) {
-        super(systemeNerveux);
+    public CapteurVocal3() {
+        super();
 
         speechWebServer = WebSpeechServer.getInstance();
         // Le capteur vocal est écouteur du serveur
@@ -65,7 +64,7 @@ public class CapteurVocal3 extends AbstractOrgane implements WebSpeechServerList
             // Envoi de l'évènement de reconnaissance
             final ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
             event.setTexteReconnu(speechResult);
-            systemeNerveux.publish(event);
+            RobotEventBus.getInstance().publish(event);
         }
     }
 

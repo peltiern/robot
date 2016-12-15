@@ -5,6 +5,8 @@ package fr.roboteek.robot.systemenerveux.event;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class ReconnaissanceVocaleEvent extends RobotEvent {
+	
+	public static final String EVENT_TYPE = "ReconnaissanceVocale";
     
     /** Texte reconnu. */
     private String texteReconnu;

@@ -1,8 +1,6 @@
 package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import net.engio.mbassy.bus.MBassador;
 
 /**
  * Capteur lié à la reconnaissance vocale.
@@ -10,8 +8,8 @@ import net.engio.mbassy.bus.MBassador;
  */
 public class CapteurVocal extends AbstractOrgane /*implements ResultListener*/ {
 
-	public CapteurVocal(MBassador<RobotEvent> systemeNerveux) {
-		super(systemeNerveux);
+	public CapteurVocal() {
+		super();
 		// TODO Auto-generated constructor stub
 	}
 

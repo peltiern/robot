@@ -1,18 +1,14 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
-import fr.roboteek.robot.server.WebSpeechServer;
-import fr.roboteek.robot.server.WebSpeechServerListener;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import net.engio.mbassy.bus.MBassador;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import net.engio.mbassy.listener.Handler;
 
 public class OrganeParoleGoogle extends AbstractOrgane {
@@ -23,8 +19,8 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     private Logger logger = Logger.getLogger(OrganeParoleGoogle.class);
 
     /** Constructeur. */
-    public OrganeParoleGoogle(MBassador<RobotEvent> systemeNerveux) {
-        super(systemeNerveux);
+    public OrganeParoleGoogle() {
+        super();
 //        fichierSyntheseVocale = System.getProperty("robot.dir") + File.separator + "synthese-vocale" + File.separator + "synthese.sh";
     }
 
@@ -37,7 +33,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
-            systemeNerveux.publish(eventPause);
+            RobotEventBus.getInstance().publish(eventPause);
 
             System.out.println("Lecture :\t" + texte);
             String[] params = {fichierSyntheseVocale, texte};
@@ -57,7 +53,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
             eventRedemarrage.setControle(CONTROLE.DEMARRER);
-            systemeNerveux.publish(eventRedemarrage);
+            RobotEventBus.getInstance().publish(eventRedemarrage);
         }
     }
     
@@ -87,7 +83,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
         
         System.setProperty("robot.dir", "/home/npeltier/Robot/Programme");
         
-        final OrganeParoleGoogle organeParole = new OrganeParoleGoogle(new MBassador<RobotEvent>());
+        final OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
         
         organeParole.lire("Fin de l'initialisation");
     }

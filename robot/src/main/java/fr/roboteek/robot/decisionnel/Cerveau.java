@@ -9,10 +9,9 @@ import fr.roboteek.robot.memoire.ReconnaissanceFaciale;
 import fr.roboteek.robot.memoire.ReconnaissanceFacialeAnnotator;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -20,9 +19,6 @@ import net.engio.mbassy.listener.Handler;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class Cerveau {
-
-    /** Système nerveux (bus d'évènements). */
-    private MBassador<RobotEvent> systemeNerveux;
     
     /** Contexte du robot. */
     // TODO Voir pour placer le contexte au niveau du robot
@@ -37,8 +33,7 @@ public class Cerveau {
     /** Activité en cours. */
     private AbstractActivite activiteEnCours;
 
-    public Cerveau(MBassador<RobotEvent> systemeNerveux) {
-        this.systemeNerveux = systemeNerveux;
+    public Cerveau() {
         contexte = new Contexte();
         intelligenceArtificielle = new IntelligenceArtificielle();
 //        reconnaissanceFaciale = new ReconnaissanceFacialeEigenface();
@@ -69,33 +64,33 @@ public class Cerveau {
             // Conversation
             if (texteReconnu.trim().equalsIgnoreCase("Sami conversation")) {
                 System.out.println("Activité conversation");
-                final ConversationActivite conversationActivite = new ConversationActivite(systemeNerveux, contexte, reconnaissanceFaciale);
+                final ConversationActivite conversationActivite = new ConversationActivite(contexte, reconnaissanceFaciale);
                 commencerActivite(conversationActivite);
             }
             
             // Conversation avec moteur de chat
             else if (texteReconnu.trim().equalsIgnoreCase("Conversation")) {
-                final ChatBotActivite chatBotActivite = new ChatBotActivite(systemeNerveux, contexte, reconnaissanceFaciale);
+                final ChatBotActivite chatBotActivite = new ChatBotActivite(contexte, reconnaissanceFaciale);
                 commencerActivite(chatBotActivite);
             }
             
             // Tracking
             else if (texteReconnu.trim().equalsIgnoreCase("Sami suivi visage")) {
-                final TrackingActivite trackingActivite = new TrackingActivite(systemeNerveux, contexte, reconnaissanceFaciale);
+                final TrackingActivite trackingActivite = new TrackingActivite(contexte, reconnaissanceFaciale);
                 commencerActivite(trackingActivite);
             }
             
             // Jeu
-            else if (texteReconnu.trim().equalsIgnoreCase("Sami jouer")) {
-                final JeuActivite jeuActivite = new JeuActivite(systemeNerveux, contexte, reconnaissanceFaciale);
+            else if (texteReconnu.trim().equalsIgnoreCase("jouer")) {
+                final JeuActivite jeuActivite = new JeuActivite(contexte, reconnaissanceFaciale);
                 commencerActivite(jeuActivite);
             }
             
             // Arrêt du robot
-            else if (texteReconnu.trim().equalsIgnoreCase("Sami stop")) {
+            else if (texteReconnu.trim().equalsIgnoreCase("au revoir")) {
                 dire("Au revoir.");
                 final StopEvent stopEvent = new StopEvent();
-                systemeNerveux.publish(stopEvent);
+                RobotEventBus.getInstance().publish(stopEvent);
             }
         }
     }
@@ -117,14 +112,14 @@ public class Cerveau {
         arreterActiviteEnCours();
         activiteEnCours = activite;
         // Inscription de l'activité au système nerveux
-        systemeNerveux.subscribe(activiteEnCours);
+        RobotEventBus.getInstance().subscribe(activiteEnCours);
         activiteEnCours.initialiser();
     }
     
     private void arreterActiviteEnCours() {
         if (activiteEnCours != null) {
             // Désinscription de l'activité du système nerveux
-            systemeNerveux.unsubscribe(activiteEnCours);
+        	RobotEventBus.getInstance().unsubscribe(activiteEnCours);
             // Arrêt de l'activité
             activiteEnCours.arreter();
             activiteEnCours = null;
@@ -139,7 +134,7 @@ public class Cerveau {
         System.out.println("Dire = " + texte);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
-        systemeNerveux.publish(paroleEvent);
+        RobotEventBus.getInstance().publish(paroleEvent);
     }
     
 

@@ -5,6 +5,8 @@ package fr.roboteek.robot.systemenerveux.event;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class ParoleEvent extends RobotEvent {
+	
+	public static final String EVENT_TYPE = "Parole";
     
     /** Texte à dire. */
     private String texte;

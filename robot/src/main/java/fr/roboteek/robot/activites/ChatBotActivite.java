@@ -7,9 +7,7 @@ import org.apache.log4j.Logger;
 import fr.roboteek.robot.decisionnel.Contexte;
 import fr.roboteek.robot.memoire.ReconnaissanceFaciale;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -28,8 +26,8 @@ public class ChatBotActivite extends AbstractActivite {
      * Constructeur.
      * @param systemeNerveux système nerveux du robot
      */
-    public ChatBotActivite(MBassador<RobotEvent> systemeNerveux, Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
-        super(systemeNerveux, contexte, reconnaissanceFaciale);
+    public ChatBotActivite(Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
+        super(contexte, reconnaissanceFaciale);
     }
 
     @Override

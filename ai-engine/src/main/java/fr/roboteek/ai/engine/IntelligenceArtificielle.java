@@ -200,7 +200,7 @@ public class IntelligenceArtificielle {
     }
 
     public static void main(String[] args) {
-        String cheminRessources = "C:/Users/Nicolas/Documents/Robot/Programme/ai";
+        String cheminRessources = System.getenv("ROBOT_HOME") + File.separator + "ai";
         final IntelligenceArtificielle ai = new IntelligenceArtificielle(cheminRessources);
         
         

@@ -10,6 +10,8 @@ import org.openimaj.image.processing.face.detection.DetectedFace;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class VisagesEvent extends RobotEvent {
+	
+	public static final String EVENT_TYPE = "Visages";
     
     /** Image d'origine. */
     private FImage imageOrigine;

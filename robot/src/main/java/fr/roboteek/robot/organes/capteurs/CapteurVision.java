@@ -1,9 +1,12 @@
 package fr.roboteek.robot.organes.capteurs;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.openimaj.image.FImage;
+import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.MBFImage;
 import org.openimaj.image.colour.RGBColour;
 import org.openimaj.image.colour.Transforms;
@@ -16,10 +19,9 @@ import org.openimaj.video.capture.VideoCapture;
 import org.openimaj.video.capture.VideoCaptureException;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
+import fr.roboteek.robot.server.VideoWebSocket;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
-import net.engio.mbassy.bus.MBassador;
-import net.engio.mbassy.bus.config.BusConfiguration;
 
 
 /**
@@ -44,8 +46,8 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
     private Logger logger = Logger.getLogger(CapteurVision.class);
 
 
-    public CapteurVision(MBassador<RobotEvent> systemeNerveux) {
-        super(systemeNerveux);
+    public CapteurVision() {
+        super();
 
         // Création du détecteur de visages
         detecteurVisages = new HaarCascadeDetector(80);
@@ -99,12 +101,20 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
             final VisagesEvent event = new VisagesEvent();
             event.setImageOrigine(image);
             event.setListeVisages(listeVisages);
-            systemeNerveux.publish(event);
+            RobotEventBus.getInstance().publish(event);
         }
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+			ImageUtilities.write(frame, "jpg", baos);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        VideoWebSocket.broadcastImage(baos.toByteArray());
     }
 
     public static void main(String[] args) {
-        CapteurVision capteurVision = new CapteurVision(new MBassador<RobotEvent>());
+        CapteurVision capteurVision = new CapteurVision();
         capteurVision.initialiser();
     }
 

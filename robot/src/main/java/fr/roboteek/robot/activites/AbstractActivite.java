@@ -10,9 +10,8 @@ import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_GAUC
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -32,9 +31,6 @@ public abstract class AbstractActivite {
     private static int Y1 = (HAUTEUR_WEBCAM - HAUTEUR_ZONE_TRACKING) / 2;
     private static int Y2 = Y1 + HAUTEUR_ZONE_TRACKING;
 
-    /** Système nerveux (bus d'évènements). */
-    protected MBassador<RobotEvent> systemeNerveux;
-
     /** Contexte du robot. */
     protected Contexte contexte;
 
@@ -46,8 +42,7 @@ public abstract class AbstractActivite {
      * Constructeur.
      * @param systemeNerveux le système nerveux
      */
-    public AbstractActivite(MBassador<RobotEvent> systemeNerveux, Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
-        this.systemeNerveux = systemeNerveux;
+    public AbstractActivite(Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
         this.contexte = contexte;
         this.reconnaissanceFaciale = reconnaissanceFaciale;
     }
@@ -85,7 +80,7 @@ public abstract class AbstractActivite {
     public void dire(String texte) {
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
-        systemeNerveux.publish(paroleEvent);
+        RobotEventBus.getInstance().publish(paroleEvent);
     }
 
     /**
@@ -138,7 +133,7 @@ public abstract class AbstractActivite {
             mouvementTeteEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.STOPPER);
         }
 
-        systemeNerveux.publish(mouvementTeteEvent);
+        RobotEventBus.getInstance().publish(mouvementTeteEvent);
 
         return visagePlusGrand;
     }

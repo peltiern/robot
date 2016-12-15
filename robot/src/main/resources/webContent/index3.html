@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Application Video</title>
+  <script type="text/javascript" src="js/jquery-2.1.4.js"></script>
+  <script type="text/javascript" src="js/mousetrap.min.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+	
+		$(document).ready(chargerListeAnimations);
+	
+		var ws = new WebSocket("ws://" + location.hostname + ":" + location.port + "/ws/liveVideo/");
+		ws.onmessage = function(msg) {
+			var target = document.getElementById("target");
+			url = window.URL.createObjectURL(msg.data);
+			target.onload = function() {
+				window.URL.revokeObjectURL(url);
+			};
+			target.src = url;
+		}
+         
+		var wsRobotEvent = new WebSocket("ws://" + location.hostname + ":" + location.port + "/ws/robotEvents/");
+         
+		Mousetrap.bind("left", tournerAGauche, "keydown");
+		Mousetrap.bind("left", stopperTeteGaucheDroite, "keyup");
+		Mousetrap.bind("right", tournerADroite, "keydown");
+		Mousetrap.bind("right", stopperTeteGaucheDroite, "keyup");
+		Mousetrap.bind("up", tournerEnHaut, "keydown");
+		Mousetrap.bind("up", stopperTeteHautBas, "keyup");
+		Mousetrap.bind("down", tournerEnBas, "keydown");
+		Mousetrap.bind("down", stopperTeteHautBas, "keyup");
+		Mousetrap.bind("enter", parler);
+         
+		function bougerTete(e) {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.positionGaucheDroite = (e.clientX * 180) / 640;
+			mouvementTeteEvent.positionHautBas = ((480 - e.clientY) * 180) / 480;
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+		}
+		
+		function tournerAGauche() {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.mouvementGaucheDroite = "TOURNER_GAUCHE";
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+		}
+         
+		function tournerADroite() {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.mouvementGaucheDroite = "TOURNER_DROITE";
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+        }
+		
+		function stopperTeteGaucheDroite() {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.mouvementGaucheDroite = "STOPPER";
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+		}
+         
+		function tournerEnHaut() {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.mouvementHauBas = "TOURNER_HAUT";
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+		}
+         
+		function tournerEnBas() {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.mouvementHauBas = "TOURNER_BAS";
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+        }
+		
+		function stopperTeteHautBas() {
+			var mouvementTeteEvent = {};
+			mouvementTeteEvent.eventType = "MouvementTete";
+			mouvementTeteEvent.mouvementHauBas = "STOPPER";
+			wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
+		}
+		
+		function parler() {
+			var message = $("#inputMessage").val();
+			if (message && message != "") {
+				var paroleEvent = {};
+				paroleEvent.eventType = "Parole";
+				paroleEvent.texte = message;
+				wsRobotEvent.send(JSON.stringify(paroleEvent));
+			}
+			$("#inputMessage").val("");
+			$("#inputMessage").focus();
+		}
+		
+		function jouerExpression(expression) {
+			if (expression && expression != "") {
+				var expressionVisageEvent = {};
+				expressionVisageEvent.eventType = "ExpressionVisage";
+				expressionVisageEvent.expression = expression;
+				wsRobotEvent.send(JSON.stringify(expressionVisageEvent));
+			}
+		}
+		
+		var mapAnimations = {};
+		
+		function chargerListeAnimations() {
+			$.ajax({
+		        url: "http://" + location.hostname + ":" + location.port + "/rest/animations"
+		    }).then(function(data) {
+		    	$.each(data, function( index, animation ) {
+		    		mapAnimations[animation.idAnimation] = animation;
+		    		// Ajout du bouton de l'animation
+		    		$(".listeAnimations").append("<button onclick=\"jouerExpression('" + animation.idAnimation + "');\" onmouseover=\"playbackAnimation('" + animation.idAnimation + "');\">" + animation.libelleAnimation + "</button>");
+		    	});
+		    	
+		    });
+		}
+		
+		function playbackAnimation(idAnimation) {
+			var animation = mapAnimations[idAnimation];
+			var pause = 0
+			$.each(animation.listeItems, function( index, item ){
+				if (item.type == "I") {
+					setTimeout(function() {
+						$(".previewAnimation").attr("src","http://" + location.hostname + ":" + location.port + "/rest/images/image-" + item.idImage);
+					}, pause);
+				} else if (item.type == "P") {
+					pause = pause + item.tempsPause * 2;
+				}
+			});
+		}
+		
+		/* function playbackAnimation(idAnimation) {
+			var animation = mapAnimations[idAnimation];
+			var pause = 0
+			$.each(animation.listeItems, function( index, item ){
+				if (item.type == "I") {
+					$(".previewAnimation").attr("src","http://" + location.hostname + ":" + location.port + "/rest/images/image-" + item.idImage);
+				} else if (item.type == "P") {
+					sleep(item.tempsPause * 2);
+				}
+			});
+		}
+		
+		function sleep(ms) {
+			  return new Promise(resolve => setTimeout(resolve, ms));
+			} */
+		
+	</script>
+	<div>
+		<img id="target" style="display: inline;" onmousemove="bougerTete(event);" />
+	</div>
+	<div>
+		<input id="inputMessage" type="text" class="mousetrap"/>
+	</div>
+	<div class="listeAnimations">
+	</div>
+	<img class="previewAnimation">
+</body>
+</html>

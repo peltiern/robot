@@ -15,9 +15,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.StringUtils;
 import org.glassfish.jersey.client.ClientConfig;
-
-import com.google.api.client.util.StringUtils;
 
 import fr.roboteek.robot.util.reconnaissance.vocale.google.RecognitionConfig.AudioEncoding;
 

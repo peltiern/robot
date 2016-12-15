@@ -1,6 +1,5 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
@@ -11,8 +10,7 @@ import fr.roboteek.robot.server.WebSpeechServerListener;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import net.engio.mbassy.bus.MBassador;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import net.engio.mbassy.listener.Handler;
 
 public class OrganeParoleEspeak extends AbstractOrgane {
@@ -23,9 +21,10 @@ public class OrganeParoleEspeak extends AbstractOrgane {
     private Logger logger = Logger.getLogger(OrganeParoleEspeak.class);
 
     /** Constructeur. */
-    public OrganeParoleEspeak(MBassador<RobotEvent> systemeNerveux) {
-        super(systemeNerveux);
-        fichierSyntheseVocale = System.getProperty("robot.dir") + File.separator + "synthese-vocale" + File.separator + "synthese.sh";
+    public OrganeParoleEspeak() {
+        super();
+        fichierSyntheseVocale = "C:/Program Files (x86)/eSpeak/command_line/espeak.exe";
+        //fichierSyntheseVocale = System.getProperty("robot.dir") + File.separator + "synthese-vocale" + File.separator + "synthese.sh";
     }
 
     /**
@@ -37,12 +36,12 @@ public class OrganeParoleEspeak extends AbstractOrgane {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
-            systemeNerveux.publish(eventPause);
+            RobotEventBus.getInstance().publish(eventPause);
 
             System.out.println("Lecture :\t" + texte);
-            String[] params = {fichierSyntheseVocale, texte};
+            String[] params = {fichierSyntheseVocale, "-v fr -p 80", texte};
             try {
-                Process p = Runtime.getRuntime().exec(params);
+            	Process p = Runtime.getRuntime().exec("C:/Program Files (x86)/eSpeak/command_line/espeak.exe -v fr -p 80 \"" + texte + "\"");
                 p.waitFor();
             } catch (IOException e) {
                 // TODO Auto-generated catch block
@@ -57,7 +56,7 @@ public class OrganeParoleEspeak extends AbstractOrgane {
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
             eventRedemarrage.setControle(CONTROLE.DEMARRER);
-            systemeNerveux.publish(eventRedemarrage);
+            RobotEventBus.getInstance().publish(eventRedemarrage);
         }
     }
     
@@ -86,7 +85,7 @@ public class OrganeParoleEspeak extends AbstractOrgane {
         
         System.setProperty("robot.dir", "/home/npeltier/Robot/Programme");
         
-        final OrganeParoleEspeak organeParole = new OrganeParoleEspeak(new MBassador<RobotEvent>());
+        final OrganeParoleEspeak organeParole = new OrganeParoleEspeak();
         
         final WebSpeechServer webSpeechServer = WebSpeechServer.getInstance();
         webSpeechServer.initialiser();

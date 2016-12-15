@@ -7,6 +7,7 @@ import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_GAUC
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
 import net.engio.mbassy.bus.MBassador;
 
@@ -20,8 +21,8 @@ public class TrackingActivite extends AbstractActivite {
      * Constructeur
      * @param systemeNerveux système nerveux du robot
      */
-    public TrackingActivite(MBassador<RobotEvent> systemeNerveux, Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
-        super(systemeNerveux, contexte, reconnaissanceFaciale);
+    public TrackingActivite(Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
+        super(contexte, reconnaissanceFaciale);
     }
     
     @Override
@@ -45,7 +46,7 @@ public class TrackingActivite extends AbstractActivite {
         final MouvementTeteEvent mouvementTeteEvent = new MouvementTeteEvent();
         mouvementTeteEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.STOPPER);
         mouvementTeteEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.STOPPER);
-        systemeNerveux.publish(mouvementTeteEvent);
+        RobotEventBus.getInstance().publish(mouvementTeteEvent);
         
         dire("Fin du suivi du visage.");
     }

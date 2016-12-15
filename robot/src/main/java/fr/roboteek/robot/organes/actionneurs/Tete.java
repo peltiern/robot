@@ -4,12 +4,10 @@ import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_GAUCHE_DROITE;
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_HAUT_BAS;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeListener;
 import fr.roboteek.robot.util.phidget.PhidgetMotor;
 import fr.roboteek.robot.util.phidget.PhidgetServoController;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -37,8 +35,8 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     private PhidgetMotor moteurHautBas;
     
     /** Constructeur. */
-    public Tete(MBassador<RobotEvent> systemeNerveux) {
-        super(systemeNerveux);
+    public Tete() {
+        super();
         
         // Création et initialisation des moteurs
         moteurGaucheDroite = PhidgetServoController.getMotor(IDX_MOTEUR_GAUCHE_DROITE);
@@ -100,6 +98,16 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     }
     
     /**
+     * Positionne la tête sur le plan "Gauche / Droite" à une position précise (0 : à gauche, 180 : à droite).
+     * @param position position en degrés (0 : à gauche, 180 : à droite)
+     */
+    public void positionnerTeteGaucheDroite(double position) {
+    	if (position >= moteurGaucheDroite.getPositionMin() && position <= moteurGaucheDroite.getPositionMax()) {
+    		moteurGaucheDroite.setPosition(position);
+    	}
+    }
+    
+    /**
      * Stoppe le mouvement de la tête sur le plan "Gauche / Droite".
      */
     public void stopperTeteGaucheDroite() {
@@ -141,6 +149,16 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     }
     
     /**
+     * Positionne la tête sur le plan "Haut / Bas" à une position précise (0 : en bas, 180 : en haut).
+     * @param position position en degrés (0 : en bas, 180 : en haut)
+     */
+    public void positionnerTeteHautBas(double position) {
+    	if (position >= moteurHautBas.getPositionMin() && position <= moteurHautBas.getPositionMax()) {
+    		moteurHautBas.setPosition(position);
+    	}
+    }
+    
+    /**
      * Stoppe le mouvement de la tête sur le plan "Haut / Bas".
      */
     public void stopperTeteHautBas() {
@@ -153,7 +171,10 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
      */
     @Handler
     public void handleMouvementTeteEvent(MouvementTeteEvent mouvementTeteEvent) {
-        if (mouvementTeteEvent.getMouvementGaucheDroite() != null) {
+    	System.out.println("Event = " + mouvementTeteEvent);
+    	if (mouvementTeteEvent.getPositionGaucheDroite() != -1) {
+    		positionnerTeteGaucheDroite(mouvementTeteEvent.getPositionGaucheDroite());
+    	} else if (mouvementTeteEvent.getMouvementGaucheDroite() != null) {
             if (mouvementTeteEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.STOPPER) {
                 stopperTeteGaucheDroite();
             } else if (mouvementTeteEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE) {
@@ -162,7 +183,9 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
                 tournerADroite();
             }
         }
-        if (mouvementTeteEvent.getMouvementHauBas() != null) {
+    	if (mouvementTeteEvent.getPositionHautBas() != -1) {
+    		positionnerTeteHautBas(mouvementTeteEvent.getPositionHautBas());
+    	} else if (mouvementTeteEvent.getMouvementHauBas() != null) {
             if (mouvementTeteEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.STOPPER) {
                 stopperTeteHautBas();
             } else if (mouvementTeteEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_HAUT) {
@@ -204,7 +227,7 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     }
     
     public static void main(String[] args) {
-        Tete tete = new Tete(new MBassador<RobotEvent>());
+        Tete tete = new Tete();
         tete.initialiser();
         try {
             Thread.sleep(2000);

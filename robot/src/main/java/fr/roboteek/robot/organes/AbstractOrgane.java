@@ -1,23 +1,15 @@
 package fr.roboteek.robot.organes;
 
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import net.engio.mbassy.bus.MBassador;
-
 /**
  * Classe abstraite représentant un organe.
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public abstract class AbstractOrgane {
     
-    /** Système nerveux (bus d'évènements). */
-    protected MBassador<RobotEvent> systemeNerveux;
-    
     /**
      * Constructeur.
-     * @param systemeNerveux le système nerveux
      */
-    public AbstractOrgane(MBassador<RobotEvent> systemeNerveux) {
-        this.systemeNerveux = systemeNerveux;
+    public AbstractOrgane() {
     }
     
     /**

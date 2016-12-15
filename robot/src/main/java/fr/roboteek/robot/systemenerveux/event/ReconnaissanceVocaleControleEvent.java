@@ -5,6 +5,8 @@ package fr.roboteek.robot.systemenerveux.event;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class ReconnaissanceVocaleControleEvent extends RobotEvent {
+	
+	public static final String EVENT_TYPE = "ReconnaissanceVocaleControle";
     
     /** Constante de contrôle de la reconnaissance vocale. */
     public static enum CONTROLE {DEMARRER, METTRE_EN_PAUSE};

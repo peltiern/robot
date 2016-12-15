@@ -14,10 +14,8 @@ import org.openimaj.util.pair.IndependentPair;
 import fr.roboteek.robot.decisionnel.Contexte;
 import fr.roboteek.robot.memoire.ReconnaissanceFaciale;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
 import fr.roboteek.robot.util.callback.AsyncCallback;
-import net.engio.mbassy.bus.MBassador;
 
 /**
  * Activité "Conversation".
@@ -52,8 +50,8 @@ public class ConversationActivite extends AbstractActivite {
      * Constructeur.
      * @param systemeNerveux système nerveux du robot
      */
-    public ConversationActivite(MBassador<RobotEvent> systemeNerveux, Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
-        super(systemeNerveux, contexte, reconnaissanceFaciale);
+    public ConversationActivite(Contexte contexte, ReconnaissanceFaciale reconnaissanceFaciale) {
+        super(contexte, reconnaissanceFaciale);
     }
 
     @Override

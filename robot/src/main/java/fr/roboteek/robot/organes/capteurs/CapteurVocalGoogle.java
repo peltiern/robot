@@ -7,7 +7,6 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -33,11 +32,9 @@ import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.reconnaissance.vocale.google.GoogleSpeechRecognizer;
 import fr.roboteek.robot.util.reconnaissance.vocale.google.GoogleSpeechRecognizerRest;
-import net.engio.mbassy.bus.MBassador;
-import net.engio.mbassy.bus.config.BusConfiguration;
 import net.sourceforge.javaflacencoder.FLAC_FileEncoder;
 
 /**
@@ -88,10 +85,10 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 
 	/** Buffer permettant de stocker le signal audio précédent. */
 	private byte[] bufferNMoins1;
-	
+
 	/** Buffer permettant de stocker le signal audio précédent. */
 	private byte[] bufferNMoins2;
-	
+
 	/** Buffer permettant de stocker le signal audio précédent. */
 	private byte[] bufferNMoins3;
 
@@ -101,8 +98,8 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 	/** Flag permettant de savoir si le flux en cours de traitement est un flux "parlé". */
 	private boolean parle = false;
 
-	public CapteurVocalGoogle(MBassador<RobotEvent> systemeNerveux) {
-		super(systemeNerveux);
+	public CapteurVocalGoogle() {
+		super();
 
 		recognizer= GoogleSpeechRecognizerRest.getInstance();
 		flacEncoder = new FLAC_FileEncoder();
@@ -149,13 +146,13 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 			PitchDetectionHandler pdh = new PitchDetectionHandler() {
 				public void handlePitch(PitchDetectionResult result,AudioEvent e) {
 					double actualTimeStamp = e.getTimeStamp();
-//					System.out.println("SPL = " + silenceDetector.currentSPL() + ", temps = " + actualTimeStamp);
+					//					System.out.println("SPL = " + silenceDetector.currentSPL() + ", temps = " + actualTimeStamp);
 					if (silenceDetector.currentSPL() > SilenceDetector.DEFAULT_SILENCE_THRESHOLD - 20) {
 						final float pitchInHz = result.getPitch();
 						if (pitchInHz > 0) {
-//							System.out.println("Pitch = " + pitchInHz + "\ttime = " + e.getTimeStamp());
+							//							System.out.println("Pitch = " + pitchInHz + "\ttime = " + e.getTimeStamp());
 							if (fichierVide) {
-//								System.out.println("Concat avant parle");
+								//								System.out.println("Concat avant parle");
 								bufferAvantParle = Bytes.concat(bufferNMoins3, bufferNMoins2, bufferNMoins1);
 							}
 							parle = true;
@@ -191,7 +188,7 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 					bufferNMoins3 = Bytes.concat(bufferNMoins2);
 					bufferNMoins2 = Bytes.concat(bufferNMoins1);
 					bufferNMoins1 = Bytes.concat(e.getByteBuffer());
-					
+
 				}
 			};
 			AudioProcessor p = new PitchProcessor(PitchEstimationAlgorithm.YIN, sampleRate, bufferSize, pdh);
@@ -227,7 +224,7 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 		if (fichierWav == null || !fichierVide) {
 			// Création du fichier Wav
 			if (fichierWav != null) {
-//				System.out.println("Fermeture du fichier");
+				//				System.out.println("Fermeture du fichier");
 				if (bufferAvantParle != null) {
 					content = Bytes.concat(bufferAvantParle, content);
 				}
@@ -263,7 +260,7 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 						final ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
 						event.setTexteReconnu(resultat);
 						System.out.println("Résultat = " + resultat);
-						systemeNerveux.publish(event);
+						RobotEventBus.getInstance().publish(event);
 						dire(resultat);
 					}
 
@@ -282,7 +279,7 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 	public synchronized void getNextFile() throws IOException {
 		if (fichierWav == null || !fichierVide) {
 			fichierVide = true;
-//			System.out.println("Nouveau fichier");
+			//			System.out.println("Nouveau fichier");
 			fichierWav = new RandomAccessFile(cheminFichierWav, "rw");
 			fichierWav.write(new byte[44]);
 		}
@@ -297,28 +294,27 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 	}
 
 	public synchronized void ecrire(byte[] buffer) throws IOException {
-//		System.out.println("Ecrire " + buffer.length + ", fichier vide  = " + fichierVide + ", content = " + (content != null ? content.length : "0"));
-//		if (Arrays.equals(content, buffer)) {
-//			System.out.println("Contenu identique = " + buffer);
-//		}
+		//		System.out.println("Ecrire " + buffer.length + ", fichier vide  = " + fichierVide + ", content = " + (content != null ? content.length : "0"));
+		//		if (Arrays.equals(content, buffer)) {
+		//			System.out.println("Contenu identique = " + buffer);
+		//		}
 		if (content != null) {
-//			System.out.println("Concaténation");
+			//			System.out.println("Concaténation");
 			content = Bytes.concat(content, buffer);
 		}
-//		System.out.println("Fin Ecrire = " + content.length);
+		//		System.out.println("Fin Ecrire = " + content.length);
 		setFichierVide(false);
 	}
 
 	public static void main(String[] args) {
-		MBassador<RobotEvent> systeme = new MBassador<RobotEvent>();
-		OrganeParoleGoogle organeParole = new OrganeParoleGoogle(systeme);
-		systeme.subscribe(organeParole);
-		final CapteurVocalGoogle capteurVocal = new CapteurVocalGoogle(systeme);
+		OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
+		RobotEventBus.getInstance().subscribe(organeParole);
+		final CapteurVocalGoogle capteurVocal = new CapteurVocalGoogle();
 		capteurVocal.initialiser();
-		systeme.subscribe(capteurVocal);
+		RobotEventBus.getInstance().subscribe(capteurVocal);
 		final ParoleEvent paroleEvent = new ParoleEvent();
-	     paroleEvent.setTexte("test");
-	     systeme.post(paroleEvent).now();
+		paroleEvent.setTexte("test");
+		RobotEventBus.getInstance().publish(paroleEvent);
 
 	}
 
@@ -328,9 +324,9 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 	 */
 	private void dire(String texte) {
 		System.out.println("Dire = " + texte);
-		     final ParoleEvent paroleEvent = new ParoleEvent();
-		     paroleEvent.setTexte(texte);
-		     systemeNerveux.post(paroleEvent).now();
+				     final ParoleEvent paroleEvent = new ParoleEvent();
+				     paroleEvent.setTexte(texte);
+				     RobotEventBus.getInstance().publish(paroleEvent);
 //		try {
 //			Process p = Runtime.getRuntime().exec("C:/Program Files (x86)/eSpeak/command_line/espeak.exe -v fr -p 80 \"" + texte + "\"");
 //			p.waitFor();

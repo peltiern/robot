@@ -5,8 +5,6 @@ import org.apache.log4j.Logger;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.server.WebSpeechServer;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import net.engio.mbassy.bus.MBassador;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -22,8 +20,8 @@ public class OrganeParole3 extends AbstractOrgane {
     private Logger logger = Logger.getLogger(OrganeParole3.class);
 
     /** Constructeur. */
-    public OrganeParole3(MBassador<RobotEvent> systemeNerveux) {
-        super(systemeNerveux);
+    public OrganeParole3() {
+        super();
         speechWebServer = WebSpeechServer.getInstance();
     }
 
