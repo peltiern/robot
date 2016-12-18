@@ -32,6 +32,13 @@
 		Mousetrap.bind("down", tournerEnBas, "keydown");
 		Mousetrap.bind("down", stopperTeteHautBas, "keyup");
 		Mousetrap.bind("enter", parler);
+		Mousetrap.bind("a", function(){jouerExpression("01_allumer");playbackAnimation("01_allumer");});
+		Mousetrap.bind("q", function(){jouerExpression("02_eteindre");playbackAnimation("02_eteindre");});
+		Mousetrap.bind("z", function(){jouerExpression("03_clignement");playbackAnimation("03_clignement");});
+		Mousetrap.bind("s", function(){jouerExpression("04_clin_oeil");playbackAnimation("04_clin_oeil");});
+		Mousetrap.bind("w", function(){jouerExpression("05_amour");playbackAnimation("05_amour");});
+		Mousetrap.bind("e", function(){jouerExpression("06_triste");playbackAnimation("06_triste");});
+		Mousetrap.bind("d", function(){jouerExpression("07_triste_inverse");playbackAnimation("07_triste_inverse");});
          
 		function bougerTete(e) {
 			var mouvementTeteEvent = {};
@@ -113,7 +120,7 @@
 		    	$.each(data, function( index, animation ) {
 		    		mapAnimations[animation.idAnimation] = animation;
 		    		// Ajout du bouton de l'animation
-		    		$(".listeAnimations").append("<button onclick=\"jouerExpression('" + animation.idAnimation + "');\" onmouseover=\"playbackAnimation('" + animation.idAnimation + "');\">" + animation.libelleAnimation + "</button>");
+		    		$(".listeAnimations").append("<button onclick=\"jouerExpression('" + animation.idAnimation + "');playbackAnimation('" + animation.idAnimation + "');\">" + animation.libelleAnimation + "</button>");
 		    	});
 		    	
 		    });
@@ -128,7 +135,7 @@
 						$(".previewAnimation").attr("src","http://" + location.hostname + ":" + location.port + "/rest/images/image-" + item.idImage);
 					}, pause);
 				} else if (item.type == "P") {
-					pause = pause + item.tempsPause * 2;
+					pause = pause + item.tempsPause * 1;
 				}
 			});
 		}
@@ -158,6 +165,6 @@
 	</div>
 	<div class="listeAnimations">
 	</div>
-	<img class="previewAnimation">
+	<img class="previewAnimation" style="width: 256px; height: 128px;">
 </body>
 </html>
