@@ -34,7 +34,7 @@ import net.engio.mbassy.listener.Handler;
  *
  */
 public class VisageDoubleBuffering extends AbstractOrgane {
-	
+
 	/** Instance. */
 	private static VisageDoubleBuffering instance;
 
@@ -52,12 +52,12 @@ public class VisageDoubleBuffering extends AbstractOrgane {
 
 	/** Ecran. */
 	private YDisplay ecran;
-	
-	
+
+
 	private VisageDoubleBuffering() {
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	public static VisageDoubleBuffering getInstance() {
 		if (instance == null) {
 			instance = new VisageDoubleBuffering();
@@ -84,7 +84,7 @@ public class VisageDoubleBuffering extends AbstractOrgane {
 
 		// Recherche de l'écran
 		ecran = YDisplay.FirstDisplay();
-		
+
 		try {
 			ecran.resetAll();
 		} catch (YAPI_Exception e) {
@@ -94,7 +94,7 @@ public class VisageDoubleBuffering extends AbstractOrgane {
 
 		// Chargement des images
 		chargerImages();
-		
+
 		jouerExpression("01_allumer");
 
 	}
@@ -153,31 +153,24 @@ public class VisageDoubleBuffering extends AbstractOrgane {
 				final String idAnimation = (String) cleIdAnimation;
 				final String chaineAnimation = fichierExpressions.getProperty(idAnimation);
 				final String[] proprietesAnimation = chaineAnimation.split("\\|");
-				final String libelleAnimation = proprietesAnimation[0];
-				final String[] itemsAnimation = proprietesAnimation[1].split(",");
+				final String[] imagesAnimation = proprietesAnimation[1].split(",");
 
 				// Création de l'animation
-				final Animation animation = new Animation(idAnimation, libelleAnimation, ecran);
+				final Animation animation = new Animation(ecran);
 
 				// Ajout des images à l'animation
-				if (itemsAnimation != null && itemsAnimation.length != 0) {
-					for (String item : itemsAnimation) {
-						// Récupération du type de l'item et de la valeur
-						final String[] typeValeurItem = item.split(":");
-						if (typeValeurItem != null && typeValeurItem.length != 0) {
-							final String typeItem = typeValeurItem[0];
-							if (typeItem.equals("I")) {
-								// Image
-								final String nomImage = typeValeurItem[1];
-								animation.ajouterImage(nomImage, mapImages.get(nomImage));
-							} else if (typeItem.equals("P")) {
-								// Pause
-								final int tempsPause = Integer.valueOf(typeValeurItem[1]);
-								animation.ajouterPause(tempsPause);
-							}
+				if (imagesAnimation != null && imagesAnimation.length != 0) {
+					for (String image : imagesAnimation) {
+						// Récupération de l'identifiant de l'image et du temps
+						final String[] idImageTemps = image.split(":");
+						if (idImageTemps != null && idImageTemps.length != 0) {
+							final String nomImage = idImageTemps[0];
+							final int tempsPause = Integer.valueOf(idImageTemps[1]);
+							animation.ajouterImage(nomImage, mapImages.get(nomImage), tempsPause);
 						}
 					}
 				}
+
 				mapAnimationsExpressions.put(idAnimation, animation);
 			}
 		} catch (FileNotFoundException e) {

@@ -13,16 +13,15 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import fr.roboteek.robot.organes.actionneurs.Tete;
-import fr.roboteek.robot.server.service.AnimationResource;
 import fr.roboteek.robot.server.test.CapteurVisionWebSocket;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
@@ -65,9 +64,20 @@ public class RobotServer {
         context.setWelcomeFiles(new String[] { "index.html" });
 
         context.getMimeTypes().addMimeMapping("txt","text/plain;charset=utf-8");
+        context.getMimeTypes().addMimeMapping("eot","application/vnd.ms-fontobject");
+        context.getMimeTypes().addMimeMapping("svg","image/svg+xml");
+        context.getMimeTypes().addMimeMapping("ttf","application/octet-stream");
+        context.getMimeTypes().addMimeMapping("woff","application/font-woff");
+        context.getMimeTypes().addMimeMapping("woff2","application/font-woff2");
+        System.out.println("Type Mime = " + context.getMimeTypes().getMimeMap());
         
 //        server.setHandler(context);
         context.addServlet(DefaultServlet.class,"/");
+//        ServletHolder holderPwd = new ServletHolder("default", DefaultServlet.class);
+//        holderPwd.setInitParameter("resourceBase","/webContent/");
+//        holderPwd.setInitParameter("dirAllowed","true");
+//        holderPwd.
+//        context.addServlet(holderPwd,"/");
         
         final ServletContextHandler webSocketServletContext = getWebSocketContext();
         final ContextHandlerCollection contexts = new ContextHandlerCollection();
@@ -126,6 +136,7 @@ public class RobotServer {
     private static ServletHolder getRestServlet() {
     	ResourceConfig config = new ResourceConfig();
         config.packages("fr.roboteek.robot.server.service");
+        config.register(MultiPartFeature.class);
         ServletHolder servlet = new ServletHolder(new ServletContainer(config));
         return servlet;
     }

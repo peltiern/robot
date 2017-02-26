@@ -8,10 +8,13 @@ package fr.roboteek.robot.organes.actionneurs.util;
  * @author Nicolas
  *
  */
-public class AnimationImage extends AnimationItem {
+public class AnimationImage {
 
 	/** Identifiant de l'image. */
 	private String identifiant;
+	
+	/** Temps de la pause. */
+	private int tempsPause;
 	
 	/** Couche dans laquelle est dessinée l'image (1 à 5). */
 	private int couche;
@@ -19,8 +22,9 @@ public class AnimationImage extends AnimationItem {
 	/** Zone de la couche dans laquelle est dessinée l'image (0 ou 1). */
 	private int zoneCouche;
 
-	public AnimationImage(String identifiant, int couche, int zoneCouche) {
+	public AnimationImage(String identifiant, int tempsPause,  int couche, int zoneCouche) {
 		this.identifiant = identifiant;
+		this.tempsPause = tempsPause;
 		this.couche = couche;
 		this.zoneCouche = zoneCouche;
 	}
@@ -35,6 +39,10 @@ public class AnimationImage extends AnimationItem {
 
 	public int getZoneCouche() {
 		return zoneCouche;
+	}
+
+	public int getTempsPause() {
+		return tempsPause;
 	}
 
 }

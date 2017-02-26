@@ -53,7 +53,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
             eventRedemarrage.setControle(CONTROLE.DEMARRER);
-            RobotEventBus.getInstance().publish(eventRedemarrage);
+            RobotEventBus.getInstance().publishAsync(eventRedemarrage);
         }
     }
     

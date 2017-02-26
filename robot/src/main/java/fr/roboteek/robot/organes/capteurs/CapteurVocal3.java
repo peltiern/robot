@@ -64,7 +64,7 @@ public class CapteurVocal3 extends AbstractOrgane implements WebSpeechServerList
             // Envoi de l'évènement de reconnaissance
             final ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
             event.setTexteReconnu(speechResult);
-            RobotEventBus.getInstance().publish(event);
+            RobotEventBus.getInstance().publishAsync(event);
         }
     }
 

@@ -12,6 +12,11 @@ public class ReconnaissanceVocaleControleEvent extends RobotEvent {
     public static enum CONTROLE {DEMARRER, METTRE_EN_PAUSE};
     
     private CONTROLE controle;
+    
+	public ReconnaissanceVocaleControleEvent() {
+		super(EVENT_TYPE);
+		// TODO Auto-generated constructor stub
+	}
 
     /**
      * Récupère la valeur de controle.

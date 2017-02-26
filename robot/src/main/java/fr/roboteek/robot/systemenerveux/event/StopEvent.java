@@ -7,5 +7,9 @@ package fr.roboteek.robot.systemenerveux.event;
 public class StopEvent extends RobotEvent {
 	
 	public static final String EVENT_TYPE = "Stop";
-
+	
+	public StopEvent() {
+		super(EVENT_TYPE);
+	}
+	
 }

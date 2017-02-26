@@ -10,6 +10,13 @@ public class ParoleEvent extends RobotEvent {
     
     /** Texte à dire. */
     private String texte;
+    
+    /** Pour test. */
+    private boolean pourTest = false;
+    
+	public ParoleEvent() {
+		super(EVENT_TYPE);
+	}
 
     /**
      * Récupère la valeur de texte.
@@ -26,5 +33,13 @@ public class ParoleEvent extends RobotEvent {
     public void setTexte(String texte) {
         this.texte = texte;
     }
+
+	public boolean isPourTest() {
+		return pourTest;
+	}
+
+	public void setPourTest(boolean pourTest) {
+		this.pourTest = pourTest;
+	}
 
 }

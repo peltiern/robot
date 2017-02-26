@@ -92,6 +92,7 @@ public class GoogleSpeechRecognizerRest implements GoogleSpeechRecognizer {
 		request.setAudio(audioRequest);
 		
 		// Appel du service web
+		System.out.println("==> Appel Cloud Speech");
 		Response response = invocationBuilder.post(Entity.json(request));
 
 		// Récupération du résultat

@@ -80,7 +80,7 @@ public abstract class AbstractActivite {
     public void dire(String texte) {
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
-        RobotEventBus.getInstance().publish(paroleEvent);
+        RobotEventBus.getInstance().publishAsync(paroleEvent);
     }
 
     /**
@@ -133,7 +133,7 @@ public abstract class AbstractActivite {
             mouvementTeteEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.STOPPER);
         }
 
-        RobotEventBus.getInstance().publish(mouvementTeteEvent);
+        RobotEventBus.getInstance().publishAsync(mouvementTeteEvent);
 
         return visagePlusGrand;
     }

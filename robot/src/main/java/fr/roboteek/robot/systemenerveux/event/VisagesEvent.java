@@ -20,6 +20,10 @@ public class VisagesEvent extends RobotEvent {
     /** Liste des visages détectés. */
     private List<DetectedFace> listeVisages;
     
+	public VisagesEvent() {
+		super(EVENT_TYPE);
+	}
+    
     /**
      * Récupère la valeur de imageOrigine.
      * @return la valeur de imageOrigine

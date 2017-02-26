@@ -14,6 +14,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.TargetDataLine;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import com.google.common.primitives.Bytes;
 
@@ -252,6 +253,8 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 					File fichierFlac = new File(cheminFichierFlac);
 					flacEncoder.encode(fichierWav, fichierFlac);
 
+					System.out.println("==>Durée fichier : " + getDuration(fichierWav));
+					
 					// Appel du moteur de reconnaissance
 					final String resultat = recognizer.reconnaitre(cheminFichierFlac);
 
@@ -260,8 +263,8 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 						final ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
 						event.setTexteReconnu(resultat);
 						System.out.println("Résultat = " + resultat);
-						RobotEventBus.getInstance().publish(event);
-						dire(resultat);
+						RobotEventBus.getInstance().publishAsync(event);
+						//dire(resultat);
 					}
 
 					// Suppression des fichiers
@@ -314,7 +317,7 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 		RobotEventBus.getInstance().subscribe(capteurVocal);
 		final ParoleEvent paroleEvent = new ParoleEvent();
 		paroleEvent.setTexte("test");
-		RobotEventBus.getInstance().publish(paroleEvent);
+		RobotEventBus.getInstance().publishAsync(paroleEvent);
 
 	}
 
@@ -324,19 +327,37 @@ public class CapteurVocalGoogle extends AbstractOrgane {
 	 */
 	private void dire(String texte) {
 		System.out.println("Dire = " + texte);
-				     final ParoleEvent paroleEvent = new ParoleEvent();
-				     paroleEvent.setTexte(texte);
-				     RobotEventBus.getInstance().publish(paroleEvent);
-//		try {
-//			Process p = Runtime.getRuntime().exec("C:/Program Files (x86)/eSpeak/command_line/espeak.exe -v fr -p 80 \"" + texte + "\"");
-//			p.waitFor();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		final ParoleEvent paroleEvent = new ParoleEvent();
+		paroleEvent.setTexte(texte);
+		paroleEvent.setPourTest(true);
+		RobotEventBus.getInstance().publishAsync(paroleEvent);
+		//		try {
+		//			Process p = Runtime.getRuntime().exec("C:/Program Files (x86)/eSpeak/command_line/espeak.exe -v fr -p 80 \"" + texte + "\"");
+		//			p.waitFor();
+		//		} catch (IOException e) {
+		//			// TODO Auto-generated catch block
+		//			e.printStackTrace();
+		//		} catch (InterruptedException e) {
+		//			// TODO Auto-generated catch block
+		//			e.printStackTrace();
+		//		}
+	}
+
+	private float getDuration(File fichierSon) {
+		float durationInSeconds = 0f;
+		AudioInputStream audioInputStream;
+		try {
+			audioInputStream = AudioSystem.getAudioInputStream(fichierSon);
+			AudioFormat format = audioInputStream.getFormat();
+			long audioFileLength = fichierSon.length();
+			int frameSize = format.getFrameSize();
+			float frameRate = format.getFrameRate();
+			durationInSeconds = (audioFileLength / (frameSize * frameRate));
+		} catch (UnsupportedAudioFileException | IOException e) {
+			e.printStackTrace();
+		}
+		return durationInSeconds;
+
 	}
 
 }

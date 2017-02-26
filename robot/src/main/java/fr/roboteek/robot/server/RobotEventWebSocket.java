@@ -18,22 +18,26 @@
 
 package fr.roboteek.robot.server;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.websocket.EncodeException;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 
-import fr.roboteek.robot.server.event.RobotEventDecoder;
+import fr.roboteek.robot.server.event.RobotEventCodec;
+import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
 @ServerEndpoint(value = "/robotEvents/",
-		decoders = {RobotEventDecoder.class}
+		decoders = {RobotEventCodec.class},
+		encoders = {RobotEventCodec.class}
 )
 public class RobotEventWebSocket {
     private static Set<Session> clients = Collections.synchronizedSet(new HashSet<Session>());
@@ -48,7 +52,7 @@ public class RobotEventWebSocket {
     @OnMessage
     public void onMessage(RobotEvent event)
     {
-    	RobotEventBus.getInstance().publish(event);
+    	RobotEventBus.getInstance().publishAsync(event);
     }
 
     @OnClose
@@ -60,5 +64,24 @@ public class RobotEventWebSocket {
 
 	public static Set<Session> getClients() {
 		return clients;
+	}
+	
+	public static synchronized void broadcastEvent(RobotEvent robotEvent) {
+        for(Session session : getClients()){
+        	try {
+        		System.out.println("TEST avant");
+				session.getBasicRemote().sendObject(robotEvent);
+//        		session.getBasicRemote().sendText(((ConversationEvent) robotEvent).getTexte());
+				System.out.println("TEST après");
+			} 
+        	catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+        	catch (EncodeException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
 	}
 }

@@ -13,6 +13,10 @@ public class ReconnaissanceVocaleEvent extends RobotEvent {
     
     /** Nom de la règle correspondant au texte reconnu. */
     private String nomRegle;
+    
+	public ReconnaissanceVocaleEvent() {
+		super(EVENT_TYPE);
+	}
 
     /**
      * Récupère la valeur de texteReconnu.

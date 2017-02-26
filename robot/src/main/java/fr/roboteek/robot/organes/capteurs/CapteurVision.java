@@ -101,7 +101,7 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
             final VisagesEvent event = new VisagesEvent();
             event.setImageOrigine(image);
             event.setListeVisages(listeVisages);
-            RobotEventBus.getInstance().publish(event);
+            RobotEventBus.getInstance().publishAsync(event);
         }
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {

@@ -27,20 +27,14 @@ public class Animation {
 
 	private static int idxCoucheTransition = 4;
 
-	/** Identifiant de l'animation. */
-	private String idAnimation;
-	
-	/** Libellé de l'animation. */
-	private String libelleAnimation;
-
 	/**
 	 * Map des images de l'animation.
 	 * Clé : identifiant de l'image, valeur : l'image
 	 */
 	private Map<String, AnimationImage> mapImages = new HashMap<String, AnimationImage>();
 
-	/** Séquence des items de l'animation dans l'ordre dans lequel elles seront affichées. */
-	private List<AnimationItem> listeItemsAnimation = new ArrayList<AnimationItem>();
+	/** Séquence des images de l'animation dans l'ordre dans lequel elles seront affichées. */
+	private List<AnimationImage> listeImagesAnimation = new ArrayList<AnimationImage>();
 
 	/** Tableau des données des différentes couches (128 * 128 : peut contenir 2 images contenues dans 2 zones différentes (A et B)). */
 	private ByteArrayBuffer[] tabDonneesCouches;
@@ -50,9 +44,7 @@ public class Animation {
 
 	private int idxCoucheEnCours = -1;
 
-	public Animation(String idAnimation, String libelleAnimation, YDisplay ecran) {
-		this.idAnimation = idAnimation;
-		this.libelleAnimation = libelleAnimation;
+	public Animation(YDisplay ecran) {
 		this.ecran = ecran;
 
 		// Création des 4 couches de données
@@ -70,7 +62,7 @@ public class Animation {
 		}
 	}
 
-	public void ajouterImage(String identifiantImage, ByteArrayBuffer contenuImage) {
+	public void ajouterImage(String identifiantImage, ByteArrayBuffer contenuImage, int tempsPause) {
 		// On teste si l'image n'est pas déjà présente
 		AnimationImage image = mapImages.get(identifiantImage);
 		if (image == null) {
@@ -79,18 +71,14 @@ public class Animation {
 			final int nbImagesDejaPresentes = mapImages.size();
 			final int couche = (int) (nbImagesDejaPresentes / nbImagesParCouche);
 			final int zone = nbImagesDejaPresentes % nbImagesParCouche;
-			image = new AnimationImage(identifiantImage, couche, zone);
+			image = new AnimationImage(identifiantImage, tempsPause, couche, zone);
 			// Ajout à la map
 			mapImages.put(identifiantImage, image);
 			// Ajout du contenu de l'image à la couche et la zone correspondante (à la suite)
 			tabDonneesCouches[couche].append(contenuImage.toByteArray(), 0, contenuImage.length());
 		}
 		// Ajout de l'image à la séquence
-		listeItemsAnimation.add(image);
-	}
-
-	public void ajouterPause(int tempsPause) {
-		listeItemsAnimation.add(new AnimationPause(tempsPause));
+		listeImagesAnimation.add(image);
 	}
 
 	public void preparer() {
@@ -112,12 +100,12 @@ public class Animation {
 		}
 	}
 
+	/** Joue l'animation sur l'écran. */
 	public void jouer() {
 		try {
 			AnimationImage derniereImage = null;
-			for (AnimationItem item : listeItemsAnimation) {
-				if (item instanceof AnimationImage) {
-					AnimationImage image = (AnimationImage) item;
+			for (AnimationImage image : listeImagesAnimation) {
+				if (image instanceof AnimationImage) {
 					ecran.get_displayLayer(image.getCouche()).setLayerPosition(0, - image.getZoneCouche() * 64, 0);
 					if (idxCoucheEnCours != image.getCouche()) {
 						ecran.get_displayLayer(image.getCouche()).unhide();
@@ -127,10 +115,9 @@ public class Animation {
 					}
 					idxCoucheEnCours = image.getCouche();
 					derniereImage = image;
-
-				} else if (item instanceof AnimationPause) {
-					AnimationPause pause = (AnimationPause) item;
-					Thread.sleep(pause.getTempsPause());
+					
+					// Temps d'affichage de l'image
+					Thread.sleep(image.getTempsPause());
 				}
 			}
 
@@ -151,17 +138,5 @@ public class Animation {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	public String getIdAnimation() {
-		return idAnimation;
-	}
-
-	public String getLibelleAnimation() {
-		return libelleAnimation;
-	}
-
-	public List<AnimationItem> getListeItemsAnimation() {
-		return listeItemsAnimation;
 	}
 }

@@ -7,6 +7,8 @@ import fr.roboteek.robot.activites.JeuActivite;
 import fr.roboteek.robot.activites.TrackingActivite;
 import fr.roboteek.robot.memoire.ReconnaissanceFaciale;
 import fr.roboteek.robot.memoire.ReconnaissanceFacialeAnnotator;
+import fr.roboteek.robot.server.RobotEventWebSocket;
+import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -25,7 +27,10 @@ public class Cerveau {
     private Contexte contexte;
     
     /** Intelligence artificielle (contenant le système conversationnel). */
-    private IntelligenceArtificielle intelligenceArtificielle;
+//    private IntelligenceArtificielle intelligenceArtificielle;
+    
+    /** Intelligence artificielle (contenant le système conversationnel). */
+    private IntelligenceArtificielleRivescript intelligenceArtificielle;
     
     /** Reconnaissance faciale. */
     private ReconnaissanceFaciale reconnaissanceFaciale;
@@ -35,7 +40,7 @@ public class Cerveau {
 
     public Cerveau() {
         contexte = new Contexte();
-        intelligenceArtificielle = new IntelligenceArtificielle();
+        intelligenceArtificielle = new IntelligenceArtificielleRivescript();
 //        reconnaissanceFaciale = new ReconnaissanceFacialeEigenface();
         reconnaissanceFaciale = new ReconnaissanceFacialeAnnotator();
     }
@@ -59,40 +64,63 @@ public class Cerveau {
         
         System.out.println("==================>CERVEAU : " + texteReconnu);
         
+        // Envoi d'un évènement de conversation au serveur
+    	final ConversationEvent conversationEvent = new ConversationEvent();
+    	conversationEvent.setTexte(reconnaissanceVocaleEvent.getTexteReconnu());
+    	conversationEvent.setIdLocuteur(0);
+    	RobotEventWebSocket.broadcastEvent(conversationEvent);
+    	
+    	System.out.println("==================>CERVEAU après : " + texteReconnu);
+        
         if (texteReconnu != null && !texteReconnu.equals("")) {
-            
-            // Conversation
-            if (texteReconnu.trim().equalsIgnoreCase("Sami conversation")) {
-                System.out.println("Activité conversation");
-                final ConversationActivite conversationActivite = new ConversationActivite(contexte, reconnaissanceFaciale);
-                commencerActivite(conversationActivite);
-            }
-            
-            // Conversation avec moteur de chat
-            else if (texteReconnu.trim().equalsIgnoreCase("Conversation")) {
-                final ChatBotActivite chatBotActivite = new ChatBotActivite(contexte, reconnaissanceFaciale);
-                commencerActivite(chatBotActivite);
-            }
-            
-            // Tracking
-            else if (texteReconnu.trim().equalsIgnoreCase("Sami suivi visage")) {
-                final TrackingActivite trackingActivite = new TrackingActivite(contexte, reconnaissanceFaciale);
-                commencerActivite(trackingActivite);
-            }
-            
-            // Jeu
-            else if (texteReconnu.trim().equalsIgnoreCase("jouer")) {
-                final JeuActivite jeuActivite = new JeuActivite(contexte, reconnaissanceFaciale);
-                commencerActivite(jeuActivite);
-            }
-            
-            // Arrêt du robot
-            else if (texteReconnu.trim().equalsIgnoreCase("au revoir")) {
-                dire("Au revoir.");
-                final StopEvent stopEvent = new StopEvent();
-                RobotEventBus.getInstance().publish(stopEvent);
-            }
+            dire(intelligenceArtificielle.repondreAPhrase(texteReconnu));
+//            // Conversation
+//            if (texteReconnu.trim().equalsIgnoreCase("Sami conversation")) {
+//                System.out.println("Activité conversation");
+//                final ConversationActivite conversationActivite = new ConversationActivite(contexte, reconnaissanceFaciale);
+//                commencerActivite(conversationActivite);
+//            }
+//            
+//            // Conversation avec moteur de chat
+//            else if (texteReconnu.trim().equalsIgnoreCase("Conversation")) {
+//                final ChatBotActivite chatBotActivite = new ChatBotActivite(contexte, reconnaissanceFaciale);
+//                commencerActivite(chatBotActivite);
+//            }
+//            
+//            // Tracking
+//            else if (texteReconnu.trim().equalsIgnoreCase("Sami suivi visage")) {
+//                final TrackingActivite trackingActivite = new TrackingActivite(contexte, reconnaissanceFaciale);
+//                commencerActivite(trackingActivite);
+//            }
+//            
+//            // Jeu
+//            else if (texteReconnu.trim().equalsIgnoreCase("jouer")) {
+//                final JeuActivite jeuActivite = new JeuActivite(contexte, reconnaissanceFaciale);
+//                commencerActivite(jeuActivite);
+//            }
+//            
+//            // Arrêt du robot
+//            else if (texteReconnu.trim().equalsIgnoreCase("au revoir")) {
+//                dire("Au revoir.");
+//                final StopEvent stopEvent = new StopEvent();
+//                RobotEventBus.getInstance().publishAsync(stopEvent);
+//            }
         }
+    }
+    
+    /**
+     * Intercepte les évènements de lecture.
+     * @param paroleEvent évènement de lecture
+     */
+    @Handler
+    public void handleParoleEvent(ParoleEvent paroleEvent) {
+    	if (!paroleEvent.isPourTest()) {
+    		// Envoi d'un évènement de conversation au serveur
+    		final ConversationEvent conversationEvent = new ConversationEvent();
+    		conversationEvent.setTexte(paroleEvent.getTexte());
+    		conversationEvent.setIdLocuteur(-1);
+    		RobotEventWebSocket.broadcastEvent(conversationEvent);
+    	}
     }
     
     /**
@@ -134,7 +162,7 @@ public class Cerveau {
         System.out.println("Dire = " + texte);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
-        RobotEventBus.getInstance().publish(paroleEvent);
+        RobotEventBus.getInstance().publishAsync(paroleEvent);
     }
     
 

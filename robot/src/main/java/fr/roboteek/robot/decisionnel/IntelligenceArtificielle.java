@@ -16,7 +16,7 @@ public class IntelligenceArtificielle {
     private Chat chat;
     
     /** Logger. */
-    private Logger logger = Logger.getLogger(ChatBotActivite.class);
+    private Logger logger = Logger.getLogger(IntelligenceArtificielle.class);
     
     public IntelligenceArtificielle() {
         // Création du chat

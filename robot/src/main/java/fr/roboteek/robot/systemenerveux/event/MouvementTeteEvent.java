@@ -23,6 +23,10 @@ public class MouvementTeteEvent extends RobotEvent {
     
     /** Position "Haut - Bas" (0 : en bas, 180 : en haut). */
     private double positionHautBas = -1;
+    
+	public MouvementTeteEvent() {
+		super(EVENT_TYPE);
+	}
 
     public MOUVEMENTS_GAUCHE_DROITE getMouvementGaucheDroite() {
         return mouvementGaucheDroite;

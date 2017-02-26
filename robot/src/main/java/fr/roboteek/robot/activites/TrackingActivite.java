@@ -46,7 +46,7 @@ public class TrackingActivite extends AbstractActivite {
         final MouvementTeteEvent mouvementTeteEvent = new MouvementTeteEvent();
         mouvementTeteEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.STOPPER);
         mouvementTeteEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.STOPPER);
-        RobotEventBus.getInstance().publish(mouvementTeteEvent);
+        RobotEventBus.getInstance().publishAsync(mouvementTeteEvent);
         
         dire("Fin du suivi du visage.");
     }

@@ -9,6 +9,10 @@ public class ExpressionVisageEvent extends RobotEvent {
 	public static final String EVENT_TYPE = "ExpressionVisage";
 
     private String expression;
+    
+	public ExpressionVisageEvent() {
+		super(EVENT_TYPE);
+	}
 
 	public String getExpression() {
 		return expression;

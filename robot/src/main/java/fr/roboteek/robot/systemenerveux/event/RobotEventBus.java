@@ -42,5 +42,9 @@ public class RobotEventBus {
 	public void publish(RobotEvent event) {
 		mBassador.publish(event);
 	}
+	
+	public void publishAsync(RobotEvent event) {
+		mBassador.publishAsync(event);
+	}
 
 }

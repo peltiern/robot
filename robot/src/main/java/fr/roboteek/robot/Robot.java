@@ -25,7 +25,7 @@ public class Robot {
     private Cerveau cerveau;
 
     /** Tête du robot. */
-    private Tete tete;
+//    private Tete tete;
     
     /** Visage. */
     private VisageDoubleBuffering visage;
@@ -52,7 +52,7 @@ public class Robot {
     //private CapteurVocal3 capteurVocal;
     
     /** Capteur vocal. */
-//    private CapteurVocalGoogle capteurVocal;
+    private CapteurVocalGoogle capteurVocal;
 
     /** Flag d'arrêt du robot. */
     private boolean stopper = false;
@@ -82,11 +82,11 @@ public class Robot {
         // Actionneurs
 //        tete =  new Tete();
         organeParole = new OrganeParoleEspeak();
-        visage = VisageDoubleBuffering.getInstance();
+//        visage = VisageDoubleBuffering.getInstance();
         // Initialisation des actionneurs
 //        tete.initialiser();
         organeParole.initialiser();
-        visage.initialiser();
+//        visage.initialiser();
         
         
         // Abonnement aux évènements du système nerveux
@@ -94,25 +94,25 @@ public class Robot {
         RobotEventBus.getInstance().subscribe(cerveau);
 //        RobotEventBus.getInstance().subscribe(tete);
         RobotEventBus.getInstance().subscribe(organeParole);
-        RobotEventBus.getInstance().subscribe(visage);
+//        RobotEventBus.getInstance().subscribe(visage);
 
         // Capteurs
         capteurVision = new CapteurVision();
-//        capteurVocal = new CapteurVocalGoogle();
+        capteurVocal = new CapteurVocalGoogle();
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
         
         // Initialisation des capteurs
         capteurVision.initialiser();
-//        capteurVocal.initialiser();
+        capteurVocal.initialiser();
         
-//        RobotEventBus.getInstance().subscribe(capteurVocal);
+        RobotEventBus.getInstance().subscribe(capteurVocal);
         
         // Démarrage du serveur
         RobotServer.getInstance().run();
         
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte("J'ai terminé de m'initialiser");
-        RobotEventBus.getInstance().publish(paroleEvent);
+        RobotEventBus.getInstance().publishAsync(paroleEvent);
         logger.debug("Fin de l'initialisation");
     }
 
@@ -127,7 +127,7 @@ public class Robot {
                 
                 // Désabonnement des organes au système nerveux
                 RobotEventBus.getInstance().unsubscribe(visage);
-//                RobotEventBus.getInstance().unsubscribe(capteurVocal);
+                RobotEventBus.getInstance().unsubscribe(capteurVocal);
                 logger.debug("arrêt du robot 1");
                 RobotEventBus.getInstance().unsubscribe(organeParole);
                 logger.debug("arrêt du robot 2");

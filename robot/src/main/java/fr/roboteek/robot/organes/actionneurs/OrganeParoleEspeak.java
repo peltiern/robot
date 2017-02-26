@@ -36,7 +36,7 @@ public class OrganeParoleEspeak extends AbstractOrgane {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
-            RobotEventBus.getInstance().publish(eventPause);
+            RobotEventBus.getInstance().publishAsync(eventPause);
 
             System.out.println("Lecture :\t" + texte);
             String[] params = {fichierSyntheseVocale, "-v fr -p 80", texte};

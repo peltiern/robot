@@ -13,5 +13,8 @@ public class Constantes {
 	
 	/** Chemin vers le dossier de gestion du visage. */
 	public static final String DOSSIER_VISAGE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "visage";
+	
+	/** Chemin vers le dossier du système conversationnel Rivescript. */
+	public static final String DOSSIER_RIVESCRIPT = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "rivescript";
 
 }

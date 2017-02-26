@@ -1,0 +1,16 @@
+.liveVideo {
+	display: inline;
+	width: 100%;
+	max-width: 640px;
+}
+
+#conteneurImagesVisage {
+	height: 200px;
+	overflow-y: scroll;
+	border: 1px solid #cdcdcd;
+	padding: 3px;
+}
+
+#animationListeImages {
+	padding: 3px;
+}
