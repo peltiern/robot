@@ -36,7 +36,7 @@ public class RobotEventBus {
 	}
 	
 	public synchronized void unsubscribe(Object listener) {
-		mBassador.subscribe(listener);
+		mBassador.unsubscribe(listener);
 	}
 	
 	public void publish(RobotEvent event) {

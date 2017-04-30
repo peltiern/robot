@@ -1,7 +1,8 @@
+package fr.roboteek.robot.util.reconnaissance.vocale.google;
 /**
  * 
  */
-package fr.roboteek.robot.util.reconnaissance.vocale.google;
+
 
 /**
  * @author Nicolas

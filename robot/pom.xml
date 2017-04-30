@@ -146,6 +146,21 @@
 			<artifactId>rivescript-core</artifactId>
 			<version>0.8.1</version>
 		</dependency>
+		
+		<dependency>
+    <groupId>com.mashape.unirest</groupId>
+    <artifactId>unirest-java</artifactId>
+    <version>1.4.9</version>
+</dependency>
+
+<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-speech</artifactId>
+    <version>0.10.0-alpha</version>
+</dependency>
+
+
+
 
 	</dependencies>
 

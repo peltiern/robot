@@ -33,7 +33,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
-            RobotEventBus.getInstance().publish(eventPause);
+//            RobotEventBus.getInstance().publish(eventPause);
 
             System.out.println("Lecture :\t" + texte);
             String[] params = {fichierSyntheseVocale, texte};
@@ -43,11 +43,13 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 
+            System.out.println("Fin Lecture :\t" + texte);
             logger.debug("Fin lecture :\t" + texte);
 
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale

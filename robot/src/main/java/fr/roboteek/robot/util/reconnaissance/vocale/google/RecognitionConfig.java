@@ -1,5 +1,6 @@
 package fr.roboteek.robot.util.reconnaissance.vocale.google;
 
+
 public class RecognitionConfig {
 
 	public static enum AudioEncoding {ENCODING_UNSPECIFIED, LINEAR16, FLAC, MULAW, AMR, AMR_WB};

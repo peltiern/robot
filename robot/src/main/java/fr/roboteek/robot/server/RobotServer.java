@@ -117,6 +117,7 @@ public class RobotServer {
         webSocketContainer.setDefaultMaxSessionIdleTimeout(0);
         webSocketContainer.addEndpoint(TimeSocket.class);
         webSocketContainer.addEndpoint(VideoWebSocket.class);
+        webSocketContainer.addEndpoint(AudioWebSocket.class);
         webSocketContainer.addEndpoint(RobotEventWebSocket.class);
     }
 

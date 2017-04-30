@@ -3,16 +3,16 @@ package fr.roboteek.robot;
 import org.apache.log4j.Logger;
 
 import fr.roboteek.robot.decisionnel.Cerveau;
+import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleEspeak;
-import fr.roboteek.robot.organes.actionneurs.Tete;
-import fr.roboteek.robot.organes.actionneurs.Visage;
 import fr.roboteek.robot.organes.actionneurs.VisageDoubleBuffering;
 import fr.roboteek.robot.organes.capteurs.CapteurVision;
-import fr.roboteek.robot.organes.capteurs.CapteurVocalGoogle;
+import fr.roboteek.robot.organes.capteurs.CapteurVocalWebService;
 import fr.roboteek.robot.server.RobotServer;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
+import fr.roboteek.robot.util.reconnaissance.vocale.bing.BingSpeechRecognizerRest;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -52,7 +52,7 @@ public class Robot {
     //private CapteurVocal3 capteurVocal;
     
     /** Capteur vocal. */
-    private CapteurVocalGoogle capteurVocal;
+    private AbstractOrgane capteurVocal;
 
     /** Flag d'arrêt du robot. */
     private boolean stopper = false;
@@ -98,7 +98,7 @@ public class Robot {
 
         // Capteurs
         capteurVision = new CapteurVision();
-        capteurVocal = new CapteurVocalGoogle();
+        capteurVocal = new CapteurVocalWebService(BingSpeechRecognizerRest.getInstance());
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
         
         // Initialisation des capteurs

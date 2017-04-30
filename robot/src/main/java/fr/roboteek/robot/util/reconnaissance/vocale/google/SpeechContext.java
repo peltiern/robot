@@ -1,5 +1,6 @@
 package fr.roboteek.robot.util.reconnaissance.vocale.google;
 
+
 public class SpeechContext {
 
 	private String[] phrases;

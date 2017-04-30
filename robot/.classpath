@@ -28,6 +28,5 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/tarsos/TarsosDSP-latest.jar"/>
-	<classpathentry kind="lib" path="lib/programAB/Ab.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

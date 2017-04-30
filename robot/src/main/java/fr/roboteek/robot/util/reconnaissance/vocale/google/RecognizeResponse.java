@@ -1,5 +1,6 @@
 package fr.roboteek.robot.util.reconnaissance.vocale.google;
 
+
 import java.util.List;
 
 public class RecognizeResponse {

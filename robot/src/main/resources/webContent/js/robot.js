@@ -6,6 +6,10 @@ $(document).ready(function() {
 	initialiserDropzone();
 });
 
+// Création du contexte audio
+window.AudioContext = window.AudioContext||window.webkitAudioContext;
+contexteAudio = new AudioContext();
+
 // Websocket pour la vidéo
 var wsVideo = new WebSocket("ws://" + location.hostname + ":" + location.port + "/ws/liveVideo/");
 wsVideo.onmessage = function(msg) {
@@ -15,6 +19,13 @@ wsVideo.onmessage = function(msg) {
 		window.URL.revokeObjectURL(url);
 	};
 	target.src = url;
+}
+
+// Websocket pour l'audio
+var wsAudio = new WebSocket("ws://" + location.hostname + ":" + location.port + "/ws/liveAudio/");
+wsAudio.binaryType = "arraybuffer"
+wsAudio.onmessage = function(msg) {
+	traiterAudio(msg.data);
 }
 
 //Websocket bidirectionnel pour les évènements envoyés par le robot ou à envoyer au robot
@@ -355,5 +366,14 @@ function initialiserDropzone() {
 		acceptedFiles: "image/png",
 		addedFile: function(file) { console.log(file); },
 		successmultiple: chargerListeImagesVisage
+	});
+}
+
+function traiterAudio(audioBytes) {
+	var source = contexteAudio.createBufferSource();
+	contexteAudio.decodeAudioData(audioBytes, function(buffer) {
+		source.buffer = buffer;
+	    source.connect(contexteAudio.destination); 
+	    source.start(contexteAudio.currentTime);
 	});
 }
