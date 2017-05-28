@@ -148,19 +148,22 @@
 		</dependency>
 		
 		<dependency>
-    <groupId>com.mashape.unirest</groupId>
-    <artifactId>unirest-java</artifactId>
-    <version>1.4.9</version>
-</dependency>
+    		<groupId>com.mashape.unirest</groupId>
+    		<artifactId>unirest-java</artifactId>
+    		<version>1.4.9</version>
+		</dependency>
 
-<dependency>
-    <groupId>com.google.cloud</groupId>
-    <artifactId>google-cloud-speech</artifactId>
-    <version>0.10.0-alpha</version>
-</dependency>
+		<dependency>
+    		<groupId>com.google.cloud</groupId>
+    		<artifactId>google-cloud-speech</artifactId>
+    		<version>0.10.0-alpha</version>
+		</dependency>
 
-
-
+		<dependency>
+    		<groupId>com.ibm.watson.developer_cloud</groupId>
+    		<artifactId>speech-to-text</artifactId>
+    		<version>3.8.0</version>
+		</dependency>
 
 	</dependencies>
 
