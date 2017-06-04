@@ -129,7 +129,6 @@ public class DetecteurVocal {
 
 						// Récupération de la fréquence du bloc
 						final float pitchInHz = result.getPitch();
-						System.out.println(pitchInHz);
 
 						// Si le bloc est compris dans une certaine plage de fréquences : bloc contenant de la voix (parlé)
 						if (pitchInHz > 60 && pitchInHz < 200) {
