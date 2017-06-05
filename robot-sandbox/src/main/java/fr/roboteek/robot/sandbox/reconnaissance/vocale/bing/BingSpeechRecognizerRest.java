@@ -118,7 +118,7 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 
 	public static void main(String[] args) throws IOException {
 		final BingSpeechRecognizerRest bingSpeechRecognizerRest = BingSpeechRecognizerRest.getInstance();
-		// Création et lancement du détecteur vocale en passant le moteur de reconnaissance à utiliser
+		// Création et lancement du détecteur vocal en passant le moteur de reconnaissance à utiliser
 		final DetecteurVocal detecteurVocal = new DetecteurVocal(bingSpeechRecognizerRest);
 		detecteurVocal.demarrer();
 	}

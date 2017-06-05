@@ -130,7 +130,7 @@ public class GoogleSpeechRecognizerRest implements SpeechRecognizer {
 
 	public static void main(String[] args) throws IOException {
 		final SpeechRecognizer googleRecognizerRest = GoogleSpeechRecognizerRest.getInstance();
-		// Création et lancement du détecteur vocale en passant le moteur de reconnaissance à utiliser
+		// Création et lancement du détecteur vocal en passant le moteur de reconnaissance à utiliser
 		final DetecteurVocal detecteurVocal = new DetecteurVocal(googleRecognizerRest);
 		detecteurVocal.demarrer();
 	}
