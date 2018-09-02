@@ -3,9 +3,9 @@ package fr.roboteek.robot.organes.actionneurs;
 import com.phidgets.AdvancedServoPhidget;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
-import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent;
-import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_GAUCHE_DROITE;
-import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_HAUT_BAS;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeListener;
 import fr.roboteek.robot.util.phidget.PhidgetMotor;
@@ -13,10 +13,10 @@ import fr.roboteek.robot.util.phidget.PhidgetServoController;
 import net.engio.mbassy.listener.Handler;
 
 /**
- * Classe représentant la tête du robot.
+ * Classe représentant le cou du robot.
  * @author Java Developer
  */
-public class Tete extends AbstractOrgane implements MotorPositionChangeListener {
+public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
     
     /** Index du moteur Gauche / Droite sur le servo-contrôleur. */
     private static final int IDX_MOTEUR_GAUCHE_DROITE = 0;
@@ -25,7 +25,7 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     private static final int IDX_MOTEUR_HAUT_BAS = 1;
     
     /** Position initiale du moteur Gauche / Droite. */
-    private static final double POSITION_INITIALE_MOTEUR_GAUCHE_DROITE = 75;
+    private static final double POSITION_INITIALE_MOTEUR_GAUCHE_DROITE = 90;
     
     /** Position initiale du moteur Haut / Bas. */
     private static final double POSITION_INITIALE_MOTEUR_HAUT_BAS = 90;
@@ -37,7 +37,7 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     private PhidgetMotor moteurHautBas;
     
     /** Constructeur. */
-    public Tete() {
+    public Cou() {
         super();
         
         // Création et initialisation des moteurs
@@ -47,16 +47,16 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
         moteurGaucheDroite.setEngaged(true);
         moteurGaucheDroite.setSpeedRampingOn(true);
         moteurGaucheDroite.setVelocityLimit(90);
-        moteurGaucheDroite.setAcceleration(90);
-        moteurGaucheDroite.setPositionMin(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE - 50);
-        moteurGaucheDroite.setPositionMax(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE + 50);
+        moteurGaucheDroite.setAcceleration(2000);
+        moteurGaucheDroite.setPositionMin(0);
+        moteurGaucheDroite.setPositionMax(180);
         
         moteurHautBas.setEngaged(true);
         moteurHautBas.setSpeedRampingOn(true);
         moteurHautBas.setVelocityLimit(90);
-        moteurHautBas.setAcceleration(90);
-        moteurHautBas.setPositionMin(POSITION_INITIALE_MOTEUR_HAUT_BAS - 60);
-        moteurHautBas.setPositionMax(POSITION_INITIALE_MOTEUR_HAUT_BAS + 20);
+        moteurHautBas.setAcceleration(2000);
+        moteurHautBas.setPositionMin(50);
+        moteurHautBas.setPositionMax(120);
         
         // Ajout des listeners sur les moteurs
         moteurGaucheDroite.addMotorPositionChangeListener(this);
@@ -171,30 +171,30 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     
     /**
      * Intercepte les évènements de mouvements.
-     * @param mouvementTeteEvent évènement de mouvements
+     * @param mouvementCouEvent évènement de mouvements
      */
     @Handler
-    public void handleMouvementTeteEvent(MouvementTeteEvent mouvementTeteEvent) {
-    	System.out.println("Event = " + mouvementTeteEvent);
-    	if (mouvementTeteEvent.getPositionGaucheDroite() != -1) {
-    		positionnerTeteGaucheDroite(mouvementTeteEvent.getPositionGaucheDroite());
-    	} else if (mouvementTeteEvent.getMouvementGaucheDroite() != null) {
-            if (mouvementTeteEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.STOPPER) {
+    public void handleMouvementTeteEvent(MouvementCouEvent mouvementCouEvent) {
+    	System.out.println("Event = " + mouvementCouEvent);
+    	if (mouvementCouEvent.getPositionGaucheDroite() != -1) {
+    		positionnerTeteGaucheDroite(mouvementCouEvent.getPositionGaucheDroite());
+    	} else if (mouvementCouEvent.getMouvementGaucheDroite() != null) {
+            if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.STOPPER) {
                 stopperTeteGaucheDroite();
-            } else if (mouvementTeteEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE) {
+            } else if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE) {
                 tournerAGauche();
-            } else if (mouvementTeteEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE) {
+            } else if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE) {
                 tournerADroite();
             }
         }
-    	if (mouvementTeteEvent.getPositionHautBas() != -1) {
-    		positionnerTeteHautBas(mouvementTeteEvent.getPositionHautBas());
-    	} else if (mouvementTeteEvent.getMouvementHauBas() != null) {
-            if (mouvementTeteEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.STOPPER) {
+    	if (mouvementCouEvent.getPositionHautBas() != -1) {
+    		positionnerTeteHautBas(mouvementCouEvent.getPositionHautBas());
+    	} else if (mouvementCouEvent.getMouvementHauBas() != null) {
+            if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.STOPPER) {
                 stopperTeteHautBas();
-            } else if (mouvementTeteEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_HAUT) {
+            } else if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_HAUT) {
                 tournerEnHaut();
-            } else if (mouvementTeteEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_BAS) {
+            } else if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_BAS) {
                 tournerEnBas();
             }
         }
@@ -231,7 +231,7 @@ public class Tete extends AbstractOrgane implements MotorPositionChangeListener 
     }
     
     public static void main(String[] args) {
-        Tete tete = new Tete();
+        Cou tete = new Cou();
         tete.initialiser();
         try {
             Thread.sleep(2000);

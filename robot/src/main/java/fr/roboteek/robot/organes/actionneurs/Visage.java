@@ -101,17 +101,6 @@ public class Visage extends AbstractOrgane {
 			jouerExpression(expressionVisageEvent.getExpression());
 		}
 	}
-	
-	/**
-	 * Intercepte les évènements pour modifier les expressions du visage.
-	 * @param paroleEvent évènement pour lire du texte
-	 */
-	@Handler
-	public void handleReconnaissanceVocaleEvent(ReconnaissanceVocaleEvent reconnaissanceVocaleEvent) {
-		if (reconnaissanceVocaleEvent.getTexteReconnu() != null && !reconnaissanceVocaleEvent.getTexteReconnu().trim().equals("")) {
-			jouerExpression(reconnaissanceVocaleEvent.getTexteReconnu().toLowerCase());
-		}
-	}
 
 	private void chargerImages() {
 		// Lecture de l'ensemble des images du dossier pour les transformer en tableau de bytes lisibles par l'écran

@@ -6,7 +6,7 @@ public class RecognitionConfig {
 	public static enum AudioEncoding {ENCODING_UNSPECIFIED, LINEAR16, FLAC, MULAW, AMR, AMR_WB};
 	
 	private AudioEncoding encoding;
-	private int sampleRate;
+	private int sampleRateHertz;
 	private String languageCode;
 	private int maxAlternatives;
 	private boolean profanityFilter;
@@ -17,11 +17,11 @@ public class RecognitionConfig {
 	public void setEncoding(AudioEncoding encoding) {
 		this.encoding = encoding;
 	}
-	public int getSampleRate() {
-		return sampleRate;
+	public int getSampleRateHertz() {
+		return sampleRateHertz;
 	}
-	public void setSampleRate(int sampleRate) {
-		this.sampleRate = sampleRate;
+	public void setSampleRateHertz(int sampleRateHertz) {
+		this.sampleRateHertz = sampleRateHertz;
 	}
 	public String getLanguageCode() {
 		return languageCode;

@@ -3,6 +3,7 @@ $(document).ready(function() {
 	chargerListeAnimations();
 	chargerListeImagesVisage();
 	initialiserJoystick();
+	initialiserSlidersYeux();
 	initialiserDropzone();
 });
 
@@ -66,42 +67,42 @@ function bougerTete(e) {
 
 function tournerAGauche() {
 	var mouvementTeteEvent = {};
-	mouvementTeteEvent.eventType = "MouvementTete";
+	mouvementTeteEvent.eventType = "MouvementCou";
 	mouvementTeteEvent.mouvementGaucheDroite = "TOURNER_GAUCHE";
 	wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
 }
  
 function tournerADroite() {
 	var mouvementTeteEvent = {};
-	mouvementTeteEvent.eventType = "MouvementTete";
+	mouvementTeteEvent.eventType = "MouvementCou";
 	mouvementTeteEvent.mouvementGaucheDroite = "TOURNER_DROITE";
 	wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
 }
 
 function stopperTeteGaucheDroite() {
 	var mouvementTeteEvent = {};
-	mouvementTeteEvent.eventType = "MouvementTete";
+	mouvementTeteEvent.eventType = "MouvementCou";
 	mouvementTeteEvent.mouvementGaucheDroite = "STOPPER";
 	wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
 }
  
 function tournerEnHaut() {
 	var mouvementTeteEvent = {};
-	mouvementTeteEvent.eventType = "MouvementTete";
+	mouvementTeteEvent.eventType = "MouvementCou";
 	mouvementTeteEvent.mouvementHauBas = "TOURNER_HAUT";
 	wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
 }
  
 function tournerEnBas() {
 	var mouvementTeteEvent = {};
-	mouvementTeteEvent.eventType = "MouvementTete";
+	mouvementTeteEvent.eventType = "MouvementCou";
 	mouvementTeteEvent.mouvementHauBas = "TOURNER_BAS";
 	wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
 }
 
 function stopperTeteHautBas() {
 	var mouvementTeteEvent = {};
-	mouvementTeteEvent.eventType = "MouvementTete";
+	mouvementTeteEvent.eventType = "MouvementCou";
 	mouvementTeteEvent.mouvementHauBas = "STOPPER";
 	wsRobotEvent.send(JSON.stringify(mouvementTeteEvent));
 }
@@ -377,3 +378,93 @@ function traiterAudio(audioBytes) {
 	    source.start(contexteAudio.currentTime);
 	});
 }
+
+/**
+ * Initialise les sliders des yeux.
+ */
+function initialiserSlidersYeux() {
+	var sliderOeilGauche = $("#oeilGauche").slider({
+		min: -45,
+		max: 15,
+		value: 0,
+		step: 1,
+		reversed : true,
+		tooltip_position: "left",
+		orientation: "vertical"
+	});
+	sliderOeilGauche.on("slide", function (slideEvt) {
+		var mouvementYeuxEvent = {};
+		mouvementYeuxEvent.eventType = "MouvementYeux";
+		mouvementYeuxEvent.positionOeilGauche = slideEvt.value;
+		wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent));
+		var sliderAttache = $("#sliderAttache")[0].checked;
+		if (sliderAttache) {
+			var mouvementYeuxEvent2 = {};
+			mouvementYeuxEvent2.eventType = "MouvementYeux";
+			mouvementYeuxEvent2.positionOeilDroit = slideEvt.value;
+			wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent2));
+			$("#oeilDroit").slider("setValue", slideEvt.value);
+		}
+	});
+	sliderOeilGauche.on("change", function (slideEvt) {
+		var mouvementYeuxEvent = {};
+		mouvementYeuxEvent.eventType = "MouvementYeux";
+		mouvementYeuxEvent.positionOeilGauche = slideEvt.value.newValue;
+		wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent));
+		var sliderAttache = $("#sliderAttache")[0].checked;
+		if (sliderAttache) {
+			var mouvementYeuxEvent2 = {};
+			mouvementYeuxEvent2.eventType = "MouvementYeux";
+			mouvementYeuxEvent2.positionOeilDroit = slideEvt.value.newValue;
+			wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent2));
+			$("#oeilDroit").slider("setValue", slideEvt.value.newValue);
+		}
+	});
+	var sliderOeilDroit = $("#oeilDroit").slider({
+		min: -45,
+		max: 15,
+		value: 0,
+		step: 1,
+		reversed : true,
+		tooltip_position: "right",
+		orientation: "vertical"
+	});
+	sliderOeilDroit.on("slide", function (slideEvt) {
+		var mouvementYeuxEvent = {};
+		mouvementYeuxEvent.eventType = "MouvementYeux";
+		mouvementYeuxEvent.positionOeilDroit = slideEvt.value;
+		wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent));
+		var sliderAttache = $("#sliderAttache")[0].checked;
+		if (sliderAttache) {
+			var mouvementYeuxEvent2 = {};
+			mouvementYeuxEvent2.eventType = "MouvementYeux";
+			mouvementYeuxEvent2.positionOeilGauche = slideEvt.value;
+			wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent2));
+			$("#oeilGauche").slider("setValue", slideEvt.value);
+		}
+	});
+	sliderOeilDroit.on("change", function (slideEvt) {
+		var mouvementYeuxEvent = {};
+		mouvementYeuxEvent.eventType = "MouvementYeux";
+		mouvementYeuxEvent.positionOeilDroit = slideEvt.value.newValue;
+		wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent));
+		var sliderAttache = $("#sliderAttache")[0].checked;
+		if (sliderAttache) {
+			var mouvementYeuxEvent2 = {};
+			mouvementYeuxEvent2.eventType = "MouvementYeux";
+			mouvementYeuxEvent2.positionOeilGauche = slideEvt.value.newValue;
+			wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent2));
+			$("#oeilGauche").slider("setValue", slideEvt.value.newValue);
+		}
+	});
+}
+	
+//	.slider()
+//		.on("slide", function (slideEvt) {
+//			var mouvementYeuxEvent = {};
+//			mouvementYeuxEvent.eventType = "MouvementYeux";
+//			mouvementYeuxEvent.positionOeilGauche = slideEvt.value;
+//			wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent));
+//		}
+//		).data("slider");
+//}

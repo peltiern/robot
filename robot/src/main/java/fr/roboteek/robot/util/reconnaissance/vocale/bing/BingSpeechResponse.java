@@ -7,31 +7,43 @@ package fr.roboteek.robot.util.reconnaissance.vocale.bing;
  */
 public class BingSpeechResponse {
 	
-	/** Version. */
-	private String version;
+	/** Statut. */
+	private String RecognitionStatus;
 	
 	/** Entête. */
-	private BingSpeechHeader header;
+	private String DisplayText;
+	
+	/** Durée. */
+	private int Duration;
 
-	public String getVersion() {
-		return version;
+	public String getRecognitionStatus() {
+		return RecognitionStatus;
 	}
 
-	public void setVersion(String version) {
-		this.version = version;
+	public void setRecognitionStatus(String recognitionStatus) {
+		this.RecognitionStatus = recognitionStatus;
 	}
 
-	public BingSpeechHeader getHeader() {
-		return header;
+	public String getDisplayText() {
+		return DisplayText;
 	}
 
-	public void setHeader(BingSpeechHeader header) {
-		this.header = header;
+	public void setDisplayText(String displayText) {
+		this.DisplayText = displayText;
+	}
+
+	public int getDuration() {
+		return Duration;
+	}
+
+	public void setDuration(int duration) {
+		this.Duration = duration;
 	}
 
 	@Override
 	public String toString() {
-		return "BingSpeechResponse [version=" + version + ", header=" + header + "]";
+		return "BingSpeechResponse [recognitionStatus=" + RecognitionStatus + ", displayText=" + DisplayText
+				+ ", duration=" + Duration + "]";
 	}
 
 }

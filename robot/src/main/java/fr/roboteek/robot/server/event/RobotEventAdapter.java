@@ -11,7 +11,9 @@ import com.google.gson.JsonSerializer;
 
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.ExpressionVisageEvent;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent;
+import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 
@@ -25,6 +27,10 @@ public class RobotEventAdapter implements JsonDeserializer<RobotEvent>, JsonSeri
 		String eventType = json.getAsJsonObject().getAsJsonPrimitive(PROPERTY_EVENT_TYPE).getAsString();
 		if (eventType.equals(MouvementTeteEvent.EVENT_TYPE)) {
 			return (RobotEvent) context.deserialize(json, MouvementTeteEvent.class);
+		} else if (eventType.equals(MouvementCouEvent.EVENT_TYPE)) {
+			return (RobotEvent) context.deserialize(json, MouvementCouEvent.class);
+		} else if (eventType.equals(MouvementYeuxEvent.EVENT_TYPE)) {
+			return (RobotEvent) context.deserialize(json, MouvementYeuxEvent.class);
 		} else if (eventType.equals(ParoleEvent.EVENT_TYPE)) {
 			return (RobotEvent) context.deserialize(json, ParoleEvent.class);
 		} else if (eventType.equals(ExpressionVisageEvent.EVENT_TYPE)) {

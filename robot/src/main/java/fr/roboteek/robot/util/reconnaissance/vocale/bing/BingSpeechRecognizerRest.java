@@ -29,7 +29,7 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 		private static String WEB_SERVICE_TOKEN_URL = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
 		
 		/** URL du service web de reconnaissance. */
-		private static String WEB_SERVICE_SPEECH_URL = "https://speech.platform.bing.com/recognize";
+		private static String WEB_SERVICE_SPEECH_URL = "https://speech.platform.bing.com/speech/recognition/dictation/cognitiveservices/v1";
 
 		/** Singleton de la classe. */
 		private static BingSpeechRecognizerRest instance;
@@ -72,18 +72,14 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 				
 				// Appel du service web
 				response = gson.fromJson(Unirest.post(WEB_SERVICE_SPEECH_URL)
-				.queryString("scenarios", "smd")
-				.queryString("appid", applicationId)
-				.queryString("locale", "fr-FR")
-				.queryString("device.os", "Windows")
-				.queryString("version", "3.0")
-				.queryString("format", "json")
-				.queryString("instanceid", UUID.randomUUID())
-				.queryString("requestid", UUID.randomUUID())
-				.header("Authorization", "Bearer " + getToken())
-				.header("Content-type", "audio/wav")
-				.body(contenuFichierWav)
-				.asString().getBody(), BingSpeechResponse.class);
+						.queryString("language", "fr-FR")
+						.queryString("locale", "fr-FR")
+						.queryString("format", "json")
+						.queryString("requestid", UUID.randomUUID())
+						.header("Authorization", "Bearer " + getToken())
+						.header("Content-type", "audio/wav")
+						.body(contenuFichierWav)
+						.asString().getBody(), BingSpeechResponse.class);
 			} catch (UnirestException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -94,9 +90,9 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 			
 
 			// Récupération du résultat
-			if (response != null && response.getHeader() != null && response.getHeader().getStatus() != null && response.getHeader().getStatus().equals("success")) {
-				if (response.getHeader().getName() != null) {
-					return response.getHeader().getName();
+			if (response != null && response.getRecognitionStatus() != null && response.getRecognitionStatus().equalsIgnoreCase("success")) {
+				if (response.getDisplayText() != null) {
+					return response.getDisplayText();
 				}
 			}
 			

@@ -31,7 +31,7 @@ public class GoogleSpeechRecognizerRest implements SpeechRecognizer {
 	private static String ENV_VAR_GOOGLE_API_KEY = "GOOGLE_API_KEY";
 
 	/** URL du service web. */
-	private static String WEB_SERVICE_SPEECH_URL = "https://speech.googleapis.com/v1beta1/speech:syncrecognize";
+	private static String WEB_SERVICE_SPEECH_URL = "https://speech.googleapis.com/v1/speech:recognize";
 
 	/** Singleton de la classe. */
 	private static GoogleSpeechRecognizerRest instance;
@@ -64,7 +64,7 @@ public class GoogleSpeechRecognizerRest implements SpeechRecognizer {
 		// Paramètre fixe de la requête
 		RecognitionConfig config = new RecognitionConfig();
 		config.setEncoding(AudioEncoding.FLAC);
-		config.setSampleRate(44100);
+		config.setSampleRateHertz(44100);
 		config.setLanguageCode("FR");
 
 		// Objet permettant de faire la requête
@@ -106,6 +106,13 @@ public class GoogleSpeechRecognizerRest implements SpeechRecognizer {
 		try {
 			// Appel du service web
 			System.out.println("==> Appel Cloud Speech");
+			
+			String test = Unirest.post(WEB_SERVICE_SPEECH_URL + paramApiKey)
+					.body(gson.toJson(request))
+					.asString().getBody();
+			
+			System.out.println("Test = " + test);
+			
 			response = gson.fromJson(Unirest.post(WEB_SERVICE_SPEECH_URL + paramApiKey)
 					.body(gson.toJson(request))
 					.asString().getBody(), RecognizeResponse.class);

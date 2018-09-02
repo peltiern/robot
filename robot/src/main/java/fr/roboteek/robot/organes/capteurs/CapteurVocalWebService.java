@@ -30,9 +30,7 @@ import be.tarsos.dsp.writer.WaveHeader;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleEspeak;
-import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.server.AudioWebSocket;
-import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.reconnaissance.vocale.SpeechRecognizer;
@@ -279,12 +277,11 @@ public class CapteurVocalWebService extends AbstractOrgane {
 		// Création du header WAV
 		WaveHeader waveHeader=new WaveHeader(WaveHeader.FORMAT_PCM,
 				(short)format.getChannels(),
-				(int)format.getSampleRate(),(short)16,contenuAudio.length);//16 is for pcm, Read WaveHeader class for more details
+				(int)format.getSampleRate(),(short)16,contenuAudio.length);
 		ByteArrayOutputStream header=new ByteArrayOutputStream();
 		try {
 			waveHeader.write(header);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		return Bytes.concat(header.toByteArray(), contenuAudio);
@@ -298,22 +295,5 @@ public class CapteurVocalWebService extends AbstractOrgane {
 		RobotEventBus.getInstance().subscribe(capteurVocal);
 
 	}
-
-//	private float getDuration(File fichierSon) {
-//		float durationInSeconds = 0f;
-//		AudioInputStream audioInputStream;
-//		try {
-//			audioInputStream = AudioSystem.getAudioInputStream(fichierSon);
-//			AudioFormat format = audioInputStream.getFormat();
-//			long audioFileLength = fichierSon.length();
-//			int frameSize = format.getFrameSize();
-//			float frameRate = format.getFrameRate();
-//			durationInSeconds = (audioFileLength / (frameSize * frameRate));
-//		} catch (UnsupportedAudioFileException | IOException e) {
-//			e.printStackTrace();
-//		}
-//		return durationInSeconds;
-//
-//	}
 
 }

@@ -73,8 +73,8 @@ public class Cerveau {
     	System.out.println("==================>CERVEAU après : " + texteReconnu);
         
         if (texteReconnu != null && !texteReconnu.equals("")) {
-//            dire(intelligenceArtificielle.repondreAPhrase(texteReconnu));
-            dire(texteReconnu);
+            dire(intelligenceArtificielle.repondreAPhrase(texteReconnu));
+//            dire(texteReconnu);
 //            // Conversation
 //            if (texteReconnu.trim().equalsIgnoreCase("Sami conversation")) {
 //                System.out.println("Activité conversation");

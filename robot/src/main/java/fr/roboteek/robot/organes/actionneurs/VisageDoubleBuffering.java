@@ -26,7 +26,6 @@ import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.util.Animation;
 import fr.roboteek.robot.systemenerveux.event.ExpressionVisageEvent;
-import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -113,17 +112,6 @@ public class VisageDoubleBuffering extends AbstractOrgane {
 	public void handleExpressionVisageEvent(ExpressionVisageEvent expressionVisageEvent) {
 		if (expressionVisageEvent.getExpression() != null && !expressionVisageEvent.getExpression().trim().equals("")) {
 			jouerExpression(expressionVisageEvent.getExpression());
-		}
-	}
-
-	/**
-	 * Intercepte les évènements pour modifier les expressions du visage.
-	 * @param paroleEvent évènement pour lire du texte
-	 */
-	@Handler
-	public void handleReconnaissanceVocaleEvent(ReconnaissanceVocaleEvent reconnaissanceVocaleEvent) {
-		if (reconnaissanceVocaleEvent.getTexteReconnu() != null && !reconnaissanceVocaleEvent.getTexteReconnu().trim().equals("")) {
-			jouerExpression(reconnaissanceVocaleEvent.getTexteReconnu().toLowerCase());
 		}
 	}
 

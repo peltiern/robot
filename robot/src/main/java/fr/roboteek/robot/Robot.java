@@ -4,11 +4,15 @@ import org.apache.log4j.Logger;
 
 import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleEspeak;
+import fr.roboteek.robot.organes.actionneurs.Tete;
 import fr.roboteek.robot.organes.actionneurs.VisageDoubleBuffering;
+import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.organes.capteurs.CapteurVision;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalWebService;
 import fr.roboteek.robot.server.RobotServer;
+import fr.roboteek.robot.server.test.CapteurVisionWebSocket;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
@@ -25,7 +29,13 @@ public class Robot {
     private Cerveau cerveau;
 
     /** Tête du robot. */
-//    private Tete tete;
+    //private Tete tete;
+    
+    /** Cou du robot. */
+    private Cou cou;
+    
+    /** Yeux du robot. */
+    private Yeux yeux;
     
     /** Visage. */
     private VisageDoubleBuffering visage;
@@ -40,7 +50,7 @@ public class Robot {
     private OrganeParoleEspeak organeParole;
 
     /** Capteur de vision (oeil du robot). Thread ? */
-    private CapteurVision capteurVision;
+    private AbstractOrgane capteurVision;
 
     /** Capteur vocal. */
 //    private CapteurVocal capteurVocal;
@@ -80,11 +90,15 @@ public class Robot {
         cerveau = new Cerveau();
         
         // Actionneurs
-//        tete =  new Tete();
+        //tete =  new Tete();
+        cou =  new Cou();
+        yeux = new Yeux();
         organeParole = new OrganeParoleEspeak();
 //        visage = VisageDoubleBuffering.getInstance();
         // Initialisation des actionneurs
 //        tete.initialiser();
+        cou.initialiser();
+        yeux.initialiser();
         organeParole.initialiser();
 //        visage.initialiser();
         
@@ -93,11 +107,13 @@ public class Robot {
         RobotEventBus.getInstance().subscribe(this);
         RobotEventBus.getInstance().subscribe(cerveau);
 //        RobotEventBus.getInstance().subscribe(tete);
+        RobotEventBus.getInstance().subscribe(cou);
+        RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(organeParole);
 //        RobotEventBus.getInstance().subscribe(visage);
 
         // Capteurs
-        capteurVision = new CapteurVision();
+        capteurVision = new CapteurVisionWebSocket();
         capteurVocal = new CapteurVocalWebService(BingSpeechRecognizerRest.getInstance());
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
         
@@ -131,7 +147,9 @@ public class Robot {
                 logger.debug("arrêt du robot 1");
                 RobotEventBus.getInstance().unsubscribe(organeParole);
                 logger.debug("arrêt du robot 2");
-//                systemeNerveux.unsubscribe(tete);
+//                RobotEventBus.getInstance().unsubscribe(tete);
+                RobotEventBus.getInstance().unsubscribe(cou);
+                RobotEventBus.getInstance().unsubscribe(yeux);
                 logger.debug("arrêt du robot 3");
                 RobotEventBus.getInstance().unsubscribe(cerveau);
                 logger.debug("arrêt du robot 4");
@@ -146,6 +164,7 @@ public class Robot {
                 organeParole.arreter();
                 logger.debug("arrêt du robot 8");
 //                tete.arreter();
+                cou.arreter();
                 logger.debug("arrêt du robot 9");
                 cerveau.arreter();
                 

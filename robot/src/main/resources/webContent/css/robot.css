@@ -14,3 +14,10 @@
 #animationListeImages {
 	padding: 3px;
 }
+
+#oeilGaucheSlider .slider-selection {
+	background: #BABABA;
+}
+#oeilDroitSlider .slider-selection {
+	background: #BABABA;
+}

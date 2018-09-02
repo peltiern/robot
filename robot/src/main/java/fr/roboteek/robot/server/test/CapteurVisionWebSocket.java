@@ -20,17 +20,14 @@ import org.openimaj.video.capture.VideoCaptureException;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.server.VideoWebSocket;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
-import net.engio.mbassy.bus.MBassador;
-import net.engio.mbassy.bus.config.BusConfiguration;
 
 
 /**
  * Capteur lié à la vision.
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-public class CapteurVisionWebSocket implements VideoDisplayListener<MBFImage> {
+public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDisplayListener<MBFImage> {
 
     /** Capture vidéo.*/
     private VideoCapture capture;

@@ -49,13 +49,14 @@ public class PhidgetServoController implements ServoPositionChangeListener {
     /**
      * Récupère l'instance du moteur demandé. Le crée si nécessaire.
      * @param index index du moteur demandé
+     * @param type type du servo-moteur
      */
-    public static PhidgetMotor getMotor(int index) {
+    public static PhidgetMotor getMotor(int index, int type) {
         // Création de l'instance du contrôleur si nécessaire
         getInstance();
         // Création du moteur si nécessaire
         if (tabMotors[index] == null) {
-            tabMotors[index] = new PhidgetMotor(index, servoController);
+            tabMotors[index] = new PhidgetMotor(index, type, servoController);
         }
         return tabMotors[index];
     }

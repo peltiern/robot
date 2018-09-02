@@ -30,13 +30,14 @@ public class PhidgetMotor implements Motor, ServoPositionChangeListener {
     /**
      * Constructeur d'un moteur Phidget.
      * @param index index du moteur
+     * @param type type du servo-moteur
      * @param servoController instance du servo-contrôleur
      */
-    public PhidgetMotor(int index, AdvancedServoPhidget servoController) {
+    public PhidgetMotor(int index, int type, AdvancedServoPhidget servoController) {
         this.index = index;
         this.servoController = servoController;
         try {
-            servoController.setServoType(index, AdvancedServoPhidget.PHIDGET_SERVO_HITEC_HS422);
+            servoController.setServoType(index, type);
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -88,29 +88,29 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
     }
     public synchronized void beforeUpdate(MBFImage frame) {
 
-        // Recherche de visages
-        final FImage image = Transforms.calculateIntensity(frame);
-        final List<DetectedFace> listeVisages = detecteurVisages.detectFaces(image);
-        //        final List<DetectedFace> listeVisages = faceTracker.trackFace(frame.flatten());
-        for (final DetectedFace visage : listeVisages) {
-            frame.drawShape(visage.getShape(), 3, RGBColour.ORANGE);
-        }
-
-        // Envoi d'un évènement de détection de visages
-        if (listeVisages != null && !listeVisages.isEmpty()) {
-            final VisagesEvent event = new VisagesEvent();
-            event.setImageOrigine(image);
-            event.setListeVisages(listeVisages);
-            RobotEventBus.getInstance().publishAsync(event);
-        }
-        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-			ImageUtilities.write(frame, "jpg", baos);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-        VideoWebSocket.broadcastImage(baos.toByteArray());
+//        // Recherche de visages
+//        final FImage image = Transforms.calculateIntensity(frame);
+//        final List<DetectedFace> listeVisages = detecteurVisages.detectFaces(image);
+//        //        final List<DetectedFace> listeVisages = faceTracker.trackFace(frame.flatten());
+//        for (final DetectedFace visage : listeVisages) {
+//            frame.drawShape(visage.getShape(), 3, RGBColour.ORANGE);
+//        }
+//
+//        // Envoi d'un évènement de détection de visages
+//        if (listeVisages != null && !listeVisages.isEmpty()) {
+//            final VisagesEvent event = new VisagesEvent();
+//            event.setImageOrigine(image);
+//            event.setListeVisages(listeVisages);
+//            RobotEventBus.getInstance().publishAsync(event);
+//        }
+//        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        try {
+//			ImageUtilities.write(frame, "jpg", baos);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//        VideoWebSocket.broadcastImage(baos.toByteArray());
     }
 
     public static void main(String[] args) {

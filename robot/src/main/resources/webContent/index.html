@@ -22,6 +22,7 @@
 
 <link href="css/chat.css" rel="stylesheet">
 <link href="css/robot.css" rel="stylesheet">
+<link href="css/bootstrap-slider.min.css" rel="stylesheet">
 
 </head>
 
@@ -327,6 +328,35 @@
 							</div>
 						</div>
 					</div>
+					
+					<div class="row">
+						<div class="col-md-12 col-sm-12 col-xs-12">
+							<div class="x_panel">
+								<div class="x_title">
+									<h2>Yeux</h2>
+									<ul class="nav navbar-right panel_toolbox">
+										<li><a class="collapse-link"><i
+												class="fa fa-chevron-up"></i></a></li>
+										<li class="dropdown"><a href="#" class="dropdown-toggle"
+											data-toggle="dropdown" role="button" aria-expanded="false"><i
+												class="fa fa-wrench"></i></a>
+											<ul class="dropdown-menu" role="menu">
+												<li><a href="#">Settings 1</a></li>
+												<li><a href="#">Settings 2</a></li>
+											</ul></li>
+									</ul>
+									<div class="clearfix"></div>
+								</div>
+								<div class="x_content">
+									<div>
+										<input id="sliderAttache" type="checkbox"/>
+										<input id="oeilGauche" data-slider-id="oeilGaucheSlider" type="text"/>
+										<input id="oeilDroit" data-slider-id="oeilDroitSlider" type="text"/>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 
 					<div class="row">
 						<div class="col-md-12 col-sm-12 col-xs-12">
@@ -468,6 +498,9 @@
 
 	<!-- Librairie d'upload de fichiers -->
 	<script type="text/javascript" src="js/dropzone.js"></script>
+	
+	<!-- Librairie de sliders -->
+	<script type="text/javascript" src="js/bootstrap-slider.min.js"></script>
 
 	<script type="text/javascript" src="js/robot.js"></script>
 
