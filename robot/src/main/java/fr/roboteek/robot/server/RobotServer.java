@@ -21,7 +21,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
-import fr.roboteek.robot.organes.actionneurs.Tete;
+import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.server.test.CapteurVisionWebSocket;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
@@ -154,9 +154,9 @@ public class RobotServer {
             capteur.initialiser();
             
             // Tete
-            Tete tete = new Tete();
-            tete.initialiser();
-            RobotEventBus.getInstance().subscribe(tete);
+            Cou cou = new Cou();
+            cou.initialiser();
+            RobotEventBus.getInstance().subscribe(cou);
             
             new RobotServer().run();
         }

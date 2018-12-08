@@ -6,10 +6,8 @@ import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleEspeak;
-import fr.roboteek.robot.organes.actionneurs.Tete;
 import fr.roboteek.robot.organes.actionneurs.VisageDoubleBuffering;
 import fr.roboteek.robot.organes.actionneurs.Yeux;
-import fr.roboteek.robot.organes.capteurs.CapteurVision;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalWebService;
 import fr.roboteek.robot.server.RobotServer;
 import fr.roboteek.robot.server.test.CapteurVisionWebSocket;
@@ -91,8 +89,8 @@ public class Robot {
         
         // Actionneurs
         //tete =  new Tete();
-        cou =  new Cou();
         yeux = new Yeux();
+        cou =  new Cou();
         organeParole = new OrganeParoleEspeak();
 //        visage = VisageDoubleBuffering.getInstance();
         // Initialisation des actionneurs
@@ -107,8 +105,8 @@ public class Robot {
         RobotEventBus.getInstance().subscribe(this);
         RobotEventBus.getInstance().subscribe(cerveau);
 //        RobotEventBus.getInstance().subscribe(tete);
-        RobotEventBus.getInstance().subscribe(cou);
         RobotEventBus.getInstance().subscribe(yeux);
+        RobotEventBus.getInstance().subscribe(cou);
         RobotEventBus.getInstance().subscribe(organeParole);
 //        RobotEventBus.getInstance().subscribe(visage);
 

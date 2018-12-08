@@ -12,6 +12,8 @@ public class MouvementTeteEvent extends RobotEvent {
     
     public static enum MOUVEMENTS_HAUT_BAS {TOURNER_HAUT, TOURNER_BAS, STOPPER};
     
+    public static enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER};
+    
     /** Mouvement "Gauche - Droite" à effectuer. */
     private MOUVEMENTS_GAUCHE_DROITE mouvementGaucheDroite;
     
@@ -23,6 +25,12 @@ public class MouvementTeteEvent extends RobotEvent {
     
     /** Position "Haut - Bas" (0 : en bas, 180 : en haut). */
     private double positionHautBas = -1;
+    
+    /** Mouvement "Roulis" à effectuer. */
+    private MOUVEMENTS_ROULIS mouvementRoulis;
+    
+    /** Position du roulis (-90 : en bas, 90 : en haut). */
+    private double positionRoulis = 0;
     
 	public MouvementTeteEvent() {
 		super(EVENT_TYPE);
@@ -59,11 +67,30 @@ public class MouvementTeteEvent extends RobotEvent {
 	public void setPositionHautBas(double positionHautBas) {
 		this.positionHautBas = positionHautBas;
 	}
+	
+	public MOUVEMENTS_ROULIS getMouvementRoulis() {
+		return mouvementRoulis;
+	}
+
+	public void setMouvementRoulis(MOUVEMENTS_ROULIS mouvementRoulis) {
+		this.mouvementRoulis = mouvementRoulis;
+	}
+
+	public double getPositionRoulis() {
+		return positionRoulis;
+	}
+
+	public void setPositionRoulis(double positionRoulis) {
+		this.positionRoulis = positionRoulis;
+	}
 
 	@Override
 	public String toString() {
 		return "MouvementTeteEvent [mouvementGaucheDroite=" + mouvementGaucheDroite + ", positionGaucheDroite="
 				+ positionGaucheDroite + ", mouvementHauBas=" + mouvementHauBas + ", positionHautBas=" + positionHautBas
-				+ "]";
+				+ ", mouvementRoulis=" + mouvementRoulis + ", positionRoulis=" + positionRoulis + ", toString()="
+				+ super.toString() + "]";
 	}
+
+
 }

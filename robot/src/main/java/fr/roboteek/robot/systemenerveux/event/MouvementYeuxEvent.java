@@ -1,5 +1,7 @@
 package fr.roboteek.robot.systemenerveux.event;
 
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULIS;
+
 /**
  * Evènement pour bouger les yeux.
  * @author Nicolas Peltier (nico.peltier@gmail.com)
@@ -8,7 +10,9 @@ public class MouvementYeuxEvent extends RobotEvent {
 	
 	public static final String EVENT_TYPE = "MouvementYeux";
 
-    public static enum MOUVEMENTS_OEIL {TOURNER_BAS, TOURNER_HAUT, STOPPER};
+    public static enum MOUVEMENTS_OEIL {TOURNER_BAS, TOURNER_HAUT, ROLL, STOPPER};
+    
+    public static enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER};
     
     /** Mouvement de l'oeil gauche à effectuer. */
     private MOUVEMENTS_OEIL mouvementOeilGauche;
@@ -21,6 +25,12 @@ public class MouvementYeuxEvent extends RobotEvent {
     
     /** Position  de l'oeil droit (0 : en bas, 180 : en haut). */
     private double positionOeilDroit = -1;
+    
+    /** Mouvement "Roulis" à effectuer. */
+    private MOUVEMENTS_ROULIS mouvementRoulis;
+    
+    /** Position du roulis (-90 : en bas, 90 : en haut). */
+    private double positionRoulis = 0;
     
 	public MouvementYeuxEvent() {
 		super(EVENT_TYPE);
@@ -58,10 +68,29 @@ public class MouvementYeuxEvent extends RobotEvent {
 		this.positionOeilDroit = positionOeilDroit;
 	}
 
+	public MOUVEMENTS_ROULIS getMouvementRoulis() {
+		return mouvementRoulis;
+	}
+
+	public void setMouvementRoulis(MOUVEMENTS_ROULIS mouvementRoulis) {
+		this.mouvementRoulis = mouvementRoulis;
+	}
+
+	public double getPositionRoulis() {
+		return positionRoulis;
+	}
+
+	public void setPositionRoulis(double positionRoulis) {
+		this.positionRoulis = positionRoulis;
+	}
+
 	@Override
 	public String toString() {
 		return "MouvementYeuxEvent [mouvementOeilGauche=" + mouvementOeilGauche + ", positionOeilGauche="
 				+ positionOeilGauche + ", mouvementOeilDroit=" + mouvementOeilDroit + ", positionOeilDroit="
-				+ positionOeilDroit + ", toString()=" + super.toString() + "]";
+				+ positionOeilDroit + ", mouvementRoulis=" + mouvementRoulis + ", positionRoulis=" + positionRoulis
+				+ ", toString()=" + super.toString() + "]";
 	}
+
+
 }

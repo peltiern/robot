@@ -384,8 +384,8 @@ function traiterAudio(audioBytes) {
  */
 function initialiserSlidersYeux() {
 	var sliderOeilGauche = $("#oeilGauche").slider({
-		min: -45,
-		max: 15,
+		min: -24,
+		max: 20,
 		value: 0,
 		step: 1,
 		reversed : true,
@@ -421,8 +421,8 @@ function initialiserSlidersYeux() {
 		}
 	});
 	var sliderOeilDroit = $("#oeilDroit").slider({
-		min: -45,
-		max: 15,
+		min: -24,
+		max: 20,
 		value: 0,
 		step: 1,
 		reversed : true,
@@ -456,6 +456,27 @@ function initialiserSlidersYeux() {
 			wsRobotEvent.send(JSON.stringify(mouvementYeuxEvent2));
 			$("#oeilGauche").slider("setValue", slideEvt.value.newValue);
 		}
+	});
+	var sliderRoulis = $("#roulis").slider({
+		min: -20,
+		max: 20,
+		value: 0,
+		step: 1,
+		reversed : false
+	});
+//	sliderRoulis.on("slide", function (slideEvt) {
+//		var mouvementCouEvent = {};
+//		mouvementCouEvent.eventType = "MouvementCou";
+//		mouvementCouEvent.mouvementRoulis = "HORAIRE";
+//		mouvementCouEvent.positionRoulis = slideEvt.value;
+//		wsRobotEvent.send(JSON.stringify(mouvementCouEvent));
+//	});
+	sliderRoulis.on("change", function (slideEvt) {
+		var mouvementCouEvent = {};
+		mouvementCouEvent.eventType = "MouvementCou";
+		mouvementCouEvent.mouvementRoulis = "HORAIRE";
+		mouvementCouEvent.positionRoulis = slideEvt.value.newValue;
+		wsRobotEvent.send(JSON.stringify(mouvementCouEvent));
 	});
 }
 	

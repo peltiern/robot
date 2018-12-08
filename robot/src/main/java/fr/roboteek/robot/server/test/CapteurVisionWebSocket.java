@@ -15,6 +15,7 @@ import org.openimaj.image.processing.face.detection.FaceDetector;
 import org.openimaj.image.processing.face.detection.HaarCascadeDetector;
 import org.openimaj.video.VideoDisplay;
 import org.openimaj.video.VideoDisplayListener;
+import org.openimaj.video.capture.Device;
 import org.openimaj.video.capture.VideoCapture;
 import org.openimaj.video.capture.VideoCaptureException;
 
@@ -51,15 +52,29 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         detecteurVisages = new HaarCascadeDetector(80);
 
         // Récupération de la webcam
-        System.setProperty(VideoCapture.DEFAULT_DEVICE_NUMBER_PROPERTY, "1");
+        Device webcamRobot = null;
+        for (Device device : VideoCapture.getVideoDevices()) {
+        	System.out.println("WEBCAM = " + device);
+        	if (device.getNameStr() != null && device.getNameStr().toLowerCase().contains("twist")) {
+        		System.out.println("WEBCAM ROBOT TROUVEE");
+        		webcamRobot = device;
+        		break;
+        	}
+        }
+        
         // Initialisation du flux de capture sur la webcam
+        System.setProperty(VideoCapture.DEFAULT_DEVICE_NUMBER_PROPERTY, "0");
         try {
-            capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM);
+        	if (webcamRobot != null) {
+            	capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM, 10, webcamRobot);
+            } else {
+            	capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM);
+            }
         } catch (VideoCaptureException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        capture.setFPS(25);
+        capture.setFPS(10);
 
         // Création d'un affichage du flux vidéo
         videoFrame = VideoDisplay.createVideoDisplay(capture);

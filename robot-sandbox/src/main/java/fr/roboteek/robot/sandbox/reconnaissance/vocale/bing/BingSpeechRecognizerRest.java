@@ -31,10 +31,10 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 	private static BingSpeechRecognizerRest instance;
 
 	/** Clé API Bing Speech (à récupérer sur le site de l'API). */
-	private String bingSpeechApiKey= "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+	private String bingSpeechApiKey= "32e6e62de6ff4bd08310acf11c85dbb1";
 
 	/** GUID de l'application Bing (GUID personnel à générer par le développeur). */
-	private static String bingSpeechApplicationId = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX";
+	private static String bingSpeechApplicationId = "b53084f8-1170-4aba-bcae-8dfb2ace89ad";
 
 	/** Classe GSON permettant la création des objets JSON. */
 	private Gson gson;

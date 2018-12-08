@@ -1,14 +1,15 @@
 package fr.roboteek.robot.util.reconnaissance.vocale.ibm;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
 import com.ibm.watson.developer_cloud.speech_to_text.v1.SpeechToText;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechAlternative;
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.Transcript;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionAlternative;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResult;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechRecognitionResults;
 
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.util.reconnaissance.vocale.SpeechRecognizer;
@@ -56,13 +57,6 @@ public class IBMSpeechRecognizerRest implements SpeechRecognizer {
 		service.setEndPoint(WEB_SERVICE_SPEECH_TO_TEXT_URL);
 //		service.setUsernameAndPassword("dcd0c12e-a5a8-4423-b088-5b329473e240", "nXuPMyb1nzna");
 		service.setUsernameAndPassword(System.getenv(ENV_VAR_IBM_WATSON_SERVICE_USERNAME), System.getenv(ENV_VAR_IBM_WATSON_SERVICE_PASSWORD));
-		
-		// Création des options
-		options = new RecognizeOptions.Builder()
-				  .contentType("audio/flac")
-				  .model("fr-FR_BroadbandModel")
-				  .timestamps(true)
-				  .build();
 	}
 
 	/**
@@ -80,17 +74,30 @@ public class IBMSpeechRecognizerRest implements SpeechRecognizer {
 		File fichierWav = new File(cheminFichierWav);
 		File fichierFlac = new File(cheminFichierFlac);
 		flacEncoder.encode(fichierWav, fichierFlac);
-		
-		final SpeechResults resultats = service.recognize(fichierFlac, options).execute();
+
+		// Création des options
+		try {
+			options = new RecognizeOptions.Builder()
+					.audio(fichierFlac)
+					.contentType("audio/flac")
+					.model("fr-FR_BroadbandModel")
+					.timestamps(true)
+					.build();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		final SpeechRecognitionResults resultats = service.recognize(options).execute();
 
 		// Récupération du résultat
 		if (resultats != null) {
-			final List<Transcript> listeTranscripts = resultats.getResults();
-			if (listeTranscripts != null && !listeTranscripts.isEmpty()) {
-				Transcript transcript = listeTranscripts.get(0);
-				final List<SpeechAlternative> listeAlternatives = transcript.getAlternatives();
+			final List<SpeechRecognitionResult > listeResultats = resultats.getResults();
+			if (listeResultats != null && !listeResultats.isEmpty()) {
+				SpeechRecognitionResult resultat = listeResultats.get(0);
+				final List<SpeechRecognitionAlternative> listeAlternatives = resultat.getAlternatives();
 				if (listeAlternatives != null && !listeAlternatives.isEmpty()) {
-					SpeechAlternative alternative = listeAlternatives.get(0);
+					SpeechRecognitionAlternative alternative = listeAlternatives.get(0);
 					return alternative.getTranscript();
 				}
 			}

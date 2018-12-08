@@ -15,6 +15,8 @@ import org.openimaj.image.processing.face.detection.FaceDetector;
 import org.openimaj.image.processing.face.detection.HaarCascadeDetector;
 import org.openimaj.video.VideoDisplay;
 import org.openimaj.video.VideoDisplayListener;
+import org.openimaj.video.capture.Device;
+import org.openimaj.video.capture.DeviceList;
 import org.openimaj.video.capture.VideoCapture;
 import org.openimaj.video.capture.VideoCaptureException;
 
@@ -51,12 +53,25 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
 
         // Création du détecteur de visages
         detecteurVisages = new HaarCascadeDetector(80);
+        
+        Device webcamRobot = null;
+        for (Device device : VideoCapture.getVideoDevices()) {
+        	System.out.println("WEBCAM = " + device);
+        	if (device.getNameStr() != null && device.getNameStr().toLowerCase().contains("twist")) {
+        		System.out.println("WEBCAM ROBOT TROUVEE");
+        		webcamRobot = device;
+        		break;
+        	}
+        }
 
-        // Récupération de la webcam
-        System.setProperty(VideoCapture.DEFAULT_DEVICE_NUMBER_PROPERTY, "1");
         // Initialisation du flux de capture sur la webcam
+        System.setProperty(VideoCapture.DEFAULT_DEVICE_NUMBER_PROPERTY, "0");
         try {
-            capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM);
+        	if (webcamRobot != null) {
+            	capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM, 10, webcamRobot);
+            } else {
+            	capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM);
+            }
         } catch (VideoCaptureException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -88,29 +103,29 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
     }
     public synchronized void beforeUpdate(MBFImage frame) {
 
-//        // Recherche de visages
-//        final FImage image = Transforms.calculateIntensity(frame);
-//        final List<DetectedFace> listeVisages = detecteurVisages.detectFaces(image);
-//        //        final List<DetectedFace> listeVisages = faceTracker.trackFace(frame.flatten());
-//        for (final DetectedFace visage : listeVisages) {
-//            frame.drawShape(visage.getShape(), 3, RGBColour.ORANGE);
-//        }
-//
-//        // Envoi d'un évènement de détection de visages
-//        if (listeVisages != null && !listeVisages.isEmpty()) {
-//            final VisagesEvent event = new VisagesEvent();
-//            event.setImageOrigine(image);
-//            event.setListeVisages(listeVisages);
-//            RobotEventBus.getInstance().publishAsync(event);
-//        }
-//        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//        try {
-//			ImageUtilities.write(frame, "jpg", baos);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//        VideoWebSocket.broadcastImage(baos.toByteArray());
+        // Recherche de visages
+        final FImage image = Transforms.calculateIntensity(frame);
+        final List<DetectedFace> listeVisages = detecteurVisages.detectFaces(image);
+        //        final List<DetectedFace> listeVisages = faceTracker.trackFace(frame.flatten());
+        for (final DetectedFace visage : listeVisages) {
+            frame.drawShape(visage.getShape(), 3, RGBColour.ORANGE);
+        }
+
+        // Envoi d'un évènement de détection de visages
+        if (listeVisages != null && !listeVisages.isEmpty()) {
+            final VisagesEvent event = new VisagesEvent();
+            event.setImageOrigine(image);
+            event.setListeVisages(listeVisages);
+            RobotEventBus.getInstance().publishAsync(event);
+        }
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+			ImageUtilities.write(frame, "jpg", baos);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        VideoWebSocket.broadcastImage(baos.toByteArray());
     }
 
     public static void main(String[] args) {
