@@ -6,7 +6,6 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCH
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
-import fr.roboteek.robot.util.phidget.MotorPositionChangeListener;
 import fr.roboteek.robot.util.phidget.PhidgetMotor2;
 import net.engio.mbassy.listener.Handler;
 
@@ -14,7 +13,7 @@ import net.engio.mbassy.listener.Handler;
  * Classe représentant le cou du robot.
  * @author Java Developer
  */
-public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
+public class Cou extends AbstractOrgane {
 
 	/** Index du moteur Gauche / Droite sur le servo-contrôleur. */
 	private static final int IDX_MOTEUR_GAUCHE_DROITE = 0;
@@ -41,21 +40,14 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 		System.out.println("COU :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurGaucheDroite = new PhidgetMotor2(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150);
-		moteurHautBas = new PhidgetMotor2(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130);
+		moteurGaucheDroite = new PhidgetMotor2(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 180, 150);
+		moteurHautBas = new PhidgetMotor2(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 180, 150);
 
 		moteurGaucheDroite.setEngaged(true);
 		moteurGaucheDroite.setSpeedRampingState(true);
-		moteurGaucheDroite.setVelocityLimit(180);
-		moteurGaucheDroite.setAcceleration(150);
 
 		moteurHautBas.setEngaged(true);
 		moteurHautBas.setSpeedRampingState(true);
-		moteurHautBas.setVelocityLimit(180);
-		moteurHautBas.setAcceleration(150);
-
-		// Ajout des listeners sur les moteurs
-		moteurGaucheDroite.addMotorPositionChangeListener(this);
 	}
 
 	@Override
@@ -64,48 +56,48 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 	}
 
 	/** Tourne la tête à gauche sans s'arrêter. */
-	public void tournerAGauche() {
-		moteurGaucheDroite.backward();
+	public void tournerAGauche(Double vitesse, Double acceleration, boolean waitForPosition) {
+		moteurGaucheDroite.backward(vitesse, acceleration, waitForPosition);
 	}
 
 	/** Tourne la tête à droite sans s'arrêter. */
-	public void tournerADroite() {
-		moteurGaucheDroite.forward();
+	public void tournerADroite(Double vitesse, Double acceleration, boolean waitForPosition) {
+		moteurGaucheDroite.forward(vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Tourne la tête sur le plan "Gauche / Droite" d'un certain angle.
 	 * @param angle angle en degrés (négatif : à droite, positif : à gauche)
 	 */
-	public void tournerTeteGaucheDroite(double angle) {
-		moteurGaucheDroite.rotate(angle);
+	public void tournerTeteGaucheDroite(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+		moteurGaucheDroite.rotate(angle, vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Tourne la tête à gauche d'un certain angle.
 	 * @param angle angle en degrés
 	 */
-	public void tournerAGauche(double angle) {
-		tournerTeteGaucheDroite(-angle);
+	public void tournerAGauche(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+		tournerTeteGaucheDroite(-angle, vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Tourne la tête à droite d'un certain angle.
 	 * @param angle angle en degrés
 	 */
-	public void tournerADroite(double angle) {
-		tournerTeteGaucheDroite(angle);
+	public void tournerADroite(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+		tournerTeteGaucheDroite(angle, vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Positionne la tête sur le plan "Gauche / Droite" à une position précise (0 : à gauche, 180 : à droite).
 	 * @param position position en degrés (0 : à gauche, 180 : à droite)
 	 */
-	public void positionnerTeteGaucheDroite(double position, boolean waitForPosition) {
+	public void positionnerTeteGaucheDroite(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
 		double positionMoteur = POSITION_INITIALE_MOTEUR_GAUCHE_DROITE - position;
 		if (positionMoteur >= moteurGaucheDroite.getPositionMin() && positionMoteur <= moteurGaucheDroite.getPositionMax()) {
 			System.out.println("POS_GD = " + positionMoteur);
-			moteurGaucheDroite.setPositionCible(positionMoteur);
+			moteurGaucheDroite.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
 		}
 	}
 
@@ -117,48 +109,48 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 	}
 
 	/** Tourne la tête en bas sans s'arrêter. */
-	public void tournerEnBas() {
-		moteurHautBas.forward();
+	public void tournerEnBas(Double vitesse, Double acceleration, boolean waitForPosition) {
+		moteurHautBas.forward(vitesse, acceleration, waitForPosition);
 	}
 
 	/** Tourne la tête en haut sans s'arrêter. */
-	public void tournerEnHaut() {
-		moteurHautBas.backward();
+	public void tournerEnHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
+		moteurHautBas.backward(vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Tourne la tête sur le plan "Haut / Bas" d'un certain angle.
 	 * @param angle angle en degrés (négatif : en bas, positif : en haut)
 	 */
-	public void tournerTeteHautBas(double angle) {
-		moteurHautBas.rotate(angle);
+	public void tournerTeteHautBas(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+		moteurHautBas.rotate(angle, vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Tourne la tête en bas d'un certain angle.
 	 * @param angle angle en degrés
 	 */
-	public void tournerEnBas(double angle) {
-		tournerTeteHautBas(-angle);
+	public void tournerEnBas(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+		tournerTeteHautBas(-angle, vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Tourne la tête en haut d'un certain angle.
 	 * @param angle angle en degrés
 	 */
-	public void tournerEnHaut(double angle) {
-		tournerTeteHautBas(angle);
+	public void tournerEnHaut(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+		tournerTeteHautBas(angle, vitesse, acceleration, waitForPosition);
 	}
 
 	/**
 	 * Positionne la tête sur le plan "Haut / Bas" à une position précise (0 : en bas, 180 : en haut).
 	 * @param position position en degrés (0 : en bas, 180 : en haut)
 	 */
-	public void positionnerTeteHautBas(double position, boolean waitForPosition) {
+	public void positionnerTeteHautBas(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
 		double positionMoteur = POSITION_INITIALE_MOTEUR_HAUT_BAS - position;
 		if (positionMoteur >= moteurHautBas.getPositionMin() && positionMoteur <= moteurHautBas.getPositionMax()) {
 			System.out.println("POS_HB = " + positionMoteur);
-			moteurHautBas.setPositionCible(positionMoteur);
+			moteurHautBas.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
 		}
 	}
 
@@ -176,26 +168,26 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 	@Handler
 	public void handleMouvementTeteEvent(MouvementCouEvent mouvementCouEvent) {
 		System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
-		if (mouvementCouEvent.getPositionGaucheDroite() != -1) {
-			positionnerTeteGaucheDroite(mouvementCouEvent.getPositionGaucheDroite(), false);
+		if (mouvementCouEvent.getPositionGaucheDroite() != MouvementCouEvent.POSITION_NEUTRE) {
+			positionnerTeteGaucheDroite(mouvementCouEvent.getPositionGaucheDroite(), mouvementCouEvent.getVitesseGaucheDroite(), mouvementCouEvent.getAccelerationGaucheDroite(), mouvementCouEvent.isSynchrone());
 		} else if (mouvementCouEvent.getMouvementGaucheDroite() != null) {
 			if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.STOPPER) {
 				stopperTeteGaucheDroite();
 			} else if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE) {
-				tournerAGauche();
+				tournerAGauche(mouvementCouEvent.getVitesseGaucheDroite(), mouvementCouEvent.getAccelerationGaucheDroite(), mouvementCouEvent.isSynchrone());
 			} else if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE) {
-				tournerADroite();
+				tournerADroite(mouvementCouEvent.getVitesseGaucheDroite(), mouvementCouEvent.getAccelerationGaucheDroite(), mouvementCouEvent.isSynchrone());
 			}
 		}
-		if (mouvementCouEvent.getPositionHautBas() != -1) {
-			positionnerTeteHautBas(mouvementCouEvent.getPositionHautBas(), false);
+		if (mouvementCouEvent.getPositionHautBas() != MouvementCouEvent.POSITION_NEUTRE) {
+			positionnerTeteHautBas(mouvementCouEvent.getPositionHautBas(), mouvementCouEvent.getVitesseHautBas(), mouvementCouEvent.getAccelerationHautBas(), mouvementCouEvent.isSynchrone());
 		} else if (mouvementCouEvent.getMouvementHauBas() != null) {
 			if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.STOPPER) {
 				stopperTeteHautBas();
 			} else if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_HAUT) {
-				tournerEnHaut();
+				tournerEnHaut(mouvementCouEvent.getVitesseHautBas(), mouvementCouEvent.getAccelerationHautBas(), mouvementCouEvent.isSynchrone());
 			} else if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.TOURNER_BAS) {
-				tournerEnBas();
+				tournerEnBas(mouvementCouEvent.getVitesseHautBas(), mouvementCouEvent.getAccelerationHautBas(), mouvementCouEvent.isSynchrone());
 			}
 		}
 	}
@@ -217,15 +209,15 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 
 	/** Remet la tête à sa position par défaut. */
 	private void reset() {
-		moteurHautBas.setPositionCible(POSITION_INITIALE_MOTEUR_HAUT_BAS);
-		moteurGaucheDroite.setPositionCible(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE);
+		moteurHautBas.setPositionCible(POSITION_INITIALE_MOTEUR_HAUT_BAS, null, null, false);
+		moteurGaucheDroite.setPositionCible(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, null, null, false);
 	}
 
 	public void onPositionchanged(MotorPositionChangeEvent event) {
 		if (event.getSource() == moteurGaucheDroite) {
-			//System.out.println("MOTEUR G-D : " + event.getPosition());
+			System.out.println("MOTEUR G-D : " + event.getPosition() + ", PR = " + moteurGaucheDroite.getPositionReelle() + ", temps = " + System.currentTimeMillis());
 		} else if (event.getSource() == moteurHautBas) {
-			//System.out.println("MOTEUR H-B : " + event.getPosition());
+			System.out.println("MOTEUR H-B : " + event.getPosition() + ", PR = " + moteurHautBas.getPositionReelle() + ", temps = " + System.currentTimeMillis());
 		}
 	}
 	
@@ -233,17 +225,17 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 		int pas = 30;
 		System.out.println("====== PAS 30");
 		for (int angle = -60; angle <= 60; angle += pas) {
-			positionnerTeteGaucheDroite(angle, true);
+			positionnerTeteGaucheDroite(angle, 180D, 150D, true);
 		}
 		pas = 5;
 		System.out.println("====== PAS 5");
 		for (int angle = -60; angle <= 60; angle += pas) {
-			positionnerTeteGaucheDroite(angle, true);
+			positionnerTeteGaucheDroite(angle, 180D, 150D, true);
 		}
 		pas = 1;
 		System.out.println("====== PAS 1");
 		for (int angle = -60; angle <= 60; angle += pas) {
-			positionnerTeteGaucheDroite(angle, true);
+			positionnerTeteGaucheDroite(angle, 180D, 150D, true);
 		}
 //		System.out.println("====== PAS 0");
 //		positionnerTeteGaucheDroite(-60, true);
@@ -257,52 +249,67 @@ public class Cou extends AbstractOrgane implements MotorPositionChangeListener {
 			Cou cou = new Cou();
 			cou.initialiser();
 			RobotEventBus.getInstance().subscribe(cou);
-			cou.testMouvement();
-//			MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(0);
-//			mouvementCouEvent.setPositionHautBas(30);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(15);
-//			mouvementCouEvent.setPositionHautBas(15);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(30);
-//			mouvementCouEvent.setPositionHautBas(0);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(15);
-//			mouvementCouEvent.setPositionHautBas(-15);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(0);
-//			mouvementCouEvent.setPositionHautBas(-30);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(-15);
-//			mouvementCouEvent.setPositionHautBas(-15);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(-30);
-//			mouvementCouEvent.setPositionHautBas(0);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(-15);
-//			mouvementCouEvent.setPositionHautBas(15);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setPositionGaucheDroite(0);
-//			mouvementCouEvent.setPositionHautBas(30);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
+			//cou.testMouvement();
+			MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(0);
+			mouvementCouEvent.setPositionHautBas(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(-30);
+			mouvementCouEvent.setVitesseGaucheDroite(300D);
+			mouvementCouEvent.setPositionHautBas(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(30);
+			mouvementCouEvent.setVitesseGaucheDroite(300D);
+			mouvementCouEvent.setPositionHautBas(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(-30);
+			mouvementCouEvent.setVitesseGaucheDroite(800D);
+			mouvementCouEvent.setAccelerationGaucheDroite(400D);
+			mouvementCouEvent.setPositionHautBas(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(30);
+			mouvementCouEvent.setVitesseGaucheDroite(800D);
+			mouvementCouEvent.setAccelerationGaucheDroite(400D);
+			mouvementCouEvent.setPositionHautBas(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(0);
+			mouvementCouEvent.setPositionHautBas(30);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(30);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionHautBas(-30);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(-30);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionHautBas(30);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionGaucheDroite(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
+			mouvementCouEvent = new MouvementCouEvent();
+			mouvementCouEvent.setPositionHautBas(0);
+			mouvementCouEvent.setSynchrone(true);
+			RobotEventBus.getInstance().publish(mouvementCouEvent);
 //			mouvementCouEvent = new MouvementCouEvent();
 //			mouvementCouEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE);
 //			mouvementCouEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
