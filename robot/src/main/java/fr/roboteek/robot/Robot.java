@@ -82,8 +82,6 @@ public class Robot {
     private void initialiser() {
         logger.debug("Initialisation du robot");
         
-        System.setProperty("robot.dir", "/home/npeltier/Robot/Programme");
-        
         // Instanciation des différents organes du robot
         cerveau = new Cerveau();
         

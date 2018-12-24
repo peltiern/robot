@@ -10,6 +10,9 @@ public class Constantes {
 	
 	/** Chemin vers le dossier de reconnaissance vocale. */
 	public static final String DOSSIER_RECONNAISSANCE_VOCALE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "reconnaissanceVocale";
+
+	/** Chemin vers le dossier de synthèse vocale. */
+	public static final String DOSSIER_SYNTHESE_VOCALE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "synthese-vocale";
 	
 	/** Chemin vers le dossier de gestion du visage. */
 	public static final String DOSSIER_VISAGE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "visage";

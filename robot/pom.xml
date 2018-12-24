@@ -98,11 +98,19 @@
 		</dependency>
 
 		<dependency>
+			<groupId>be.tarsos</groupId>
+			<artifactId>dsp</artifactId>
+			<version>2.4</version>
+			<scope>system</scope>
+			<systemPath>/home/npeltier/Robot/jars-externes/tarsosDsp/TarsosDSP-2.4.jar</systemPath>
+		</dependency>
+
+		<dependency>
 			<groupId>com.phidgets</groupId>
 			<artifactId>phidget</artifactId>
 			<version>2.2</version>
 			<scope>system</scope>
-			<systemPath>C:\Program Files\Phidgets\Phidget22\phidget22.jar</systemPath>
+			<systemPath>/home/npeltier/Robot/jars-externes/phidgets/phidget22.jar</systemPath>
 		</dependency>
 
 		<dependency>

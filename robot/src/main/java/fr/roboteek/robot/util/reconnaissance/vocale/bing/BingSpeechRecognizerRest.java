@@ -119,7 +119,7 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 		public static void main(String[] args) throws IOException {
 			final BingSpeechRecognizerRest bingSpeechRecognizerRest = BingSpeechRecognizerRest.getInstance();
 			long debut = System.currentTimeMillis();
-			final String resultat = bingSpeechRecognizerRest.reconnaitre("test.wav");
+			final String resultat = bingSpeechRecognizerRest.reconnaitre("/home/npeltier/Robot/Programme/reconnaissanceVocale/test.wav");
 			long fin = System.currentTimeMillis();
 			System.out.println("Résultat = " + resultat);
 			System.out.println("Temps = " + (fin - debut));

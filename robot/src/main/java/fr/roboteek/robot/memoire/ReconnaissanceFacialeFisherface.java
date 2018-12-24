@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import fr.roboteek.robot.Constantes;
 import org.apache.log4j.Logger;
 import org.openimaj.feature.DoubleFVComparison;
 import org.openimaj.image.DisplayUtilities;
@@ -36,7 +37,7 @@ public class ReconnaissanceFacialeFisherface extends ReconnaissanceFaciale {
 
     public ReconnaissanceFacialeFisherface() {
         // Récupération ou création du moteur de reconnaissance
-        fichierReconnaissanceFaciale = new File(System.getProperty("robot.dir") + File.separator + "reconnaissance-faciale" + File.separator + "moteurReconnaissanceFisherFace.sav");
+        fichierReconnaissanceFaciale = new File(System.getenv(Constantes.ENV_VAR_ROBOT_HOME) + File.separator + "reconnaissance-faciale" + File.separator + "moteurReconnaissanceFisherFace.sav");
         if (!fichierReconnaissanceFaciale.exists()) {
             // Détecteur
             final FaceDetector<KEDetectedFace, FImage> detector = new FKEFaceDetector(new HaarCascadeDetector(80));

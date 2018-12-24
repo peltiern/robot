@@ -1,19 +1,10 @@
 package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.AbstractActivite;
-import fr.roboteek.robot.activites.ChatBotActivite;
-import fr.roboteek.robot.activites.ConversationActivite;
-import fr.roboteek.robot.activites.JeuActivite;
-import fr.roboteek.robot.activites.TrackingActivite;
 import fr.roboteek.robot.memoire.ReconnaissanceFaciale;
 import fr.roboteek.robot.memoire.ReconnaissanceFacialeAnnotator;
 import fr.roboteek.robot.server.RobotEventWebSocket;
-import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
-import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
-import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.systemenerveux.event.StopEvent;
-import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
+import fr.roboteek.robot.systemenerveux.event.*;
 import net.engio.mbassy.listener.Handler;
 
 /**

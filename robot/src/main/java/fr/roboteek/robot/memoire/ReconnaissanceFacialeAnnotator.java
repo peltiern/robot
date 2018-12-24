@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import fr.roboteek.robot.Constantes;
 import org.apache.log4j.Logger;
 import org.openimaj.feature.FloatFV;
 import org.openimaj.feature.FloatFVComparison;
@@ -39,7 +40,7 @@ public class ReconnaissanceFacialeAnnotator extends ReconnaissanceFaciale {
 
     public ReconnaissanceFacialeAnnotator() {
         // Récupération ou création du moteur de reconnaissance
-        fichierReconnaissanceFaciale = new File(System.getProperty("robot.dir") + File.separator + "reconnaissance-faciale" + File.separator + "moteurReconnaissanceAnnotator.sav");
+        fichierReconnaissanceFaciale = new File(System.getenv(Constantes.ENV_VAR_ROBOT_HOME) + File.separator + "reconnaissance-faciale" + File.separator + "moteurReconnaissanceAnnotator.sav");
         if (!fichierReconnaissanceFaciale.exists()) {
          // Détecteur
             final CLMFaceDetector detector = new CLMFaceDetector();

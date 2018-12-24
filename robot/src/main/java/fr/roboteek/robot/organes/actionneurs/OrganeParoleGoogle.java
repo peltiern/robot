@@ -21,7 +21,6 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     /** Constructeur. */
     public OrganeParoleGoogle() {
         super();
-//        fichierSyntheseVocale = System.getProperty("robot.dir") + File.separator + "synthese-vocale" + File.separator + "synthese.sh";
     }
 
     /**
@@ -82,8 +81,6 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     }
     
     public static void main(String[] args) {
-        
-        System.setProperty("robot.dir", "/home/npeltier/Robot/Programme");
         
         final OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
         
