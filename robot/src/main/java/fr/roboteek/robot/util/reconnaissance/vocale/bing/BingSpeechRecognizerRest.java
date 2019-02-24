@@ -37,16 +37,12 @@ public class BingSpeechRecognizerRest implements SpeechRecognizer {
 		/** Clé API Speech. */
 		private String speehApiKey;
 		
-		/** GUID de l'application. */
-		private static String applicationId;
-		
 		/** Classe GSON permettant la création des objets JSON. */
 		private Gson gson;
 
 		/** Constructeur privé. */
 		private BingSpeechRecognizerRest() {
 			speehApiKey = System.getenv(ENV_VAR_BING_SPEECH_API_KEY);
-			applicationId = System.getenv(ENV_VAR_APPLICATION_ID);
 			
 			gson = new GsonBuilder().create();
 		}

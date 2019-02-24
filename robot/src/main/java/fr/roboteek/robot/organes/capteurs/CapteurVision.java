@@ -76,7 +76,7 @@ public class CapteurVision extends AbstractOrgane implements VideoDisplayListene
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        capture.setFPS(10);
+        capture.setFPS(25);
 
         // Création d'un affichage du flux vidéo
         videoFrame = VideoDisplay.createVideoDisplay(capture);

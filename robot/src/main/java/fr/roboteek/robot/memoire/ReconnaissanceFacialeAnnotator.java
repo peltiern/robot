@@ -43,6 +43,7 @@ public class ReconnaissanceFacialeAnnotator extends ReconnaissanceFaciale {
         fichierReconnaissanceFaciale = new File(System.getenv(Constantes.ENV_VAR_ROBOT_HOME) + File.separator + "reconnaissance-faciale" + File.separator + "moteurReconnaissanceAnnotator.sav");
         if (!fichierReconnaissanceFaciale.exists()) {
          // Détecteur
+            // TODO Remplacer par un IdentityFaceDetector en passant juste le visage détecté en entrée (getDetectedPatch()) et en retaillant toutes les images en entrée à la même taille
             final CLMFaceDetector detector = new CLMFaceDetector();
             // Reconnaissance
 //            final LocalLBPHistogram.Extractor<CLMDetectedFace> extractor = new LocalLBPHistogram.Extractor<CLMDetectedFace>(new CLMAligner(), 20, 20, 8, 1);

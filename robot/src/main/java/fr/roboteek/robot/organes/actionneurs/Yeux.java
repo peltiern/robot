@@ -199,8 +199,8 @@ public class Yeux extends AbstractOrgane {
 	public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
 		System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
-			// TODO ne pas mettre en synchrone si oeil droit en synchrone
-			positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche(), mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
+			// TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
+			positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche(), mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), false/*mouvementYeuxEvent.isSynchrone()*/);
 		} else if (mouvementYeuxEvent.getMouvementOeilGauche() != null) {
 			if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.STOPPER) {
 				stopperOeilGauche();
@@ -237,8 +237,6 @@ public class Yeux extends AbstractOrgane {
 			setPositionRoulis(-mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
 		} else {
 			roulisEnCours = false;
-			stopperOeilGauche();
-			stopperOeilDroit();
 		}
 	}
 	

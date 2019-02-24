@@ -272,7 +272,7 @@ public class PhidgetMotor2 implements AttachListener, DetachListener, RCServoPos
 		if (event.getSource().equals(rcServo)) {
 			try {
 				positionAtteinte.set(true);
-				System.out.println("POSITION REACHED = time = " + System.currentTimeMillis() + ", event = " + event.getPosition() + ", servo = " + rcServo.getPosition());
+				System.out.println("POSITION REACHED = time = " + System.currentTimeMillis() + ", event = " + event.getPosition() + ", servo = " + rcServo.getChannel() + ":" + rcServo.getPosition());
 			} catch (PhidgetException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

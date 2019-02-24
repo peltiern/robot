@@ -1,5 +1,6 @@
 package fr.roboteek.robot.decisionnel;
 
+import com.rivescript.exception.ReplyNotMatchedException;
 import org.apache.log4j.Logger;
 
 import com.rivescript.Config;
@@ -23,6 +24,7 @@ public class IntelligenceArtificielleRivescript {
 		bot = new RiveScript(Config.Builder
 		        .utf8()
 		        .unicodePunctuation("[.,!?;:]")
+				.throwExceptions(true)
 		        .build());
 		bot.loadDirectory(Constantes.DOSSIER_RIVESCRIPT);
 		bot.sortReplies();
@@ -34,10 +36,16 @@ public class IntelligenceArtificielleRivescript {
 	 * @return la réponse issue de l'intelligence artificielle
 	 */
 	public String repondreAPhrase(String phrase) {
-		if (phrase != null) {
-			return bot.reply("humain", phrase.toLowerCase().replace("'", " "));
-		} else {
-			return "";
+		try {
+			if (phrase != null) {
+				return bot.reply("humain", phrase.toLowerCase().replace("'", " "));
+			} else {
+				return "";
+			}
+		} catch (ReplyNotMatchedException e) {
+			StringBuilder reponseNonTrouvee = new StringBuilder();
+			reponseNonTrouvee.append("Désolé !").append(" Je suis incapable de répondre à la phrase : ").append(phrase);
+			return reponseNonTrouvee.toString();
 		}
 	}
 

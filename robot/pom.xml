@@ -102,7 +102,7 @@
 			<artifactId>dsp</artifactId>
 			<version>2.4</version>
 			<scope>system</scope>
-			<systemPath>/home/npeltier/Robot/jars-externes/tarsosDsp/TarsosDSP-2.4.jar</systemPath>
+			<systemPath>${basedir}/lib/tarsosDsp/TarsosDSP-2.4.jar</systemPath>
 		</dependency>
 
 		<dependency>
@@ -110,7 +110,7 @@
 			<artifactId>phidget</artifactId>
 			<version>2.2</version>
 			<scope>system</scope>
-			<systemPath>/home/npeltier/Robot/jars-externes/phidgets/phidget22.jar</systemPath>
+			<systemPath>${basedir}/lib/phidgets/phidget22.jar</systemPath>
 		</dependency>
 
 		<dependency>

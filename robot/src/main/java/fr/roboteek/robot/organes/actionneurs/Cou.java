@@ -169,6 +169,7 @@ public class Cou extends AbstractOrgane {
 	public void handleMouvementTeteEvent(MouvementCouEvent mouvementCouEvent) {
 		System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementCouEvent.getPositionGaucheDroite() != MouvementCouEvent.POSITION_NEUTRE) {
+			// TODO ne pas mettre en synchrone si Haut/Bas en synchrone ==> A corriger
 			positionnerTeteGaucheDroite(mouvementCouEvent.getPositionGaucheDroite(), mouvementCouEvent.getVitesseGaucheDroite(), mouvementCouEvent.getAccelerationGaucheDroite(), mouvementCouEvent.isSynchrone());
 		} else if (mouvementCouEvent.getMouvementGaucheDroite() != null) {
 			if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.STOPPER) {
