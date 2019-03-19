@@ -133,7 +133,8 @@ public class PhidgetMotor2 implements AttachListener, DetachListener, RCServoPos
 	public void stop() {
 		try {
 			rcServo.setVelocityLimit(0);
-			rcServo.setTargetPosition(rcServo.getPosition());
+			// TODO A voir si nécessaire
+			//rcServo.setTargetPosition(rcServo.getPosition());
 			positionAtteinte.set(true);
 		} catch (PhidgetException e) {
 			// TODO Auto-generated catch block

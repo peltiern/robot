@@ -15,6 +15,8 @@ public class MouvementCouEvent extends RobotEvent {
     public static enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER};
     
     public static final double POSITION_NEUTRE = 99999;
+
+	public static final double ANGLE_NEUTRE = 99999;
     
     public static final double VITESSE_NEUTRE = 99999;
     
@@ -25,6 +27,9 @@ public class MouvementCouEvent extends RobotEvent {
     
     /** Position "Gauche - Droite" (0 : à gauche, 180 : à droite). */
     private double positionGaucheDroite = POSITION_NEUTRE;
+
+    /** Angle "Gauche - Droite". */
+    private double angleGaucheDroite = ANGLE_NEUTRE;
     
     /** Vitesse du mouvement "Gauche - Droite". */
     private Double vitesseGaucheDroite;
@@ -37,6 +42,9 @@ public class MouvementCouEvent extends RobotEvent {
     
     /** Position "Haut - Bas" (0 : en bas, 180 : en haut). */
     private double positionHautBas = POSITION_NEUTRE;
+
+	/** Angle "Haut - Bas". */
+	private double angleHautBas = ANGLE_NEUTRE;
     
     /** Vitesse du mouvement "Haut - Bas". */
     private Double vitesseHautBas;
@@ -192,16 +200,40 @@ public class MouvementCouEvent extends RobotEvent {
 		this.accelerationRoulis = accelerationRoulis;
 	}
 
-	@Override
-	public String toString() {
-		return "MouvementCouEvent [mouvementGaucheDroite=" + mouvementGaucheDroite + ", positionGaucheDroite="
-				+ positionGaucheDroite + ", vitesseGaucheDroite=" + vitesseGaucheDroite + ", accelerationGaucheDroite="
-				+ accelerationGaucheDroite + ", mouvementHauBas=" + mouvementHauBas + ", positionHautBas="
-				+ positionHautBas + ", vitesseHautBas=" + vitesseHautBas + ", accelerationHautBas="
-				+ accelerationHautBas + ", mouvementRoulis=" + mouvementRoulis + ", positionRoulis=" + positionRoulis
-				+ ", vitesseRoulis=" + vitesseRoulis + ", accelerationRoulis=" + accelerationRoulis + ", synchrone="
-				+ synchrone + "]";
+	public double getAngleGaucheDroite() {
+		return angleGaucheDroite;
 	}
 
-	
+	public void setAngleGaucheDroite(double angleGaucheDroite) {
+		this.angleGaucheDroite = angleGaucheDroite;
+	}
+
+	public double getAngleHautBas() {
+		return angleHautBas;
+	}
+
+	public void setAngleHautBas(double angleHautBas) {
+		this.angleHautBas = angleHautBas;
+	}
+
+	@Override
+	public String toString() {
+		return "MouvementCouEvent{" +
+				"mouvementGaucheDroite=" + mouvementGaucheDroite +
+				", positionGaucheDroite=" + positionGaucheDroite +
+				", angleGaucheDroite=" + angleGaucheDroite +
+				", vitesseGaucheDroite=" + vitesseGaucheDroite +
+				", accelerationGaucheDroite=" + accelerationGaucheDroite +
+				", mouvementHauBas=" + mouvementHauBas +
+				", positionHautBas=" + positionHautBas +
+				", angleHautBas=" + angleHautBas +
+				", vitesseHautBas=" + vitesseHautBas +
+				", accelerationHautBas=" + accelerationHautBas +
+				", mouvementRoulis=" + mouvementRoulis +
+				", positionRoulis=" + positionRoulis +
+				", vitesseRoulis=" + vitesseRoulis +
+				", accelerationRoulis=" + accelerationRoulis +
+				", synchrone=" + synchrone +
+				'}';
+	}
 }

@@ -2,14 +2,12 @@ package fr.roboteek.robot.activites;
 
 import fr.roboteek.robot.decisionnel.Contexte;
 import fr.roboteek.robot.memoire.ReconnaissanceFaciale;
-import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent;
-import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_GAUCHE_DROITE;
-import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent.MOUVEMENTS_HAUT_BAS;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE;
+import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
-import net.engio.mbassy.bus.MBassador;
 
 /**
  * Activité "Tracking de visage".
@@ -43,7 +41,7 @@ public class TrackingActivite extends AbstractActivite {
     @Override
     public void arreter() {
         // Arrêt de la tête
-        final MouvementTeteEvent mouvementTeteEvent = new MouvementTeteEvent();
+        final MouvementCouEvent mouvementTeteEvent = new MouvementCouEvent();
         mouvementTeteEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.STOPPER);
         mouvementTeteEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.STOPPER);
         RobotEventBus.getInstance().publishAsync(mouvementTeteEvent);

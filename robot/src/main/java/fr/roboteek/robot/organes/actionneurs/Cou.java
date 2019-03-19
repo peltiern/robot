@@ -40,8 +40,8 @@ public class Cou extends AbstractOrgane {
 		System.out.println("COU :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurGaucheDroite = new PhidgetMotor2(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 180, 150);
-		moteurHautBas = new PhidgetMotor2(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 180, 150);
+		moteurGaucheDroite = new PhidgetMotor2(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 40, 60);
+		moteurHautBas = new PhidgetMotor2(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 40, 60);
 
 		moteurGaucheDroite.setEngaged(true);
 		moteurGaucheDroite.setSpeedRampingState(true);
@@ -167,10 +167,13 @@ public class Cou extends AbstractOrgane {
 	 */
 	@Handler
 	public void handleMouvementTeteEvent(MouvementCouEvent mouvementCouEvent) {
-		System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
+		//System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementCouEvent.getPositionGaucheDroite() != MouvementCouEvent.POSITION_NEUTRE) {
 			// TODO ne pas mettre en synchrone si Haut/Bas en synchrone ==> A corriger
 			positionnerTeteGaucheDroite(mouvementCouEvent.getPositionGaucheDroite(), mouvementCouEvent.getVitesseGaucheDroite(), mouvementCouEvent.getAccelerationGaucheDroite(), mouvementCouEvent.isSynchrone());
+		} else if (mouvementCouEvent.getAngleGaucheDroite() != MouvementCouEvent.ANGLE_NEUTRE) {
+			// TODO ne pas mettre en synchrone si Haut/Bas en synchrone ==> A corriger
+			tournerTeteGaucheDroite(mouvementCouEvent.getAngleGaucheDroite(), mouvementCouEvent.getVitesseGaucheDroite(), mouvementCouEvent.getAccelerationGaucheDroite(), mouvementCouEvent.isSynchrone());
 		} else if (mouvementCouEvent.getMouvementGaucheDroite() != null) {
 			if (mouvementCouEvent.getMouvementGaucheDroite() == MOUVEMENTS_GAUCHE_DROITE.STOPPER) {
 				stopperTeteGaucheDroite();
@@ -182,6 +185,8 @@ public class Cou extends AbstractOrgane {
 		}
 		if (mouvementCouEvent.getPositionHautBas() != MouvementCouEvent.POSITION_NEUTRE) {
 			positionnerTeteHautBas(mouvementCouEvent.getPositionHautBas(), mouvementCouEvent.getVitesseHautBas(), mouvementCouEvent.getAccelerationHautBas(), mouvementCouEvent.isSynchrone());
+		} else if (mouvementCouEvent.getAngleHautBas() != MouvementCouEvent.ANGLE_NEUTRE) {
+			tournerTeteHautBas(mouvementCouEvent.getPositionHautBas(), mouvementCouEvent.getVitesseHautBas(), mouvementCouEvent.getAccelerationHautBas(), mouvementCouEvent.isSynchrone());
 		} else if (mouvementCouEvent.getMouvementHauBas() != null) {
 			if (mouvementCouEvent.getMouvementHauBas() == MOUVEMENTS_HAUT_BAS.STOPPER) {
 				stopperTeteHautBas();

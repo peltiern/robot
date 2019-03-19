@@ -72,7 +72,13 @@ public class Robot {
     public Robot() {
         // Initialisation
         initialiser();
-        while(!stopper) {}
+        while(!stopper) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         logger.debug("Arrêt complet");
         System.out.println("ARRET");
         System.exit(0);

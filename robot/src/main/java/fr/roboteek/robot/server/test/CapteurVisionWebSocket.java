@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 
+import fr.roboteek.robot.activites.AbstractActivite;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import org.apache.log4j.Logger;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
@@ -26,23 +28,34 @@ import fr.roboteek.robot.systemenerveux.event.VisagesEvent;
 
 /**
  * Capteur lié à la vision.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDisplayListener<MBFImage> {
 
-    /** Capture vidéo.*/
+    /**
+     * Capture vidéo.
+     */
     private VideoCapture capture;
     private VideoDisplay<MBFImage> videoFrame;
 
-    /** Détecteur de visages. */
-    private FaceDetector<DetectedFace,FImage> detecteurVisages;
+    /**
+     * Détecteur de visages.
+     */
+    private FaceDetector<DetectedFace, FImage> detecteurVisages;
 
-    /** Largeur de la vidéo issue de la webcam. */
+    /**
+     * Largeur de la vidéo issue de la webcam.
+     */
     private static int LARGEUR_WEBCAM = 640;
-    /** Hauteur de la vidéo issue de la webcam. */
+    /**
+     * Hauteur de la vidéo issue de la webcam.
+     */
     private static int HAUTEUR_WEBCAM = 480;
 
-    /** Logger. */
+    /**
+     * Logger.
+     */
     private Logger logger = Logger.getLogger(CapteurVisionWebSocket.class);
 
 
@@ -54,27 +67,27 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         // Récupération de la webcam
         Device webcamRobot = null;
         for (Device device : VideoCapture.getVideoDevices()) {
-        	System.out.println("WEBCAM = " + device);
-        	if (device.getNameStr() != null && device.getNameStr().toLowerCase().contains("twist")) {
-        		System.out.println("WEBCAM ROBOT TROUVEE");
-        		webcamRobot = device;
-        		break;
-        	}
+            System.out.println("WEBCAM = " + device);
+            if (device.getNameStr() != null && device.getNameStr().toLowerCase().contains("twist")) {
+                System.out.println("WEBCAM ROBOT TROUVEE");
+                webcamRobot = device;
+                break;
+            }
         }
-        
+
         // Initialisation du flux de capture sur la webcam
         System.setProperty(VideoCapture.DEFAULT_DEVICE_NUMBER_PROPERTY, "0");
         try {
-        	if (webcamRobot != null) {
-            	capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM, 10, webcamRobot);
+            if (webcamRobot != null) {
+                capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM, 10, webcamRobot);
             } else {
-            	capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM);
+                capture = new VideoCapture(LARGEUR_WEBCAM, HAUTEUR_WEBCAM);
             }
         } catch (VideoCaptureException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        capture.setFPS(10);
+        capture.setFPS(25);
 
         // Création d'un affichage du flux vidéo
         videoFrame = VideoDisplay.createVideoDisplay(capture);
@@ -95,8 +108,9 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
     }
 
     public void afterUpdate(VideoDisplay<MBFImage> display) {
-        
+
     }
+
     public synchronized void beforeUpdate(MBFImage frame) {
 
         // Recherche de visages
@@ -104,22 +118,26 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         final List<DetectedFace> listeVisages = detecteurVisages.detectFaces(image);
         //        final List<DetectedFace> listeVisages = faceTracker.trackFace(frame.flatten());
         for (final DetectedFace visage : listeVisages) {
+            System.out.println("LARGEUR = " + visage.getBounds().getWidth() + ", HAUTEUR = " + visage.getBounds().getHeight() + ", CENTRE = " + visage.getBounds().calculateCentroid());
             frame.drawShape(visage.getShape(), 3, RGBColour.ORANGE);
         }
 
+
+
         // Envoi d'un évènement de détection de visages
-        if (listeVisages != null && !listeVisages.isEmpty()) {
-            final VisagesEvent event = new VisagesEvent();
-            event.setImageOrigine(image);
-            event.setListeVisages(listeVisages);
-        }
+        final VisagesEvent event = new VisagesEvent();
+        event.setImageOrigine(image);
+        event.setListeVisages(listeVisages);
+        //AbstractActivite.suivreVisage(event);
+        RobotEventBus.getInstance().publishAsync(event);
+
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-			ImageUtilities.write(frame, "jpg", baos);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+            ImageUtilities.write(frame, "jpg", baos);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         VideoWebSocket.broadcastImage(baos.toByteArray());
     }
 
