@@ -1,0 +1,5 @@
+Installation de JInput en installant le plugn MAVEN permettant de copier les librairies natives dans le dossier target.
+Copier ces librairies dans un dossier externe.
+Dans la configuration de l'exécution, renseigner dans les options de VM :
+-Djava.library.path="path/to/native/libraries/"
+
