@@ -131,11 +131,11 @@ public class DeepLearningFaceDetection {
         int i = 0;
         while (true) {
             while (capture.read(colorimg) && mainframe.isVisible()) {
-                if (i % 5 == 0) {
-                    //detectAndDraw(colorimg);
-                    detectAndDrawByHaarCascade(colorimg);
+                //if (i % 5 == 0) {
+                    detectAndDraw(colorimg);
+                    //detectAndDrawByHaarCascade(colorimg);
                     mainframe.showImage(converter.convert(colorimg));
-                }
+               // }
                 i++;
 //                try {
 //                    Thread.sleep(50);
