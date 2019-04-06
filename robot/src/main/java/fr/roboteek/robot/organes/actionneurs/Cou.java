@@ -22,10 +22,10 @@ public class Cou extends AbstractOrgane {
 	private static final int IDX_MOTEUR_HAUT_BAS = 1;
 
 	/** Position initiale du moteur Gauche / Droite. */
-	private static final double POSITION_INITIALE_MOTEUR_GAUCHE_DROITE = 90;
+	public static final double POSITION_INITIALE_MOTEUR_GAUCHE_DROITE = 90;
 
 	/** Position initiale du moteur Haut / Bas. */
-	private static final double POSITION_INITIALE_MOTEUR_HAUT_BAS = 90;
+	public static final double POSITION_INITIALE_MOTEUR_HAUT_BAS = 90;
 
 	/** Moteur Gauche / Droite. */
 	private PhidgetMotor2 moteurGaucheDroite;

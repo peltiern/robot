@@ -1,5 +1,6 @@
 package fr.roboteek.robot;
 
+import fr.roboteek.robot.util.gamepad.RobotGamepadController;
 import org.apache.log4j.Logger;
 
 import fr.roboteek.robot.decisionnel.Cerveau;
@@ -61,6 +62,9 @@ public class Robot {
     
     /** Capteur vocal. */
     private AbstractOrgane capteurVocal;
+
+    /** Controleur de manette. */
+    private RobotGamepadController robotGamepadController;
 
     /** Flag d'arrêt du robot. */
     private boolean stopper = false;
@@ -124,6 +128,13 @@ public class Robot {
         capteurVocal.initialiser();
         
         RobotEventBus.getInstance().subscribe(capteurVocal);
+
+        // Manette
+        //String currentLibraryPath = System.getProperty("java.library.path");
+        //System.setProperty("java.library.path", currentLibraryPath + ":/home/npeltier/Developpement/robot/robot-sandbox/target/natives");
+        System.out.println("LIBRARY PATH = " + System.getProperty("java.library.path"));
+        robotGamepadController = new RobotGamepadController();
+        robotGamepadController.start();
         
         // Démarrage du serveur
         RobotServer.getInstance().run();

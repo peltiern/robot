@@ -118,7 +118,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         final List<DetectedFace> listeVisages = detecteurVisages.detectFaces(image);
         //        final List<DetectedFace> listeVisages = faceTracker.trackFace(frame.flatten());
         for (final DetectedFace visage : listeVisages) {
-            System.out.println("LARGEUR = " + visage.getBounds().getWidth() + ", HAUTEUR = " + visage.getBounds().getHeight() + ", CENTRE = " + visage.getBounds().calculateCentroid());
+            //System.out.println("LARGEUR = " + visage.getBounds().getWidth() + ", HAUTEUR = " + visage.getBounds().getHeight() + ", CENTRE = " + visage.getBounds().calculateCentroid());
             frame.drawShape(visage.getShape(), 3, RGBColour.ORANGE);
         }
 

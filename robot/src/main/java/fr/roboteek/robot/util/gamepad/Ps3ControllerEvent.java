@@ -1,6 +1,6 @@
 package fr.roboteek.robot.util.gamepad;
 
-public class Ps3ControllerEvent extends GamepadEvent {
+public class Ps3ControllerEvent extends GamepadEvent<PS3Component> {
 
     private Boolean buttonTrianglePressed = false;
     private Boolean buttonSquarePressed = false;
@@ -174,6 +174,8 @@ public class Ps3ControllerEvent extends GamepadEvent {
     public void setJoystickRightAxisYValue(float joystickRightAxisYValue) {
         this.joystickRightAxisYValue = joystickRightAxisYValue;
     }
+
+
 
 
     @Override
