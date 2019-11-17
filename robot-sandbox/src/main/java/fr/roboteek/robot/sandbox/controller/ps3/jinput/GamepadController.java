@@ -1,5 +1,7 @@
 package fr.roboteek.robot.sandbox.controller.ps3.jinput;
 
+import fr.roboteek.robot.sandbox.controller.ps3.shared.GamepadEvent;
+import fr.roboteek.robot.sandbox.controller.ps3.shared.GamepadListener;
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;

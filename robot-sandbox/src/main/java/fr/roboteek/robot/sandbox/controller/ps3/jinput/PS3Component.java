@@ -1,5 +1,6 @@
 package fr.roboteek.robot.sandbox.controller.ps3.jinput;
 
+import fr.roboteek.robot.sandbox.controller.ps3.shared.GamepadComponent;
 import net.java.games.input.Component;
 
 import java.util.Arrays;

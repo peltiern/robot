@@ -1,5 +1,7 @@
 package fr.roboteek.robot.sandbox.controller.ps3.jinput;
 
+import fr.roboteek.robot.sandbox.controller.ps3.shared.AbstractGamepadManager;
+import fr.roboteek.robot.sandbox.controller.ps3.shared.GamepadListener;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 
@@ -7,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GamepadManager {
+public class GamepadManager extends AbstractGamepadManager<PS3Listener> {
 
     private volatile boolean running = false;
 
@@ -15,14 +17,13 @@ public class GamepadManager {
 
     // TODO Liste de controller autorisé (spécifier un identifiant reconnaissable dans le Controller)
 
-    List<GamepadListener> listeners = new ArrayList<>();
-
     List<GamepadController> listeAuthorizedGamepadDummies = new ArrayList<>();
 
     public GamepadManager(Class<? extends GamepadController> ... authorizedClasses) {
         setAuthorizedGamepads(authorizedClasses);
     }
 
+    @Override
     public void start() {
         Controller[] controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
         Arrays.stream(controllers).forEach(this::addGamepad);
@@ -96,11 +97,6 @@ public class GamepadManager {
 //            }
 //        }
 //    }
-
-    public void addListener(GamepadListener listener) {
-        listeners.add(listener);
-        // TODO ajouter les listeners aux gamepadController
-    }
 
     private void setAuthorizedGamepads(Class<? extends GamepadController> ... authorizedClasses) {
         if (authorizedClasses != null && authorizedClasses.length > 0) {

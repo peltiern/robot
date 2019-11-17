@@ -1,10 +1,11 @@
 package fr.roboteek.robot.sandbox.controller.ps3.jinput;
 
+import fr.roboteek.robot.sandbox.controller.ps3.shared.GamepadComponentValue;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
 
-import java.util.Optional;
+import java.util.*;
 
 public class Ps3Controller extends GamepadController<Ps3ControllerEvent, PS3Listener> {
 
@@ -162,32 +163,58 @@ public class Ps3Controller extends GamepadController<Ps3ControllerEvent, PS3List
     }
 
     private Ps3ControllerEvent createPs3ControllerEvent(PS3Component ps3Component, Float oldValue, Float newValue, Boolean oldPressed, Boolean newPressed) {
-        Ps3ControllerEvent event = new Ps3ControllerEvent();
-        event.setComponent(ps3Component);
-        event.setOldNumericValue(oldValue);
-        event.setNewNumericValue(newValue);
-        event.setOldPressed(oldPressed);
-        event.setNewPressed(newPressed);
-        event.setButtonTrianglePressed(buttonTrianglePressed);
-        event.setButtonSquarePressed(buttonSquarePressed);
-        event.setButtonCrossPressed(buttonCrossPressed);
-        event.setButtonRoundPressed(buttonRoundPressed);
-        event.setButtonSelectPressed(buttonSelectPressed);
-        event.setButtonStartPressed(buttonStartPressed);
-        event.setButtonModePressed(buttonModePressed);
-        event.setButtonLeft1Pressed(buttonLeft1Pressed);
-        event.setButtonLeft2Pressed(buttonLeft2Pressed);
-        event.setButtonLeftJoystick3Pressed(buttonLeftJoystick3Pressed);
-        event.setButtonRight1Pressed(buttonRight1Pressed);
-        event.setButtonRight2Pressed(buttonRight2Pressed);
-        event.setButtonRightJoystick3Pressed(buttonRightJoystick3Pressed);
-        event.setButtonAnalogLeft2Value(buttonAnalogLeft2Value);
-        event.setButtonAnalogRight2Value(buttonAnalogRight2Value);
-        event.setJoystickLeftAxisXValue(joystickLeftAxisXValue);
-        event.setJoystickLeftAxisYValue(joystickLeftAxisYValue);
-        event.setJoystickRightAxisXValue(joystickRightAxisXValue);
-        event.setJoystickRightAxisYValue(joystickRightAxisYValue);
-        return event;
+        List<PS3Component> modifiedComponents = new ArrayList<>();
+        modifiedComponents.add(ps3Component);
+
+        Map<PS3Component, GamepadComponentValue<PS3Component>> mapValues = new HashMap<>();
+        //BUTTON_TRIANGLE
+        mapValues.put(PS3Component.BUTTON_TRIANGLE, new GamepadComponentValue<>(PS3Component.BUTTON_TRIANGLE, buttonTrianglePressed, buttonTrianglePressed));
+        //BUTTON_SQUARE
+        mapValues.put(PS3Component.BUTTON_SQUARE, new GamepadComponentValue<>(PS3Component.BUTTON_SQUARE, buttonSquarePressed, buttonSquarePressed));
+        //BUTTON_CROSS
+        mapValues.put(PS3Component.BUTTON_CROSS, new GamepadComponentValue<>(PS3Component.BUTTON_CROSS, buttonCrossPressed, buttonCrossPressed));
+        //BUTTON_ROUND
+        mapValues.put(PS3Component.BUTTON_ROUND, new GamepadComponentValue<>(PS3Component.BUTTON_ROUND, buttonRoundPressed, buttonRoundPressed));
+        //BUTTON_SELECT
+        mapValues.put(PS3Component.BUTTON_SELECT, new GamepadComponentValue<>(PS3Component.BUTTON_SELECT, buttonSelectPressed, buttonSelectPressed));
+        //BUTTON_START
+        mapValues.put(PS3Component.BUTTON_START, new GamepadComponentValue<>(PS3Component.BUTTON_START, buttonStartPressed, buttonStartPressed));
+        //BUTTON_MODE
+        mapValues.put(PS3Component.BUTTON_MODE, new GamepadComponentValue<>(PS3Component.BUTTON_MODE, buttonModePressed, buttonModePressed));
+        //BUTTON_LEFT_1
+        mapValues.put(PS3Component.BUTTON_LEFT_1, new GamepadComponentValue<>(PS3Component.BUTTON_LEFT_1, buttonLeft1Pressed, buttonLeft1Pressed));
+        //BUTTON_LEFT_2
+        mapValues.put(PS3Component.BUTTON_LEFT_2, new GamepadComponentValue<>(PS3Component.BUTTON_LEFT_2, buttonLeft2Pressed, buttonLeft2Pressed));
+        //BUTTON_LEFT_JOYSTICK_3
+        mapValues.put(PS3Component.BUTTON_LEFT_JOYSTICK_3, new GamepadComponentValue<>(PS3Component.BUTTON_LEFT_JOYSTICK_3, buttonLeftJoystick3Pressed, buttonLeftJoystick3Pressed));
+        //BUTTON_RIGHT_1
+        mapValues.put(PS3Component.BUTTON_RIGHT_1, new GamepadComponentValue<>(PS3Component.BUTTON_RIGHT_1, buttonRight1Pressed, buttonRight1Pressed));
+        //BUTTON_RIGHT_2
+        mapValues.put(PS3Component.BUTTON_RIGHT_2, new GamepadComponentValue<>(PS3Component.BUTTON_RIGHT_2, buttonRight2Pressed, buttonRight2Pressed));
+        //BUTTON_RIGHT_JOYSTICK_3
+        mapValues.put(PS3Component.BUTTON_RIGHT_JOYSTICK_3, new GamepadComponentValue<>(PS3Component.BUTTON_RIGHT_JOYSTICK_3, buttonRightJoystick3Pressed, buttonRightJoystick3Pressed));
+        //BUTTON_ANALOG_LEFT_2
+        mapValues.put(PS3Component.BUTTON_ANALOG_LEFT_2, new GamepadComponentValue<>(PS3Component.BUTTON_ANALOG_LEFT_2, buttonAnalogLeft2Value, buttonAnalogLeft2Value));
+        //BUTTON_ANALOG_RIGHT_2
+        mapValues.put(PS3Component.BUTTON_ANALOG_RIGHT_2, new GamepadComponentValue<>(PS3Component.BUTTON_ANALOG_RIGHT_2, buttonAnalogRight2Value, buttonAnalogRight2Value));
+        //JOYSTICK_LEFT_AXIS_X
+        mapValues.put(PS3Component.JOYSTICK_LEFT_AXIS_X, new GamepadComponentValue<>(PS3Component.JOYSTICK_LEFT_AXIS_X, joystickLeftAxisXValue, joystickLeftAxisXValue));
+        //JOYSTICK_LEFT_AXIS_Y
+        mapValues.put(PS3Component.JOYSTICK_LEFT_AXIS_Y, new GamepadComponentValue<>(PS3Component.JOYSTICK_LEFT_AXIS_Y, joystickLeftAxisYValue, joystickLeftAxisYValue));
+        //JOYSTICK_RIGHT_AXIS_X
+        mapValues.put(PS3Component.JOYSTICK_RIGHT_AXIS_X, new GamepadComponentValue<>(PS3Component.JOYSTICK_RIGHT_AXIS_X, joystickRightAxisXValue, joystickRightAxisXValue));
+        //JOYSTICK_RIGHT_AXIS_Y
+        mapValues.put(PS3Component.JOYSTICK_RIGHT_AXIS_Y, new GamepadComponentValue<>(PS3Component.JOYSTICK_RIGHT_AXIS_Y, joystickRightAxisYValue, joystickRightAxisYValue));
+
+        if (ps3Component == PS3Component.BUTTON_ANALOG_LEFT_2 || ps3Component == PS3Component.BUTTON_ANALOG_RIGHT_2
+                || ps3Component == PS3Component.JOYSTICK_LEFT_AXIS_X || ps3Component == PS3Component.JOYSTICK_LEFT_AXIS_Y ||
+                ps3Component == PS3Component.JOYSTICK_RIGHT_AXIS_X || ps3Component == PS3Component.JOYSTICK_RIGHT_AXIS_Y) {
+            mapValues.put(ps3Component, new GamepadComponentValue<>(ps3Component, oldValue, newValue));
+        } else {
+            mapValues.put(ps3Component, new GamepadComponentValue<>(ps3Component, oldPressed, newPressed));
+        }
+
+        return new Ps3ControllerEvent(modifiedComponents, mapValues);
     }
 
 }

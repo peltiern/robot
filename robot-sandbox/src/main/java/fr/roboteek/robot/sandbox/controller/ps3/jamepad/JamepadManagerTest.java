@@ -1,11 +1,11 @@
-package fr.roboteek.robot.sandbox.controller.ps3.jinput;
+package fr.roboteek.robot.sandbox.controller.ps3.jamepad;
 
-public class GamepadTest implements PS3Listener {
+public class JamepadManagerTest implements PS3Listener {
 
     public static void main (String[] args) {
-        GamepadManager gamepadManager = new GamepadManager(Ps3Controller.class);
-        gamepadManager.addListener(new GamepadTest());
-        gamepadManager.start();
+        JamepadManager jamepadManager = new JamepadManager();
+        jamepadManager.addListener(new JamepadManagerTest());
+        jamepadManager.start();
     }
 
     @Override

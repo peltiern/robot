@@ -1,4 +1,4 @@
-package fr.roboteek.robot.sandbox.controller.ps3.jinput;
+package fr.roboteek.robot.sandbox.controller.ps3.jamepad;
 
 import fr.roboteek.robot.sandbox.controller.ps3.shared.GamepadListener;
 
