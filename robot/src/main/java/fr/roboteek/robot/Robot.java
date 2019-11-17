@@ -1,5 +1,6 @@
 package fr.roboteek.robot;
 
+import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
 import fr.roboteek.robot.util.gamepad.RobotGamepadController;
 import org.apache.log4j.Logger;
 
@@ -63,6 +64,9 @@ public class Robot {
     /** Capteur vocal. */
     private AbstractOrgane capteurVocal;
 
+    /** Capteur Activité Son. */
+    private CapteurActiviteSon capteurActiviteSon;
+
     /** Controleur de manette. */
     private RobotGamepadController robotGamepadController;
 
@@ -91,6 +95,7 @@ public class Robot {
     /** Initialisation du robot. */
     private void initialiser() {
         logger.debug("Initialisation du robot");
+        System.out.println("LIBRARY PATH = " + System.getProperty("java.library.path"));
         
         // Instanciation des différents organes du robot
         cerveau = new Cerveau();
@@ -122,17 +127,18 @@ public class Robot {
         capteurVision = new CapteurVisionWebSocket();
         capteurVocal = new CapteurVocalWebService(BingSpeechRecognizerRest.getInstance());
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
+        capteurActiviteSon = new CapteurActiviteSon();
         
         // Initialisation des capteurs
         capteurVision.initialiser();
         capteurVocal.initialiser();
+        capteurActiviteSon.initialiser();
         
         RobotEventBus.getInstance().subscribe(capteurVocal);
 
         // Manette
         //String currentLibraryPath = System.getProperty("java.library.path");
         //System.setProperty("java.library.path", currentLibraryPath + ":/home/npeltier/Developpement/robot/robot-sandbox/target/natives");
-        System.out.println("LIBRARY PATH = " + System.getProperty("java.library.path"));
         robotGamepadController = new RobotGamepadController();
         robotGamepadController.start();
         

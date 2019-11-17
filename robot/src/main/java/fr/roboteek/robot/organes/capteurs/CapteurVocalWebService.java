@@ -31,10 +31,12 @@ import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleEspeak;
 import fr.roboteek.robot.server.AudioWebSocket;
+import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.reconnaissance.vocale.SpeechRecognizer;
 import fr.roboteek.robot.util.reconnaissance.vocale.bing.BingSpeechRecognizerRest;
+import net.engio.mbassy.listener.Handler;
 
 /**
  * Capteur vocal.
@@ -57,6 +59,9 @@ public class CapteurVocalWebService extends AbstractOrgane {
 
 	/** Moteur de reconnaissance vocale. */
 	private SpeechRecognizer recognizer;
+
+	/** Flag indiquant que la reconnaissance est mise en pause. */
+    private boolean misEnPause = false;
 
 	/** Format audio. */
 	private AudioFormat format;
@@ -145,57 +150,67 @@ public class CapteurVocalWebService extends AbstractOrgane {
 
 					// On teste si le bloc en cours contient de la voix (bruit à une certaine fréquence)
 
-					// Si le bloc ne correspond pas à un silence (volume au delà d'un certain seuil), on traite ce bloc
-					if (silenceDetector.currentSPL() > SilenceDetector.DEFAULT_SILENCE_THRESHOLD) {
+					if (!misEnPause) {
+						// Si le bloc ne correspond pas à un silence (volume au delà d'un certain seuil), on traite ce bloc
+						if (silenceDetector.currentSPL() > SilenceDetector.DEFAULT_SILENCE_THRESHOLD) {
 
-						// Récupération de la fréquence du bloc
-						final float pitchInHz = result.getPitch();
+							// Récupération de la fréquence du bloc
+							final float pitchInHz = result.getPitch();
 
-						// Si le bloc est compris dans une certaine plage de fréquences : bloc contenant de la voix (parlé)
-						if (pitchInHz > 0) {
-							isBlocParle = true;
+							// Si le bloc est compris dans une certaine plage de fréquences : bloc contenant de la voix (parlé)
+							if (pitchInHz > 0) {
+								isBlocParle = true;
+							} else {
+								isBlocParle = false;
+							}
 						} else {
 							isBlocParle = false;
 						}
-					} else {
-						isBlocParle = false;
-					}
 
-					if (isBlocParle || timestampBlocEnCours - timestampDernierBlocParle < 0.6) {
-						// Si ça parle, ou petit silence
-						// On concatène le bloc audio en cours au contenu général
-						contenuParle = Bytes.concat(contenuParle, e.getByteBuffer());
-					} else {
-						// Ca ne parle pas et grand silence
-
-						// On ne lance la reconnaissance que s'il y a du contenu
-						if (contenuParle.length > 0) {
-							lancerReconnaissance();
-
-							// Réinitialisation des blocs
-							contenuParle = new byte[0];
-							bufferNMoins1 = new byte[0];
-							bufferNMoins2 = new byte[0];
-							bufferNMoins3 = new byte[0];
-							bufferNMoins4 = new byte[0];
-							bufferNMoins5 = new byte[0];
+						if (isBlocParle || timestampBlocEnCours - timestampDernierBlocParle < 0.6) {
+							// Si ça parle, ou petit silence
+							// On concatène le bloc audio en cours au contenu général
+							contenuParle = Bytes.concat(contenuParle, e.getByteBuffer());
 						} else {
-							// Silence et pas de contenu : on ne fait rien
+							// Ca ne parle pas et grand silence
+
+							// On ne lance la reconnaissance que s'il y a du contenu
+							if (contenuParle.length > 0) {
+								lancerReconnaissance();
+
+								// Réinitialisation des blocs
+								contenuParle = new byte[0];
+								bufferNMoins1 = new byte[0];
+								bufferNMoins2 = new byte[0];
+								bufferNMoins3 = new byte[0];
+								bufferNMoins4 = new byte[0];
+								bufferNMoins5 = new byte[0];
+							} else {
+								// Silence et pas de contenu : on ne fait rien
+							}
 						}
-					}
 
-					// Mise à jour du timestamp précédent par celui du bloc audio en cours si c'est un bloc "parlé"
-					if (isBlocParle) {
-						timestampDernierBlocParle = timestampBlocEnCours;
-					}
+						// Mise à jour du timestamp précédent par celui du bloc audio en cours si c'est un bloc "parlé"
+						if (isBlocParle) {
+							timestampDernierBlocParle = timestampBlocEnCours;
+						}
 
-					// Si aucun bloc "parlé" depuis la dernière reconnaissance : échange des blocs précédant un éventuel bloc "parlé"
-					if (contenuParle.length == 0) {
-						bufferNMoins5 = Bytes.concat(bufferNMoins4);
-						bufferNMoins4 = Bytes.concat(bufferNMoins3);
-						bufferNMoins3 = Bytes.concat(bufferNMoins2);
-						bufferNMoins2 = Bytes.concat(bufferNMoins1);
-						bufferNMoins1 = Bytes.concat(e.getByteBuffer());
+						// Si aucun bloc "parlé" depuis la dernière reconnaissance : échange des blocs précédant un éventuel bloc "parlé"
+						if (contenuParle.length == 0) {
+							bufferNMoins5 = Bytes.concat(bufferNMoins4);
+							bufferNMoins4 = Bytes.concat(bufferNMoins3);
+							bufferNMoins3 = Bytes.concat(bufferNMoins2);
+							bufferNMoins2 = Bytes.concat(bufferNMoins1);
+							bufferNMoins1 = Bytes.concat(e.getByteBuffer());
+						}
+					} else {
+						// Réinitialisation des blocs
+						contenuParle = new byte[0];
+						bufferNMoins1 = new byte[0];
+						bufferNMoins2 = new byte[0];
+						bufferNMoins3 = new byte[0];
+						bufferNMoins4 = new byte[0];
+						bufferNMoins5 = new byte[0];
 					}
 
 					// Broadcast live du fichier WAV (entête + contenu)
@@ -267,6 +282,35 @@ public class CapteurVocalWebService extends AbstractOrgane {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 //     * Intercepte les évènements de contrôle de la reconnaissance vocale.
+	 //     * @param reconnaissanceVocaleControleEvent évènement de contrôle de la reconnaissance vocale
+	 //     */
+    @Handler
+    public void handleReconnaissanceVocaleControleEvent(ReconnaissanceVocaleControleEvent reconnaissanceVocaleControleEvent) {
+        if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER) {
+            System.out.println("Démarrage de la reconnaissance vocale");
+            misEnPause = false;
+			// Réinitialisation des blocs
+			contenuParle = new byte[0];
+			bufferNMoins1 = new byte[0];
+			bufferNMoins2 = new byte[0];
+			bufferNMoins3 = new byte[0];
+			bufferNMoins4 = new byte[0];
+			bufferNMoins5 = new byte[0];
+        } else if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE.METTRE_EN_PAUSE) {
+            System.out.println("Mise en pause de la reconnaissance vocale");
+            misEnPause = true;
+			// Réinitialisation des blocs
+			contenuParle = new byte[0];
+			bufferNMoins1 = new byte[0];
+			bufferNMoins2 = new byte[0];
+			bufferNMoins3 = new byte[0];
+			bufferNMoins4 = new byte[0];
+			bufferNMoins5 = new byte[0];
+        }
+    }
 	
 	/**
 	 * Crée l'entête WAV au contenu audio 
