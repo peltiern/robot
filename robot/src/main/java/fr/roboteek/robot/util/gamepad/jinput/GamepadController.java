@@ -1,5 +1,7 @@
-package fr.roboteek.robot.util.gamepad;
+package fr.roboteek.robot.util.gamepad.jinput;
 
+import fr.roboteek.robot.util.gamepad.shared.GamepadEvent;
+import fr.roboteek.robot.util.gamepad.shared.GamepadListener;
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;

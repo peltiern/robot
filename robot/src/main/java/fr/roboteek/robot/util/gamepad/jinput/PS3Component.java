@@ -1,5 +1,6 @@
-package fr.roboteek.robot.util.gamepad;
+package fr.roboteek.robot.util.gamepad.jinput;
 
+import fr.roboteek.robot.util.gamepad.shared.GamepadComponent;
 import net.java.games.input.Component;
 
 import java.util.Arrays;

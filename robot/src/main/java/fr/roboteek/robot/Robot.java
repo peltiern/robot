@@ -1,7 +1,9 @@
 package fr.roboteek.robot;
 
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
-import fr.roboteek.robot.util.gamepad.RobotGamepadController;
+import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
+import fr.roboteek.robot.util.gamepad.jinput.RobotJinputController;
+import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 import org.apache.log4j.Logger;
 
 import fr.roboteek.robot.decisionnel.Cerveau;
@@ -139,7 +141,8 @@ public class Robot {
         // Manette
         //String currentLibraryPath = System.getProperty("java.library.path");
         //System.setProperty("java.library.path", currentLibraryPath + ":/home/npeltier/Developpement/robot/robot-sandbox/target/natives");
-        robotGamepadController = new RobotGamepadController();
+        robotGamepadController = new RobotJinputController();
+        //robotGamepadController = new RobotJamepadController();
         robotGamepadController.start();
         
         // Démarrage du serveur
