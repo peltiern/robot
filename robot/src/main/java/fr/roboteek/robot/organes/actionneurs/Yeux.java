@@ -6,7 +6,7 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULI
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent.MOUVEMENTS_OEIL;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
-import fr.roboteek.robot.util.phidget.PhidgetMotor2;
+import fr.roboteek.robot.util.phidget.PhidgetServoMotor;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -46,10 +46,10 @@ public class Yeux extends AbstractOrgane {
 	private static final double POSITION_MAXIMALE_MOTEUR_OEIL_DROIT = toPositionAbsolueOeilDroit(POSITION_MINIMALE_RELATIVE_OEIL);
 
 	/** Moteur Gauche / Droite. */
-	private PhidgetMotor2 moteurOeilGauche;
+	private PhidgetServoMotor moteurOeilGauche;
 
 	/** Moteur Haut / Bas. */
-	private PhidgetMotor2 moteurOeilDroit;
+	private PhidgetServoMotor moteurOeilDroit;
 	
 	/** Flag indiquant que le roulis est en cours. */
 	private boolean roulisEnCours= false;
@@ -70,8 +70,8 @@ public class Yeux extends AbstractOrgane {
 		System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurOeilGauche = new PhidgetMotor2(IDX_MOTEUR_OEIL_GAUCHE, POSITION_ZERO_MOTEUR_OEIL_GAUCHE, POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE, POSITION_MAXIMALE_MOTEUR_OEIL_GAUCHE, 40, 60);
-		moteurOeilDroit = new PhidgetMotor2(IDX_MOTEUR_OEIL_DROIT, POSITION_ZERO_MOTEUR_OEIL_DROIT, POSITION_MINIMALE_MOTEUR_OEIL_DROIT, POSITION_MAXIMALE_MOTEUR_OEIL_DROIT, 40, 60);
+		moteurOeilGauche = new PhidgetServoMotor(IDX_MOTEUR_OEIL_GAUCHE, POSITION_ZERO_MOTEUR_OEIL_GAUCHE, POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE, POSITION_MAXIMALE_MOTEUR_OEIL_GAUCHE, 40, 60);
+		moteurOeilDroit = new PhidgetServoMotor(IDX_MOTEUR_OEIL_DROIT, POSITION_ZERO_MOTEUR_OEIL_DROIT, POSITION_MINIMALE_MOTEUR_OEIL_DROIT, POSITION_MAXIMALE_MOTEUR_OEIL_DROIT, 40, 60);
 
 		moteurOeilGauche.setSpeedRampingState(true);
 

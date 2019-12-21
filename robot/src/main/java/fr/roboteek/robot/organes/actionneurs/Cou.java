@@ -6,7 +6,7 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCH
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
-import fr.roboteek.robot.util.phidget.PhidgetMotor2;
+import fr.roboteek.robot.util.phidget.PhidgetServoMotor;
 import net.engio.mbassy.listener.Handler;
 
 /**
@@ -28,10 +28,10 @@ public class Cou extends AbstractOrgane {
 	public static final double POSITION_INITIALE_MOTEUR_HAUT_BAS = 75;
 
 	/** Moteur Gauche / Droite. */
-	private PhidgetMotor2 moteurGaucheDroite;
+	private PhidgetServoMotor moteurGaucheDroite;
 
 	/** Moteur Haut / Bas. */
-	private PhidgetMotor2 moteurHautBas;
+	private PhidgetServoMotor moteurHautBas;
 
 	/** Constructeur. */
 	public Cou() {
@@ -40,8 +40,8 @@ public class Cou extends AbstractOrgane {
 		System.out.println("COU :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurGaucheDroite = new PhidgetMotor2(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 40, 60);
-		moteurHautBas = new PhidgetMotor2(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 40, 60);
+		moteurGaucheDroite = new PhidgetServoMotor(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 40, 60);
+		moteurHautBas = new PhidgetServoMotor(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 40, 60);
 
 		moteurGaucheDroite.setEngaged(true);
 		moteurGaucheDroite.setSpeedRampingState(true);

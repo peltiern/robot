@@ -22,7 +22,7 @@ import com.phidget22.RCServoVelocityChangeListener;
  * Implémentation d'un moteur servo-moteur via le servo-contrôleur Phidget.
  * @author Java Developer
  */
-public class PhidgetMotor2 implements AttachListener, DetachListener, RCServoPositionChangeListener, RCServoTargetPositionReachedListener, ErrorListener, RCServoVelocityChangeListener {
+public class PhidgetServoMotor implements AttachListener, DetachListener, RCServoPositionChangeListener, RCServoTargetPositionReachedListener, ErrorListener, RCServoVelocityChangeListener {
 
 	/** Moteur Phidget associé. */
 	private RCServo rcServo;
@@ -49,7 +49,7 @@ public class PhidgetMotor2 implements AttachListener, DetachListener, RCServoPos
 	 * Constructeur d'un moteur Phidget.
 	 * @param index index du moteur sur le contrôleur
 	 */
-	public PhidgetMotor2(int index, double positionInitiale, double positionMin, double positionMax, double vitesseParDefaut, double accelerationParDefaut) {
+	public PhidgetServoMotor(int index, double positionInitiale, double positionMin, double positionMax, double vitesseParDefaut, double accelerationParDefaut) {
 		try {
 			this.positionInitiale = positionInitiale;
 			this.positionMin = positionMin;
@@ -307,7 +307,7 @@ public class PhidgetMotor2 implements AttachListener, DetachListener, RCServoPos
 	}
 
 	public static void main (String[] args) {
-		final PhidgetMotor2 moteurG = new PhidgetMotor2(2, 92, 50, 150, 60, 600);
+		final PhidgetServoMotor moteurG = new PhidgetServoMotor(2, 92, 50, 150, 60, 600);
 		try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
@@ -339,7 +339,7 @@ public class PhidgetMotor2 implements AttachListener, DetachListener, RCServoPos
 		moteurG.setPositionCible(92, null, null, true);
 		moteurG.setPositionCible(110, null, null, false);
 
-		final PhidgetMotor2 moteurD = new PhidgetMotor2(3, 86, 50, 150, 60, 600);
+		final PhidgetServoMotor moteurD = new PhidgetServoMotor(3, 86, 50, 150, 60, 600);
 //		try {
 //			Thread.sleep(3000);
 //		} catch (InterruptedException e) {
