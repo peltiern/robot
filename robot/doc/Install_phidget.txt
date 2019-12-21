@@ -15,31 +15,31 @@ tar -xzvf libphidget22java.tar.gz
 tar -xzvf phidget22networkserver.tar.gz
 tar -xzvf phidget22admin.tar.gz
 
-cd libphidget22-1.0.0.20181219/
+cd libphidget22-1.5.20191101/
 ./configure
 make
 sudo make install
 cd ..
 
-cd libphidget22extra-1.0.0.20181219/
+cd libphidget22extra-1.5.20191101/
 ./configure
 make
 sudo make install
 cd ..
 
-cd libphidget22java-1.0.0.20181219/
+cd libphidget22java-1.5.20191101/
 ./configure
 make
 sudo make install
 cd ..
 
-cd phidget22admin-1.0.0.20181219/
+cd phidget22admin-1.5.20191101/
 ./configure
 make
 sudo make install
 cd ..
 
-cd phidget22networkserver-1.0.0.20181219/
+cd phidget22networkserver-1.5.20191101/
 ./configure
 make
 sudo make install
@@ -48,7 +48,7 @@ sudo mkdir -p /etc/phidgets
 sudo cp files/etc/phidgets/* /etc/phidgets/
 
 #REGLES UDEV
-sudo cp /home/npeltier/Robot/phidgets/libphidget22-1.0.0.20181219/plat/linux/udev/99-libphidget22.rules /etc/udev/rules.d
+sudo cp /home/npeltier/Robot/phidgets/libphidget22-1.5.20191101/plat/linux/udev/99-libphidget22.rules /etc/udev/rules.d
 
 #TESTS
 mkdir tests
