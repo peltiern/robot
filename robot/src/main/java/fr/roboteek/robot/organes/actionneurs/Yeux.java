@@ -5,7 +5,6 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULIS;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent.MOUVEMENTS_OEIL;
-import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
 import fr.roboteek.robot.util.phidget.PhidgetServoMotor;
 import net.engio.mbassy.listener.Handler;
 
@@ -306,6 +305,8 @@ public class Yeux extends AbstractOrgane {
 		moteurOeilDroit.setSpeedRampingState(true);
 		moteurOeilGauche.setEngaged(false);
 		moteurOeilDroit.setEngaged(false);
+		moteurOeilGauche.close();
+		moteurOeilDroit.close();
 	}
 
 	/** Remet les yeux à leur position par défaut. */
@@ -316,14 +317,6 @@ public class Yeux extends AbstractOrgane {
 		positionRelativeOeilDroitDebutRoulis = 0;
 		positionRelativeOeilGaucheDebutRoulis = 0;
 		angleRoulis = 0;
-	}
-
-	public void onPositionchanged(MotorPositionChangeEvent event) {
-		if (event.getSource() == moteurOeilGauche) {
-			System.out.println("MOTEUR O G : " + event.getPosition());
-		} else if (event.getSource() == moteurOeilDroit) {
-			System.out.println("MOTEUR O D : " + event.getPosition());
-		}
 	}
 	
 	/**

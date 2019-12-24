@@ -142,6 +142,14 @@ public class PhidgetServoMotor implements AttachListener, DetachListener, RCServ
 		}
 	}
 
+	public void close() {
+		try {
+			rcServo.close();
+		} catch (PhidgetException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public double getPositionMax() {
 		return positionMax;
 	}
@@ -236,31 +244,13 @@ public class PhidgetServoMotor implements AttachListener, DetachListener, RCServ
 	public void onAttach(AttachEvent attachEvent) {
 		// Une fois que le moteur est attaché, on l'active
 		try {
-			final RCServo moteur = (RCServo) attachEvent.getSource();
-
-			/**
-			 * Get device information and display it.
-			 **/
-			int serialNumber = moteur.getDeviceSerialNumber();
-			String channelClass = moteur.getChannelClassName();
-			int channel = moteur.getChannel();
-
-			DeviceClass deviceClass = moteur.getDeviceClass();
-			if (deviceClass != DeviceClass.VINT) {
-				System.out.print("\n\t-> Channel Class: " + channelClass + "\n\t-> Serial Number: " + serialNumber +
-						"\n\t-> Channel:  " + channel + "\n");
-			} 
-			else {            
-				int hubPort = moteur.getHubPort();
-				System.out.print("\n\t-> Channel Class: " + channelClass + "\n\t-> Serial Number: " + serialNumber +
-						"\n\t-> Hub Port: " + hubPort + "\n\t-> Channel:  " + channel + "\n");
+			if (attachEvent.getSource().equals(rcServo)) {
+				rcServo.setDataInterval(32);
+				rcServo.setAcceleration(accelerationParDefaut);
+				rcServo.setTargetPosition(positionInitiale);
+				rcServo.setVelocityLimit(vitesseParDefaut);
+				rcServo.setEngaged(true);
 			}
-
-			moteur.setDataInterval(32);
-			moteur.setAcceleration(accelerationParDefaut);
-			moteur.setTargetPosition(positionInitiale);
-			moteur.setVelocityLimit(vitesseParDefaut);
-			moteur.setEngaged(true);
 		} catch (PhidgetException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -283,7 +273,7 @@ public class PhidgetServoMotor implements AttachListener, DetachListener, RCServ
 	
 	@Override
 	public void onPositionChange(RCServoPositionChangeEvent event) {
-		if (event.getSource() == rcServo) {
+		if (event.getSource().equals(rcServo)) {
 //			// Envoi d'un évènement à l'ensemble des écouteurs
 //			if (listeEcouteursChangementPosition != null && !listeEcouteursChangementPosition.isEmpty()) {
 //				final MotorPositionChangeEvent evenement = new MotorPositionChangeEvent(this, event.getPosition());

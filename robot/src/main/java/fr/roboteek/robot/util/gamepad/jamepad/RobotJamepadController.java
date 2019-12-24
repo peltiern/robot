@@ -1,6 +1,8 @@
 package fr.roboteek.robot.util.gamepad.jamepad;
 
+import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
+import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -26,6 +28,10 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(ps3Component -> {
             switch (ps3Component) {
+                case JOYSTICK_RIGHT_AXIS_X:
+                case JOYSTICK_RIGHT_AXIS_Y:
+                    processJoystickRight(event);
+                    break;
                 case JOYSTICK_LEFT_AXIS_X:
                     processJoystickLeftX(event);
                     break;
@@ -52,6 +58,28 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
                     break;
             }
         });
+    }
+
+    private void processJoystickRight(Ps3ControllerEvent event) {
+        double amplitude = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AMPLITUDE).getCurrentNumericValue();
+        // Ceil amplitude to 1
+        amplitude = amplitude > 1 ? 1 : amplitude;
+        double xValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_X).getCurrentNumericValue();
+        MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
+        mouvementRoueEvent.setAccelerationRoueGauche(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+        mouvementRoueEvent.setAccelerationRoueDroite(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+        double leftSpeed;
+        double rightSpeed;
+        if (xValue > 0) {
+            // Turn right
+            mouvementRoueEvent.setVitesseRoueGauche(amplitude);
+            mouvementRoueEvent.setVitesseRoueDroite(1 - xValue);
+        } else {
+            // Turn left
+            mouvementRoueEvent.setVitesseRoueGauche(1 + xValue);
+            mouvementRoueEvent.setVitesseRoueDroite(amplitude);
+        }
+        RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
     }
 
     private void processJoystickLeftX(Ps3ControllerEvent event) {

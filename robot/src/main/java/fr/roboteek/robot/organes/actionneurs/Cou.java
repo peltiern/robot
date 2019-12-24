@@ -5,7 +5,6 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.util.phidget.MotorPositionChangeEvent;
 import fr.roboteek.robot.util.phidget.PhidgetServoMotor;
 import net.engio.mbassy.listener.Handler;
 
@@ -166,7 +165,7 @@ public class Cou extends AbstractOrgane {
 	 * @param mouvementCouEvent évènement de mouvements
 	 */
 	@Handler
-	public void handleMouvementTeteEvent(MouvementCouEvent mouvementCouEvent) {
+	public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
 		//System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementCouEvent.getPositionGaucheDroite() != MouvementCouEvent.POSITION_NEUTRE) {
 			// TODO ne pas mettre en synchrone si Haut/Bas en synchrone ==> A corriger
@@ -211,20 +210,14 @@ public class Cou extends AbstractOrgane {
 		moteurHautBas.setSpeedRampingState(true);
 		moteurGaucheDroite.setEngaged(false);
 		moteurHautBas.setEngaged(false);
+		moteurGaucheDroite.close();
+		moteurHautBas.close();
 	}
 
 	/** Remet la tête à sa position par défaut. */
 	private void reset() {
 		moteurHautBas.setPositionCible(POSITION_INITIALE_MOTEUR_HAUT_BAS, null, null, false);
 		moteurGaucheDroite.setPositionCible(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, null, null, false);
-	}
-
-	public void onPositionchanged(MotorPositionChangeEvent event) {
-		if (event.getSource() == moteurGaucheDroite) {
-			System.out.println("MOTEUR G-D : " + event.getPosition() + ", PR = " + moteurGaucheDroite.getPositionReelle() + ", temps = " + System.currentTimeMillis());
-		} else if (event.getSource() == moteurHautBas) {
-			System.out.println("MOTEUR H-B : " + event.getPosition() + ", PR = " + moteurHautBas.getPositionReelle() + ", temps = " + System.currentTimeMillis());
-		}
 	}
 	
 	public void testMouvement() {
