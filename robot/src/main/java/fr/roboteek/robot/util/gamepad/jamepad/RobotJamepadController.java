@@ -73,10 +73,10 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         if (xValue > 0) {
             // Turn right
             mouvementRoueEvent.setVitesseRoueGauche(amplitude);
-            mouvementRoueEvent.setVitesseRoueDroite(1 - xValue);
+            mouvementRoueEvent.setVitesseRoueDroite((1 - xValue) * amplitude);
         } else {
             // Turn left
-            mouvementRoueEvent.setVitesseRoueGauche(1 + xValue);
+            mouvementRoueEvent.setVitesseRoueGauche((1 + xValue) * amplitude);
             mouvementRoueEvent.setVitesseRoueDroite(amplitude);
         }
         RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
