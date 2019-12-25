@@ -28,6 +28,11 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     private static final double VITESSE_MAX = 0.5;
 
     /**
+     * Vitesse par défaut.
+     */
+    public static final double VITESSE_PAR_DEFAUT = 1;
+
+    /**
      * Accélération par défaut.
      */
     public static final double ACCELERATION_PAR_DEFAUT = 1;
