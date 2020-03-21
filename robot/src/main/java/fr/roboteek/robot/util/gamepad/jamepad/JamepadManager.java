@@ -154,11 +154,11 @@ public class JamepadManager extends AbstractGamepadManager<PS3Listener> {
         }
         //JOYSTICK_RIGHT_AXIS_X
         if (previousState.rightStickX != currentState.rightStickX) {
-            modifiedComponents.add(PS3Component.BUTTON_ANALOG_RIGHT_2);
+            modifiedComponents.add(PS3Component.JOYSTICK_RIGHT_AXIS_X);
         }
         //JOYSTICK_RIGHT_AXIS_Y
         if (previousState.rightStickY != currentState.rightStickY) {
-            modifiedComponents.add(PS3Component.BUTTON_ANALOG_RIGHT_2);
+            modifiedComponents.add(PS3Component.JOYSTICK_RIGHT_AXIS_Y);
         }
         // JOYSTICK_RIGHT_AMPLITUDE
         if (previousState.rightStickMagnitude != currentState.rightStickMagnitude) {

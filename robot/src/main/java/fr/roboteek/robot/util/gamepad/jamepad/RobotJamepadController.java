@@ -73,6 +73,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         // Ceil amplitude to 1
         amplitude = amplitude > 1 ? 1 : amplitude;
         double xValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_X).getCurrentNumericValue();
+        double yValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_Y).getCurrentNumericValue();
         MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
         if (amplitude > 0.1) {
             // Differential drive
@@ -81,14 +82,15 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
             mouvementRoueEvent.setAccelerationRoueDroite(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
             double leftSpeed;
             double rightSpeed;
+            int signe = yValue > 0 ? 1 : -1;
             if (xValue > 0) {
                 // Turn right
-                mouvementRoueEvent.setVitesseRoueGauche(amplitude);
-                mouvementRoueEvent.setVitesseRoueDroite((1 - xValue) * amplitude);
+                mouvementRoueEvent.setVitesseRoueGauche(amplitude * signe);
+                mouvementRoueEvent.setVitesseRoueDroite((1 - xValue) * amplitude * signe);
             } else {
                 // Turn left
-                mouvementRoueEvent.setVitesseRoueGauche((1 + xValue) * amplitude);
-                mouvementRoueEvent.setVitesseRoueDroite(amplitude);
+                mouvementRoueEvent.setVitesseRoueGauche((1 + xValue) * amplitude * signe);
+                mouvementRoueEvent.setVitesseRoueDroite(amplitude * signe);
             }
         } else {
             // Stop
@@ -136,7 +138,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
     }
 
     private void processButtonCrossLeft(Ps3ControllerEvent event) {
-        GamepadComponentValue<PS3Component> leftValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_BOTTOM);
+        GamepadComponentValue<PS3Component> leftValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_LEFT);
         if (leftValue.getCurrentPressed()) {
             // Rotate left
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_GAUCHE, ConduiteDifferentielle.VITESSE_PAR_DEFAUT, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
@@ -198,7 +200,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         if (value == 0) {
             mouvementCouEvent.setMouvementHauBas(MouvementCouEvent.MOUVEMENTS_HAUT_BAS.STOPPER);
         } else {
-            mouvementCouEvent.setMouvementHauBas(value > 0 ? MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_BAS : MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_HAUT);
+            mouvementCouEvent.setMouvementHauBas(value > 0 ? MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_HAUT : MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
             mouvementCouEvent.setVitesseHautBas(absolute * 40);
         }
         mouvementCouEvent.setSynchrone(false);
@@ -280,7 +282,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
                 mouvementCouEvent.setMouvementRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE);
                 mouvementCouEvent.setAccelerationRoulis(2000D);
                 mouvementCouEvent.setVitesseRoulis(50D);
-                mouvementCouEvent.setPositionRoulis(-180);
+                mouvementCouEvent.setPositionRoulis(-179);
                 mouvementCouEvent.setSynchrone(false);
                 RobotEventBus.getInstance().publish(mouvementCouEvent);
             } else {

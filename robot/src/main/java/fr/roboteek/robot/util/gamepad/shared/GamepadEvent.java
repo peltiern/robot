@@ -29,4 +29,13 @@ public abstract class GamepadEvent <C> {
     public void setMapValues(Map<C, GamepadComponentValue<C>> mapValues) {
         this.mapValues = mapValues;
     }
+
+
+    @Override
+    public String toString() {
+        return "GamepadEvent{" +
+                "modifiedComponents=" + modifiedComponents +
+                ", mapValues=" + mapValues +
+                '}';
+    }
 }
