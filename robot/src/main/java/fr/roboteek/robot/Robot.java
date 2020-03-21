@@ -115,7 +115,7 @@ public class Robot {
         // Abonnement aux évènements du système nerveux
         RobotEventBus.getInstance().subscribe(this);
         RobotEventBus.getInstance().subscribe(cerveau);
-        RobotEventBus.getInstance().subscribe(tete);
+//        RobotEventBus.getInstance().subscribe(tete);
         RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(cou);
 //        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
