@@ -20,4 +20,7 @@ public class Constantes {
 	/** Chemin vers le dossier du système conversationnel Rivescript. */
 	public static final String DOSSIER_RIVESCRIPT = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "rivescript";
 
+	/** Chemin vers le dossier des sons. */
+	public static final String DOSSIER_SONS = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "sounds";
+
 }
