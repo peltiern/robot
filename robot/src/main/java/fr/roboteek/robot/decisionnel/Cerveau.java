@@ -7,6 +7,7 @@ import fr.roboteek.robot.memoire.ReconnaissanceFacialeAnnotator;
 import fr.roboteek.robot.server.RobotEventWebSocket;
 import fr.roboteek.robot.systemenerveux.event.*;
 import net.engio.mbassy.listener.Handler;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Cerveau du robot nécessaire à la prise de décisions.
@@ -93,7 +94,10 @@ public class Cerveau {
                 dire("Au revoir.");
             } else {
                 // Conversation
-                dire(intelligenceArtificielle.repondreAPhrase(texteReconnu));
+                RequeteIntelligenceArtificielle requete = new RequeteIntelligenceArtificielle();
+                requete.setInputText(texteReconnu);
+                ReponseIntelligenceArtificielle reponse = intelligenceArtificielle.repondreARequete(requete);
+                dire(reponse);
             }
 
 //            dire(texteReconnu);
@@ -119,6 +123,29 @@ public class Cerveau {
 //            }
 //            
 
+        }
+    }
+
+    /**
+     * Intercepte les évènements de détection vocale.
+     *
+     * @param detectionVocaleEvent évènement de détection vocale
+     */
+    @Handler
+    public void handleDetectionVocalEvent(DetectionVocaleEvent detectionVocaleEvent) {
+
+        if (detectionVocaleEvent != null && StringUtils.isNotEmpty(detectionVocaleEvent.getCheminFichier())) {
+                // Conversation
+            RequeteIntelligenceArtificielle requete = new RequeteIntelligenceArtificielle();
+            requete.setInputWavFilePath(detectionVocaleEvent.getCheminFichier());
+            ReponseIntelligenceArtificielle reponse = intelligenceArtificielle.repondreARequete(requete);
+            dire(reponse);
+
+            // Envoi d'un évènement de conversation au serveur
+            final ConversationEvent conversationEvent = new ConversationEvent();
+            conversationEvent.setTexte(reponse.getOutputText());
+            conversationEvent.setIdLocuteur(0);
+            RobotEventWebSocket.broadcastEvent(conversationEvent);
         }
     }
 
@@ -179,6 +206,18 @@ public class Cerveau {
         System.out.println("Dire = " + texte);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
+        RobotEventBus.getInstance().publishAsync(paroleEvent);
+    }
+
+    /**
+     * Envoie un évènement pour dire du texte.
+     *
+     * @param reponse la réponse à dire
+     */
+    private void dire(ReponseIntelligenceArtificielle reponse) {
+        final ParoleEvent paroleEvent = new ParoleEvent();
+        paroleEvent.setTexte(reponse.getOutputText());
+        paroleEvent.setAudioContent(reponse.getOutputAudio());
         RobotEventBus.getInstance().publishAsync(paroleEvent);
     }
 

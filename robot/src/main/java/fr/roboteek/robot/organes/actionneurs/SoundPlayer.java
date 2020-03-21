@@ -31,9 +31,9 @@ public class SoundPlayer extends AbstractOrgane {
      */
     public void play(RobotSound sound) {
         if(sound != null) {
-            if (streamPlayer.isPlaying()) {
-                streamPlayer.stop();
-            }
+//            if (streamPlayer.isPlaying()) {
+//                streamPlayer.stop();
+//            }
 
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
@@ -83,5 +83,8 @@ public class SoundPlayer extends AbstractOrgane {
     public static void main(String[] args) {
         final SoundPlayer soundPlayer = new SoundPlayer();
         soundPlayer.play(RobotSound.WALLE);
+        soundPlayer.play(RobotSound.OH);
+        soundPlayer.play(RobotSound.WOW);
+        soundPlayer.play(RobotSound.SAD);
     }
 }
