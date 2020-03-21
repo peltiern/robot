@@ -6,6 +6,7 @@ import com.phidget22.DCMotor;
 import com.phidget22.DetachEvent;
 import com.phidget22.DetachListener;
 import com.phidget22.PhidgetException;
+import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
 
 public class PhidgetDCMotor implements AttachListener, DetachListener {
 
@@ -79,6 +80,7 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
                 //moteur.setDataInterval(32);
                 motor.setAcceleration(accelerationParDefaut);
                 motor.setTargetVelocity(0);
+                System.out.println("DC motor " + motor.getHubPort() + " attached");
             }
 
         } catch (PhidgetException e) {
@@ -90,6 +92,20 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
     @Override
     public void onDetach(DetachEvent detachEvent) {
 
+    }
+
+    public static void main(String args[]) {
+        PhidgetDCMotor m = new PhidgetDCMotor(561050, 0, 1);
+        try {
+            Thread.sleep(10000);
+            m.forward(0.5, 1.0);
+            Thread.sleep(3000);
+            m.backward(0.5, 1.0);
+            Thread.sleep(3000);
+            m.stop();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     // TODO Voir pour gérer la température et le courant pour pouvoir envoyer des évènements

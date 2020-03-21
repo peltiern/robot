@@ -113,6 +113,7 @@ public class PhidgetServoMotor implements AttachListener, DetachListener, RCServ
 			return rcServo.getPosition();
 		} catch (PhidgetException e) {
 			// TODO Auto-generated catch block
+			System.out.println("Plantage position reelle");
 			e.printStackTrace();
 			return 0;
 		}
@@ -245,11 +246,12 @@ public class PhidgetServoMotor implements AttachListener, DetachListener, RCServ
 		// Une fois que le moteur est attaché, on l'active
 		try {
 			if (attachEvent.getSource().equals(rcServo)) {
-				rcServo.setDataInterval(32);
+				//rcServo.setDataInterval(32);
 				rcServo.setAcceleration(accelerationParDefaut);
 				rcServo.setTargetPosition(positionInitiale);
 				rcServo.setVelocityLimit(vitesseParDefaut);
 				rcServo.setEngaged(true);
+				System.out.println("Servo " + rcServo.getChannel() + " attached");
 			}
 		} catch (PhidgetException e) {
 			// TODO Auto-generated catch block
@@ -291,8 +293,14 @@ public class PhidgetServoMotor implements AttachListener, DetachListener, RCServ
 	}
 
 	@Override
-	public void onDetach(DetachEvent arg0) {
-		// TODO Auto-generated method stub
+	public void onDetach(DetachEvent event) {
+		if (event.getSource().equals(rcServo)) {
+			try {
+				System.out.println("Servo " + rcServo.getChannel() + " detached");
+			} catch (PhidgetException e) {
+				e.printStackTrace();
+			}
+		}
 
 	}
 

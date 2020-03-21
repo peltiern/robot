@@ -25,7 +25,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     /**
      * Vitesse maximale des moteurs.
      */
-    private static final double VITESSE_MAX = 0.5;
+    private static final double VITESSE_MAX = 1;
 
     /**
      * Vitesse par défaut.
@@ -45,7 +45,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     /**
      * Moteur pour la roue droite.
      */
-    private PhidgetDCMotor moteurDroit;
+    //private PhidgetDCMotor moteurDroit;
 
     /**
      * Constructeur.
@@ -55,7 +55,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
 
         // Création et initialisation des moteurs
         moteurGauche = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_GAUCHE, ACCELERATION_PAR_DEFAUT);
-        moteurDroit = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_DROIT, ACCELERATION_PAR_DEFAUT);
+        //moteurDroit = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_DROIT, ACCELERATION_PAR_DEFAUT);
 
     }
 
@@ -63,14 +63,14 @@ public class ConduiteDifferentielle extends AbstractOrgane {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
         moteurGauche.forward(vitesseFormatee, accelerationFormatee);
-        moteurDroit.forward(vitesseFormatee, accelerationFormatee);
+        //moteurDroit.forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void reculer(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
         moteurGauche.forward(-vitesseFormatee, accelerationFormatee);
-        moteurDroit.forward(-vitesseFormatee, accelerationFormatee);
+        //moteurDroit.forward(-vitesseFormatee, accelerationFormatee);
     }
 
     public void pivoterAGauche(Double vitesse, Double acceleration) {
@@ -97,12 +97,12 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     public void tournerRoueDroite(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
-        moteurDroit.forward(vitesseFormatee, accelerationFormatee);
+        //moteurDroit.forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void stop() {
         moteurGauche.stop();
-        moteurDroit.stop();
+        //moteurDroit.stop();
     }
 
     /**
@@ -111,6 +111,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
      */
     @Handler
     public void handleMouvementRoueEvent(MouvementRoueEvent mouvementRoueEvent) {
+        System.out.println(mouvementRoueEvent);
         if (mouvementRoueEvent.getMouvementRoue() == MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER) {
             avancer(mouvementRoueEvent.getVitesseGlobale(), mouvementRoueEvent.getAccelerationGlobale());
         } else if (mouvementRoueEvent.getMouvementRoue() == MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER) {
@@ -136,13 +137,13 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     public void arreter() {
         reset();
         moteurGauche.close();
-        moteurDroit.close();
+        //moteurDroit.close();
     }
 
     /** Arrête les moteurs. */
     private void reset() {
         moteurGauche.stop();
-        moteurDroit.stop();
+        //moteurDroit.stop();
     }
 
     private double toVitesse(Double vitesse) {
