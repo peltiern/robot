@@ -27,7 +27,12 @@ public class Cerveau {
     /**
      * Intelligence artificielle (contenant le système conversationnel).
      */
-    private IntelligenceArtificielleRivescript intelligenceArtificielle;
+//    private IntelligenceArtificielleRivescript intelligenceArtificielle;
+
+    /**
+     * Intelligence artificielle (contenant le système conversationnel).
+     */
+    private IntelligenceArtificielleDialogFlow intelligenceArtificielle;
 
     /**
      * Reconnaissance faciale.
@@ -41,7 +46,7 @@ public class Cerveau {
 
     public Cerveau() {
         contexte = new Contexte();
-        intelligenceArtificielle = new IntelligenceArtificielleRivescript();
+        intelligenceArtificielle = new IntelligenceArtificielleDialogFlow();
 //        reconnaissanceFaciale = new ReconnaissanceFacialeEigenface();
         reconnaissanceFaciale = new ReconnaissanceFacialeAnnotator();
     }

@@ -1,5 +1,7 @@
 package fr.roboteek.robot;
 
+import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
+import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
 import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.jinput.RobotJinputController;
@@ -38,30 +40,21 @@ public class Robot {
     
     /** Yeux du robot. */
     private Yeux yeux;
+
+    /** Conduite différentielle. */
+    private ConduiteDifferentielle conduiteDifferentielle;
     
     /** Visage. */
     private VisageDoubleBuffering visage;
+    
+    /** Organe de la parole. */
+//    private OrganeParoleEspeak organeParole;
 
     /** Organe de la parole. */
-//    private OrganeParole organeParole;
-    
-    /** Organe de la parole. */
-//    private OrganeParole3 organeParole;
-    
-    /** Organe de la parole. */
-    private OrganeParoleEspeak organeParole;
+    private OrganeParoleGoogle organeParole;
 
     /** Capteur de vision (oeil du robot). Thread ? */
     private AbstractOrgane capteurVision;
-
-    /** Capteur vocal. */
-//    private CapteurVocal capteurVocal;
-    
-    /** Capteur vocal. */
-//    private CapteurVocal2 capteurVocal;
-    
-    /** Capteur vocal. */
-    //private CapteurVocal3 capteurVocal;
     
     /** Capteur vocal. */
     private AbstractOrgane capteurVocal;
@@ -106,12 +99,15 @@ public class Robot {
         //tete =  new Tete();
         yeux = new Yeux();
         cou =  new Cou();
-        organeParole = new OrganeParoleEspeak();
+//        conduiteDifferentielle = new ConduiteDifferentielle();
+//        organeParole = new OrganeParoleEspeak();
+        organeParole = new OrganeParoleGoogle();
 //        visage = VisageDoubleBuffering.getInstance();
         // Initialisation des actionneurs
 //        tete.initialiser();
         cou.initialiser();
         yeux.initialiser();
+//        conduiteDifferentielle.initialiser();
         organeParole.initialiser();
 //        visage.initialiser();
         
@@ -119,9 +115,10 @@ public class Robot {
         // Abonnement aux évènements du système nerveux
         RobotEventBus.getInstance().subscribe(this);
         RobotEventBus.getInstance().subscribe(cerveau);
-//        RobotEventBus.getInstance().subscribe(tete);
+        RobotEventBus.getInstance().subscribe(tete);
         RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(cou);
+//        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
         RobotEventBus.getInstance().subscribe(organeParole);
 //        RobotEventBus.getInstance().subscribe(visage);
 
@@ -141,8 +138,8 @@ public class Robot {
         // Manette
         //String currentLibraryPath = System.getProperty("java.library.path");
         //System.setProperty("java.library.path", currentLibraryPath + ":/home/npeltier/Developpement/robot/robot-sandbox/target/natives");
-        robotGamepadController = new RobotJinputController();
-        //robotGamepadController = new RobotJamepadController();
+        //robotGamepadController = new RobotJinputController();
+        robotGamepadController = new RobotJamepadController();
         robotGamepadController.start();
         
         // Démarrage du serveur
@@ -172,6 +169,7 @@ public class Robot {
 //                RobotEventBus.getInstance().unsubscribe(tete);
                 RobotEventBus.getInstance().unsubscribe(cou);
                 RobotEventBus.getInstance().unsubscribe(yeux);
+//                RobotEventBus.getInstance().unsubscribe(conduiteDifferentielle);
                 logger.debug("arrêt du robot 3");
                 RobotEventBus.getInstance().unsubscribe(cerveau);
                 logger.debug("arrêt du robot 4");

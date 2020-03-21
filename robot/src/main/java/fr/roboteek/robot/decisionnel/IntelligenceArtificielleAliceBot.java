@@ -4,21 +4,19 @@ import org.alicebot.ab.Bot;
 import org.alicebot.ab.Chat;
 import org.apache.log4j.Logger;
 
-import fr.roboteek.robot.activites.ChatBotActivite;
-
 /**
  * Intelligence artificielle du robot permettant notamment de faire la conversation.
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-public class IntelligenceArtificielle {
+public class IntelligenceArtificielleAliceBot {
     
     /** Système conversationnel. */
     private Chat chat;
     
     /** Logger. */
-    private Logger logger = Logger.getLogger(IntelligenceArtificielle.class);
+    private Logger logger = Logger.getLogger(IntelligenceArtificielleAliceBot.class);
     
-    public IntelligenceArtificielle() {
+    public IntelligenceArtificielleAliceBot() {
         // Création du chat
         String botname="amy";
         String path = System.getProperty("robot.dir");
