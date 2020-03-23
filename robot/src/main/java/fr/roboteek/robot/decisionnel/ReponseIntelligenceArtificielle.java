@@ -31,4 +31,13 @@ public class ReponseIntelligenceArtificielle {
     public void setOutputAudio(byte[] outputAudio) {
         this.outputAudio = outputAudio;
     }
+
+
+    @Override
+    public String toString() {
+        return "ReponseIntelligenceArtificielle{" +
+                "inputText='" + inputText + '\'' +
+                ", outputText='" + outputText + '\'' +
+                '}';
+    }
 }

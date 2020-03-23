@@ -215,6 +215,7 @@ public class Cerveau {
      * @param reponse la réponse à dire
      */
     private void dire(ReponseIntelligenceArtificielle reponse) {
+        System.out.println("Réponse = " + reponse);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(reponse.getOutputText());
         paroleEvent.setAudioContent(reponse.getOutputAudio());

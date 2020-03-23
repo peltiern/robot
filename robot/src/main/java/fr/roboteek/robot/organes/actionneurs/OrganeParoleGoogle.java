@@ -121,6 +121,54 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             RobotEventBus.getInstance().publishAsync(eventRedemarrage);
         }
     }
+
+    /**
+     * Lit un texte issu d'un contenu audio.
+     * @param audioContent le texte à dire
+     */
+    public void lire(byte[] audioContent) {
+        if (audioContent != null) {
+            // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
+            final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
+            eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
+//            RobotEventBus.getInstance().publish(eventPause);
+
+            System.out.println("Lecture issu d'un contenu audio :\t" + audioContent);
+
+            // Write the response to the output file.
+            String pathOutputFile = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "output-" + System.currentTimeMillis() + ".wav";
+            try (OutputStream out = new FileOutputStream(pathOutputFile)) {
+                out.write(audioContent);
+                logger.info("Fin d'écriture dans le fichier : " + System.currentTimeMillis());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            String[] params = {fichierSyntheseVocale, pathOutputFile};
+            try {
+                Process p = Runtime.getRuntime().exec(params);
+                p.waitFor();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            System.out.println("Fin Lecture :\t" + audioContent);
+            logger.debug("Fin lecture :\t" + audioContent);
+
+            // Envoi d'un évènement pour redémarrer la reconnaissance vocale
+            final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
+            eventRedemarrage.setControle(CONTROLE.DEMARRER);
+            RobotEventBus.getInstance().publishAsync(eventRedemarrage);
+        }
+    }
     
     /**
      * Intercepte les évènements pour lire du texte.
@@ -129,7 +177,9 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     @Handler
     public void handleParoleEvent(ParoleEvent paroleEvent) {
     	System.out.println("ParoleEvent = " + paroleEvent);
-        if (paroleEvent.getTexte() != null && !paroleEvent.getTexte().trim().equals("")) {
+    	if (paroleEvent.getAudioContent() != null) {
+    	    lire(paroleEvent.getAudioContent());
+        } else if (paroleEvent.getTexte() != null && !paroleEvent.getTexte().trim().equals("")) {
             lire(paroleEvent.getTexte().trim());
         }
     }
