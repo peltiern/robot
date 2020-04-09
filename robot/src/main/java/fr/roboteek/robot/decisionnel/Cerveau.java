@@ -33,7 +33,8 @@ public class Cerveau {
     /**
      * Intelligence artificielle (contenant le système conversationnel).
      */
-    private IntelligenceArtificielleDialogFlow intelligenceArtificielle;
+//    private IntelligenceArtificielleDialogFlow intelligenceArtificielle;
+    private IntelligenceArtificielleGoogleKnowledge intelligenceArtificielle;
 
     /**
      * Reconnaissance faciale.
@@ -47,7 +48,7 @@ public class Cerveau {
 
     public Cerveau() {
         contexte = new Contexte();
-        intelligenceArtificielle = new IntelligenceArtificielleDialogFlow();
+        intelligenceArtificielle = new IntelligenceArtificielleGoogleKnowledge();
 //        reconnaissanceFaciale = new ReconnaissanceFacialeEigenface();
         reconnaissanceFaciale = new ReconnaissanceFacialeAnnotator();
     }

@@ -3,6 +3,7 @@ package fr.roboteek.robot;
 import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
+import fr.roboteek.robot.organes.capteurs.CapteurVocalSimple;
 import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.jinput.RobotJinputController;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
@@ -97,16 +98,16 @@ public class Robot {
         
         // Actionneurs
         //tete =  new Tete();
-        yeux = new Yeux();
-        cou =  new Cou();
+//        yeux = new Yeux();
+//        cou =  new Cou();
 //        conduiteDifferentielle = new ConduiteDifferentielle();
 //        organeParole = new OrganeParoleEspeak();
         organeParole = new OrganeParoleGoogle();
 //        visage = VisageDoubleBuffering.getInstance();
         // Initialisation des actionneurs
 //        tete.initialiser();
-        cou.initialiser();
-        yeux.initialiser();
+//        cou.initialiser();
+//        yeux.initialiser();
 //        conduiteDifferentielle.initialiser();
         organeParole.initialiser();
 //        visage.initialiser();
@@ -116,22 +117,23 @@ public class Robot {
         RobotEventBus.getInstance().subscribe(this);
         RobotEventBus.getInstance().subscribe(cerveau);
 //        RobotEventBus.getInstance().subscribe(tete);
-        RobotEventBus.getInstance().subscribe(yeux);
-        RobotEventBus.getInstance().subscribe(cou);
+//        RobotEventBus.getInstance().subscribe(yeux);
+//        RobotEventBus.getInstance().subscribe(cou);
 //        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
         RobotEventBus.getInstance().subscribe(organeParole);
 //        RobotEventBus.getInstance().subscribe(visage);
 
         // Capteurs
         capteurVision = new CapteurVisionWebSocket();
+//        capteurVocal = new CapteurVocalSimple();
         capteurVocal = new CapteurVocalWebService(BingSpeechRecognizerRest.getInstance());
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
-        capteurActiviteSon = new CapteurActiviteSon();
+//        capteurActiviteSon = new CapteurActiviteSon();
         
         // Initialisation des capteurs
         capteurVision.initialiser();
         capteurVocal.initialiser();
-        capteurActiviteSon.initialiser();
+//        capteurActiviteSon.initialiser();
         
         RobotEventBus.getInstance().subscribe(capteurVocal);
 
@@ -139,8 +141,8 @@ public class Robot {
         //String currentLibraryPath = System.getProperty("java.library.path");
         //System.setProperty("java.library.path", currentLibraryPath + ":/home/npeltier/Developpement/robot/robot-sandbox/target/natives");
         //robotGamepadController = new RobotJinputController();
-        robotGamepadController = new RobotJamepadController();
-        robotGamepadController.start();
+//        robotGamepadController = new RobotJamepadController();
+//        robotGamepadController.start();
         
         // Démarrage du serveur
         RobotServer.getInstance().run();
@@ -169,7 +171,7 @@ public class Robot {
 //                RobotEventBus.getInstance().unsubscribe(tete);
                 RobotEventBus.getInstance().unsubscribe(cou);
                 RobotEventBus.getInstance().unsubscribe(yeux);
-//                RobotEventBus.getInstance().unsubscribe(conduiteDifferentielle);
+                RobotEventBus.getInstance().unsubscribe(conduiteDifferentielle);
                 logger.debug("arrêt du robot 3");
                 RobotEventBus.getInstance().unsubscribe(cerveau);
                 logger.debug("arrêt du robot 4");
