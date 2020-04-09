@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/ai-engine" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/ai-engine/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/robot" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/robot-sandbox" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/robot-sandbox/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/robot/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/robot/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
