@@ -284,9 +284,17 @@
 									<div class="clearfix"></div>
 								</div>
 								<div class="x_content">
-									<div id="divVideo" style="display: table-cell;">
+									<div id="divVideo" class="div-video">
 										<img id="liveVideo" class="liveVideo"
 											onmousemove="bougerTete(event);" />
+										<svg id="svgLandmarks" class="landmarks" width="640px" height="480px" viewBox="0 0 640 480"></svg>
+										<div id="divFaces" class="div-faces">
+										</div>
+									</div>
+									<div>
+										<input id="showFaces" type="checkbox" checked/>Visages
+										<input id="showLandmarks" type="checkbox" checked/>Repères
+										<input id="pauseVideo" type="checkbox"/>Pause
 									</div>
 								</div>
 							</div>

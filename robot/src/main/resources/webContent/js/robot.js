@@ -14,12 +14,158 @@ contexteAudio = new AudioContext();
 // Websocket pour la vidéo
 var wsVideo = new WebSocket("ws://" + location.hostname + ":" + location.port + "/ws/liveVideo/");
 wsVideo.onmessage = function(msg) {
-	var target = document.getElementById("liveVideo");
-	url = window.URL.createObjectURL(msg.data);
-	target.onload = function() {
-		window.URL.revokeObjectURL(url);
-	};
-	target.src = url;
+    if (!$("#pauseVideo").is(':checked')) {
+        var target = document.getElementById("liveVideo");
+        var msgJson = JSON.parse(msg.data);
+    //	url = window.URL.createObjectURL(msg.data);
+    //    target.onload = function() {
+    //        window.URL.revokeObjectURL(url);
+    //    };
+    //    target.src = url;
+        target.src = "data:image/jpeg;base64, " + msgJson.imageBase64;
+        // On vide le conteneur des visages
+        $("#divFaces").empty();
+        $("#svgLandmarks").empty();
+        // Chargement des visages
+        var showFaces = $("#showFaces").is(':checked');
+        var showLandmarks = $("#showLandmarks").is(':checked');
+//        if (showFaces || showLandmarks) {
+            $.each(msgJson.faces, function( index, face ) {
+                // Chargement des repères
+//                if (showLandmarks) {
+                    // Left eye
+                    var pointsLeftEye = "";
+                    $.each(face.landmarks.left_eye, function( index, point ) {
+                        if (index != 0) {
+                            pointsLeftEye += ", ";
+                        }
+                        pointsLeftEye += point.x + " " + point.y;
+                    });
+                    if (pointsLeftEye != "") {
+                        var polyline = makeSVGElement('polygon', { 'points': '' + pointsLeftEye + '',
+                                                                'stroke': 'red',
+                                                               'stroke-width': 3,
+                                                                'fill': 'transparent' });
+                        $("#svgLandmarks").append(polyline);
+                    }
+                    // Right eye
+                    var pointsRightEye = "";
+                    $.each(face.landmarks.right_eye, function( index, point ) {
+                        if (index != 0) {
+                            pointsRightEye += ", ";
+                        }
+                        pointsRightEye += point.x + " " + point.y;
+                    });
+                    if (pointsRightEye != "") {
+                        var polyline = makeSVGElement('polygon', { 'points': '' + pointsRightEye + '',
+                                                                'stroke': 'red',
+                                                               'stroke-width': 3,
+                                                                'fill': 'transparent' });
+                        $("#svgLandmarks").append(polyline);
+                    }
+
+                    // Top lip
+                    var pointsTopLip = "";
+                    $.each(face.landmarks.top_lip, function( index, point ) {
+                        if (index != 0) {
+                            pointsTopLip += ", ";
+                        }
+                        pointsTopLip += point.x + " " + point.y;
+                    });
+                    if (pointsTopLip != "") {
+                        var polyline = makeSVGElement('polyline', { 'points': '' + pointsTopLip + '',
+                                                                'stroke': 'blue',
+                                                               'stroke-width': 3,
+                                                                'fill': 'transparent' });
+                        $("#svgLandmarks").append(polyline);
+                    }
+
+                    // Bottom lip
+                    var pointsBottomLip = "";
+                    $.each(face.landmarks.bottom_lip, function( index, point ) {
+                        if (index != 0) {
+                            pointsBottomLip += ", ";
+                        }
+                        pointsBottomLip += point.x + " " + point.y;
+                    });
+                    if (pointsBottomLip != "") {
+                        var polyline = makeSVGElement('polyline', { 'points': '' + pointsBottomLip + '',
+                                                                'stroke': 'blue',
+                                                               'stroke-width': 3,
+                                                                'fill': 'transparent' });
+                        $("#svgLandmarks").append(polyline);
+                    }
+
+                    // Nose bridge
+                    var pointsNoseBridge = "";
+                    $.each(face.landmarks.nose_bridge, function( index, point ) {
+                        if (index != 0) {
+                            pointsNoseBridge += ", ";
+                        }
+                        pointsNoseBridge += point.x + " " + point.y;
+                    });
+                    if (pointsNoseBridge != "") {
+                        var polyline = makeSVGElement('polyline', { 'points': '' + pointsNoseBridge + '',
+                                                                'stroke': 'yellow',
+                                                               'stroke-width': 3,
+                                                                'fill': 'transparent' });
+                        $("#svgLandmarks").append(polyline);
+                    }
+
+                    // Nose bridge
+                    var pointsNoseTip = "";
+                    $.each(face.landmarks.nose_tip, function( index, point ) {
+                        if (index != 0) {
+                            pointsNoseTip += ", ";
+                        }
+                        pointsNoseTip += point.x + " " + point.y;
+                    });
+                    if (pointsNoseTip != "") {
+                        var polyline = makeSVGElement('polyline', { 'points': '' + pointsNoseTip + '',
+                                                                'stroke': 'yellow',
+                                                               'stroke-width': 3,
+                                                                'fill': 'transparent' });
+                        $("#svgLandmarks").append(polyline);
+                    }
+//                }
+//                if (showFaces) {
+                    // Ajout de l'image
+                    $("#divFaces").append(
+                        "<div class='face'>"
+                            + "<div class='face_bounds' style='left: " + (face.x + 5) + "px; top: " + (face.y + 5) + "px; width: " + face.width + "px; height: " + face.height + "px;'/>"
+                            + "<div class='face_label' style='left: " + (face.x + 5) + "px; top: " + (face.y + face.height) + "px; min-width: " + face.width + "px; height: 25px;'>"
+                                + "<span>" + face.name + "</span>"
+                            + "</div>"
+                        + "</div>"
+                    );
+//                }
+            });
+//        }
+    }
+}
+$("#showFaces").change(function () {
+    var checked = $(this).is(':checked');
+    if (checked) {
+        $("#divFaces").show();
+    } else {
+        $("#divFaces").hide();
+    }
+});
+$("#showLandmarks").change(function () {
+    var checked = $(this).is(':checked');
+    if (checked) {
+        $("#svgLandmarks").show();
+    } else {
+        $("#svgLandmarks").hide();
+    }
+});
+
+function makeSVGElement(tag, attrs) {
+    var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) {
+        el.setAttribute(k, attrs[k]);
+    }
+    return el;
 }
 
 // Websocket pour l'audio
@@ -267,14 +413,14 @@ function chargerListeImagesVisage() {
  * Initialise le joystick de contrôle de la tête.
  */
 function initialiserJoystick() {
-	var joystick = nipplejs.create({
-        zone: document.getElementById("divVideo"),
-        color: "blue",
-        threshold: 0.7
-    });
-	joystick.on('end move', function(evt, data) {
-		traiterJoystickEvent(evt, data);
-	});
+//	var joystick = nipplejs.create({
+//        zone: document.getElementById("divVideo"),
+//        color: "blue",
+//        threshold: 0.7
+//    });
+//	joystick.on('end move', function(evt, data) {
+//		traiterJoystickEvent(evt, data);
+//	});
 }
 
 /**

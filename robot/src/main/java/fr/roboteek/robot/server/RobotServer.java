@@ -22,7 +22,7 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import fr.roboteek.robot.organes.actionneurs.Cou;
-import fr.roboteek.robot.server.test.CapteurVisionWebSocket;
+import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
 public class RobotServer {

@@ -18,49 +18,62 @@
 
 package fr.roboteek.robot.server;
 
+import fr.roboteek.robot.server.event.ImageWithRecognizedFacesCodec;
+
+import javax.websocket.EncodeException;
+import javax.websocket.OnClose;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
+import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.websocket.OnClose;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
-import javax.websocket.server.ServerEndpoint;
-
-@ServerEndpoint("/liveVideo/")
+@ServerEndpoint(value = "/liveVideo/",
+        encoders = {ImageWithRecognizedFacesCodec.class}
+)
 public class VideoWebSocket {
     private static Set<Session> clients = Collections.synchronizedSet(new HashSet<Session>());
 
     @OnOpen
-    public void onOpen(Session session)
-    {
-    	session.setMaxBinaryMessageBufferSize(1024*512);
+    public void onOpen(Session session) {
+        session.setMaxBinaryMessageBufferSize(1024 * 512);
         clients.add(session);
-        System.out.println(this +  " : = Nouvelle session : " + session.getUserProperties());
+        System.out.println(this + " : = Nouvelle session : " + session.getUserProperties());
     }
 
     @OnClose
-    public void onClose(Session session)
-    {
-    	System.out.println(this +  " : = Fermeture session : " + session.getUserProperties());
-    	clients.remove(session);
+    public void onClose(Session session) {
+        System.out.println(this + " : = Fermeture session : " + session.getUserProperties());
+        clients.remove(session);
     }
 
-	public static Set<Session> getClients() {
-		return clients;
-	}
-	
-	public static synchronized void broadcastImage(byte[] image) {
-        for(Session session : getClients()){
-        	try {
-        		ByteBuffer buf = ByteBuffer.wrap(image);
-				session.getBasicRemote().sendBinary(buf);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+    public static Set<Session> getClients() {
+        return clients;
+    }
+
+    public static synchronized void broadcastImage(byte[] image) {
+        for (Session session : getClients()) {
+            try {
+                ByteBuffer buf = ByteBuffer.wrap(image);
+                session.getBasicRemote().sendBinary(buf);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
-	}
+    }
+
+    public static synchronized void broadcastImageWithFaceInfos(ImageWithRecognizedFaces imageWithRecognizedFaces) {
+        for (Session session : getClients()) {
+            try {
+                session.getBasicRemote().sendObject(imageWithRecognizedFaces);
+            } catch (EncodeException | IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
 }
