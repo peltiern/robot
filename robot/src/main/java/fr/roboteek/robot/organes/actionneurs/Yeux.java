@@ -27,10 +27,10 @@ public class Yeux extends AbstractOrgane {
 	private static final double POSITION_ZERO_MOTEUR_OEIL_DROIT = 86;
 	
 	/** Position minimale relative d'un oeil. */
-	private static final double POSITION_MINIMALE_RELATIVE_OEIL = -24;
+	public static final double POSITION_MINIMALE_RELATIVE_OEIL = -24;
 	
 	/** Position maximale relative d'un oeil. */
-	private static final double POSITION_MAXIMALE_RELATIVE_OEIL = 20;
+	public static final double POSITION_MAXIMALE_RELATIVE_OEIL = 20;
 	
 	/** Position minimale du moteur de l'oeil gauche. */
 	private static final double POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE = toPositionAbsolueOeilGauche(POSITION_MAXIMALE_RELATIVE_OEIL);
@@ -80,6 +80,11 @@ public class Yeux extends AbstractOrgane {
 
 	@Override
 	public void initialiser() {
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		reset();
 	}
 

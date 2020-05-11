@@ -39,8 +39,8 @@ public class Cou extends AbstractOrgane {
 		System.out.println("COU :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurGaucheDroite = new PhidgetServoMotor(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 40, 60);
-		moteurHautBas = new PhidgetServoMotor(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 40, 60);
+		moteurGaucheDroite = new PhidgetServoMotor(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 100, 200);
+		moteurHautBas = new PhidgetServoMotor(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 100, 200);
 
 		moteurGaucheDroite.setEngaged(true);
 		moteurGaucheDroite.setSpeedRampingState(true);
@@ -51,6 +51,11 @@ public class Cou extends AbstractOrgane {
 
 	@Override
 	public void initialiser() {
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		reset();
 	}
 

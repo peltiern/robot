@@ -11,10 +11,11 @@ import net.engio.mbassy.listener.Handler;
 import org.apache.log4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
 
 public class SoundPlayer extends AbstractOrgane {
 
-    private StreamPlayer streamPlayer;
+//    private StreamPlayer streamPlayer;
 
     /** Logger. */
     private Logger logger = Logger.getLogger(OrganeParoleEspeak.class);
@@ -22,7 +23,7 @@ public class SoundPlayer extends AbstractOrgane {
     /** Constructeur. */
     public SoundPlayer() {
         super();
-        streamPlayer = new StreamPlayer();
+//        streamPlayer = new StreamPlayer();
     }
 
     /**
@@ -42,11 +43,24 @@ public class SoundPlayer extends AbstractOrgane {
 
             System.out.println("Lecture son :\t" + sound);
 
+//            try {
+//                streamPlayer.open(new File(Constantes.DOSSIER_SONS + File.separator + sound.getFileName()));
+//                streamPlayer.play();
+//            } catch (StreamPlayerException e) {
+//                logger.error("Ereur lors de la lecture d'un son", e);
+//                e.printStackTrace();
+//            }
+
+            String[] params = {"play", Constantes.DOSSIER_SONS + File.separator + sound.getFileName()};
             try {
-                streamPlayer.open(new File(Constantes.DOSSIER_SONS + File.separator + sound.getFileName()));
-                streamPlayer.play();
-            } catch (StreamPlayerException e) {
-                logger.error("Ereur lors de la lecture d'un son", e);
+                Process p = Runtime.getRuntime().exec(params);
+                p.waitFor();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            catch (InterruptedException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
 

@@ -10,7 +10,7 @@ public class PlaySoundEvent extends RobotEvent {
 
 	public static final String EVENT_TYPE = "PlaySound";
 
-    /** Texte à dire. */
+    /** Nom du fichier à jouer. */
     private RobotSound sound;
 
 	public PlaySoundEvent() {

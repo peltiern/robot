@@ -204,9 +204,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
         final OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
         organeParole.initialiser();
 
-        organeParole.lire("Bonjour Nicolas. Comment vas-tu ?");
-        organeParole.lire("Moi, je vais très bien. Quel temps fait-il aujourd'hui ?");
-        organeParole.lire("Je suis un robot doté d'une intelligence artificielle basique en cours d'évolution. Youpiiii !.");
+        organeParole.lire("Mon nom est Wally");
     }
 
 }
