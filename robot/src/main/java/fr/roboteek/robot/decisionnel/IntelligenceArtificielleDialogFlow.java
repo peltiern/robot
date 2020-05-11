@@ -178,6 +178,8 @@ public class IntelligenceArtificielleDialogFlow {
 
         ReponseIntelligenceArtificielle reponse = new ReponseIntelligenceArtificielle();
         reponse.setInputText(queryResult.getQueryText());
+        reponse.setIntent(queryResult.getIntent().getName());
+        reponse.setFallback(queryResult.getIntent().getIsFallback());
         reponse.setOutputText(responseText);
         reponse.setOutputAudio(response.getOutputAudio().toByteArray());
         return reponse;

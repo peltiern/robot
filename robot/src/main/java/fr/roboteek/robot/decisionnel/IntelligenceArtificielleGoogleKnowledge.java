@@ -50,7 +50,10 @@ public class IntelligenceArtificielleGoogleKnowledge {
             if (element != null) {
                 response.setOutputText(processWeatherInfos(element));
             }
-            element = doc.select("[data-attrid], [data-tts=\"answers\"], [id=\"cwos\"]").not("[data-attrid=\"image\"]").first();
+            element = doc.select("[data-attrid], [data-tts=\"answers\"], [id=\"cwos\"]")
+                    .not("[data-attrid=\"image\"]")
+                    .not("[data-attrid=\"kc:/music/recording_cluster:lyrics\"]")
+                    .first();
 //            }
             if (element != null) {
                 Document cleanDoc = Jsoup.parse(Jsoup.clean(element.html(), Whitelist.none()));

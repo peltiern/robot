@@ -33,8 +33,8 @@ public class Cerveau {
     /**
      * Intelligence artificielle (contenant le système conversationnel).
      */
-//    private IntelligenceArtificielleDialogFlow intelligenceArtificielle;
-    private IntelligenceArtificielleGoogleKnowledge intelligenceArtificielle;
+    private IntelligenceArtificielleDialogFlow intelligenceArtificielleDialogFlow;
+    private IntelligenceArtificielleGoogleKnowledge intelligenceArtificielleGoogleKnowledge;
 
     /**
      * Reconnaissance faciale.
@@ -48,7 +48,8 @@ public class Cerveau {
 
     public Cerveau() {
         contexte = new Contexte();
-        intelligenceArtificielle = new IntelligenceArtificielleGoogleKnowledge();
+        intelligenceArtificielleDialogFlow = new IntelligenceArtificielleDialogFlow();
+        intelligenceArtificielleGoogleKnowledge = new IntelligenceArtificielleGoogleKnowledge();
 //        reconnaissanceFaciale = new ReconnaissanceFacialeEigenface();
         reconnaissanceFaciale = new ReconnaissanceFacialeAnnotator();
     }
@@ -97,7 +98,14 @@ public class Cerveau {
                 // Conversation
                 RequeteIntelligenceArtificielle requete = new RequeteIntelligenceArtificielle();
                 requete.setInputText(texteReconnu);
-                ReponseIntelligenceArtificielle reponse = intelligenceArtificielle.repondreARequete(requete);
+                ReponseIntelligenceArtificielle reponse = intelligenceArtificielleDialogFlow.repondreARequete(requete);
+                ReponseIntelligenceArtificielle firstResponse = reponse;
+                if (reponse.isFallback()) {
+                    reponse = intelligenceArtificielleGoogleKnowledge.repondreARequete(requete);
+                }
+                if (reponse.isFallback()) {
+                    reponse = firstResponse;
+                }
                 dire(reponse);
             }
 
@@ -139,7 +147,18 @@ public class Cerveau {
                 // Conversation
             RequeteIntelligenceArtificielle requete = new RequeteIntelligenceArtificielle();
             requete.setInputWavFilePath(detectionVocaleEvent.getCheminFichier());
-            ReponseIntelligenceArtificielle reponse = intelligenceArtificielle.repondreARequete(requete);
+            ReponseIntelligenceArtificielle reponse = intelligenceArtificielleDialogFlow.repondreARequete(requete);
+            ReponseIntelligenceArtificielle firstResponse = reponse;
+            if (reponse.isFallback()) {
+                // Récupération de la requête sous forme textuelle (car la requête initiale était audio)
+                if (StringUtils.isNotBlank(reponse.getInputText())) {
+                    requete.setInputText(reponse.getInputText());
+                }
+                reponse = intelligenceArtificielleGoogleKnowledge.repondreARequete(requete);
+            }
+            if (reponse.isFallback()) {
+                reponse = firstResponse;
+            }
             dire(reponse);
 
             // Envoi d'un évènement de conversation au serveur
