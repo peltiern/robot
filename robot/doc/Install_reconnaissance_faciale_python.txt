@@ -1,0 +1,9 @@
+Installer Python3
+TODO
+
+pip3 install numpy
+pip3 install pandas
+pip3 install face-recognition
+pip3 install flask
+pip3 install opencv-python
+
