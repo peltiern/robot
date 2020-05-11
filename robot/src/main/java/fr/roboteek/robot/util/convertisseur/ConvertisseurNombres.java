@@ -1,4 +1,4 @@
-package fr.roboteek.robot.util.callback.convertisseur;
+package fr.roboteek.robot.util.convertisseur;
 
 
 /**
