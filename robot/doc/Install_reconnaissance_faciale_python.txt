@@ -7,3 +7,6 @@ pip3 install face-recognition
 pip3 install flask
 pip3 install opencv-python
 
+# Charger la configuration de YoloV3 sur le Drive
+https://drive.google.com/open?id=17ry2JHWNaJJ2jJ6Dvotm7u1v2BWxeEIV
+
