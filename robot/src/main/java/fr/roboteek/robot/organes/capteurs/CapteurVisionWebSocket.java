@@ -1,9 +1,10 @@
 package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.memoire.FacialRecognitionResponse;
+import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.ReconnaissanceFacialePython;
 import fr.roboteek.robot.organes.AbstractOrgane;
-import fr.roboteek.robot.server.ImageWithRecognizedFaces;
+import fr.roboteek.robot.server.ImageWithDetectedObjects;
 import fr.roboteek.robot.server.VideoWebSocket;
 import org.apache.log4j.Logger;
 import org.openimaj.image.FImage;
@@ -52,6 +53,8 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
     private FacialRecognitionResponse facialRecognitionResponse;
 
+    private ObjectDetectionResponse objectDetectionResponse;
+
     /**
      * Logger.
      */
@@ -85,7 +88,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        capture.setFPS(25);
+        capture.setFPS(12);
 
         // Création d'un affichage du flux vidéo
         videoFrame = VideoDisplay.createVideoDisplay(capture);
@@ -113,7 +116,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
         // Recherche de visages
         final FImage image = Transforms.calculateIntensity(frame);
-        if (indexFrame % 10 == 0 || facialRecognitionResponse == null) {
+        if (indexFrame % 8 == 0 || facialRecognitionResponse == null) {
             facialRecognitionResponse = reconnaissanceFacialePython.recognizeFaces(frame);
         } else {
             facialRecognitionResponse = processFaceNameForDetection(reconnaissanceFacialePython.detectFaces(frame));
@@ -121,6 +124,14 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
             facialRecognitionResponse = null;
         }
+
+        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
+            objectDetectionResponse = reconnaissanceFacialePython.detectObjects(frame);
+        }
+        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
+            objectDetectionResponse = null;
+        }
+
         indexFrame++;
 
         // Envoi d'un évènement de détection de visages
@@ -138,13 +149,17 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
             e.printStackTrace();
         }
 //        VideoWebSocket.broadcastImage(baos.toByteArray());
-        ImageWithRecognizedFaces imageWithRecognizedFaces = new ImageWithRecognizedFaces();
-        imageWithRecognizedFaces.setImageBase64(Base64.getEncoder().encodeToString(baos.toByteArray()));
+        ImageWithDetectedObjects imageWithDetectedObjects = new ImageWithDetectedObjects();
+        imageWithDetectedObjects.setImageBase64(Base64.getEncoder().encodeToString(baos.toByteArray()));
         if (facialRecognitionResponse != null) {
-            imageWithRecognizedFaces.setFaceFound(facialRecognitionResponse.isFaceFound());
-            imageWithRecognizedFaces.setFaces(facialRecognitionResponse.getFaces());
+            imageWithDetectedObjects.setFaceFound(facialRecognitionResponse.isFaceFound());
+            imageWithDetectedObjects.setFaces(facialRecognitionResponse.getFaces());
         }
-        VideoWebSocket.broadcastImageWithFaceInfos(imageWithRecognizedFaces);
+        if (objectDetectionResponse != null) {
+            imageWithDetectedObjects.setObjectFound(objectDetectionResponse.isObjectFound());
+            imageWithDetectedObjects.setObjects(objectDetectionResponse.getObjects());
+        }
+        VideoWebSocket.broadcastImageWithDetectionInfos(imageWithDetectedObjects);
     }
 
     private FacialRecognitionResponse processFaceNameForDetection(FacialRecognitionResponse response) {

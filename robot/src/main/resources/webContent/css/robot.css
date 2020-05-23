@@ -75,4 +75,37 @@
     display: table-cell;
     text-align: center;
     color: black;
+    text-transform: uppercase;
+}
+
+.div-video .div-objects {
+    z-index: 100;
+}
+
+.object_bounds {
+    border: 5px solid cyan;
+    border-radius: 10px 10px 0 0;
+    position: absolute;
+}
+.object_label {
+    border: 5px solid cyan;
+    border-radius: 0 0 10px 10px;
+    background-color: rgba(255, 255, 255, .7);
+    position: absolute;
+    display: table;
+}
+
+.object:hover>.object_bounds,.object:hover>.object_label {
+    border-color: red;
+}
+
+.object_label>span {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    vertical-align:middle;
+    display: table-cell;
+    text-align: center;
+    color: black;
+    text-transform: uppercase;
 }

@@ -2,12 +2,12 @@ package fr.roboteek.robot.server.event;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import fr.roboteek.robot.server.ImageWithRecognizedFaces;
+import fr.roboteek.robot.server.ImageWithDetectedObjects;
 
 import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
 
-public class ImageWithRecognizedFacesCodec implements Encoder.Text<ImageWithRecognizedFaces> {
+public class ImageWithRecognizedFacesCodec implements Encoder.Text<ImageWithDetectedObjects> {
 
     private Gson gson;
 
@@ -23,7 +23,7 @@ public class ImageWithRecognizedFacesCodec implements Encoder.Text<ImageWithReco
     }
 
     @Override
-    public String encode(ImageWithRecognizedFaces object) {
+    public String encode(ImageWithDetectedObjects object) {
         return gson.toJson(object);
     }
 

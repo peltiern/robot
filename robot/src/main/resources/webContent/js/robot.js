@@ -26,6 +26,7 @@ wsVideo.onmessage = function(msg) {
         // On vide le conteneur des visages
         $("#divFaces").empty();
         $("#svgLandmarks").empty();
+        $("#divObjects").empty();
         // Chargement des visages
         var showFaces = $("#showFaces").is(':checked');
         var showLandmarks = $("#showLandmarks").is(':checked');
@@ -140,6 +141,17 @@ wsVideo.onmessage = function(msg) {
                     );
 //                }
             });
+
+            $.each(msgJson.objects, function( index, object ) {
+                $("#divObjects").append(
+                    "<div class='object'>"
+                        + "<div class='object_bounds' style='left: " + (object.x + 5) + "px; top: " + (object.y + 5) + "px; width: " + object.width + "px; height: " + object.height + "px;'/>"
+                        + "<div class='object_label' style='left: " + (object.x + 5) + "px; top: " + (object.y + object.height) + "px; min-width: " + object.width + "px; height: 25px;'>"
+                            + "<span>" + object.name + "</span>"
+                        + "</div>"
+                    + "</div>"
+                );
+            });
 //        }
     }
 }
@@ -157,6 +169,15 @@ $("#showLandmarks").change(function () {
         $("#svgLandmarks").show();
     } else {
         $("#svgLandmarks").hide();
+    }
+});
+
+$("#showObjects").change(function () {
+    var checked = $(this).is(':checked');
+    if (checked) {
+        $("#divObjects").show();
+    } else {
+        $("#divObjects").hide();
     }
 });
 

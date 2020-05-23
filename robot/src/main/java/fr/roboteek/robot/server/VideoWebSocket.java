@@ -66,10 +66,10 @@ public class VideoWebSocket {
         }
     }
 
-    public static synchronized void broadcastImageWithFaceInfos(ImageWithRecognizedFaces imageWithRecognizedFaces) {
+    public static synchronized void broadcastImageWithDetectionInfos(ImageWithDetectedObjects imageWithDetectedObjects) {
         for (Session session : getClients()) {
             try {
-                session.getBasicRemote().sendObject(imageWithRecognizedFaces);
+                session.getBasicRemote().sendObject(imageWithDetectedObjects);
             } catch (EncodeException | IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

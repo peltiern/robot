@@ -16,11 +16,12 @@ import java.util.List;
 public class ReconnaissanceFacialePython {
 
     private String PYTHON_CMD = "/usr/bin/python3.6";
-    private String FACE_RECOGNITION_PYTHON_SERVER_FILE = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "python-server" + File.separator + "face_recognition_server.py";
+    private String FACE_RECOGNITION_PYTHON_SERVER_FILE = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "python-server" + File.separator + "robot_ai_api.py";
     private String KNOWN_FACES_FOLDER = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "known-faces";
     private String IMAGE_TEMP_FOLDER = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "tmp-img";
     private String FACE_RECOGNITION_ENDPOINT_URL = "http://localhost:5001/face-recognition";
     private String FACE_DETECTION_ENDPOINT_URL = "http://localhost:5001/face-detection";
+    private String OBJECT_DETECTION_ENDPOINT_URL = "http://localhost:5001/object-detection";
 
     /**
      * Classe GSON permettant la création des objets JSON.
@@ -58,25 +59,29 @@ public class ReconnaissanceFacialePython {
     }
 
     public FacialRecognitionResponse recognizeFaces(MBFImage image) {
-        return processImage(image, FACE_RECOGNITION_ENDPOINT_URL);
+        return processFacialImage(image, FACE_RECOGNITION_ENDPOINT_URL, FacialRecognitionResponse.class);
     }
 
     public FacialRecognitionResponse detectFaces(MBFImage image) {
-        return processImage(image, FACE_DETECTION_ENDPOINT_URL);
+        return processFacialImage(image, FACE_DETECTION_ENDPOINT_URL, FacialRecognitionResponse.class);
     }
 
     public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
 
     }
 
-    private FacialRecognitionResponse processImage(MBFImage image, String endpointUrl) {
+    public ObjectDetectionResponse detectObjects(MBFImage image) {
+        return processFacialImage(image, OBJECT_DETECTION_ENDPOINT_URL, ObjectDetectionResponse.class);
+    }
+
+    private <T> T processFacialImage(MBFImage image, String endpointUrl, Class<T> responseClass) {
         long timestamp = System.currentTimeMillis();
         File file = new File(IMAGE_TEMP_FOLDER + File.separator + "face_" + timestamp + ".jpg");
         try {
             ImageUtilities.write(image, file);
-            FacialRecognitionResponse response = gson.fromJson(Unirest.post(endpointUrl)
+            T response = gson.fromJson(Unirest.post(endpointUrl)
                     .field("file", file)
-                    .asString().getBody(), FacialRecognitionResponse.class);
+                    .asString().getBody(), responseClass);
             asyncDeleteFile(file);
             return response;
         } catch (UnirestException | IOException e) {
