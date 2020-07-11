@@ -1,6 +1,7 @@
 package fr.roboteek.robot.util.gamepad.jamepad;
 
 import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
+import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
@@ -25,7 +26,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
 
     @Override
     public void onEvent(Ps3ControllerEvent event) {
-        System.out.println("ESSAI = " + event.toString());
+        // System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(ps3Component -> {
             switch (ps3Component) {
                 case JOYSTICK_RIGHT_AXIS_X:
@@ -63,6 +64,9 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
                     break;
                 case BUTTON_START:
                     processButtonStart(event);
+                    break;
+                case BUTTON_SELECT:
+                    processButtonSelect(event);
                     break;
             }
         });
@@ -325,6 +329,14 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
             final ParoleEvent paroleEvent = new ParoleEvent();
             paroleEvent.setTexte("Bonjour");
             RobotEventBus.getInstance().publishAsync(paroleEvent);
+        }
+    }
+
+    private void processButtonSelect(Ps3ControllerEvent event) {
+        GamepadComponentValue<PS3Component> selectValue = event.getMapValues().get(PS3Component.BUTTON_SELECT);
+        if (selectValue.getCurrentPressed()) {
+            DisplayPositionEvent displayPositionEvent = new DisplayPositionEvent();
+            RobotEventBus.getInstance().publishAsync(displayPositionEvent);
         }
     }
 }

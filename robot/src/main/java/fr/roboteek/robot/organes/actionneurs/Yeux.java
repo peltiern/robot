@@ -1,6 +1,7 @@
 package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULIS;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
@@ -44,6 +45,14 @@ public class Yeux extends AbstractOrgane {
 	/** Position maximale du moteur de l'oeil droit. */
 	private static final double POSITION_MAXIMALE_MOTEUR_OEIL_DROIT = toPositionAbsolueOeilDroit(POSITION_MINIMALE_RELATIVE_OEIL);
 
+	public static final double DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE = 40;
+
+	public static final double DEFAULT_SPEED_MOTEUR_OEIL_DROIT = 40;
+
+	public static final double DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE = 60;
+
+	public static final double DEFAULT_ACCELERATION_MOTEUR_OEIL_DROIT = 60;
+
 	/** Moteur Gauche / Droite. */
 	private PhidgetServoMotor moteurOeilGauche;
 
@@ -69,8 +78,10 @@ public class Yeux extends AbstractOrgane {
 		System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurOeilGauche = new PhidgetServoMotor(IDX_MOTEUR_OEIL_GAUCHE, POSITION_ZERO_MOTEUR_OEIL_GAUCHE, POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE, POSITION_MAXIMALE_MOTEUR_OEIL_GAUCHE, 40, 60);
-		moteurOeilDroit = new PhidgetServoMotor(IDX_MOTEUR_OEIL_DROIT, POSITION_ZERO_MOTEUR_OEIL_DROIT, POSITION_MINIMALE_MOTEUR_OEIL_DROIT, POSITION_MAXIMALE_MOTEUR_OEIL_DROIT, 40, 60);
+		moteurOeilGauche = new PhidgetServoMotor(IDX_MOTEUR_OEIL_GAUCHE, POSITION_ZERO_MOTEUR_OEIL_GAUCHE, POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE, POSITION_MAXIMALE_MOTEUR_OEIL_GAUCHE,
+				DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE, DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE);
+		moteurOeilDroit = new PhidgetServoMotor(IDX_MOTEUR_OEIL_DROIT, POSITION_ZERO_MOTEUR_OEIL_DROIT, POSITION_MINIMALE_MOTEUR_OEIL_DROIT, POSITION_MAXIMALE_MOTEUR_OEIL_DROIT,
+				DEFAULT_SPEED_MOTEUR_OEIL_DROIT, DEFAULT_ACCELERATION_MOTEUR_OEIL_DROIT);
 
 		moteurOeilGauche.setSpeedRampingState(true);
 
@@ -358,6 +369,17 @@ public class Yeux extends AbstractOrgane {
 	 */
 	private static double toPositionRelativeOeilDroit(double positionAbsolue) {
 		return POSITION_ZERO_MOTEUR_OEIL_DROIT - positionAbsolue;
+	}
+
+	/**
+	 * Intercepte les évènements d'affichage de position.
+	 * @param displayPositionEvent évènement
+	 */
+	@Handler
+	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
+		double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
+		double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
+		System.out.println("YEUX\tgauche = " + positionRelativeOeilGauche + "\tdroit = " + positionRelativeOeilDroit);
 	}
 
 	public static void main(String[] args) {

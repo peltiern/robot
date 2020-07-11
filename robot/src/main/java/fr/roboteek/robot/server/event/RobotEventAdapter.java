@@ -10,11 +10,13 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
+import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.ExpressionVisageEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementTeteEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
+import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEvent;
 
 public class RobotEventAdapter implements JsonDeserializer<RobotEvent>, JsonSerializer<RobotEvent> {
@@ -35,6 +37,10 @@ public class RobotEventAdapter implements JsonDeserializer<RobotEvent>, JsonSeri
 			return (RobotEvent) context.deserialize(json, ParoleEvent.class);
 		} else if (eventType.equals(ExpressionVisageEvent.EVENT_TYPE)) {
 			return (RobotEvent) context.deserialize(json, ExpressionVisageEvent.class);
+		} else if (eventType.equals(DisplayPositionEvent.EVENT_TYPE)) {
+			return (RobotEvent) context.deserialize(json, DisplayPositionEvent.class);
+		} else if (eventType.equals(PlayAnimationEvent.EVENT_TYPE)) {
+			return (RobotEvent) context.deserialize(json, PlayAnimationEvent.class);
 		}
 		return null;
 	}

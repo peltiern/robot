@@ -3,9 +3,12 @@ package fr.roboteek.robot.organes.actionneurs.animation;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Animation {
 
@@ -14,6 +17,7 @@ public class Animation {
     public static Animation AMAZED;
     public static Animation TEST;
     public static Animation TEST_2;
+    private static Map<String, Animation> mapAnimationsByName;
 
     static {
         SAD = new Animation();
@@ -36,6 +40,13 @@ public class Animation {
         TEST_2.addAnimationStep(new AnimationStep(2000, -24, -6, 0, 0, null));
         TEST_2.addAnimationStep(new AnimationStep(2000, -6, -24, 0, 0, null));
         TEST_2.addAnimationStep(new AnimationStep(2000, -15, -15, 0, 0, null));
+
+        mapAnimationsByName = new HashMap<>();
+        mapAnimationsByName.put("SAD", SAD);
+        mapAnimationsByName.put("SURPRISED", SURPRISED);
+        mapAnimationsByName.put("AMAZED", AMAZED);
+        mapAnimationsByName.put("TEST", TEST);
+        mapAnimationsByName.put("TEST_2", TEST_2);
     }
 
     /**
@@ -60,5 +71,12 @@ public class Animation {
 
     public void setSteps(List<AnimationStep> steps) {
         this.steps = steps;
+    }
+
+    public static Animation getAnimationByName(String animationName) {
+        if (StringUtils.isBlank(animationName)) {
+            return null;
+        }
+        return mapAnimationsByName.get(animationName);
     }
 }

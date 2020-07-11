@@ -24,6 +24,12 @@
 #roulisSlider .slider-selection {
 	background: #BABABA;
 }
+#couHautBasSlider .slider-selection {
+	background: #BABABA;
+}
+#couGaucheDroiteSlider .slider-selection {
+	background: #BABABA;
+}
 
 .div-video {
     position: relative;

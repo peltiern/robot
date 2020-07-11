@@ -1,8 +1,10 @@
 $(document).ready(function() {
 	moment.locale("fr");
+	loadAnimations();
 	chargerListeAnimations();
 	chargerListeImagesVisage();
 	initialiserJoystick();
+	initialiserSlidersCou();
 	initialiserSlidersYeux();
 	initialiserDropzone();
 });
@@ -223,6 +225,13 @@ Mousetrap.bind("s", function(){jouerExpression("04_clin_oeil");playbackAnimation
 Mousetrap.bind("w", function(){jouerExpression("05_amour");playbackAnimation("05_amour");});
 Mousetrap.bind("e", function(){jouerExpression("06_triste");playbackAnimation("06_triste");});
 Mousetrap.bind("d", function(){jouerExpression("07_triste_inverse");playbackAnimation("07_triste_inverse");});
+Mousetrap.bind("i", displayPosition);
+
+function displayPosition() {
+	var displayPositionEvent = {};
+	displayPositionEvent.eventType = "DisplayPosition";
+	wsRobotEvent.send(JSON.stringify(displayPositionEvent));
+}
  
 function bougerTete(e) {
 	/*var mouvementTeteEvent = {};
@@ -428,6 +437,42 @@ function chargerListeImagesVisage() {
     	});
     	
     });
+}
+
+/**
+ * Charge la liste des animations disponibles
+ */
+function loadAnimations() {
+    var arrayAnimations =[
+        {name: "SAD", description: "Triste"},
+        {name: "SURPRISED", description: "Surpris"},
+        {name: "AMAZED", description: "Emerveillé"},
+        {name: "TEST", description: "Test"},
+        {name: "TEST_2", description: "Test 2"},
+    ];
+    // Suppression de toutes les lignes du tableau excepté l'entête
+    $('#tableListeAnimations tr').not(function(){ return !!$(this).has('th').length; }).remove();
+    $.each(arrayAnimations, function( index, animation ) {
+        // Ajout de l'animation au tableau
+        $("#tableListeAnimations").append(
+                  "<tr>"
+                    + "<td>" + animation.name + "</td>"
+                    + "<td>" + animation.description + "</td>"
+                    + "<td>"
+                        + "<button class=\"btn btn-xs\" onclick=\"playAnimation('" + animation.name + "'); return false;\"><span class=\"glyphicon glyphicon-play\"></span></button>"
+                    + "</td>"
+                + "</tr>"
+        );
+    });
+}
+
+function playAnimation(animationName) {
+	if (animationName && animationName != "") {
+		var playAnimationEvent = {};
+		playAnimationEvent.eventType = "PlayAnimation";
+		playAnimationEvent.animationName = animationName;
+		wsRobotEvent.send(JSON.stringify(playAnimationEvent));
+	}
 }
 
 /**
@@ -656,3 +701,51 @@ function initialiserSlidersYeux() {
 //		}
 //		).data("slider");
 //}
+
+/**
+ * Initialise les sliders du cou.
+ */
+function initialiserSlidersCou() {
+	var sliderCouHautBas = $("#couHautBas").slider({
+		min: -35,
+		max: 35,
+		value: 0,
+		step: 1,
+		reversed : true,
+		tooltip_position: "left",
+		orientation: "vertical"
+	});
+	sliderCouHautBas.on("slide", function (slideEvt) {
+		var mouvementCouEvent = {};
+		mouvementCouEvent.eventType = "MouvementCou";
+		mouvementCouEvent.positionHautBas = slideEvt.value;
+		wsRobotEvent.send(JSON.stringify(mouvementCouEvent));
+	});
+	sliderCouHautBas.on("change", function (slideEvt) {
+		var mouvementCouEvent = {};
+		mouvementCouEvent.eventType = "MouvementCou";
+		mouvementCouEvent.positionHautBas = slideEvt.value.newValue;
+		wsRobotEvent.send(JSON.stringify(mouvementCouEvent));
+	});
+	var sliderCouGaucheDroite = $("#couGaucheDroite").slider({
+        min: -65,
+        max: 65,
+        value: 0,
+        step: 1,
+        reversed : false,
+        tooltip_position: "right",
+        orientation: "horizontal"
+    });
+    sliderCouGaucheDroite.on("slide", function (slideEvt) {
+        var mouvementCouEvent = {};
+        mouvementCouEvent.eventType = "MouvementCou";
+        mouvementCouEvent.positionGaucheDroite = -slideEvt.value;
+        wsRobotEvent.send(JSON.stringify(mouvementCouEvent));
+    });
+    sliderCouGaucheDroite.on("change", function (slideEvt) {
+        var mouvementCouEvent = {};
+        mouvementCouEvent.eventType = "MouvementCou";
+        mouvementCouEvent.positionGaucheDroite = -slideEvt.value.newValue;
+        wsRobotEvent.send(JSON.stringify(mouvementCouEvent));
+    });
+}

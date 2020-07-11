@@ -16,6 +16,11 @@ public class PlayAnimationEvent extends RobotEvent {
      */
     private Animation animation;
 
+    /**
+     * Nom de l'animation à jouer.
+     */
+    private String animationName;
+
     public PlayAnimationEvent() {
         super(EVENT_TYPE);
     }
@@ -26,5 +31,13 @@ public class PlayAnimationEvent extends RobotEvent {
 
     public void setAnimation(Animation animation) {
         this.animation = animation;
+    }
+
+    public String getAnimationName() {
+        return animationName;
+    }
+
+    public void setAnimationName(String animationName) {
+        this.animationName = animationName;
     }
 }

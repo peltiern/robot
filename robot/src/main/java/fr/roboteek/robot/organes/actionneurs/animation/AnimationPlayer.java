@@ -48,10 +48,13 @@ public class AnimationPlayer extends AbstractOrgane {
      */
     @Handler
     public void handlePlayAnimationEvent(PlayAnimationEvent playAnimationEvent) {
-        if (playAnimationEvent != null && playAnimationEvent.getAnimation() != null
-                && CollectionUtils.isNotEmpty(playAnimationEvent.getAnimation().getSteps())) {
-            // Nettoyage de la liste des animations en cours
-            animationSteps.addAll(playAnimationEvent.getAnimation().getSteps());
+        if (playAnimationEvent != null) {
+            Animation animation = playAnimationEvent.getAnimation() != null ?
+                    playAnimationEvent.getAnimation() : Animation.getAnimationByName(playAnimationEvent.getAnimationName());
+            if (animation != null && CollectionUtils.isNotEmpty(animation.getSteps())) {
+                // Nettoyage de la liste des animations en cours
+                animationSteps.addAll(animation.getSteps());
+            }
         }
     }
 
@@ -201,11 +204,11 @@ public class AnimationPlayer extends AbstractOrgane {
 
         Thread.sleep(2000);
 
-//        playAnimationEvent = new PlayAnimationEvent();
-//        playAnimationEvent.setAnimation(Animation.TEST);
-//        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-//
-//        Thread.sleep(2000);
+        playAnimationEvent = new PlayAnimationEvent();
+        playAnimationEvent.setAnimation(Animation.TEST);
+        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
+
+        Thread.sleep(2000);
 
         playAnimationEvent = new PlayAnimationEvent();
         playAnimationEvent.setAnimation(Animation.TEST_2);

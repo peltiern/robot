@@ -1,6 +1,7 @@
 package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
@@ -26,6 +27,14 @@ public class Cou extends AbstractOrgane {
 	/** Position initiale du moteur Haut / Bas. */
 	public static final double POSITION_INITIALE_MOTEUR_HAUT_BAS = 75;
 
+	public static final double DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE = 100;
+
+    public static final double DEFAULT_SPEED_MOTEUR_HAUT_BAS = 100;
+
+    public static final double DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE = 200;
+
+    public static final double DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS = 200;
+
 	/** Moteur Gauche / Droite. */
 	private PhidgetServoMotor moteurGaucheDroite;
 
@@ -39,8 +48,10 @@ public class Cou extends AbstractOrgane {
 		System.out.println("COU :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurGaucheDroite = new PhidgetServoMotor(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 30, 150, 100, 200);
-		moteurHautBas = new PhidgetServoMotor(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 50, 130, 100, 200);
+		moteurGaucheDroite = new PhidgetServoMotor(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 20, 150,
+                DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE, DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE);
+		moteurHautBas = new PhidgetServoMotor(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 35, 110,
+                DEFAULT_SPEED_MOTEUR_HAUT_BAS, DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS);
 
 		moteurGaucheDroite.setEngaged(true);
 		moteurGaucheDroite.setSpeedRampingState(true);
@@ -223,6 +234,17 @@ public class Cou extends AbstractOrgane {
 	private void reset() {
 		moteurHautBas.setPositionCible(POSITION_INITIALE_MOTEUR_HAUT_BAS, null, null, false);
 		moteurGaucheDroite.setPositionCible(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, null, null, false);
+	}
+
+	/**
+	 * Intercepte les évènements d'affichage de position.
+	 * @param displayPositionEvent évènement
+	 */
+	@Handler
+	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
+		double positionGaucheDroite = POSITION_INITIALE_MOTEUR_GAUCHE_DROITE - moteurGaucheDroite.getPositionReelle();
+		double positionHautBas = POSITION_INITIALE_MOTEUR_HAUT_BAS - moteurHautBas.getPositionReelle();
+		System.out.println("COU\tGD = " + positionGaucheDroite + "\tHB = " + positionHautBas);
 	}
 	
 	public void testMouvement() {
