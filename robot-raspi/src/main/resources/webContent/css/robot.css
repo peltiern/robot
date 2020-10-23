@@ -1,0 +1,117 @@
+.liveVideo {
+	display: inline;
+	width: 100%;
+	max-width: 640px;
+}
+
+#conteneurImagesVisage {
+	height: 200px;
+	overflow-y: scroll;
+	border: 1px solid #cdcdcd;
+	padding: 3px;
+}
+
+#animationListeImages {
+	padding: 3px;
+}
+
+#oeilGaucheSlider .slider-selection {
+	background: #BABABA;
+}
+#oeilDroitSlider .slider-selection {
+	background: #BABABA;
+}
+#roulisSlider .slider-selection {
+	background: #BABABA;
+}
+#couHautBasSlider .slider-selection {
+	background: #BABABA;
+}
+#couGaucheDroiteSlider .slider-selection {
+	background: #BABABA;
+}
+
+.div-video {
+    position: relative;
+    display: inline-block; /* <= shrinks container to image size */
+}
+
+.div-video img { /* <= optional, for responsiveness */
+    display: block;
+    max-width: 100%;
+    height: auto;
+    z-index: 50;
+}
+
+.div-video svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+   /* width: 100%;
+    height: 100%;*/
+    z-index: 100;
+}
+
+.div-video .div-faces {
+    z-index: 150;
+}
+
+.face_bounds {
+    border: 5px solid #88cc00;
+    border-radius: 10px 10px 0 0;
+    position: absolute;
+}
+.face_label {
+    border: 5px solid #88cc00;
+    border-radius: 0 0 10px 10px;
+    background-color: rgba(255, 255, 255, .7);
+    position: absolute;
+    display: table;
+}
+
+.face:hover>.face_bounds,.face:hover>.face_label {
+    border-color: red;
+}
+
+.face_label>span {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    vertical-align:middle;
+    display: table-cell;
+    text-align: center;
+    color: black;
+    text-transform: uppercase;
+}
+
+.div-video .div-objects {
+    z-index: 100;
+}
+
+.object_bounds {
+    border: 5px solid cyan;
+    border-radius: 10px 10px 0 0;
+    position: absolute;
+}
+.object_label {
+    border: 5px solid cyan;
+    border-radius: 0 0 10px 10px;
+    background-color: rgba(255, 255, 255, .7);
+    position: absolute;
+    display: table;
+}
+
+.object:hover>.object_bounds,.object:hover>.object_label {
+    border-color: red;
+}
+
+.object_label>span {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    vertical-align:middle;
+    display: table-cell;
+    text-align: center;
+    color: black;
+    text-transform: uppercase;
+}

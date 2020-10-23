@@ -1,0 +1,90 @@
+# Activer le SSH sur le Raspberry Pi (Préférences / Configuration)
+
+# Connexion en ssh
+ssh pi@192.168.1.20
+
+# Copier le ZIP contenant les dossiers et fichiers nécessaire au robot
+scp installation/Robot.zip   pi@192.168.1.20:~/
+unzip Robot.zip
+rm Robot.zip
+
+
+# Installation du JDK
+sudo apt update
+sudo apt-get --assume-yes install default-jdk
+
+# Phidgets
+sudo apt-get --assume-yes install libusb-1.0-0-dev
+
+cd ~/Robot/third-party/phidgets/
+wget https://www.phidgets.com/downloads/phidget22/libraries/linux/libphidget22.tar.gz
+wget https://www.phidgets.com/downloads/phidget22/libraries/linux/libphidget22java.tar.gz
+tar -xzvf libphidget22.tar.gz
+tar -xzvf libphidget22java.tar.gz
+
+cd libphidget22-1.6.20200921/
+./configure
+make
+sudo make install
+cd ..
+
+cd libphidget22java-1.6.20200921/
+./configure
+make
+sudo make install
+cd ..
+
+#REGLES UDEV
+sudo cp ~/Robot/third-party/phidgets/libphidget22-1.6.20200921/plat/linux/udev/99-libphidget22.rules /etc/udev/rules.d
+
+#TESTS
+cd ~/Robot/third-party/phidgets/
+mkdir tests
+cd tests/
+wget https://www.phidgets.com/downloads/phidget22/examples/c/Manager/Phidget22_HelloWorld_C_Ex.zip
+unzip Phidget22_HelloWorld_C_Ex.zip
+cd HelloWorld_Example/
+gcc HelloWorld.c -o HelloWorld -lphidget22
+./HelloWorld
+
+#TESTS JAVA
+cd ~/Robot/third-party/phidgets/
+mkdir tests_java
+cd tests_java/
+wget https://www.phidgets.com/downloads/phidget22/examples/java/RCServo/Phidget22_RCServo_Java_Ex.zip
+unzip Phidget22_RCServo_Java_Ex.zip
+wget https://www.phidgets.com/downloads/phidget22/libraries/any/Phidget22Java.zip
+unzip Phidget22Java.zip
+javac -classpath .:phidget22.jar RCServoExample.java
+java -classpath .:phidget22.jar RCServoExample
+
+# Installation Webcam
+sudo apt-get install libjpeg8
+
+# Respeaker (droits sur USB de la carte)
+sudo cp ~/Robot/third-party/respeaker/60-respeaker.rules /etc/udev/rules.d
+
+# Sox pour synthèse vocale
+sudo apt-get --assume-yes install sox
+
+# Manette PS3 (https://pimylifeup.com/raspberry-pi-playstation-controllers/)
+# Marche pas du premier coup mais passe en branchant et débranchant par USB
+sudo apt-get --assume-yes install libusb-dev
+cd ~/Robot/third-party/sixpair
+wget http://www.pabr.org/sixlinux/sixpair.c
+gcc -o sixpair sixpair.c -lusb
+sudo ~/Robot/third-party/sixpair/sixpair
+sudo bluetoothctl
+scan on
+agent on
+default-agent
+connect YOUR_MAC_ADDRESS
+trust YOUR_MAC_ADDRESS
+quit
+sudo reboot
+
+# Copier le fichier JSON des credentials Google
+
+
+
+

@@ -1,0 +1,3 @@
+# Installation du JAR dans le repo Maven en exécutant une commande Maven à partir d'IntelliJ
+mvn install:install-file -Dfile=/home/npeltier/Developpement/robot/robot-raspi/lib/phidgets/phidget22.jar -DgroupId=com.phidgets -DartifactId=phidgets -Dversion=2.2 -Dpackaging=jar
+mvn install:install-file -Dfile=/home/npeltier/Developpement/robot/robot-raspi/lib/tarsosDsp/TarsosDSP-2.4.jar -DgroupId=be.tarsos -DartifactId=dsp -Dversion=2.4 -Dpackaging=jar
