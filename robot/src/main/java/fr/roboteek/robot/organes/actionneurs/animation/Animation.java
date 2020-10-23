@@ -24,10 +24,10 @@ public class Animation {
         SAD.addAnimationStep(new AnimationStep(100, -24, -24, 0, 0, RobotSound.SAD));
 
         SURPRISED = new Animation();
-        SURPRISED.addAnimationStep(new AnimationStep(100, 0, -20, MouvementCouEvent.POSITION_NEUTRE, MouvementCouEvent.POSITION_NEUTRE, RobotSound.OH));
+        SURPRISED.addAnimationStep(new AnimationStep(100, 0, -20, MouvementCouEvent.POSITION_NEUTRE, MouvementCouEvent.POSITION_NEUTRE, RobotSound.WOW));
 
         AMAZED = new Animation();
-        AMAZED.addAnimationStep(new AnimationStep(100, -3, -3, MouvementCouEvent.POSITION_NEUTRE, 20, RobotSound.WOW));
+        AMAZED.addAnimationStep(new AnimationStep(100, -3, -3, MouvementCouEvent.POSITION_NEUTRE, 20, RobotSound.OH));
         AMAZED.addAnimationStep(new AnimationStep(500, MouvementYeuxEvent.POSITION_NEUTRE, MouvementYeuxEvent.POSITION_NEUTRE, MouvementCouEvent.POSITION_NEUTRE, 0, null));
 
         TEST = new Animation();

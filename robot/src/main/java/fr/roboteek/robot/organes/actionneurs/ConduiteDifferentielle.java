@@ -2,6 +2,8 @@ package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.phidget.PhidgetDCMotor;
 import net.engio.mbassy.listener.Handler;
 
@@ -15,22 +17,22 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     /**
      * Port du hub pour le moteur gauche.
      */
-    private static final int PORT_MOTEUR_GAUCHE = 0;
+    private static final int PORT_MOTEUR_GAUCHE = 1;
 
     /**
      * Port du hub pour le moteur droit.
      */
-    private static final int PORT_MOTEUR_DROIT = 1;
+    private static final int PORT_MOTEUR_DROIT = 0;
 
     /**
      * Vitesse maximale des moteurs.
      */
-    private static final double VITESSE_MAX = 1;
+    private static final double VITESSE_MAX = 0.7;
 
     /**
      * Vitesse par défaut.
      */
-    public static final double VITESSE_PAR_DEFAUT = 1;
+    public static final double VITESSE_PAR_DEFAUT = 0.4;
 
     /**
      * Accélération par défaut.
@@ -45,7 +47,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     /**
      * Moteur pour la roue droite.
      */
-    //private PhidgetDCMotor moteurDroit;
+    private PhidgetDCMotor moteurDroit;
 
     /**
      * Constructeur.
@@ -55,22 +57,23 @@ public class ConduiteDifferentielle extends AbstractOrgane {
 
         // Création et initialisation des moteurs
         moteurGauche = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_GAUCHE, ACCELERATION_PAR_DEFAUT);
-        //moteurDroit = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_DROIT, ACCELERATION_PAR_DEFAUT);
+        moteurDroit = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_DROIT, ACCELERATION_PAR_DEFAUT);
 
     }
 
     public void avancer(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
+        System.out.println("vitesseFormatee = " + vitesseFormatee + ", accelerationFormatee = " + accelerationFormatee);
         moteurGauche.forward(vitesseFormatee, accelerationFormatee);
-        //moteurDroit.forward(vitesseFormatee, accelerationFormatee);
+        moteurDroit.forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void reculer(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
         moteurGauche.forward(-vitesseFormatee, accelerationFormatee);
-        //moteurDroit.forward(-vitesseFormatee, accelerationFormatee);
+        moteurDroit.forward(-vitesseFormatee, accelerationFormatee);
     }
 
     public void pivoterAGauche(Double vitesse, Double acceleration) {
@@ -97,12 +100,12 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     public void tournerRoueDroite(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
-        //moteurDroit.forward(vitesseFormatee, accelerationFormatee);
+        moteurDroit.forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void stop() {
         moteurGauche.stop();
-        //moteurDroit.stop();
+        moteurDroit.stop();
     }
 
     /**
@@ -137,13 +140,13 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     public void arreter() {
         reset();
         moteurGauche.close();
-        //moteurDroit.close();
+        moteurDroit.close();
     }
 
     /** Arrête les moteurs. */
     private void reset() {
         moteurGauche.stop();
-        //moteurDroit.stop();
+        moteurDroit.stop();
     }
 
     private double toVitesse(Double vitesse) {
@@ -152,5 +155,13 @@ public class ConduiteDifferentielle extends AbstractOrgane {
 
     private double toAcceleration(Double acceleration) {
         return acceleration == null || acceleration < 0.1 || acceleration > 100 ? ACCELERATION_PAR_DEFAUT : acceleration;
+    }
+
+    public static void main(String[] args) {
+        ConduiteDifferentielle conduiteDifferentielle = new ConduiteDifferentielle();
+        conduiteDifferentielle.initialiser();
+        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+        RobotJamepadController robotGamepadController = new RobotJamepadController();
+        robotGamepadController.start();
     }
 }

@@ -88,7 +88,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        capture.setFPS(12);
+        capture.setFPS(25);
 
         // Création d'un affichage du flux vidéo
         videoFrame = VideoDisplay.createVideoDisplay(capture);
@@ -116,18 +116,18 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
         // Recherche de visages
         final FImage image = Transforms.calculateIntensity(frame);
-        if (indexFrame % 8 == 0 || facialRecognitionResponse == null) {
-            facialRecognitionResponse = reconnaissanceFacialePython.recognizeFaces(frame);
-        } else {
-            facialRecognitionResponse = processFaceNameForDetection(reconnaissanceFacialePython.detectFaces(frame));
-        }
-        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
-            facialRecognitionResponse = null;
-        }
+//        if (indexFrame % 25 == 0 || facialRecognitionResponse == null) {
+//            facialRecognitionResponse = reconnaissanceFacialePython.recognizeFaces(frame);
+//        } else {
+//            facialRecognitionResponse = processFaceNameForDetection(reconnaissanceFacialePython.detectFaces(frame));
+//        }
+//        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
+//            facialRecognitionResponse = null;
+//        }
 
-        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
+//        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
             objectDetectionResponse = reconnaissanceFacialePython.detectObjects(frame);
-        }
+//        }
         if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
             objectDetectionResponse = null;
         }

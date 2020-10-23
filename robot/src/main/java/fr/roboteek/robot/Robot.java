@@ -33,7 +33,7 @@ public class Robot {
 
     /** Tête du robot. */
     //private Tete tete;
-    
+
     /** Cou du robot. */
     private Cou cou;
 
@@ -42,10 +42,10 @@ public class Robot {
 
     /** Conduite différentielle. */
     private ConduiteDifferentielle conduiteDifferentielle;
-    
+
     /** Visage. */
     private VisageDoubleBuffering visage;
-    
+
     /** Organe de la parole. */
 //    private OrganeParoleEspeak organeParole;
 
@@ -54,7 +54,7 @@ public class Robot {
 
     /** Capteur de vision (oeil du robot). Thread ? */
     private AbstractOrgane capteurVision;
-    
+
     /** Capteur vocal. */
     private AbstractOrgane capteurVocal;
 
@@ -72,7 +72,7 @@ public class Robot {
 
     /** Flag d'arrêt du robot. */
     private boolean stopper = false;
-    
+
     /** Logger. */
     private Logger logger = Logger.getLogger(Robot.class);
 
@@ -96,15 +96,15 @@ public class Robot {
     private void initialiser() {
         logger.debug("Initialisation du robot");
         System.out.println("LIBRARY PATH = " + System.getProperty("java.library.path"));
-        
+
         // Instanciation des différents organes du robot
         cerveau = new Cerveau();
-        
+
         // Actionneurs
         //tete =  new Tete();
         yeux = new Yeux();
         cou =  new Cou();
-//        conduiteDifferentielle = new ConduiteDifferentielle();
+        conduiteDifferentielle = new ConduiteDifferentielle();
 //        organeParole = new OrganeParoleEspeak();
         organeParole = new OrganeParoleGoogle();
 //        visage = VisageDoubleBuffering.getInstance();
@@ -112,18 +112,18 @@ public class Robot {
 //        tete.initialiser();
         cou.initialiser();
         yeux.initialiser();
-//        conduiteDifferentielle.initialiser();
+        conduiteDifferentielle.initialiser();
         organeParole.initialiser();
 //        visage.initialiser();
-        
-        
+
+
         // Abonnement aux évènements du système nerveux
         RobotEventBus.getInstance().subscribe(this);
         RobotEventBus.getInstance().subscribe(cerveau);
 //        RobotEventBus.getInstance().subscribe(tete);
         RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(cou);
-//        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
         RobotEventBus.getInstance().subscribe(organeParole);
 //        RobotEventBus.getInstance().subscribe(visage);
 
@@ -133,12 +133,12 @@ public class Robot {
 //        capteurVocal = new CapteurVocalWebService(BingSpeechRecognizerRest.getInstance());
 //        capteurVocal = new CapteurVocal2(systemeNerveux);
 //        capteurActiviteSon = new CapteurActiviteSon();
-        
+
         // Initialisation des capteurs
         capteurVision.initialiser();
         capteurVocal.initialiser();
 //        capteurActiviteSon.initialiser();
-        
+
         RobotEventBus.getInstance().subscribe(capteurVocal);
 
         // Lecteur de sons
@@ -158,10 +158,10 @@ public class Robot {
         //robotGamepadController = new RobotJinputController();
         robotGamepadController = new RobotJamepadController();
         robotGamepadController.start();
-        
+
         // Démarrage du serveur
         RobotServer.getInstance().run();
-        
+
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte("J'ai terminé de m'initialiser");
         RobotEventBus.getInstance().publishAsync(paroleEvent);
@@ -176,7 +176,7 @@ public class Robot {
             @Override
             public void run() {
                 logger.debug("Début de l'arrêt du robot");
-                
+
                 // Désabonnement des organes au système nerveux
                 RobotEventBus.getInstance().unsubscribe(visage);
                 RobotEventBus.getInstance().unsubscribe(capteurVocal);
@@ -192,7 +192,7 @@ public class Robot {
                 logger.debug("arrêt du robot 4");
                 RobotEventBus.getInstance().unsubscribe(Robot.this);
                 logger.debug("arrêt du robot 5");
-                
+
                 // Arrêt des organes
 //                capteurVocal.arreter();
                 logger.debug("arrêt du robot 6");
@@ -204,7 +204,7 @@ public class Robot {
 //                cou.arreter();
                 logger.debug("arrêt du robot 9");
                 cerveau.arreter();
-                
+
                 logger.debug("Fin de l'arrêt du robot");
 
                 stopper = true;

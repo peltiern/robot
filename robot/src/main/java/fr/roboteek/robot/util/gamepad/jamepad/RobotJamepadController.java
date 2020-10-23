@@ -29,15 +29,15 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         // System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(ps3Component -> {
             switch (ps3Component) {
-                case JOYSTICK_RIGHT_AXIS_X:
-                case JOYSTICK_RIGHT_AXIS_Y:
-                    processJoystickRight(event);
-                    break;
                 case JOYSTICK_LEFT_AXIS_X:
-                    processJoystickLeftX(event);
-                    break;
                 case JOYSTICK_LEFT_AXIS_Y:
-                    processJoystickLeftY(event);
+                    processJoystickLeft(event);
+                    break;
+                case JOYSTICK_RIGHT_AXIS_X:
+                    processJoystickRightX(event);
+                    break;
+                case JOYSTICK_RIGHT_AXIS_Y:
+                    processJoystickRightY(event);
                     break;
                 case BUTTON_CROSS_TOP:
                     processButtonCrossTop(event);
@@ -72,21 +72,19 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         });
     }
 
-    private void processJoystickRight(Ps3ControllerEvent event) {
-        double amplitude = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AMPLITUDE).getCurrentNumericValue();
+    private void processJoystickLeft(Ps3ControllerEvent event) {
+        double amplitude = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AMPLITUDE).getCurrentNumericValue();
         // Ceil amplitude to 1
         amplitude = amplitude > 1 ? 1 : amplitude;
-        double xValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_X).getCurrentNumericValue();
-        double yValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_Y).getCurrentNumericValue();
+        double xValue = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AXIS_X).getCurrentNumericValue();
+        double yValue = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AXIS_Y).getCurrentNumericValue();
         MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
-        if (amplitude > 0.1) {
+        if (amplitude > 0.2) {
             // Differential drive
             mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.DIFFERENTIEL);
             mouvementRoueEvent.setAccelerationRoueGauche(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
             mouvementRoueEvent.setAccelerationRoueDroite(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
-            double leftSpeed;
-            double rightSpeed;
-            int signe = yValue > 0 ? 1 : -1;
+            int signe = yValue > -0.1 ? 1 : -1;
             if (xValue > 0) {
                 // Turn right
                 mouvementRoueEvent.setVitesseRoueGauche(amplitude * signe);
@@ -107,7 +105,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> topValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_TOP);
         if (topValue.getCurrentPressed()) {
             // Forward
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER, ConduiteDifferentielle.VITESSE_PAR_DEFAUT, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -126,7 +124,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> bottomValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_BOTTOM);
         if (bottomValue.getCurrentPressed()) {
             // Backward
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER, ConduiteDifferentielle.VITESSE_PAR_DEFAUT, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -145,7 +143,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> leftValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_LEFT);
         if (leftValue.getCurrentPressed()) {
             // Rotate left
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_GAUCHE, ConduiteDifferentielle.VITESSE_PAR_DEFAUT, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_GAUCHE, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -164,7 +162,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> rightValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_RIGHT);
         if (rightValue.getCurrentPressed()) {
             // Rotate right
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_DROIT, ConduiteDifferentielle.VITESSE_PAR_DEFAUT, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_DROIT, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -179,8 +177,8 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         }
     }
 
-    private void processJoystickLeftX(Ps3ControllerEvent event) {
-        GamepadComponentValue<PS3Component> leftXValue = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AXIS_X);
+    private void processJoystickRightX(Ps3ControllerEvent event) {
+        GamepadComponentValue<PS3Component> leftXValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_X);
         MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
         mouvementCouEvent.setAccelerationGaucheDroite(2000D);
         double absolute = Math.abs(leftXValue.getCurrentNumericValue());
@@ -195,8 +193,8 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
     }
 
-    private void processJoystickLeftY(Ps3ControllerEvent event) {
-        GamepadComponentValue<PS3Component> leftYValue = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AXIS_Y);
+    private void processJoystickRightY(Ps3ControllerEvent event) {
+        GamepadComponentValue<PS3Component> leftYValue = event.getMapValues().get(PS3Component.JOYSTICK_RIGHT_AXIS_Y);
         MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
         mouvementCouEvent.setAccelerationHautBas(2000D);
         double absolute = Math.abs(leftYValue.getCurrentNumericValue());
@@ -320,6 +318,9 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
             mouvementYeuxEvent.setPositionOeilGauche(0);
             mouvementYeuxEvent.setSynchrone(false);
             RobotEventBus.getInstance().publishAsync(mouvementYeuxEvent);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
+            mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
+            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         }
     }
 
