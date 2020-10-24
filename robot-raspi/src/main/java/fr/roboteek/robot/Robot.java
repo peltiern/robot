@@ -3,6 +3,8 @@ package fr.roboteek.robot;
 import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
+import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
+import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
 import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalSimple;
@@ -38,6 +40,12 @@ public class Robot {
 
     /** Controleur de manette. */
     private RobotGamepadController robotGamepadController;
+
+    /** Lecteur de sons. */
+    private SoundPlayer soundPlayer;
+
+    /** Lecteur d'animations. */
+    private AnimationPlayer animationPlayer;
 
     /** Flag d'arrêt du robot. */
     private boolean stopper = false;
@@ -90,6 +98,15 @@ public class Robot {
 
         RobotEventBus.getInstance().subscribe(capteurVocal);
 
+        // Lecteur de sons
+        soundPlayer = new SoundPlayer();
+        soundPlayer.initialiser();
+        RobotEventBus.getInstance().subscribe(soundPlayer);
+
+        // Lecteur d'animations
+        animationPlayer = new AnimationPlayer();
+        animationPlayer.initialiser();
+        RobotEventBus.getInstance().subscribe(animationPlayer);
 
         // Manette
         robotGamepadController = new RobotJamepadController();

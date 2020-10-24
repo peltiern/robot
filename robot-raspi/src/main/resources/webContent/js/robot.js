@@ -1,12 +1,11 @@
 $(document).ready(function() {
 	moment.locale("fr");
-	//loadAnimations();
+	loadAnimations();
 	//chargerListeAnimations();
 	//chargerListeImagesVisage();
 	initialiserJoystick();
 	initialiserSlidersCou();
 	initialiserSlidersYeux();
-	initialiserDropzone();
 });
 
 // Création du contexte audio
@@ -331,6 +330,42 @@ function jouerExpression(expression) {
 }
 
 /**
+ * Charge la liste des animations disponibles
+ */
+function loadAnimations() {
+    var arrayAnimations =[
+        {name: "SAD", description: "Triste"},
+        {name: "SURPRISED", description: "Surpris"},
+        {name: "AMAZED", description: "Emerveillé"},
+        {name: "TEST", description: "Test"},
+        {name: "TEST_2", description: "Test 2"},
+    ];
+    // Suppression de toutes les lignes du tableau excepté l'entête
+    $('#tableListeAnimations tr').not(function(){ return !!$(this).has('th').length; }).remove();
+    $.each(arrayAnimations, function( index, animation ) {
+        // Ajout de l'animation au tableau
+        $("#tableListeAnimations").append(
+                  "<tr>"
+                    + "<td>" + animation.name + "</td>"
+                    + "<td>" + animation.description + "</td>"
+                    + "<td>"
+                        + "<button class=\"btn btn-xs\" onclick=\"playAnimation('" + animation.name + "'); return false;\"><span class=\"glyphicon glyphicon-play\"></span></button>"
+                    + "</td>"
+                + "</tr>"
+        );
+    });
+}
+
+function playAnimation(animationName) {
+	if (animationName && animationName != "") {
+		var playAnimationEvent = {};
+		playAnimationEvent.eventType = "PlayAnimation";
+		playAnimationEvent.animationName = animationName;
+		wsRobotEvent.send(JSON.stringify(playAnimationEvent));
+	}
+}
+
+/**
  * Initialise le joystick de contrôle de la tête.
  */
 function initialiserJoystick() {
@@ -420,21 +455,6 @@ function traiterJoystickEvent(evt, data) {
 			tournerEnBas();
 		}
 	}
-}
-
-
-function initialiserDropzone() {
-	$("#conteneurImagesVisage").dropzone({
-		url: "/rest/visage/images",
-		paramName: "files",
-		uploadMultiple: true,
-		parallelUploads: 10,
-		createImageThumbnails: false,
-		previewsContainer: "div.dropzone-preview",
-		acceptedFiles: "image/png",
-		addedFile: function(file) { console.log(file); },
-		successmultiple: chargerListeImagesVisage
-	});
 }
 
 function traiterAudio(audioBytes) {
