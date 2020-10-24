@@ -13,6 +13,7 @@
         <module name="robot-sandbox" />
         <module name="robot" />
         <module name="ai-engine" />
+        <module name="robot-raspi" />
       </profile>
     </annotationProcessing>
   </component>
