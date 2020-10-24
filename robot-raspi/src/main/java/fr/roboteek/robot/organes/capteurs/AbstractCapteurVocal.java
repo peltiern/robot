@@ -21,10 +21,8 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
-import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
-import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.TargetDataLine;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -33,7 +31,6 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 /**
  * Capteur vocal avec appel d'un web service externe pour effectuer la reconnaisance vocale.
@@ -127,59 +124,26 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
             // Définition du format audio d'acquisition
             format = new AudioFormat(sampleRate, 16, 1, true, false);
 
-////            Line.Info dataLineInfo = null;
-//            Mixer.Info[] infoMixers = AudioSystem.getMixerInfo();
-//            for(Mixer.Info infoMixer : infoMixers) {
-//                System.out.println(infoMixer.getName() + " --> " + infoMixer.getDescription() );
-//
-//                Line.Info [] sourceLines = AudioSystem.getMixer(infoMixer).getSourceLineInfo();
-//                System.out.println("\tSource Lines:" );
-//                for(Line.Info sourceLine : sourceLines) {
-//                    System.out.println(sourceLine.toString());
-//                    showLineInfoFormats(sourceLine);
-//                }
-//                System.out.println();
-//
-//                Line.Info [] targetLines = AudioSystem.getMixer(infoMixer).getTargetLineInfo();
-//                System.out.println("\tTarget Lines:" );
-//                for(Line.Info targetLine : targetLines) {
-//                    System.out.println(targetLine.toString());
-//                    showLineInfoFormats(targetLine);
-//                }
-//                System.out.println("\n" );
-//            }
-
-//            for (Mixer.Info infoMixer : infoMixers) {
-//                // Get mixer for each info
-//                Mixer mixer = AudioSystem.getMixer(infoMixer);
-//                String mixerName = infoMixer.getName();
-//                System.out.println("MIXER NAME: " + mixerName);
-//                System.out.println("MIXER : " + infoMixer.toString());
-//                System.out.println("MIXER DESC: " + infoMixer.getDescription());
-//                System.out.println("MIXER VENDOR: " + infoMixer.getVendor());
-//                System.out.println("MIXER VERSION: " + infoMixer.getVersion());
-//
-//                // Check if is input device
-//                if (mixerName != null && mixerName.contains("ArrayUAC10")) {
-//                    Line.Info[] lines = mixer.getTargetLineInfo();
-//                    if (lines.length > 0) {
-//                        for (Line.Info line1 : lines) {
-//                            if (line1.getLineClass().equals(TargetDataLine.class)) {
-//                                System.out.println("MIXER TROUVE");
-//                                dataLineInfo = line1;
-//                                break;
-//                            }
-//                        }
-//                    }
-//                }
-//                if (dataLineInfo != null) {
-//                    break;
-//                }
-//            }
+            // Recherche de la ligne correspondant au micro recherché
+            final TargetDataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, format);
+            TargetDataLine line = null;
+            Mixer.Info[] infoMixers = AudioSystem.getMixerInfo();
+            for(Mixer.Info infoMixer : infoMixers) {
+                if (infoMixer.getName() != null && infoMixer.getName().contains("ArrayUAC10")) {
+                    Mixer mixer = AudioSystem.getMixer(infoMixer);
+                    if (mixer.isLineSupported(dataLineInfo)) {
+                        line = (TargetDataLine) mixer.getLine(dataLineInfo);
+                        System.out.println("LIGNE TROUVEE");
+                        break;
+                    }
+                }
+            }
+            // Si le micro n'est pas trouvée, on prend une ligne par défaut
+            if (line == null) {
+                line = (TargetDataLine) AudioSystem.getLine(dataLineInfo);
+            }
 
             // Récupération du flux du micro au format souhaité
-            final DataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, format);
-            TargetDataLine line = (TargetDataLine) AudioSystem.getLine(dataLineInfo);
             final AudioInputStream stream = new AudioInputStream(line);
             final JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
             final AudioDispatcher dispatcher = new AudioDispatcher(audioStream, bufferSize, overlap);
@@ -381,16 +345,5 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
             e1.printStackTrace();
         }
         return Bytes.concat(header.toByteArray(), contenuAudio);
-    }
-
-    static void showLineInfoFormats(final Line.Info lineInfo)
-    {
-        if (lineInfo instanceof DataLine.Info)
-        {
-            final DataLine.Info dataLineInfo = (DataLine.Info)lineInfo;
-
-            Arrays.stream(dataLineInfo.getFormats())
-                    .forEach(format -> System.out.println("    " + format.toString()));
-        }
     }
 }
