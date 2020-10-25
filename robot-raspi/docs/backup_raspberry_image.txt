@@ -1,0 +1,1 @@
+Utiliser l'utilitaire SD Card Copier disponible sur Raspbian sur le Raspberry Pi. Fonctionne même en copiant une carte de 64 Go sur une carte de 16 Go (si les données ne dépassent pas la taille de destination)
