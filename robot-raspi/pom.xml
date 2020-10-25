@@ -38,7 +38,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket
+                                        fr.roboteek.robot.Robot
                                     </mainClass>
                                 </manifest>
                             </archive>

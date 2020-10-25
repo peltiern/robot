@@ -2,8 +2,11 @@ package fr.roboteek.robot;
 
 import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
+import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
+import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
 import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket;
@@ -37,6 +40,15 @@ public class Robot {
 
     /** Capteur Activité Son. */
     private CapteurActiviteSon capteurActiviteSon;
+
+    /** Cou du robot. */
+    private Cou cou;
+
+    /** Yeux du robot. */
+    private Yeux yeux;
+
+    /** Conduite différentielle. */
+    private ConduiteDifferentielle conduiteDifferentielle;
 
     /** Controleur de manette. */
     private RobotGamepadController robotGamepadController;
@@ -112,6 +124,16 @@ public class Robot {
         robotGamepadController = new RobotJamepadController();
         robotGamepadController.start();
 
+        yeux = new Yeux();
+        cou =  new Cou();
+        conduiteDifferentielle = new ConduiteDifferentielle();
+        cou.initialiser();
+        yeux.initialiser();
+        conduiteDifferentielle.initialiser();
+        RobotEventBus.getInstance().subscribe(yeux);
+        RobotEventBus.getInstance().subscribe(cou);
+        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+
         // Démarrage du serveur
         RobotServer.getInstance().run();
 
@@ -125,26 +147,29 @@ public class Robot {
     private void arreter() {
         // TODO NP : Revoir l'arrêt correct de l'ensemble des threads
         // Lancement d'un Thread pour l'arrêt du robot
-        final Thread threadArret = new Thread() {
-            @Override
-            public void run() {
-                logger.debug("Début de l'arrêt du robot");
+        final Thread threadArret = new Thread(() -> {
+            logger.debug("Début de l'arrêt du robot");
 
-                // Désabonnement des organes au système nerveux
-                RobotEventBus.getInstance().unsubscribe(capteurVocal);
-                RobotEventBus.getInstance().unsubscribe(organeParole);
-                RobotEventBus.getInstance().unsubscribe(cerveau);
-                RobotEventBus.getInstance().unsubscribe(Robot.this);
+            // Désabonnement des organes au système nerveux
+            RobotEventBus.getInstance().unsubscribe(yeux);
+            RobotEventBus.getInstance().unsubscribe(cou);
+            RobotEventBus.getInstance().unsubscribe(conduiteDifferentielle);
+            RobotEventBus.getInstance().unsubscribe(animationPlayer);
+            RobotEventBus.getInstance().unsubscribe(soundPlayer);
+            RobotEventBus.getInstance().unsubscribe(capteurVocal);
+            RobotEventBus.getInstance().unsubscribe(capteurVision);
+            RobotEventBus.getInstance().unsubscribe(organeParole);
+            RobotEventBus.getInstance().unsubscribe(cerveau);
+            RobotEventBus.getInstance().unsubscribe(Robot.this);
 
-                // Arrêt des organes
-                capteurVision.arreter();
-                organeParole.arreter();
+            // Arrêt des organes
+            capteurVision.arreter();
+            organeParole.arreter();
 
-                logger.debug("Fin de l'arrêt du robot");
+            logger.debug("Fin de l'arrêt du robot");
 
-                stopper = true;
-            }
-        };
+            stopper = true;
+        });
         threadArret.start();
     }
 
