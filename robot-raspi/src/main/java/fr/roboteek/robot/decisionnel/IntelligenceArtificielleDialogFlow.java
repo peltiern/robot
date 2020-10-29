@@ -153,7 +153,7 @@ public class IntelligenceArtificielleDialogFlow {
 
             // Configuration de la synthèse vocale
             VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
-                    .setName("fr-FR-Wavenet-C")
+                    .setName("fr-FR-Wavenet-D")
                     .setSsmlGender(SsmlVoiceGender.SSML_VOICE_GENDER_NEUTRAL)
                     .build();
 

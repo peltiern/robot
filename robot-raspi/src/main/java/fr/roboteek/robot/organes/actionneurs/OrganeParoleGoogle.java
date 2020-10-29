@@ -62,7 +62,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             // Build the voice request
             VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
                     .setLanguageCode("fr-FR")
-                    .setName("fr-FR-Wavenet-C")
+                    .setName("fr-FR-Wavenet-D")
                     .setSsmlGender(SsmlVoiceGender.NEUTRAL)
                     .build();
 
@@ -181,7 +181,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
 
     @Override
     public void initialiser() {
-        fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "synthesis_from_wavenet_c.sh";
+        fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "synthesis_from_wavenet_d.sh";
         try {
             textToSpeechClient = TextToSpeechClient.create();
         } catch (IOException e) {
@@ -199,7 +199,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
         final OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
         organeParole.initialiser();
 
-        organeParole.lire("Mon nom est Wally");
+        organeParole.lire("Bonjour. Mon nom est Wally et je suis content de te rencontrer. Quel est ton nom ?");
     }
 
 }
