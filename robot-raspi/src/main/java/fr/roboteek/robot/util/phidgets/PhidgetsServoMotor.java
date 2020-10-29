@@ -65,7 +65,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
 			// Configuration
 			rcServo.setDeviceSerialNumber(561050);
-			rcServo.setHubPort(1);
+			rcServo.setHubPort(0);
 			rcServo.setChannel(index);
 
 			// Ouverture du moteur

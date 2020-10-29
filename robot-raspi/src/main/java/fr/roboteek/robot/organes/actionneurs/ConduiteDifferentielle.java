@@ -22,7 +22,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     /**
      * Port du hub pour le moteur droit.
      */
-    private static final int PORT_MOTEUR_DROIT = 0;
+    private static final int PORT_MOTEUR_DROIT = 2;
 
     /**
      * Vitesse maximale des moteurs.
