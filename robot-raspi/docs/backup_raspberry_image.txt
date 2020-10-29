@@ -1,1 +1,18 @@
 Utiliser l'utilitaire SD Card Copier disponible sur Raspbian sur le Raspberry Pi. Fonctionne même en copiant une carte de 64 Go sur une carte de 16 Go (si les données ne dépassent pas la taille de destination)
+
+
+OU
+
+# ERREUR de lecture avec cette solution
+# Insérer sur le PC la carte SD du Raspberry Pi (celle où Raspbian est installé avec tous les fichiers nécessaires au robot)
+# Lancer la commande suivante pour trouver le chemin vers la carte SD
+sudo fdisk -l
+
+# Sauvegarder l'image avec la commande suivante :
+sudo dd bs=4M if=/<path_sd_card> of=<path_backup_dir>/raspbian_robot_backup.img
+
+# Installer PiShrink
+wget https://raw.githubusercontent.com/Drewsif/PiShrink/master/pishrink.sh
+chmod +x pishrink.sh
+sudo mv pishrink.sh /usr/local/bin/
+
