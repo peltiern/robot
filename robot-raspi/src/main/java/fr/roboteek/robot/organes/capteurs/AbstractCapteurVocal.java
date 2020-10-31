@@ -12,6 +12,7 @@ import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 import be.tarsos.dsp.writer.WaveHeader;
 import com.google.common.primitives.Bytes;
 import fr.roboteek.robot.Constantes;
+import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.server.AudioWebSocket;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
@@ -31,6 +32,8 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
 /**
  * Capteur vocal avec appel d'un web service externe pour effectuer la reconnaisance vocale.
@@ -104,9 +107,13 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
      */
     private byte[] contenuParle;
 
+    /** Configuration. */
+    private RobotConfig robotConfig;
+
 
     public AbstractCapteurVocal() {
         super();
+        robotConfig = robotConfig();
     }
 
     @Override
@@ -129,7 +136,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
             TargetDataLine line = null;
             Mixer.Info[] infoMixers = AudioSystem.getMixerInfo();
             for(Mixer.Info infoMixer : infoMixers) {
-                if (infoMixer.getName() != null && infoMixer.getName().contains("ArrayUAC10")) {
+                if (infoMixer.getName() != null && infoMixer.getName().contains(robotConfig.microphoneName())) {
                     Mixer mixer = AudioSystem.getMixer(infoMixer);
                     if (mixer.isLineSupported(dataLineInfo)) {
                         line = (TargetDataLine) mixer.getLine(dataLineInfo);

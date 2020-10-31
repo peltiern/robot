@@ -9,6 +9,7 @@ import com.google.cloud.texttospeech.v1.TextToSpeechClient;
 import com.google.cloud.texttospeech.v1.VoiceSelectionParams;
 import com.google.protobuf.ByteString;
 import fr.roboteek.robot.Constantes;
+import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
@@ -23,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import static fr.roboteek.robot.configuration.Configurations.googleSpeechSynthesisConfig;
+
 /**
  * Organe permettant de synthétiser un texte en passant par la synthèse vocale de Google
  * et en appliquant des effets avec SOX.
@@ -32,6 +35,8 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     private String fichierSyntheseVocale;
 
     private TextToSpeechClient textToSpeechClient;
+
+    private GoogleSpeechSynthesisConfig config;
     
     /** Logger. */
     private Logger logger = Logger.getLogger(OrganeParoleGoogle.class);
@@ -39,6 +44,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     /** Constructeur. */
     public OrganeParoleGoogle() {
         super();
+        config = googleSpeechSynthesisConfig();
     }
 
     /**
@@ -61,8 +67,8 @@ public class OrganeParoleGoogle extends AbstractOrgane {
 
             // Build the voice request
             VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
-                    .setLanguageCode("fr-FR")
-                    .setName("fr-FR-Wavenet-D")
+                    .setLanguageCode(config.languageCode())
+                    .setName(config.voiceName())
                     .setSsmlGender(SsmlVoiceGender.NEUTRAL)
                     .build();
 
@@ -181,7 +187,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
 
     @Override
     public void initialiser() {
-        fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "synthesis_from_wavenet_d.sh";
+        fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + config.voiceFilter();
         try {
             textToSpeechClient = TextToSpeechClient.create();
         } catch (IOException e) {

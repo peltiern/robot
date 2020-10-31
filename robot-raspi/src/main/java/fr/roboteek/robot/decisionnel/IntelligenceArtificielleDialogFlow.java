@@ -16,6 +16,7 @@ import com.google.cloud.dialogflow.v2.TextInput;
 import com.google.cloud.dialogflow.v2.VoiceSelectionParams;
 import com.google.protobuf.ByteString;
 import fr.roboteek.robot.Constantes;
+import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
 import net.sourceforge.javaflacencoder.FLAC_FileEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -25,9 +26,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class IntelligenceArtificielleDialogFlow {
+import static fr.roboteek.robot.configuration.Configurations.googleSpeechSynthesisConfig;
 
-    private static final String LANGUAGE_CODE = "fr-FR";
+public class IntelligenceArtificielleDialogFlow {
 
     /**
      * Session DialogFlow.
@@ -48,12 +49,17 @@ public class IntelligenceArtificielleDialogFlow {
      */
     private String cheminFichierFlac;
 
+    /** Speech synthesis configuration. */
+    private GoogleSpeechSynthesisConfig googleSpeechSynthesisConfig;
+
     /**
      * Logger.
      */
     private Logger logger = Logger.getLogger(IntelligenceArtificielleDialogFlow.class);
 
     public IntelligenceArtificielleDialogFlow() {
+
+        googleSpeechSynthesisConfig = googleSpeechSynthesisConfig();
 
         // Initialisation de la configuration statique de DialogFlow
         initDialogFlowConfig();
@@ -84,7 +90,7 @@ public class IntelligenceArtificielleDialogFlow {
         // Set the text and language code for the query
         TextInput textInput = TextInput.newBuilder()
                 .setText(inputText)
-                .setLanguageCode(LANGUAGE_CODE)
+                .setLanguageCode(googleSpeechSynthesisConfig.languageCode())
                 .build();
 
         // Build the query with the TextInput
@@ -109,7 +115,7 @@ public class IntelligenceArtificielleDialogFlow {
         // Instructs the speech recognizer how to process the audio content.
         InputAudioConfig inputAudioConfig = InputAudioConfig.newBuilder()
                 .setAudioEncoding(AudioEncoding.AUDIO_ENCODING_FLAC)
-                .setLanguageCode(LANGUAGE_CODE)
+                .setLanguageCode(googleSpeechSynthesisConfig.languageCode())
                 .setSampleRateHertz(44100)
                 .build();
 
@@ -153,7 +159,7 @@ public class IntelligenceArtificielleDialogFlow {
 
             // Configuration de la synthèse vocale
             VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
-                    .setName("fr-FR-Wavenet-D")
+                    .setName(googleSpeechSynthesisConfig.voiceName())
                     .setSsmlGender(SsmlVoiceGender.SSML_VOICE_GENDER_NEUTRAL)
                     .build();
 

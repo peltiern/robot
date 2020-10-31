@@ -1,6 +1,5 @@
 package fr.roboteek.robot.util.gamepad.jamepad;
 
-import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
@@ -9,6 +8,8 @@ import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
+
+import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 public class RobotJamepadController implements RobotGamepadController, PS3Listener {
 
@@ -82,8 +83,8 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         if (amplitude > 0.2) {
             // Differential drive
             mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.DIFFERENTIEL);
-            mouvementRoueEvent.setAccelerationRoueGauche(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
-            mouvementRoueEvent.setAccelerationRoueDroite(ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            mouvementRoueEvent.setAccelerationRoueGauche(phidgetsConfig().differentialDrivingMotorAcceleration());
+            mouvementRoueEvent.setAccelerationRoueDroite(phidgetsConfig().differentialDrivingMotorAcceleration());
             int signe = yValue > -0.1 ? 1 : -1;
             if (xValue > 0) {
                 // Turn right
@@ -105,7 +106,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> topValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_TOP);
         if (topValue.getCurrentPressed()) {
             // Forward
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -124,7 +125,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> bottomValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_BOTTOM);
         if (bottomValue.getCurrentPressed()) {
             // Backward
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -143,7 +144,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> leftValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_LEFT);
         if (leftValue.getCurrentPressed()) {
             // Rotate left
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_GAUCHE, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_GAUCHE, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed
@@ -162,7 +163,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         GamepadComponentValue<PS3Component> rightValue = event.getMapValues().get(PS3Component.BUTTON_CROSS_RIGHT);
         if (rightValue.getCurrentPressed()) {
             // Rotate right
-            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_DROIT, 1D, ConduiteDifferentielle.ACCELERATION_PAR_DEFAUT);
+            MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_DROIT, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
             RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
         } else {
             // Stop if all cross buttons are not pressed

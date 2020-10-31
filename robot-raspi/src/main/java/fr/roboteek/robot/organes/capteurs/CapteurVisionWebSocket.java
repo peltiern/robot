@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.capteurs;
 
+import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.server.ImageWithDetectedObjects;
 import fr.roboteek.robot.server.VideoWebSocket;
@@ -15,6 +16,8 @@ import org.openimaj.video.capture.VideoCaptureException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
+
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
 
 /**
@@ -47,6 +50,9 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
 //    private ObjectDetectionResponse objectDetectionResponse;
 
+    /** Configuration. */
+    private RobotConfig robotConfig;
+
     /**
      * Logger.
      */
@@ -55,13 +61,15 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
     public CapteurVisionWebSocket() {
 
+        robotConfig = robotConfig();
+
 //        reconnaissanceFacialePython = new ReconnaissanceFacialePython();
 
         // Récupération de la webcam
         Device webcamRobot = null;
         for (Device device : VideoCapture.getVideoDevices()) {
             System.out.println("WEBCAM = " + device);
-            if (device.getNameStr() != null && device.getNameStr().toLowerCase().contains("twist")) {
+            if (device.getNameStr() != null && device.getNameStr().toLowerCase().contains(robotConfig.webcamName())) {
                 System.out.println("WEBCAM ROBOT TROUVEE");
                 webcamRobot = device;
                 break;

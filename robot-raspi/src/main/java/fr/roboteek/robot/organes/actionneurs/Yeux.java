@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
@@ -9,49 +10,13 @@ import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent.MOUVEMENTS_OEIL
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
 import net.engio.mbassy.listener.Handler;
 
+import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
+
 /**
  * Classe représentant les yeux du robot.
  * @author Java Developer
  */
 public class Yeux extends AbstractOrgane {
-
-	/** Index du moteur de l'oeil gauche sur le servo-contrôleur. */
-	private static final int IDX_MOTEUR_OEIL_GAUCHE = 2;
-
-	/** Index du moteur de l'oeil droit sur le servo-contrôleur. */
-	private static final int IDX_MOTEUR_OEIL_DROIT = 3;
-
-	/** Position "Zéro" du moteur de l'oeil gauche. */
-	private static final double POSITION_ZERO_MOTEUR_OEIL_GAUCHE = 92;
-
-	/** Position "Zéro" du moteur de l'oeil droit. */
-	private static final double POSITION_ZERO_MOTEUR_OEIL_DROIT = 86;
-	
-	/** Position minimale relative d'un oeil. */
-	public static final double POSITION_MINIMALE_RELATIVE_OEIL = -24;
-	
-	/** Position maximale relative d'un oeil. */
-	public static final double POSITION_MAXIMALE_RELATIVE_OEIL = 20;
-	
-	/** Position minimale du moteur de l'oeil gauche. */
-	private static final double POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE = toPositionAbsolueOeilGauche(POSITION_MAXIMALE_RELATIVE_OEIL);
-	
-	/** Position maximale du moteur de l'oeil gauche. */
-	private static final double POSITION_MAXIMALE_MOTEUR_OEIL_GAUCHE = toPositionAbsolueOeilGauche(POSITION_MINIMALE_RELATIVE_OEIL);
-
-	/** Position minimale du moteur de l'oeil droit. */
-	private static final double POSITION_MINIMALE_MOTEUR_OEIL_DROIT = toPositionAbsolueOeilDroit(POSITION_MAXIMALE_RELATIVE_OEIL);
-	
-	/** Position maximale du moteur de l'oeil droit. */
-	private static final double POSITION_MAXIMALE_MOTEUR_OEIL_DROIT = toPositionAbsolueOeilDroit(POSITION_MINIMALE_RELATIVE_OEIL);
-
-	public static final double DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE = 40;
-
-	public static final double DEFAULT_SPEED_MOTEUR_OEIL_DROIT = 40;
-
-	public static final double DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE = 60;
-
-	public static final double DEFAULT_ACCELERATION_MOTEUR_OEIL_DROIT = 60;
 
 	/** Moteur Gauche / Droite. */
 	private PhidgetsServoMotor moteurOeilGauche;
@@ -71,17 +36,34 @@ public class Yeux extends AbstractOrgane {
 	/** Angle roulis. */
 	private double angleRoulis = 0;
 
+	/** Phidgets Configuration. */
+	private PhidgetsConfig phidgetsConfig;
+
 	/** Constructeur. */
 	public Yeux() {
 		super();
+
+		phidgetsConfig = phidgetsConfig();
 		
 		System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurOeilGauche = new PhidgetsServoMotor(IDX_MOTEUR_OEIL_GAUCHE, POSITION_ZERO_MOTEUR_OEIL_GAUCHE, POSITION_MINIMALE_MOTEUR_OEIL_GAUCHE, POSITION_MAXIMALE_MOTEUR_OEIL_GAUCHE,
-				DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE, DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE);
-		moteurOeilDroit = new PhidgetsServoMotor(IDX_MOTEUR_OEIL_DROIT, POSITION_ZERO_MOTEUR_OEIL_DROIT, POSITION_MINIMALE_MOTEUR_OEIL_DROIT, POSITION_MAXIMALE_MOTEUR_OEIL_DROIT,
-				DEFAULT_SPEED_MOTEUR_OEIL_DROIT, DEFAULT_ACCELERATION_MOTEUR_OEIL_DROIT);
+		moteurOeilGauche = new PhidgetsServoMotor(
+				phidgetsConfig.eyeLeftMotorIndex(),
+				phidgetsConfig.eyeLeftMotorPositionZero(),
+				toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMax()),
+				toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMin()),
+				phidgetsConfig.eyeLeftMotorSpeed(),
+				phidgetsConfig.eyeLeftMotorAcceleration()
+		);
+		moteurOeilDroit = new PhidgetsServoMotor(
+				phidgetsConfig.eyeRightMotorIndex(),
+				phidgetsConfig.eyeRightMotorPositionZero(),
+				toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMax()),
+				toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMin()),
+				phidgetsConfig.eyeRightMotorSpeed(),
+				phidgetsConfig.eyeRightMotorAcceleration()
+		);
 
 		moteurOeilGauche.setSpeedRampingState(true);
 
@@ -122,7 +104,7 @@ public class Yeux extends AbstractOrgane {
 	 * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
 	 */
 	public void positionnerOeilGauche(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
-		if (positionRelative >= POSITION_MINIMALE_RELATIVE_OEIL && positionRelative <= POSITION_MAXIMALE_RELATIVE_OEIL) {
+		if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
 			double positionMoteur = toPositionAbsolueOeilGauche(positionRelative);
 			moteurOeilGauche.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
 		}
@@ -158,7 +140,7 @@ public class Yeux extends AbstractOrgane {
 	 * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
 	 */
 	public void positionnerOeilDroit(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
-		if (positionRelative >= POSITION_MINIMALE_RELATIVE_OEIL && positionRelative <= POSITION_MAXIMALE_RELATIVE_OEIL) {
+		if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
 			double positionMoteur = toPositionAbsolueOeilDroit(positionRelative);
 			moteurOeilDroit.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
 		}
@@ -173,7 +155,7 @@ public class Yeux extends AbstractOrgane {
 
 	/**
 	 * Positionne le roulis à l'angle demandé (référence : oeil gauche de face).
-	 * @param angleRoulis l'angle de roulis
+	 * @param newAngleRoulis l'angle de roulis
 	 */
 	public void setPositionRoulis(double newAngleRoulis, Double vitesse, Double acceleration, boolean waitForPosition) {
 		// Récupération des positions de chaque oeil si c'est le début du roulis
@@ -185,17 +167,17 @@ public class Yeux extends AbstractOrgane {
 		
 		// Calcul de l'angle max (référence oeil gauche)
 		double angleRoulisAAffecter = newAngleRoulis;
-		if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter > POSITION_MAXIMALE_RELATIVE_OEIL) {
-			angleRoulisAAffecter = POSITION_MAXIMALE_RELATIVE_OEIL - positionRelativeOeilGaucheDebutRoulis;
+		if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
+			angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilGaucheDebutRoulis;
 		}
-		if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter < POSITION_MINIMALE_RELATIVE_OEIL) {
-			angleRoulisAAffecter = POSITION_MINIMALE_RELATIVE_OEIL - positionRelativeOeilGaucheDebutRoulis;
+		if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
+			angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilGaucheDebutRoulis;
 		}
-		if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter > POSITION_MAXIMALE_RELATIVE_OEIL) {
-			angleRoulisAAffecter = -(POSITION_MAXIMALE_RELATIVE_OEIL - positionRelativeOeilDroitDebutRoulis);
+		if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
+			angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilDroitDebutRoulis);
 		}
-		if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter < POSITION_MINIMALE_RELATIVE_OEIL) {
-			angleRoulisAAffecter = -(POSITION_MINIMALE_RELATIVE_OEIL - positionRelativeOeilDroitDebutRoulis);
+		if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
+			angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilDroitDebutRoulis);
 		}
 		final double nouvellePositionRelativeOeilGauche = positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter;
 		final double nouvellePositionRelativeOeilDroit = positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter;
@@ -247,7 +229,7 @@ public class Yeux extends AbstractOrgane {
 
 	/**
 	 * Intercepte les évènements de mouvements de cou.
-	 * @param mouvementYeuxEvent évènement de mouvements de cou
+	 * @param mouvementCouEvent évènement de mouvements de cou
 	 */
 	@Handler
 	public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
@@ -312,8 +294,8 @@ public class Yeux extends AbstractOrgane {
 	public void arreter() {
 		reset();
 		// Attente du retour à la position initiale
-		while (moteurOeilGauche.getPositionReelle() != POSITION_ZERO_MOTEUR_OEIL_GAUCHE 
-				&& moteurOeilDroit.getPositionReelle() != POSITION_ZERO_MOTEUR_OEIL_DROIT)
+		while (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero() 
+				&& moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero())
 		{ }
 		moteurOeilGauche.stop();
 		moteurOeilDroit.stop();
@@ -327,8 +309,8 @@ public class Yeux extends AbstractOrgane {
 
 	/** Remet les yeux à leur position par défaut. */
 	private void reset() {
-		moteurOeilDroit.setPositionCible(POSITION_ZERO_MOTEUR_OEIL_DROIT, null, null, false);
-		moteurOeilGauche.setPositionCible(POSITION_ZERO_MOTEUR_OEIL_GAUCHE, null, null, false);
+		moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
+		moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
 		roulisEnCours = false;
 		positionRelativeOeilDroitDebutRoulis = 0;
 		positionRelativeOeilGaucheDebutRoulis = 0;
@@ -338,37 +320,33 @@ public class Yeux extends AbstractOrgane {
 	/**
 	 * Calcule la position absolue de l'oeil gauche à partir d'une position relative.
 	 * @param positionRelative la position relative
-	 * @param la position absolue de l'oeil gauche
 	 */
-	private static double toPositionAbsolueOeilGauche(double positionRelative) {
-		return POSITION_ZERO_MOTEUR_OEIL_GAUCHE - positionRelative;
+	private double toPositionAbsolueOeilGauche(double positionRelative) {
+		return phidgetsConfig.eyeLeftMotorPositionZero() - positionRelative;
 	}
 	
 	/**
 	 * Calcule la position relative de l'oeil gauche à partir d'une position absolue.
 	 * @param positionAbsolue la position absolue
-	 * @param la position relative de l'oeil gauche
 	 */
-	private static double toPositionRelativeOeilGauche(double positionAbsolue) {
-		return POSITION_ZERO_MOTEUR_OEIL_GAUCHE - positionAbsolue;
+	private double toPositionRelativeOeilGauche(double positionAbsolue) {
+		return phidgetsConfig.eyeLeftMotorPositionZero() - positionAbsolue;
 	}
 	
 	/**
 	 * Calcule la position absolue de l'oeil droit à partir d'une position relative.
 	 * @param positionRelative la position relative
-	 * @param la position absolue de l'oeil droit
 	 */
-	private static double toPositionAbsolueOeilDroit(double positionRelative) {
-		return POSITION_ZERO_MOTEUR_OEIL_DROIT - positionRelative;
+	private double toPositionAbsolueOeilDroit(double positionRelative) {
+		return phidgetsConfig.eyeRightMotorPositionZero() - positionRelative;
 	}
 	
 	/**
 	 * Calcule la position relative de l'oeil droit à partir d'une position absolue.
 	 * @param positionAbsolue la position absolue
-	 * @param la position relative de l'oeil droit
 	 */
-	private static double toPositionRelativeOeilDroit(double positionAbsolue) {
-		return POSITION_ZERO_MOTEUR_OEIL_DROIT - positionAbsolue;
+	private double toPositionRelativeOeilDroit(double positionAbsolue) {
+		return phidgetsConfig.eyeRightMotorPositionZero() - positionAbsolue;
 	}
 
 	/**

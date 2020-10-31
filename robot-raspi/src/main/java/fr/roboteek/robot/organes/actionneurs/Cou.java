@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
@@ -9,31 +10,13 @@ import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
 import net.engio.mbassy.listener.Handler;
 
+import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
+
 /**
  * Classe représentant le cou du robot.
  * @author Java Developer
  */
 public class Cou extends AbstractOrgane {
-
-	/** Index du moteur Gauche / Droite sur le servo-contrôleur. */
-	private static final int IDX_MOTEUR_GAUCHE_DROITE = 0;
-
-	/** Index du moteur Haut / Bas sur le servo-contrôleur. */
-	private static final int IDX_MOTEUR_HAUT_BAS = 1;
-
-	/** Position initiale du moteur Gauche / Droite. */
-	public static final double POSITION_INITIALE_MOTEUR_GAUCHE_DROITE = 85;
-
-	/** Position initiale du moteur Haut / Bas. */
-	public static final double POSITION_INITIALE_MOTEUR_HAUT_BAS = 75;
-
-	public static final double DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE = 100;
-
-    public static final double DEFAULT_SPEED_MOTEUR_HAUT_BAS = 100;
-
-    public static final double DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE = 200;
-
-    public static final double DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS = 200;
 
 	/** Moteur Gauche / Droite. */
 	private PhidgetsServoMotor moteurGaucheDroite;
@@ -41,17 +24,34 @@ public class Cou extends AbstractOrgane {
 	/** Moteur Haut / Bas. */
 	private PhidgetsServoMotor moteurHautBas;
 
+	/** Phidgets configuration. */
+	private PhidgetsConfig phidgetsConfig;
+
 	/** Constructeur. */
 	public Cou() {
 		super();
 
+		phidgetsConfig = phidgetsConfig();
+
 		System.out.println("COU :, Thread = " + Thread.currentThread().getName());
 
 		// Création et initialisation des moteurs
-		moteurGaucheDroite = new PhidgetsServoMotor(IDX_MOTEUR_GAUCHE_DROITE, POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, 20, 150,
-                DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE, DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE);
-		moteurHautBas = new PhidgetsServoMotor(IDX_MOTEUR_HAUT_BAS, POSITION_INITIALE_MOTEUR_HAUT_BAS, 35, 110,
-                DEFAULT_SPEED_MOTEUR_HAUT_BAS, DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS);
+		moteurGaucheDroite = new PhidgetsServoMotor(
+				phidgetsConfig.neckLeftRightMotorIndex(),
+				phidgetsConfig.neckLeftRightMotorInitialPosition(),
+				phidgetsConfig.neckLeftRightMotorMinPosition(),
+				phidgetsConfig.neckLeftRightMotorMaxPosition(),
+                phidgetsConfig.neckLeftRightMotorSpeed(),
+				phidgetsConfig.neckLeftRightMotorAcceleration()
+		);
+		moteurHautBas = new PhidgetsServoMotor(
+				phidgetsConfig.neckUpDownMotorIndex(),
+				phidgetsConfig.neckUpDownMotorInitialPosition(),
+				phidgetsConfig.neckUpDownMotorMinPosition(),
+				phidgetsConfig.neckUpDownMotorMaxPosition(),
+                phidgetsConfig.neckUpDownMotorSpeed(),
+				phidgetsConfig.neckUpDownMotorAcceleration()
+		);
 
 		moteurGaucheDroite.setEngaged(true);
 		moteurGaucheDroite.setSpeedRampingState(true);
@@ -109,7 +109,7 @@ public class Cou extends AbstractOrgane {
 	 * @param position position en degrés (0 : à gauche, 180 : à droite)
 	 */
 	public void positionnerTeteGaucheDroite(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
-		double positionMoteur = POSITION_INITIALE_MOTEUR_GAUCHE_DROITE - position;
+		double positionMoteur = phidgetsConfig.neckLeftRightMotorInitialPosition() - position;
 		if (positionMoteur >= moteurGaucheDroite.getPositionMin() && positionMoteur <= moteurGaucheDroite.getPositionMax()) {
 			System.out.println("POS_GD = " + positionMoteur);
 			moteurGaucheDroite.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
@@ -162,7 +162,7 @@ public class Cou extends AbstractOrgane {
 	 * @param position position en degrés (0 : en bas, 180 : en haut)
 	 */
 	public void positionnerTeteHautBas(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
-		double positionMoteur = POSITION_INITIALE_MOTEUR_HAUT_BAS - position;
+		double positionMoteur = phidgetsConfig.neckUpDownMotorInitialPosition() - position;
 		if (positionMoteur >= moteurHautBas.getPositionMin() && positionMoteur <= moteurHautBas.getPositionMax()) {
 			System.out.println("POS_HB = " + positionMoteur);
 			moteurHautBas.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
@@ -217,8 +217,8 @@ public class Cou extends AbstractOrgane {
 	public void arreter() {
 		reset();
 		// Attente du retour à la position initiale
-		while (moteurGaucheDroite.getPositionReelle() != POSITION_INITIALE_MOTEUR_GAUCHE_DROITE 
-				&& moteurHautBas.getPositionReelle() != POSITION_INITIALE_MOTEUR_HAUT_BAS)
+		while (moteurGaucheDroite.getPositionReelle() != phidgetsConfig.neckLeftRightMotorInitialPosition()
+				&& moteurHautBas.getPositionReelle() != phidgetsConfig.neckUpDownMotorInitialPosition())
 		{ }
 		moteurGaucheDroite.stop();
 		moteurHautBas.stop();
@@ -232,8 +232,8 @@ public class Cou extends AbstractOrgane {
 
 	/** Remet la tête à sa position par défaut. */
 	private void reset() {
-		moteurHautBas.setPositionCible(POSITION_INITIALE_MOTEUR_HAUT_BAS, null, null, false);
-		moteurGaucheDroite.setPositionCible(POSITION_INITIALE_MOTEUR_GAUCHE_DROITE, null, null, false);
+		moteurHautBas.setPositionCible(phidgetsConfig.neckUpDownMotorInitialPosition(), null, null, false);
+		moteurGaucheDroite.setPositionCible(phidgetsConfig.neckLeftRightMotorInitialPosition(), null, null, false);
 	}
 
 	/**
@@ -242,8 +242,8 @@ public class Cou extends AbstractOrgane {
 	 */
 	@Handler
 	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
-		double positionGaucheDroite = POSITION_INITIALE_MOTEUR_GAUCHE_DROITE - moteurGaucheDroite.getPositionReelle();
-		double positionHautBas = POSITION_INITIALE_MOTEUR_HAUT_BAS - moteurHautBas.getPositionReelle();
+		double positionGaucheDroite = phidgetsConfig.neckLeftRightMotorInitialPosition() - moteurGaucheDroite.getPositionReelle();
+		double positionHautBas = phidgetsConfig.neckUpDownMotorInitialPosition() - moteurHautBas.getPositionReelle();
 		System.out.println("COU\tGD = " + positionGaucheDroite + "\tHB = " + positionHautBas);
 	}
 	

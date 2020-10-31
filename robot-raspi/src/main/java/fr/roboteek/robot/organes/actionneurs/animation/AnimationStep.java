@@ -1,11 +1,13 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
-import fr.roboteek.robot.organes.actionneurs.Cou;
+import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
-import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
+import org.aeonbits.owner.ConfigCache;
+
+import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 public class AnimationStep {
 
@@ -13,64 +15,61 @@ public class AnimationStep {
     private long delay;
 
     /** Angle du roulis (si neutre, non pris en compte). */
-    private double angleRoulis = MouvementCouEvent.ANGLE_NEUTRE;
+    private double angleRoulis;
 
     /** Vitesse du roulis. */
-    private double vitesseRoulis = Yeux.DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE;
+    private double vitesseRoulis;
 
     /** Accélération du roulis. */
-    private double accelerationRoulis = Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE;;
+    private double accelerationRoulis;
 
     /** Position de l'oeil gauche (0 : en bas, 180 : en haut). */
-    private double positionOeilGauche = MouvementYeuxEvent.POSITION_NEUTRE;
+    private double positionOeilGauche;
 
     /** Vitesse de l'oeil gauche. */
-    private double vitesseOeilGauche = Yeux.DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE;
+    private double vitesseOeilGauche;
 
     /** Accélération de l'oeil gauche. */
-    private double accelerationOeilGauche = Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE;
+    private double accelerationOeilGauche;
 
     /** Position de l'oeil droit (0 : en bas, 180 : en haut). */
-    private double positionOeilDroit = MouvementYeuxEvent.POSITION_NEUTRE;
+    private double positionOeilDroit;
 
     /** Vitesse de l'oeil droit. */
-    private double vitesseOeilDroit = Yeux.DEFAULT_SPEED_MOTEUR_OEIL_DROIT;
+    private double vitesseOeilDroit;
 
     /** Accélération de l'oeil droit. */
-    private double accelerationOeilDroit = Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_DROIT;
+    private double accelerationOeilDroit;
 
     /** Position du cou "Gauche - Droite" (0 : à gauche, 180 : à droite). */
-    private double positionCouGaucheDroite = MouvementCouEvent.POSITION_NEUTRE;
+    private double positionCouGaucheDroite;
 
     /** Vitesse du cou "Gauche - Droite". */
-    private double vitesseCouGaucheDroite = Cou.DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE;
+    private double vitesseCouGaucheDroite;
 
     /** Accélération cou "Gauche - Droite" */
-    private double accelerationCouGaucheDroite = Cou.DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE;
+    private double accelerationCouGaucheDroite;
 
     /** Position "Haut - Bas" (0 : en bas, 180 : en haut). */
-    private double positionCouHautBas = MouvementCouEvent.POSITION_NEUTRE;;
+    private double positionCouHautBas;
 
     /** Vitesse du cou "Haut - Bas". */
-    private double vitesseCouHautBas = Cou.DEFAULT_SPEED_MOTEUR_HAUT_BAS;
+    private double vitesseCouHautBas;
 
     /** Accélération cou "Haut - Bas" */
-    private double accelerationCouHautBas = Cou.DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS;
+    private double accelerationCouHautBas;
 
     /** Son à jouer. */
     private RobotSound sound;
 
-    public AnimationStep() {
-
-    }
-
     /** Constructeur sans roulis. */
     public AnimationStep(long delay, double positionOeilGauche, double positionOeilDroit, double positionCouGaucheDroite, double positionCouHautBas, RobotSound sound) {
+
         this(delay,
-                positionOeilGauche, Yeux.DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE, Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE,
-                positionOeilDroit, Yeux.DEFAULT_SPEED_MOTEUR_OEIL_DROIT, Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_DROIT,
-                positionCouGaucheDroite, Cou.DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE, Cou.DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE,
-                positionCouHautBas, Cou.DEFAULT_SPEED_MOTEUR_HAUT_BAS, Cou.DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS,
+                positionOeilGauche, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
+                positionOeilDroit, phidgetsConfig().eyeRightMotorSpeed(), phidgetsConfig().eyeRightMotorAcceleration(),
+                positionCouGaucheDroite, phidgetsConfig().neckLeftRightMotorSpeed(), phidgetsConfig().neckLeftRightMotorAcceleration(),
+                positionCouHautBas, phidgetsConfig().neckUpDownMotorSpeed(), phidgetsConfig().neckUpDownMotorAcceleration(),
                 sound);
     }
 
@@ -78,9 +77,9 @@ public class AnimationStep {
      * Constructeur pour effectuer un roulis. */
     public AnimationStep(long delay, double angleRoulis, double positionCouGaucheDroite, double positionCouHautBas, RobotSound sound) {
         this(delay,
-                angleRoulis, Yeux.DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE, Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE,
-                positionCouGaucheDroite, Cou.DEFAULT_SPEED_MOTEUR_GAUCHE_DROITE, Cou.DEFAULT_ACCELERATION_MOTEUR_GAUCHE_DROITE,
-                positionCouHautBas, Cou.DEFAULT_SPEED_MOTEUR_HAUT_BAS, Cou.DEFAULT_ACCELERATION_MOTEUR_HAUT_BAS,
+                angleRoulis, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
+                positionCouGaucheDroite, phidgetsConfig().neckLeftRightMotorSpeed(), phidgetsConfig().neckLeftRightMotorAcceleration(),
+                positionCouHautBas, phidgetsConfig().neckUpDownMotorSpeed(), phidgetsConfig().neckUpDownMotorAcceleration(),
                 sound);
     }
 
@@ -91,10 +90,11 @@ public class AnimationStep {
                          double positionCouGaucheDroite, double vitesseCouGaucheDroite, double accelerationCouGaucheDroite,
                          double positionCouHautBas, double vitesseCouHautBas, double accelerationCouHautBas,
                          RobotSound sound) {
+        PhidgetsConfig phidgetsConfig = ConfigCache.getOrCreate(PhidgetsConfig.class);
         this.delay = delay;
         this.angleRoulis = MouvementCouEvent.ANGLE_NEUTRE;
-        this.vitesseRoulis = Yeux.DEFAULT_SPEED_MOTEUR_OEIL_GAUCHE;
-        this.accelerationRoulis = Yeux.DEFAULT_ACCELERATION_MOTEUR_OEIL_GAUCHE;
+        this.vitesseRoulis = phidgetsConfig().eyeLeftMotorSpeed();
+        this.accelerationRoulis = phidgetsConfig().eyeLeftMotorAcceleration();
         this.positionOeilGauche = positionOeilGauche;
         this.vitesseOeilGauche = vitesseOeilGauche;
         this.accelerationOeilGauche = accelerationOeilGauche;

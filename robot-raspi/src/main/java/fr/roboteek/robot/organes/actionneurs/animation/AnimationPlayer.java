@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
+import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
@@ -115,7 +116,7 @@ public class AnimationPlayer extends AbstractOrgane {
         double positionOeilGauche = MouvementYeuxEvent.POSITION_NEUTRE;
         double positionOeilDroit = MouvementYeuxEvent.POSITION_NEUTRE;
         if (moveYeux % 3 == 0) {
-            double positionOeil = RandomUtils.nextDouble(Yeux.POSITION_MINIMALE_RELATIVE_OEIL, 0);
+            double positionOeil = RandomUtils.nextDouble(Configurations.phidgetsConfig().eyeMotorRelativePositionMin(), 0);
             boolean moveYeuxSymetrique = RandomUtils.nextBoolean();
             if (moveYeuxSymetrique) {
                 positionOeilGauche = positionOeil;

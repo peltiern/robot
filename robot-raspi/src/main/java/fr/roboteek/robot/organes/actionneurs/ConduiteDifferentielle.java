@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -7,37 +8,9 @@ import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.phidgets.PhidgetDCMotor;
 import net.engio.mbassy.listener.Handler;
 
+import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
+
 public class ConduiteDifferentielle extends AbstractOrgane {
-
-    /**
-     * Numéro de série du Hub VINT.
-     */
-    private static final int SERIAL_NUMBER_VINT_HUB = 561050;
-
-    /**
-     * Port du hub pour le moteur gauche.
-     */
-    private static final int PORT_MOTEUR_GAUCHE = 1;
-
-    /**
-     * Port du hub pour le moteur droit.
-     */
-    private static final int PORT_MOTEUR_DROIT = 2;
-
-    /**
-     * Vitesse maximale des moteurs.
-     */
-    private static final double VITESSE_MAX = 0.7;
-
-    /**
-     * Vitesse par défaut.
-     */
-    public static final double VITESSE_PAR_DEFAUT = 0.4;
-
-    /**
-     * Accélération par défaut.
-     */
-    public static final double ACCELERATION_PAR_DEFAUT = 1;
 
     /**
      * Moteur pour la roue gauche.
@@ -49,15 +22,20 @@ public class ConduiteDifferentielle extends AbstractOrgane {
      */
     private PhidgetDCMotor moteurDroit;
 
+    /** Phidgets configuration. */
+    private PhidgetsConfig phidgetsConfig;
+
     /**
      * Constructeur.
      */
     public ConduiteDifferentielle() {
         super();
 
+        phidgetsConfig = phidgetsConfig();
+
         // Création et initialisation des moteurs
-        moteurGauche = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_GAUCHE, ACCELERATION_PAR_DEFAUT);
-        moteurDroit = new PhidgetDCMotor(SERIAL_NUMBER_VINT_HUB, PORT_MOTEUR_DROIT, ACCELERATION_PAR_DEFAUT);
+        moteurGauche = new PhidgetDCMotor(phidgetsConfig.hubSerialNumber(), phidgetsConfig.differentialDrivingLeftMotorPort(), phidgetsConfig.differentialDrivingMotorAcceleration());
+        moteurDroit = new PhidgetDCMotor(phidgetsConfig.hubSerialNumber(), phidgetsConfig.differentialDrivingRightMotorPort(), phidgetsConfig.differentialDrivingMotorAcceleration());
 
     }
 
@@ -150,11 +128,11 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     }
 
     private double toVitesse(Double vitesse) {
-        return (vitesse == null ? 1 : Math.abs(vitesse) > 1 ? (int) vitesse.intValue() : vitesse) * VITESSE_MAX;
+        return (vitesse == null ? 1 : Math.abs(vitesse) > 1 ? (int) vitesse.intValue() : vitesse) * phidgetsConfig.differentialDrivingMotorMaxSpeed();
     }
 
     private double toAcceleration(Double acceleration) {
-        return acceleration == null || acceleration < 0.1 || acceleration > 100 ? ACCELERATION_PAR_DEFAUT : acceleration;
+        return acceleration == null || acceleration < 0.1 || acceleration > 100 ? phidgetsConfig.differentialDrivingMotorAcceleration() : acceleration;
     }
 
     public static void main(String[] args) {
