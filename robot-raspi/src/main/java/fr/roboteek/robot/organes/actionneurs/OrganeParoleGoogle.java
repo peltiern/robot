@@ -37,6 +37,10 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     private TextToSpeechClient textToSpeechClient;
 
     private GoogleSpeechSynthesisConfig config;
+
+    private VoiceSelectionParams voice;
+
+    private AudioConfig audioConfig;
     
     /** Logger. */
     private Logger logger = Logger.getLogger(OrganeParoleGoogle.class);
@@ -63,19 +67,6 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             // Set the text input to be synthesized
             SynthesisInput input = SynthesisInput.newBuilder()
                     .setText(texte)
-                    .build();
-
-            // Build the voice request
-            VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
-                    .setLanguageCode(config.languageCode())
-                    .setName(config.voiceName())
-                    .setSsmlGender(SsmlVoiceGender.NEUTRAL)
-                    .build();
-
-            // Select the type of audio file you want returned
-            AudioConfig audioConfig = AudioConfig.newBuilder()
-                    .setAudioEncoding(AudioEncoding.LINEAR16)
-                    //.addEffectsProfileId("medium-bluetooth-speaker-class-device")
                     .build();
 
             // Perform the text-to-speech request on the text input with the selected voice parameters and
@@ -193,6 +184,18 @@ public class OrganeParoleGoogle extends AbstractOrgane {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // Build the voice request
+        voice = VoiceSelectionParams.newBuilder()
+                .setLanguageCode(config.languageCode())
+                .setName(config.voiceName())
+                .setSsmlGender(SsmlVoiceGender.NEUTRAL)
+                .build();
+
+        // Select the type of audio file you want returned
+        audioConfig = AudioConfig.newBuilder()
+                .setAudioEncoding(AudioEncoding.LINEAR16)
+                .build();
     }
 
     @Override

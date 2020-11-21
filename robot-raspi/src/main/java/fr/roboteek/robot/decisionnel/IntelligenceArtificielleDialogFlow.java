@@ -66,7 +66,7 @@ public class IntelligenceArtificielleDialogFlow {
 
         // Initialisation de l'encodeur FLAC
         flacEncoder = new FLAC_FileEncoder();
-        cheminFichierFlac = Constantes.DOSSIER_RECONNAISSANCE_VOCALE + File.separator + "reconnaissance.flac";
+        cheminFichierFlac = Constantes.DOSSIER_RECONNAISSANCE_VOCALE + File.separator + "recognition.flac";
     }
 
     /**

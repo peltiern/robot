@@ -26,4 +26,7 @@ public class Constantes {
 	/** Chemin vers le dossier de reconnaissance faciale. */
 	public static final String DOSSIER_RECONNAISSANCE_FACIALE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "reconnaissance-visage";
 
+	/** Chemin vers le dossier de tests. */
+	public static final String DOSSIER_TESTS = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "tests";
+
 }
