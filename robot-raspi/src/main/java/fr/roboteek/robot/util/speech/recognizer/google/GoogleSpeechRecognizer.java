@@ -59,7 +59,7 @@ public class GoogleSpeechRecognizer implements SpeechRecognizer {
 				RecognitionConfig.newBuilder()
 						.setEncoding(RecognitionConfig.AudioEncoding.FLAC)
 						.setSampleRateHertz(44100)
-						.setAudioChannelCount(2)
+						//.setAudioChannelCount(2)
 						.setLanguageCode(config.languageCode())
 						.build();
 	}
