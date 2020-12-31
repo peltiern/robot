@@ -1,11 +1,11 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import net.engio.mbassy.listener.Handler;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -61,7 +61,7 @@ public class SoundPlayer extends AbstractOrgane {
      * Intercepte les évènements pour jouer un son.
      * @param playSoundEvent évènement pour jouer un son
      */
-    @Handler
+    @Subscribe
     public void handlePlaySoundEvent(PlaySoundEvent playSoundEvent) {
         if (playSoundEvent.getSound() != null) {
             play(playSoundEvent.getSound());

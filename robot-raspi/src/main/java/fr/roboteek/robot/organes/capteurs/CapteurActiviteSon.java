@@ -1,9 +1,9 @@
 package fr.roboteek.robot.organes.capteurs;
 
-import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.util.respeaker.MicArrayV2;
 
-public class CapteurActiviteSon extends AbstractOrgane {
+public class CapteurActiviteSon extends AbstractOrganeWithThread {
 
     private MicArrayV2 micArrayV2;
 
@@ -18,31 +18,32 @@ public class CapteurActiviteSon extends AbstractOrgane {
 
     private int angleVoixCourant;
 
+    public CapteurActiviteSon() {
+        super("SoundActivity");
+    }
+
     @Override
     public void initialiser() {
         micArrayV2 = MicArrayV2.getInstance();
         doaAngleCourant = micArrayV2.getDoaAngle();
         voiceActivityCourant = micArrayV2.isVoiceActivity();
         speechDetectedCourant = micArrayV2.isSpeechDetected();
+    }
 
-        final Thread threadCapteur = new Thread("SoundActivity") {
-            @Override
-            public void run() {
-                while (!stopperThread) {
-                    int angle = micArrayV2.getDoaAngle();
-                    boolean voiceActivity = micArrayV2.isVoiceActivity();
-                    boolean speechDetected = micArrayV2.isSpeechDetected();
-                    traiterValeurs(angle, voiceActivity, speechDetected);
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        // TODO
-                        e.printStackTrace();
-                    }
-                }
+    @Override
+    public void loop() {
+        while (!stopperThread) {
+            int angle = micArrayV2.getDoaAngle();
+            boolean voiceActivity = micArrayV2.isVoiceActivity();
+            boolean speechDetected = micArrayV2.isSpeechDetected();
+            traiterValeurs(angle, voiceActivity, speechDetected);
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                // TODO
+                e.printStackTrace();
             }
-        };
-        threadCapteur.start();
+        }
     }
 
     @Override
@@ -102,5 +103,6 @@ public class CapteurActiviteSon extends AbstractOrgane {
     public static void main(String args[]) {
         CapteurActiviteSon capteurActiviteSon = new CapteurActiviteSon();
         capteurActiviteSon.initialiser();
+        capteurActiviteSon.start();
     }
 }

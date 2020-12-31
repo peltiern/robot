@@ -10,13 +10,13 @@ import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 import be.tarsos.dsp.writer.WaveHeader;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.primitives.Bytes;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
-import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.server.AudioWebSocket;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
-import net.engio.mbassy.listener.Handler;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -40,7 +40,7 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  *
  * @author Nicolas
  */
-public abstract class AbstractCapteurVocal extends AbstractOrgane {
+public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
     /**
      * Fréquence d'échantillonage.
@@ -111,8 +111,8 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
     private RobotConfig robotConfig;
 
 
-    public AbstractCapteurVocal() {
-        super();
+    public AbstractCapteurVocal(String threadName) {
+        super(threadName);
         robotConfig = robotConfig();
     }
 
@@ -176,7 +176,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
                 public synchronized void handlePitch(PitchDetectionResult result, AudioEvent e) {
 
                     // Flag permettant de savoir si le flux en cours de traitement est un flux "parlé"
-                    boolean isBlocParle = false;
+                    boolean isBlocParle;
 
                     // Récupération du timestamp du bloc audio
                     double timestampBlocEnCours = e.getTimeStamp();
@@ -191,11 +191,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
                             final float pitchInHz = result.getPitch();
 
                             // Si le bloc est compris dans une certaine plage de fréquences : bloc contenant de la voix (parlé)
-                            if (pitchInHz > 0) {
-                                isBlocParle = true;
-                            } else {
-                                isBlocParle = false;
-                            }
+                            isBlocParle = pitchInHz > 0;
                         } else {
                             isBlocParle = false;
                         }
@@ -256,16 +252,18 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
             dispatcher.addAudioProcessor(silenceDetector);
             dispatcher.addAudioProcessor(p);
 
-            // Lancement du dispatcher dans un thread
-            new Thread(dispatcher, "Audio Dispatcher").start();
+            // Override thread with dispatcher
+            thread = new Thread(dispatcher, "Audio Dispatcher");
 
-        } catch (LineUnavailableException e2) {
+        } catch (LineUnavailableException | IOException e2) {
             // TODO Auto-generated catch block
             e2.printStackTrace();
-        } catch (IOException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
         }
+    }
+
+    @Override
+    public void loop() {
+        // Do nothing because the thread is overriden in the init method
     }
 
     @Override
@@ -305,11 +303,11 @@ public abstract class AbstractCapteurVocal extends AbstractOrgane {
     }
 
     /**
-     * //     * Intercepte les évènements de contrôle de la reconnaissance vocale.
-     * //     * @param reconnaissanceVocaleControleEvent évènement de contrôle de la reconnaissance vocale
-     * //
+     * Intercepte les évènements de contrôle de la reconnaissance vocale.
+     *  @param reconnaissanceVocaleControleEvent évènement de contrôle de la reconnaissance vocale
+     *
      */
-    @Handler
+    @Subscribe
     public void handleReconnaissanceVocaleControleEvent(ReconnaissanceVocaleControleEvent reconnaissanceVocaleControleEvent) {
         if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER) {
             System.out.println("Démarrage de la reconnaissance vocale");

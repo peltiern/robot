@@ -1,12 +1,12 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.phidgets.PhidgetDCMotor;
-import net.engio.mbassy.listener.Handler;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
@@ -90,7 +90,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
      * Intercepte les évènements de mouvements.
      * @param mouvementRoueEvent évènement de mouvements
      */
-    @Handler
+    @Subscribe
     public void handleMouvementRoueEvent(MouvementRoueEvent mouvementRoueEvent) {
         System.out.println(mouvementRoueEvent);
         if (mouvementRoueEvent.getMouvementRoue() == MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER) {

@@ -7,6 +7,7 @@ import com.google.cloud.texttospeech.v1.SynthesisInput;
 import com.google.cloud.texttospeech.v1.SynthesizeSpeechResponse;
 import com.google.cloud.texttospeech.v1.TextToSpeechClient;
 import com.google.cloud.texttospeech.v1.VoiceSelectionParams;
+import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.ByteString;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
@@ -15,7 +16,6 @@ import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import net.engio.mbassy.listener.Handler;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -62,7 +62,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
 //            RobotEventBus.getInstance().publish(eventPause);
 
-            System.out.println("Lecture :\t" + texte);
+            System.out.println(Thread.currentThread().getName() + " say (lecture) : " + texte);
 
             // Set the text input to be synthesized
             SynthesisInput input = SynthesisInput.newBuilder()
@@ -166,12 +166,13 @@ public class OrganeParoleGoogle extends AbstractOrgane {
      * Intercepte les évènements pour lire du texte.
      * @param paroleEvent évènement pour lire du texte
      */
-    @Handler
+    @Subscribe
     public void handleParoleEvent(ParoleEvent paroleEvent) {
     	System.out.println("ParoleEvent = " + paroleEvent);
     	if (paroleEvent.getAudioContent() != null) {
     	    lire(paroleEvent.getAudioContent());
         } else if (paroleEvent.getTexte() != null && !paroleEvent.getTexte().trim().equals("")) {
+            System.out.println(Thread.currentThread().getName() + " say (avant lecture) : " + paroleEvent.getTexte());
             lire(paroleEvent.getTexte().trim());
         }
     }

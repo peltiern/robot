@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
@@ -8,7 +9,6 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULI
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent.MOUVEMENTS_OEIL;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
-import net.engio.mbassy.listener.Handler;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
@@ -192,7 +192,7 @@ public class Yeux extends AbstractOrgane {
 	 * Intercepte les évènements de mouvements.
 	 * @param mouvementYeuxEvent évènement de mouvements
 	 */
-	@Handler
+	@Subscribe
 	public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
 		System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
@@ -231,7 +231,7 @@ public class Yeux extends AbstractOrgane {
 	 * Intercepte les évènements de mouvements de cou.
 	 * @param mouvementCouEvent évènement de mouvements de cou
 	 */
-	@Handler
+	@Subscribe
 	public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
 		System.out.println("YEUX : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
@@ -247,7 +247,7 @@ public class Yeux extends AbstractOrgane {
 //	 * Intercepte les évènements de mouvements.
 //	 * @param mouvementYeuxEvent évènement de mouvements
 //	 */
-//	@Handler
+//	@Subscribe
 //	public void handleRobotEvent(RobotEvent robotEvent) {
 //		System.out.println("YEUX : Event = " + robotEvent + ", Thread = " + Thread.currentThread().getName());
 //		if (robotEvent instanceof MouvementYeuxEvent) {
@@ -353,7 +353,7 @@ public class Yeux extends AbstractOrgane {
 	 * Intercepte les évènements d'affichage de position.
 	 * @param displayPositionEvent évènement
 	 */
-	@Handler
+	@Subscribe
 	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
 		double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
 		double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());

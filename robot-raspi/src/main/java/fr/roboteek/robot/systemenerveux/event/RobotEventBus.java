@@ -3,24 +3,29 @@
  */
 package fr.roboteek.robot.systemenerveux.event;
 
-import net.engio.mbassy.bus.MBassador;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
+
+import java.util.concurrent.Executors;
 
 /**
  * @author Nicolas
  *
  */
 public class RobotEventBus {
-	
-	private MBassador<RobotEvent> mBassador;
 
-	/** Constructeur privé */	
+	private EventBus eventBus;
+	private AsyncEventBus asyncEventBus;
+
+	/** Constructeur privé */
 	private RobotEventBus() {
-		mBassador = new MBassador<>();
+		eventBus = new EventBus("RobotEventBus");
+		asyncEventBus = new AsyncEventBus("RobotEventBus ASYNC", Executors.newFixedThreadPool(100));
 	}
 
 	/** Holder */
 	private static class RobotEventBusHolder
-	{		
+	{
 		/** Instance unique non préinitialisée */
 		private final static RobotEventBus instance = new RobotEventBus();
 	}
@@ -30,21 +35,23 @@ public class RobotEventBus {
 	{
 		return RobotEventBusHolder.instance;
 	}
-	
+
 	public synchronized void subscribe(Object listener) {
-		mBassador.subscribe(listener);
+		eventBus.register(listener);
+		asyncEventBus.register(listener);
 	}
-	
+
 	public synchronized void unsubscribe(Object listener) {
-		mBassador.unsubscribe(listener);
+		eventBus.unregister(listener);
+		asyncEventBus.unregister(listener);
 	}
-	
+
 	public void publish(RobotEvent event) {
-		mBassador.publish(event);
+		eventBus.post(event);
 	}
-	
+
 	public void publishAsync(RobotEvent event) {
-		mBassador.publishAsync(event);
+		asyncEventBus.post(event);
 	}
 
 }

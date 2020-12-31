@@ -93,11 +93,17 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         // Création d'un affichage du flux vidéo
         videoFrame = VideoDisplay.createOffscreenVideoDisplay(capture);
 
+        // TODO A décommenter pour permettre de récupérer le thread qui est lancé dans createOffscreenVideoDisplay
+//        videoFrame = new VideoDisplay<MBFImage>(capture, null);
+//        videoFrame.displayMode(false);
+//        // Ajout de l'écouteur vidéo
+//        videoFrame.addVideoListener(this);
     }
 
     public void initialiser() {
-        // Ajout de l'écouteur vidéo
         videoFrame.addVideoListener(this);
+        // TODO A décommenter pour permettre de récupérer le thread qui est lancé dans createOffscreenVideoDisplay
+//        new Thread(videoFrame).start();
     }
 
     public void arreter() {

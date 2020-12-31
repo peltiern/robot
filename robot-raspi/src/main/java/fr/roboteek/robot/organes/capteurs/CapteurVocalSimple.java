@@ -11,7 +11,7 @@ import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 public class CapteurVocalSimple extends AbstractCapteurVocal {
 
     public CapteurVocalSimple() {
-        super();
+        super("CapteurVocalSimple");
     }
 
     @Override
@@ -21,5 +21,4 @@ public class CapteurVocalSimple extends AbstractCapteurVocal {
         event.setCheminFichier(cheminFichierWav);
         RobotEventBus.getInstance().publishAsync(event);
     }
-
 }

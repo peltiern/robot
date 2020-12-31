@@ -1,4 +1,4 @@
-package fr.roboteek.robot.decisionnel;
+package fr.roboteek.robot.activites.main;
 
 public class ReponseIntelligenceArtificielle {
 

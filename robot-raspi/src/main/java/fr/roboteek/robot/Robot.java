@@ -1,5 +1,6 @@
 package fr.roboteek.robot;
 
+import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
@@ -17,7 +18,6 @@ import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
-import net.engio.mbassy.listener.Handler;
 import org.apache.log4j.Logger;
 
 /**
@@ -177,7 +177,7 @@ public class Robot {
      * Intercepte les évènements pour stopper le robot.
      * @param stopEvent évènement pour stopper le robot
      */
-    @Handler
+    @Subscribe
     public void handleStopEvent(StopEvent stopEvent) {
         arreter();
     }

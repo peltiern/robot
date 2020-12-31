@@ -1,4 +1,4 @@
-package fr.roboteek.robot.decisionnel;
+package fr.roboteek.robot.activites.main;
 
 import com.google.cloud.dialogflow.v2.AudioEncoding;
 import com.google.cloud.dialogflow.v2.DetectIntentRequest;

@@ -12,6 +12,9 @@ import java.util.Map;
 
 public class Animation {
 
+    // Specific animation to generate random animations
+    public static Animation RANDOM;
+
     public static Animation SAD;
     public static Animation SURPRISED;
     public static Animation AMAZED;
@@ -20,6 +23,8 @@ public class Animation {
     private static Map<String, Animation> mapAnimationsByName;
 
     static {
+        RANDOM = new Animation();
+
         SAD = new Animation();
         SAD.addAnimationStep(new AnimationStep(100, -24, -24, 0, 0, RobotSound.SAD));
 

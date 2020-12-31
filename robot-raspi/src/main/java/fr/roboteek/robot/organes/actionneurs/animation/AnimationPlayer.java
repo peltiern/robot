@@ -1,7 +1,8 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
+import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.Configurations;
-import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
 import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
@@ -12,56 +13,34 @@ import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.commons.RandomUtils;
-import net.engio.mbassy.listener.Handler;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class AnimationPlayer extends AbstractOrgane {
+public class AnimationPlayer extends AbstractOrganeWithThread {
 
     /** Flag indiquant de stopper le thread. */
     private boolean stopperThread = false;
 
+    boolean automaticMode = false;
+
     /** Liste des étapes d'animation à jouer. */
     private ConcurrentLinkedQueue<AnimationStep> animationSteps = new ConcurrentLinkedQueue<>();
 
+    public AnimationPlayer() {
+        super("AnimationPlayer");
+    }
+
     @Override
     public void initialiser() {
-        final Thread threadPlayer = new Thread("AnimationPlayer") {
-            @Override
-            public void run() {
-                loop();
-            }
-        };
-        threadPlayer.start();
+
     }
 
     @Override
-    public void arreter() {
-        stopperThread = true;
-    }
-
-    /**
-     * Intercepte les évènements pour jouer une animation.
-     * @param playAnimationEvent évènement pour jouer une animation
-     */
-    @Handler
-    public void handlePlayAnimationEvent(PlayAnimationEvent playAnimationEvent) {
-        if (playAnimationEvent != null) {
-            Animation animation = playAnimationEvent.getAnimation() != null ?
-                    playAnimationEvent.getAnimation() : Animation.getAnimationByName(playAnimationEvent.getAnimationName());
-            if (animation != null && CollectionUtils.isNotEmpty(animation.getSteps())) {
-                // Nettoyage de la liste des animations en cours
-                animationSteps.addAll(animation.getSteps());
-            }
-        }
-    }
-
-    private void loop() {
-        boolean automaticMode = false;
+    public void loop() {
         long nextAnimationEventTimer = System.currentTimeMillis();
         AnimationStep nextAnimationStep = null;
-        while (!stopperThread) {
+        while (!Thread.interrupted()) {
             //System.out.println("LOOP : " + System.currentTimeMillis());
             // Récupération de la prochaine étape d'animation s'il n'y en a pas
             if (nextAnimationStep == null) {
@@ -87,6 +66,27 @@ public class AnimationPlayer extends AbstractOrgane {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Intercepte les évènements pour jouer une animation.
+     * @param playAnimationEvent évènement pour jouer une animation
+     */
+    @Subscribe
+    public void handlePlayAnimationEvent(PlayAnimationEvent playAnimationEvent) {
+        if (playAnimationEvent != null) {
+            Animation animation = playAnimationEvent.getAnimation() != null ?
+                    playAnimationEvent.getAnimation() : Animation.getAnimationByName(playAnimationEvent.getAnimationName());
+            if (animation != null) {
+                automaticMode = false;
+                if (animation == Animation.RANDOM) {
+                    automaticMode = true;
+                } else if (CollectionUtils.isNotEmpty(animation.getSteps())) {
+                    // Nettoyage de la liste des animations en cours
+                    animationSteps.addAll(animation.getSteps());
+                }
             }
         }
     }
@@ -182,6 +182,7 @@ public class AnimationPlayer extends AbstractOrgane {
         // Lecteur d'animations
         AnimationPlayer animationPlayer = new AnimationPlayer();
         animationPlayer.initialiser();
+        animationPlayer.start();
         RobotEventBus.getInstance().subscribe(animationPlayer);
 
         Thread.sleep(2000);

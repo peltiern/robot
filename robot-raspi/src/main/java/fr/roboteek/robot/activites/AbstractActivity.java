@@ -17,8 +17,10 @@ public abstract class AbstractActivity {
 
     /**
      * Runs the activity.
+     *
+     * @return true if the activity had been stopped, false it is ended "properly"
      */
-    public abstract void run();
+    public abstract boolean run();
 
     /**
      * Stops properly the activity.
@@ -31,6 +33,7 @@ public abstract class AbstractActivity {
      * @param text the text to say
      */
     public void say(String text) {
+        System.out.println(Thread.currentThread().getName() + " want to say : " + text);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(text);
         RobotEventBus.getInstance().publish(paroleEvent);

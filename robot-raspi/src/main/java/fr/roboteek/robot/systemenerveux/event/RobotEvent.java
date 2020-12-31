@@ -8,6 +8,8 @@ public abstract class RobotEvent {
 	private String eventType;
 	
 	private long timestamp;
+
+	private boolean processedByBrain;
 	
 	public RobotEvent(String eventType) {
 		this.eventType = eventType;
@@ -29,7 +31,12 @@ public abstract class RobotEvent {
 	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
-	
-	
-	
+
+	public boolean isProcessedByBrain() {
+		return processedByBrain;
+	}
+
+	public void setProcessedByBrain(boolean processedByBrain) {
+		this.processedByBrain = processedByBrain;
+	}
 }

@@ -1,4 +1,4 @@
-package fr.roboteek.robot.decisionnel;
+package fr.roboteek.robot.activites.main;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;

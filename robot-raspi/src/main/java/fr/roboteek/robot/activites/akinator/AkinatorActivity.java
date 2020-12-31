@@ -1,5 +1,6 @@
 package fr.roboteek.robot.activites.akinator;
 
+import com.google.common.eventbus.Subscribe;
 import com.markozajc.akiwrapper.Akiwrapper;
 import com.markozajc.akiwrapper.AkiwrapperBuilder;
 import com.markozajc.akiwrapper.core.entities.Guess;
@@ -9,12 +10,9 @@ import com.markozajc.akiwrapper.core.entities.impl.immutable.ApiKey;
 import com.markozajc.akiwrapper.core.exceptions.ServerNotFoundException;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
-import fr.roboteek.robot.organes.capteurs.CapteurVocalSimple;
-import fr.roboteek.robot.systemenerveux.event.DetectionVocaleEvent;
+import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
+import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.util.speech.recognizer.SpeechRecognizer;
-import fr.roboteek.robot.util.speech.recognizer.google.GoogleSpeechRecognizer;
-import net.engio.mbassy.listener.Handler;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -24,19 +22,20 @@ public class AkinatorActivity extends AbstractActivity {
 
     public static final double PROBABILITY_THRESHOLD = 0.85;
 
-    /** Speech recognizer. */
-    private SpeechRecognizer speechRecognizer;
-
     /** Akinator engine. */
     private Akiwrapper akinator;
+
+    /** Flag to indicate that the activity is stopped. */
+    private boolean stopActivity;
+
+    /** Flag to indicate if the game is finished. */
+    private boolean finish;
 
     /** Waiting response. */
     private String waitingResponse;
 
     @Override
     public void init() {
-        // TODO Gestion dynamique de la reconnaisance vocale (par fichier de config à un niveau supérieur)
-       speechRecognizer = GoogleSpeechRecognizer.getInstance();
 
        // TODO Gérer l'âge de la personne
         Boolean filterProfanity = Boolean.TRUE;
@@ -58,22 +57,14 @@ public class AkinatorActivity extends AbstractActivity {
     }
 
     @Override
-    public void run() {
-        Thread threadActivity = new Thread(this::runActivity);
-        threadActivity.start();
-
-    }
-
-    private void runActivity() {
+    public boolean run() {
         say("Commençons à jouer !");
 
         // A list of rejected guesses, used to prevent them from repeating.
         List<Long> declined = new ArrayList<>();
 
-        boolean finish = false;
-
         // Iterates while there are still questions left.
-        while (akinator.getCurrentQuestion() != null && !finish) {
+        while (akinator.getCurrentQuestion() != null && !finish && !stopActivity) {
 
             Question question = akinator.getCurrentQuestion();
             // Breaks the loop if question is null; /should/ not occur, but safety is still
@@ -93,23 +84,26 @@ public class AkinatorActivity extends AbstractActivity {
             finish = reviewGuesses(declined);
         }
 
-        if (!finish) {
+        if (!finish && !stopActivity) {
             for (Guess guess : akinator.getGuesses()) {
                 if (reviewGuess(guess)) {
                     // Reviews all final guesses.
                     finish(true);
-                    return;
+                    return stopActivity;
                 }
             }
 
             finish(false);
         }
+
+        say("A bientôt pour une nouvelle partie.");
+        return stopActivity;
     }
 
     private void answerQuestion() {
         boolean answered = false;
         waitingResponse = null;
-        while (!answered) {
+        while (!answered && !stopActivity) {
             // Iterates while the questions remains unanswered.
 
             String answer = waitingResponse;
@@ -196,7 +190,7 @@ public class AkinatorActivity extends AbstractActivity {
         boolean isCharacter = false;
         waitingResponse = null;
         say("Est-ce que j'ai trouvé ?");
-        while (!answered) {
+        while (!answered && !stopActivity) {
             // Asks the user if that is his character.
 
             String answer = StringUtils.isNotBlank(waitingResponse) ? waitingResponse.toLowerCase() : "";
@@ -235,21 +229,21 @@ public class AkinatorActivity extends AbstractActivity {
 
     @Override
     public void stop() {
-
+        System.out.println("Stop activity");
+        stopActivity = true;
     }
 
     /**
-     * Intercepts speech detection events
+     * Intercepts speech recognition events
      *
-     * @param speechDetectionEvent the speech detection event
+     * @param speechRecognitionEvent the speech recognition event
      */
-    @Handler
-    public void handleSpeechDetectionEvent(DetectionVocaleEvent speechDetectionEvent) {
-        System.out.println("EVENEMENT DETECTION VOCALE" + speechDetectionEvent.getCheminFichier());
-        if (speechDetectionEvent != null && StringUtils.isNotEmpty(speechDetectionEvent.getCheminFichier())) {
+    @Subscribe
+    public void handleReconnaissanceVocalEvent(ReconnaissanceVocaleEvent speechRecognitionEvent) {
+        if (speechRecognitionEvent.isProcessedByBrain() && StringUtils.isNotEmpty(speechRecognitionEvent.getTexteReconnu())) {
             // Recognize speech
-            waitingResponse = speechRecognizer.recognize(speechDetectionEvent.getCheminFichier());
-            System.out.println("Réponse reconnue = " + waitingResponse);
+            waitingResponse = speechRecognitionEvent.getTexteReconnu();
+            System.out.println(Thread.currentThread().getName() + " " + this + " --Réponse reconnue = " + waitingResponse);
         }
     }
 
@@ -258,13 +252,14 @@ public class AkinatorActivity extends AbstractActivity {
         activity.init();
         RobotEventBus.getInstance().subscribe(activity);
 
-        CapteurVocalSimple capteurVocalSimple = new CapteurVocalSimple();
-        capteurVocalSimple.initialiser();
+        CapteurVocalAvecReconnaissance capteurVocalAvecReconnaissance = new CapteurVocalAvecReconnaissance();
+        capteurVocalAvecReconnaissance.initialiser();
+        capteurVocalAvecReconnaissance.start();
         OrganeParoleGoogle organeParoleGoogle = new OrganeParoleGoogle();
         organeParoleGoogle.initialiser();
 
-        RobotEventBus.getInstance().subscribe(capteurVocalSimple);
+        RobotEventBus.getInstance().subscribe(capteurVocalAvecReconnaissance);
         RobotEventBus.getInstance().subscribe(organeParoleGoogle);
-        activity.runActivity();
+        activity.run();
     }
 }

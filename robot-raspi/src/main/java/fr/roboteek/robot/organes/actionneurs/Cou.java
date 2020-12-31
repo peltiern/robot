@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs;
 
+import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
@@ -8,7 +9,6 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_GAUCH
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_HAUT_BAS;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
-import net.engio.mbassy.listener.Handler;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
@@ -180,7 +180,7 @@ public class Cou extends AbstractOrgane {
 	 * Intercepte les évènements de mouvements.
 	 * @param mouvementCouEvent évènement de mouvements
 	 */
-	@Handler
+	@Subscribe
 	public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
 		//System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementCouEvent.getPositionGaucheDroite() != MouvementCouEvent.POSITION_NEUTRE) {
@@ -240,7 +240,7 @@ public class Cou extends AbstractOrgane {
 	 * Intercepte les évènements d'affichage de position.
 	 * @param displayPositionEvent évènement
 	 */
-	@Handler
+	@Subscribe
 	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
 		double positionGaucheDroite = phidgetsConfig.neckLeftRightMotorInitialPosition() - moteurGaucheDroite.getPositionReelle();
 		double positionHautBas = phidgetsConfig.neckUpDownMotorInitialPosition() - moteurHautBas.getPositionReelle();
