@@ -76,6 +76,7 @@ public class GoogleSpeechRecognizer implements SpeechRecognizer {
 	}
 
 	public String recognize(String wavFilePath) {
+		//System.out.println("RECOGNIZER = " + wavFilePath + ", " + flacFilePath);
 		File wavFile = new File(wavFilePath);
 		File flacFile = new File(flacFilePath);
 		flacEncoder.encode(wavFile, flacFile);

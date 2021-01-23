@@ -6,6 +6,8 @@ import fr.roboteek.robot.activites.akinator.AkinatorActivity;
 import fr.roboteek.robot.activites.main.MainActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
+import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
+import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.server.RobotEventWebSocket;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
@@ -45,7 +47,7 @@ public class Cerveau extends AbstractOrganeWithThread {
     public void loop() {
         while (true) {
             // Start activity if exists
-            if (currentActivity != null) {
+            if (currentActivity != null && currentActivity.isInitialized()) {
                 System.out.println("Lancement de l'activité");
                 boolean hasBeenStopped = currentActivity.run();
                 if (!hasBeenStopped) {
@@ -135,6 +137,7 @@ public class Cerveau extends AbstractOrganeWithThread {
         // Stop current activity
         stopCurrentActivity();
         currentActivity = activity;
+        System.out.println("initNewCurrentActivity : " + currentActivity.getClass().getName());
         currentActivity.init();
         // Subscribe to event bus
         RobotEventBus.getInstance().subscribe(currentActivity);
@@ -142,6 +145,7 @@ public class Cerveau extends AbstractOrganeWithThread {
 
     private synchronized void stopCurrentActivity() {
         if (currentActivity != null) {
+            System.out.println("stopCurrentActivity : " + currentActivity.getClass().getName());
             // Unsubscribe to event bus
             RobotEventBus.getInstance().unsubscribe(currentActivity);
             // Stop activity
@@ -163,6 +167,16 @@ public class Cerveau extends AbstractOrganeWithThread {
     }
 
     public static void main(String[] args) {
+        // Lecteur de sons
+        SoundPlayer soundPlayer = new SoundPlayer();
+        soundPlayer.initialiser();
+        RobotEventBus.getInstance().subscribe(soundPlayer);
+
+        AnimationPlayer animationPlayer = new AnimationPlayer();
+        animationPlayer.initialiser();
+        animationPlayer.start();
+        RobotEventBus.getInstance().subscribe(animationPlayer);
+
         Cerveau cerveau = new Cerveau();
         cerveau.initialiser();
         RobotEventBus.getInstance().subscribe(cerveau);

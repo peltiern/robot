@@ -2,14 +2,12 @@ package fr.roboteek.robot.activites.main;
 
 import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
+import fr.roboteek.robot.organes.actionneurs.animation.Animation;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
 public class MainActivity extends AbstractActivity {
-
-    /** Flag to indicate that the activity is stopped. */
-    private boolean stopActivity;
 
     /**
      * Intelligence artificielle (contenant le système conversationnel).
@@ -19,12 +17,15 @@ public class MainActivity extends AbstractActivity {
 
     @Override
     public void init() {
+        initialized = false;
         intelligenceArtificielleDialogFlow = new IntelligenceArtificielleDialogFlow();
         intelligenceArtificielleGoogleKnowledge = new IntelligenceArtificielleGoogleKnowledge();
+        initialized = true;
     }
 
     @Override
     public boolean run() {
+        playAnimation(Animation.RANDOM);
         while (!stopActivity) {
             try {
                 Thread.sleep(20);
@@ -34,12 +35,6 @@ public class MainActivity extends AbstractActivity {
         }
         say("OK. On arrête de parler.");
         return stopActivity;
-    }
-
-    @Override
-    public void stop() {
-        System.out.println("Stop activity");
-        stopActivity = true;
     }
 
     @Subscribe
@@ -59,7 +54,9 @@ public class MainActivity extends AbstractActivity {
                 if (reponse.isFallback()) {
                     reponse = firstResponse;
                 }
+                playAnimation(Animation.NEUTRAL);
                 say(reponse);
+                playAnimation(Animation.RANDOM);
             }
         }
     }

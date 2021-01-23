@@ -93,7 +93,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
 	public synchronized void setPositionCible(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
 		try {
-			System.out.println("POSITION DEMANDEE à " + System.currentTimeMillis() + " = " + position);
+			//System.out.println("POSITION DEMANDEE à " + System.currentTimeMillis() + " = " + position);
 			positionAtteinte.set(false);
 			setAcceleration(acceleration);
 			rcServo.setTargetPosition(position);
@@ -264,13 +264,13 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 	@Override
 	public void onTargetPositionReached(RCServoTargetPositionReachedEvent event) {
 		if (event.getSource().equals(rcServo)) {
-			try {
+			//try {
 				positionAtteinte.set(true);
-				System.out.println("POSITION REACHED = time = " + System.currentTimeMillis() + ", event = " + event.getPosition() + ", servo = " + rcServo.getChannel() + ":" + rcServo.getPosition());
-			} catch (PhidgetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+				//System.out.println("POSITION REACHED = time = " + System.currentTimeMillis() + ", event = " + event.getPosition() + ", servo = " + rcServo.getChannel() + ":" + rcServo.getPosition());
+//			} catch (PhidgetException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		};
 	}
 	

@@ -181,7 +181,7 @@ public class Yeux extends AbstractOrgane {
 		}
 		final double nouvellePositionRelativeOeilGauche = positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter;
 		final double nouvellePositionRelativeOeilDroit = positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter;
-		System.out.println("newAngleRoulis = " + newAngleRoulis + ", angleRoulis = " + angleRoulisAAffecter + ", positionOeilGaucheDebutRoulis = " + positionRelativeOeilGaucheDebutRoulis + ", nouvellePositionOeilGauche = " + nouvellePositionRelativeOeilGauche + ", positionOeilDroitDebutRoulis = " + positionRelativeOeilDroitDebutRoulis + ", nouvellePositionOeilDroit = " + nouvellePositionRelativeOeilDroit);
+		//System.out.println("newAngleRoulis = " + newAngleRoulis + ", angleRoulis = " + angleRoulisAAffecter + ", positionOeilGaucheDebutRoulis = " + positionRelativeOeilGaucheDebutRoulis + ", nouvellePositionOeilGauche = " + nouvellePositionRelativeOeilGauche + ", positionOeilDroitDebutRoulis = " + positionRelativeOeilDroitDebutRoulis + ", nouvellePositionOeilDroit = " + nouvellePositionRelativeOeilDroit);
 		positionnerOeilGauche(nouvellePositionRelativeOeilGauche, vitesse, acceleration, false);
 		positionnerOeilDroit(nouvellePositionRelativeOeilDroit, vitesse, acceleration, waitForPosition);
 		angleRoulis = angleRoulisAAffecter;
@@ -194,7 +194,7 @@ public class Yeux extends AbstractOrgane {
 	 */
 	@Subscribe
 	public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
-		System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
+		//System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
 			// TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
 			roulisEnCours = false;
@@ -233,7 +233,7 @@ public class Yeux extends AbstractOrgane {
 	 */
 	@Subscribe
 	public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
-		System.out.println("YEUX : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
+		//System.out.println("YEUX : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
 		if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
 			setPositionRoulis(mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
 		} else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
@@ -357,7 +357,7 @@ public class Yeux extends AbstractOrgane {
 	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
 		double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
 		double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
-		System.out.println("YEUX\tgauche = " + positionRelativeOeilGauche + "\tdroit = " + positionRelativeOeilDroit);
+		//System.out.println("YEUX\tgauche = " + positionRelativeOeilGauche + "\tdroit = " + positionRelativeOeilDroit);
 	}
 
 	public static void main(String[] args) {

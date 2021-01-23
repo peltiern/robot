@@ -10,6 +10,7 @@ import com.markozajc.akiwrapper.core.entities.impl.immutable.ApiKey;
 import com.markozajc.akiwrapper.core.exceptions.ServerNotFoundException;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
+import fr.roboteek.robot.organes.actionneurs.animation.Animation;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -25,9 +26,6 @@ public class AkinatorActivity extends AbstractActivity {
     /** Akinator engine. */
     private Akiwrapper akinator;
 
-    /** Flag to indicate that the activity is stopped. */
-    private boolean stopActivity;
-
     /** Flag to indicate if the game is finished. */
     private boolean finish;
 
@@ -36,6 +34,8 @@ public class AkinatorActivity extends AbstractActivity {
 
     @Override
     public void init() {
+
+        initialized = false;
 
        // TODO Gérer l'âge de la personne
         Boolean filterProfanity = Boolean.TRUE;
@@ -51,6 +51,7 @@ public class AkinatorActivity extends AbstractActivity {
                     .setLanguage(language)
                     .setGuessType(guessType)
                     .build();
+            initialized = true;
         } catch (ServerNotFoundException e) {
             System.err.println("Invalid combination of language and guess type. Try a different guess type.");
         }
@@ -58,6 +59,7 @@ public class AkinatorActivity extends AbstractActivity {
 
     @Override
     public boolean run() {
+        playAnimation(Animation.RANDOM);
         say("Commençons à jouer !");
 
         // A list of rejected guesses, used to prevent them from repeating.
@@ -75,11 +77,11 @@ public class AkinatorActivity extends AbstractActivity {
             // Say question
             System.out.println("Question #" + (question.getStep() + 1));
             System.out.println("\t" + question.getQuestion());
+            playAnimation(Animation.NEUTRAL);
             say(question.getQuestion());
 
             // Wait for answer
             answerQuestion();
-
 
             finish = reviewGuesses(declined);
         }
@@ -103,6 +105,7 @@ public class AkinatorActivity extends AbstractActivity {
     private void answerQuestion() {
         boolean answered = false;
         waitingResponse = null;
+        playAnimation(Animation.RANDOM);
         while (!answered && !stopActivity) {
             // Iterates while the questions remains unanswered.
 
@@ -165,7 +168,7 @@ public class AkinatorActivity extends AbstractActivity {
 
     private boolean reviewGuesses(List<Long> declined) {
         for (Guess guess : akinator.getGuessesAboveProbability(PROBABILITY_THRESHOLD)) {
-            if (guess.getProbability() > 0.85d && !declined.contains(guess.getIdLong())) {
+            if (guess.getProbability() > 0.25d && !declined.contains(guess.getIdLong())) {
                 // Checks if this guess complies with the conditions.
 
                 if (reviewGuess(guess)) {
@@ -192,12 +195,13 @@ public class AkinatorActivity extends AbstractActivity {
         say("Est-ce que j'ai trouvé ?");
         while (!answered && !stopActivity) {
             // Asks the user if that is his character.
-
+            System.out.println("reviewGuess : answered = " + answered + ", stopActivity" + stopActivity);
             String answer = StringUtils.isNotBlank(waitingResponse) ? waitingResponse.toLowerCase() : "";
             if (StringUtils.isNotBlank(answer)) {
                 switch (answer) {
                     case "oui":
                         // If the user has responded positively.
+                        System.out.println("REPONSE TROUVEE");
                         answered = true;
                         isCharacter = true;
                         break;
@@ -209,28 +213,31 @@ public class AkinatorActivity extends AbstractActivity {
                         break;
 
                     default:
+                        System.out.println("reviewGuess DEFAULT");
                         break;
                 }
             }
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-
+        System.out.println("reviewGuess RETURN " + isCharacter);
         return isCharacter;
     }
 
     private void finish(boolean win) {
         if (win) {
             // If Akinator has won.
+            System.out.println("ANIMATION VICTOIRE");
+            playAnimation(Animation.AMAZED);
             say("Cool ! J'ai trouvé !");
         } else {
             // If the user has won.
+            playAnimation(Animation.SAD);
             say("Bravo ! Tu as réussi à me battre !");
         }
-    }
-
-    @Override
-    public void stop() {
-        System.out.println("Stop activity");
-        stopActivity = true;
     }
 
     /**

@@ -244,7 +244,7 @@ public class Cou extends AbstractOrgane {
 	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
 		double positionGaucheDroite = phidgetsConfig.neckLeftRightMotorInitialPosition() - moteurGaucheDroite.getPositionReelle();
 		double positionHautBas = phidgetsConfig.neckUpDownMotorInitialPosition() - moteurHautBas.getPositionReelle();
-		System.out.println("COU\tGD = " + positionGaucheDroite + "\tHB = " + positionHautBas);
+		//System.out.println("COU\tGD = " + positionGaucheDroite + "\tHB = " + positionHautBas);
 	}
 	
 	public void testMouvement() {

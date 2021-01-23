@@ -15,6 +15,8 @@ public class Animation {
     // Specific animation to generate random animations
     public static Animation RANDOM;
 
+    public static Animation NEUTRAL;
+    public static Animation THINKING;
     public static Animation SAD;
     public static Animation SURPRISED;
     public static Animation AMAZED;
@@ -24,6 +26,12 @@ public class Animation {
 
     static {
         RANDOM = new Animation();
+
+        NEUTRAL = new Animation();
+        NEUTRAL.addAnimationStep(new AnimationStep(200, 0, 0, 0, 0, null));
+
+        THINKING = new Animation();
+        THINKING.addAnimationStep(new AnimationStep(200, -10, 0, 20, 20, null));
 
         SAD = new Animation();
         SAD.addAnimationStep(new AnimationStep(100, -24, -24, 0, 0, RobotSound.SAD));
@@ -47,6 +55,8 @@ public class Animation {
         TEST_2.addAnimationStep(new AnimationStep(2000, -15, -15, 0, 0, null));
 
         mapAnimationsByName = new HashMap<>();
+        mapAnimationsByName.put("NEUTRAL", NEUTRAL);
+        mapAnimationsByName.put("THINKING", THINKING);
         mapAnimationsByName.put("SAD", SAD);
         mapAnimationsByName.put("SURPRISED", SURPRISED);
         mapAnimationsByName.put("AMAZED", AMAZED);

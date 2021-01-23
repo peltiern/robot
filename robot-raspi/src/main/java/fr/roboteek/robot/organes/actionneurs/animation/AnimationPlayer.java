@@ -92,7 +92,7 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
     }
 
     private void playAnimationStep(AnimationStep animationStep) {
-        System.out.println("playAnimationStep = " + animationStep);
+        //System.out.println("playAnimationStep = " + animationStep);
         // Transformation de l'étape en évènement
         MouvementYeuxEvent mouvementYeuxEvent = animationStep.buildMouvementYeuxEvent();
         MouvementCouEvent mouvementCouEvent = animationStep.buildMouvementCouEvent();
@@ -154,11 +154,13 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
 
         // Lecture d'un son
         RobotSound sound = null;
-        int playSound = RandomUtils.nextInt(0, 5);
-        if (playSound % 5 == 0) {
-            int soundIndex = RandomUtils.nextInt(0, 4);
-            sound = RobotSound.values()[soundIndex];
-        }
+        // TODO Gérer le son en animation aléatoire
+        // TODO PB : le capteur vocal est mis en pause lorsqu'un son est joué ce qui altère la reconnaissance
+//        int playSound = RandomUtils.nextInt(0, 5);
+//        if (playSound % 5 == 0) {
+//            int soundIndex = RandomUtils.nextInt(0, 4);
+//            sound = RobotSound.values()[soundIndex];
+//        }
 
         AnimationStep animationStep = new AnimationStep(delay, positionOeilGauche, positionOeilDroit, positionCouGaucheDroite, positionCouHautBas, sound);
         return animationStep;

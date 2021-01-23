@@ -233,6 +233,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                             bufferNMoins1 = Bytes.concat(e.getByteBuffer());
                         }
                     } else {
+                        System.out.println("CAPTEUR MIS EN PAUSE");
                         // Réinitialisation des blocs
                         contenuParle = new byte[0];
                         bufferNMoins1 = new byte[0];
@@ -319,7 +320,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             bufferNMoins3 = new byte[0];
             bufferNMoins4 = new byte[0];
             bufferNMoins5 = new byte[0];
-        } else if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE.METTRE_EN_PAUSE) {
+        } else if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE) {
             System.out.println("Mise en pause de la reconnaissance vocale");
             misEnPause = true;
             // Réinitialisation des blocs

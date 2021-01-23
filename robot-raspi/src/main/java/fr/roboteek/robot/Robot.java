@@ -3,6 +3,7 @@ package fr.roboteek.robot;
 import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
@@ -11,7 +12,7 @@ import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
 import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket;
-import fr.roboteek.robot.organes.capteurs.CapteurVocalSimple;
+import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.server.RobotServer;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -36,7 +37,7 @@ public class Robot {
     private AbstractOrgane capteurVision;
 
     /** Capteur vocal. */
-    private AbstractOrgane capteurVocal;
+    private AbstractOrganeWithThread capteurVocal;
 
     /** Capteur Activité Son. */
     private CapteurActiviteSon capteurActiviteSon;
@@ -87,6 +88,7 @@ public class Robot {
 
         // Instanciation des différents organes du robot
         cerveau = new Cerveau();
+        cerveau.initialiser();
 
         // Actionneurs
         organeParole = new OrganeParoleGoogle();
@@ -102,11 +104,12 @@ public class Robot {
 
         // Capteurs
         capteurVision = new CapteurVisionWebSocket();
-        capteurVocal = new CapteurVocalSimple();
+        capteurVocal = new CapteurVocalAvecReconnaissance();
 
         // Initialisation des capteurs
         capteurVision.initialiser();
         capteurVocal.initialiser();
+        capteurVocal.start();
 
         RobotEventBus.getInstance().subscribe(capteurVocal);
 
@@ -118,6 +121,7 @@ public class Robot {
         // Lecteur d'animations
         animationPlayer = new AnimationPlayer();
         animationPlayer.initialiser();
+        animationPlayer.start();
         RobotEventBus.getInstance().subscribe(animationPlayer);
 
         // Manette
@@ -133,6 +137,8 @@ public class Robot {
         RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(cou);
         RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+
+        cerveau.start();
 
         // Démarrage du serveur
         RobotServer.getInstance().run();
