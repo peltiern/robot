@@ -77,7 +77,7 @@ public class Robot {
                 e.printStackTrace();
             }
         }
-        logger.debug("Arrêt complet");
+        logger.debug("Arrêt complet test");
         System.out.println("ARRET");
         System.exit(0);
     }
