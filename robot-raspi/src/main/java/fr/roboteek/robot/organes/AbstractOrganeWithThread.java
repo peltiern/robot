@@ -2,6 +2,7 @@ package fr.roboteek.robot.organes;
 
 /**
  * Classe abstraite représentant un organe fonctionnant avec un thread.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public abstract class AbstractOrganeWithThread extends AbstractOrgane {

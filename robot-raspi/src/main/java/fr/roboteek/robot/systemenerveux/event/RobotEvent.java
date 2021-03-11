@@ -1,42 +1,53 @@
 package fr.roboteek.robot.systemenerveux.event;
 
+import java.time.LocalDateTime;
+
 /**
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public abstract class RobotEvent {
 
-	private String eventType;
-	
-	private long timestamp;
+    private String eventType;
 
-	private boolean processedByBrain;
-	
-	public RobotEvent(String eventType) {
-		this.eventType = eventType;
-		this.timestamp = System.currentTimeMillis();
-	}
+    private LocalDateTime dateTime;
 
-	public String getEventType() {
-		return eventType;
-	}
+    private boolean processedByBrain;
 
-	public void setEventType(String eventType) {
-		this.eventType = eventType;
-	}
+    public RobotEvent(String eventType) {
+        this.eventType = eventType;
+        this.dateTime = LocalDateTime.now();
+    }
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+    public String getEventType() {
+        return eventType;
+    }
 
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
 
-	public boolean isProcessedByBrain() {
-		return processedByBrain;
-	}
+    public boolean isProcessedByBrain() {
+        return processedByBrain;
+    }
 
-	public void setProcessedByBrain(boolean processedByBrain) {
-		this.processedByBrain = processedByBrain;
-	}
+    public void setProcessedByBrain(boolean processedByBrain) {
+        this.processedByBrain = processedByBrain;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    @Override
+    public String toString() {
+        return "RobotEvent{" +
+                "eventType='" + eventType + '\'' +
+                ", dateTime=" + dateTime +
+                ", processedByBrain=" + processedByBrain +
+                '}';
+    }
 }

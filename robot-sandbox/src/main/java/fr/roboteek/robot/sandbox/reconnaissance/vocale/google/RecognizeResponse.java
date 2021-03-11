@@ -5,28 +5,28 @@ import java.util.List;
 
 public class RecognizeResponse {
 
-	private List<SpeechRecognitionResult> results;
-	
-	private int resultIndex;
+    private List<SpeechRecognitionResult> results;
 
-	public List<SpeechRecognitionResult> getResults() {
-		return results;
-	}
+    private int resultIndex;
 
-	public void setResults(List<SpeechRecognitionResult> results) {
-		this.results = results;
-	}
+    public List<SpeechRecognitionResult> getResults() {
+        return results;
+    }
 
-	public int getResultIndex() {
-		return resultIndex;
-	}
+    public void setResults(List<SpeechRecognitionResult> results) {
+        this.results = results;
+    }
 
-	public void setResultIndex(int resultIndex) {
-		this.resultIndex = resultIndex;
-	}
+    public int getResultIndex() {
+        return resultIndex;
+    }
 
-	@Override
-	public String toString() {
-		return "RecognizeResponse [results=" + results + ", resultIndex=" + resultIndex + "]";
-	}
+    public void setResultIndex(int resultIndex) {
+        this.resultIndex = resultIndex;
+    }
+
+    @Override
+    public String toString() {
+        return "RecognizeResponse [results=" + results + ", resultIndex=" + resultIndex + "]";
+    }
 }

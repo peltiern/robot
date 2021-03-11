@@ -1,0 +1,51 @@
+<div id="app">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a href="#" class="navbar-brand">Roboteek</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav w-100" routerLinkActive="active">
+        <li class="nav-item ml-3">
+          <a href="/control" class="nav-link" routerLink="control">
+            <i-bs name="joystick" width="50px" height="50px"></i-bs>
+          </a>
+        </li>
+        <li class="nav-item ml-3">
+          <a href="/dashboard" class="nav-link" routerLink="dashboard">
+            <i-bs name="graph-up" width="50px" height="50px"></i-bs>
+          </a>
+        </li>
+        <li class="nav-item ml-3">
+          <a href="/dashboard" class="nav-link" routerLink="dashboard">
+            <i-bs name="gear-fill" width="50px" height="50px"></i-bs>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!--    <ul class="navbar-nav ml-auto" *ngIf="!isLoggedIn">-->
+    <!--      <li class="nav-item">-->
+    <!--        <a href="/register" class="nav-link" routerLink="register">Sign Up</a>-->
+    <!--      </li>-->
+    <!--      <li class="nav-item">-->
+    <!--        <a href="/login" class="nav-link" routerLink="login">Login</a>-->
+    <!--      </li>-->
+    <!--    </ul>-->
+
+    <!--    <ul class="navbar-nav ml-auto" *ngIf="isLoggedIn">-->
+    <!--      <li class="nav-item">-->
+    <!--        <a href="/profile" class="nav-link" routerLink="profile">{{ username }}</a>-->
+    <!--      </li>-->
+    <!--      <li class="nav-item">-->
+    <!--        <a href class="nav-link" (click)="logout()">LogOut</a>-->
+    <!--      </li>-->
+    <!--    </ul>-->
+  </nav>
+
+  <div class="row bg-dark">
+    <div class="col-12">
+      <div class="container">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+    <!--    <router-outlet></router-outlet>-->
+  </div>
+</div>

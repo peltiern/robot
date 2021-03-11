@@ -2,36 +2,40 @@ package fr.roboteek.robot.sandbox.reconnaissance.vocale.bing;
 
 /**
  * Réponse du service Web de reconnaissance vocale de Bing.
- * @author Nicolas
  *
+ * @author Nicolas
  */
 public class BingSpeechResponse {
-	
-	/** Version. */
-	private String version;
-	
-	/** Entête. */
-	private BingSpeechHeader header;
 
-	public String getVersion() {
-		return version;
-	}
+    /**
+     * Version.
+     */
+    private String version;
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    /**
+     * Entête.
+     */
+    private BingSpeechHeader header;
 
-	public BingSpeechHeader getHeader() {
-		return header;
-	}
+    public String getVersion() {
+        return version;
+    }
 
-	public void setHeader(BingSpeechHeader header) {
-		this.header = header;
-	}
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-	@Override
-	public String toString() {
-		return "BingSpeechResponse [version=" + version + ", header=" + header + "]";
-	}
+    public BingSpeechHeader getHeader() {
+        return header;
+    }
+
+    public void setHeader(BingSpeechHeader header) {
+        this.header = header;
+    }
+
+    @Override
+    public String toString() {
+        return "BingSpeechResponse [version=" + version + ", header=" + header + "]";
+    }
 
 }

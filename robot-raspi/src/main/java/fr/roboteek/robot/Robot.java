@@ -4,73 +4,94 @@ import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.decisionnel.Cerveau;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.organes.actionneurs.ConduiteDifferentielle;
-import fr.roboteek.robot.organes.actionneurs.Cou;
-import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
-import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
-import fr.roboteek.robot.organes.actionneurs.Yeux;
+import fr.roboteek.robot.organes.actionneurs.*;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
 import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
-import fr.roboteek.robot.server.RobotServer;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
-import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 import org.apache.log4j.Logger;
 
 /**
  * Classe principale du robot.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class Robot {
 
-    /** Cerveau du robot. */
+    /**
+     * Cerveau du robot.
+     */
     private Cerveau cerveau;
 
-    /** Organe de la parole. */
+    /**
+     * Organe de la parole.
+     */
     private AbstractOrgane organeParole;
 
-    /** Capteur de vision (oeil du robot). Thread ? */
+    /**
+     * Capteur de vision (oeil du robot). Thread ?
+     */
     private AbstractOrgane capteurVision;
 
-    /** Capteur vocal. */
+    /**
+     * Capteur vocal.
+     */
     private AbstractOrganeWithThread capteurVocal;
 
-    /** Capteur Activité Son. */
+    /**
+     * Capteur Activité Son.
+     */
     private CapteurActiviteSon capteurActiviteSon;
 
-    /** Cou du robot. */
+    /**
+     * Cou du robot.
+     */
     private Cou cou;
 
-    /** Yeux du robot. */
+    /**
+     * Yeux du robot.
+     */
     private Yeux yeux;
 
-    /** Conduite différentielle. */
+    /**
+     * Conduite différentielle.
+     */
     private ConduiteDifferentielle conduiteDifferentielle;
 
-    /** Controleur de manette. */
+    /**
+     * Controleur de manette.
+     */
     private RobotGamepadController robotGamepadController;
 
-    /** Lecteur de sons. */
+    /**
+     * Lecteur de sons.
+     */
     private SoundPlayer soundPlayer;
 
-    /** Lecteur d'animations. */
+    /**
+     * Lecteur d'animations.
+     */
     private AnimationPlayer animationPlayer;
 
-    /** Flag d'arrêt du robot. */
+    /**
+     * Flag d'arrêt du robot.
+     */
     private boolean stopper = false;
 
-    /** Logger. */
+    /**
+     * Logger.
+     */
     private Logger logger = Logger.getLogger(Robot.class);
 
 
     public Robot() {
         // Initialisation
         initialiser();
-        while(!stopper) {
+        while (!stopper) {
             try {
                 Thread.sleep(20);
             } catch (InterruptedException e) {
@@ -82,7 +103,9 @@ public class Robot {
         System.exit(0);
     }
 
-    /** Initialisation du robot. */
+    /**
+     * Initialisation du robot.
+     */
     private void initialiser() {
         logger.debug("Initialisation du robot");
 
@@ -118,30 +141,27 @@ public class Robot {
         soundPlayer.initialiser();
         RobotEventBus.getInstance().subscribe(soundPlayer);
 
-        // Lecteur d'animations
-        animationPlayer = new AnimationPlayer();
-        animationPlayer.initialiser();
-        animationPlayer.start();
-        RobotEventBus.getInstance().subscribe(animationPlayer);
-
-        // Manette
-        robotGamepadController = new RobotJamepadController();
-        robotGamepadController.start();
-
-        yeux = new Yeux();
-        cou =  new Cou();
-        conduiteDifferentielle = new ConduiteDifferentielle();
-        cou.initialiser();
-        yeux.initialiser();
-        conduiteDifferentielle.initialiser();
-        RobotEventBus.getInstance().subscribe(yeux);
-        RobotEventBus.getInstance().subscribe(cou);
-        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+//        // Lecteur d'animations
+//        animationPlayer = new AnimationPlayer();
+//        animationPlayer.initialiser();
+//        animationPlayer.start();
+//        RobotEventBus.getInstance().subscribe(animationPlayer);
+//
+//        // Manette
+//        robotGamepadController = new RobotJamepadController();
+//        robotGamepadController.start();
+//
+//        yeux = new Yeux();
+//        cou =  new Cou();
+//        conduiteDifferentielle = new ConduiteDifferentielle();
+//        cou.initialiser();
+//        yeux.initialiser();
+//        conduiteDifferentielle.initialiser();
+//        RobotEventBus.getInstance().subscribe(yeux);
+//        RobotEventBus.getInstance().subscribe(cou);
+//        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
 
         cerveau.start();
-
-        // Démarrage du serveur
-        RobotServer.getInstance().run();
 
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte("J'ai terminé de m'initialiser");
@@ -149,7 +169,9 @@ public class Robot {
         logger.debug("Fin de l'initialisation");
     }
 
-    /** Arrête le robot. */
+    /**
+     * Arrête le robot.
+     */
     private void arreter() {
         // TODO NP : Revoir l'arrêt correct de l'ensemble des threads
         // Lancement d'un Thread pour l'arrêt du robot
@@ -181,6 +203,7 @@ public class Robot {
 
     /**
      * Intercepte les évènements pour stopper le robot.
+     *
      * @param stopEvent évènement pour stopper le robot
      */
     @Subscribe

@@ -16,7 +16,9 @@ public class MicArrayV2 {
     private static short VENDOR_ID = (short) 0x2886;
     private static short PRODUCT_ID = (short) 0x0018;
 
-    /** Instance de la classe (singleton). */
+    /**
+     * Instance de la classe (singleton).
+     */
     private static MicArrayV2 instance;
 
     private Context context;
@@ -30,6 +32,7 @@ public class MicArrayV2 {
 
     /**
      * Récupère l'instance de la classe (le singleton).
+     *
      * @return l'instance de la classe
      */
     public synchronized static MicArrayV2 getInstance() {

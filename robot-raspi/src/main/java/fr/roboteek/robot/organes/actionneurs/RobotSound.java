@@ -7,7 +7,9 @@ public enum RobotSound {
     WALLE("walle.ogg"),
     WOW("wow.ogg");
 
-    /** Fichier associé. */
+    /**
+     * Fichier associé.
+     */
     private String fileName;
 
     RobotSound(String fileName) {

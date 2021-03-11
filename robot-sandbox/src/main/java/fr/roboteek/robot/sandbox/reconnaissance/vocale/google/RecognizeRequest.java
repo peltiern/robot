@@ -3,23 +3,23 @@ package fr.roboteek.robot.sandbox.reconnaissance.vocale.google;
 
 public class RecognizeRequest {
 
-	private RecognitionConfig config;
-	
-	private RecognitionAudio audio;
+    private RecognitionConfig config;
 
-	public RecognitionConfig getConfig() {
-		return config;
-	}
+    private RecognitionAudio audio;
 
-	public void setConfig(RecognitionConfig config) {
-		this.config = config;
-	}
+    public RecognitionConfig getConfig() {
+        return config;
+    }
 
-	public RecognitionAudio getAudio() {
-		return audio;
-	}
+    public void setConfig(RecognitionConfig config) {
+        this.config = config;
+    }
 
-	public void setAudio(RecognitionAudio audio) {
-		this.audio = audio;
-	}
+    public RecognitionAudio getAudio() {
+        return audio;
+    }
+
+    public void setAudio(RecognitionAudio audio) {
+        this.audio = audio;
+    }
 }

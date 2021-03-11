@@ -2,8 +2,10 @@ package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
-import fr.roboteek.robot.server.ImageWithDetectedObjects;
-import fr.roboteek.robot.server.VideoWebSocket;
+import fr.roboteek.robot.spring.server.ContextProvider;
+import fr.roboteek.robot.spring.server.websocket.WebsocketBroadcaster;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import org.apache.log4j.Logger;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.MBFImage;
@@ -50,7 +52,9 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
 //    private ObjectDetectionResponse objectDetectionResponse;
 
-    /** Configuration. */
+    /**
+     * Configuration.
+     */
     private RobotConfig robotConfig;
 
     /**
@@ -154,9 +158,13 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+        VideoEvent videoEvent = new VideoEvent();
+        videoEvent.setImageBase64(Base64.getEncoder().encodeToString(baos.toByteArray()));
+        RobotEventBus.getInstance().publishAsync(videoEvent);
 //        VideoWebSocket.broadcastImage(baos.toByteArray());
-        ImageWithDetectedObjects imageWithDetectedObjects = new ImageWithDetectedObjects();
-        imageWithDetectedObjects.setImageBase64(Base64.getEncoder().encodeToString(baos.toByteArray()));
+//        ImageWithDetectedObjects imageWithDetectedObjects = new ImageWithDetectedObjects();
+//        imageWithDetectedObjects.setImageBase64(Base64.getEncoder().encodeToString(baos.toByteArray()));
 //        if (facialRecognitionResponse != null) {
 //            imageWithDetectedObjects.setFaceFound(facialRecognitionResponse.isFaceFound());
 //            imageWithDetectedObjects.setFaces(facialRecognitionResponse.getFaces());
@@ -165,7 +173,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 //            imageWithDetectedObjects.setObjectFound(objectDetectionResponse.isObjectFound());
 //            imageWithDetectedObjects.setObjects(objectDetectionResponse.getObjects());
 //        }
-        VideoWebSocket.broadcastImageWithDetectionInfos(imageWithDetectedObjects);
+//        VideoWebSocket.broadcastImageWithDetectionInfos(imageWithDetectedObjects);
     }
 
 //    private FacialRecognitionResponse processFaceNameForDetection(FacialRecognitionResponse response) {

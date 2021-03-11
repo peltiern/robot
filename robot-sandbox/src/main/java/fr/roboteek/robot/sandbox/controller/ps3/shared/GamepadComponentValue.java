@@ -1,6 +1,6 @@
 package fr.roboteek.robot.sandbox.controller.ps3.shared;
 
-public class GamepadComponentValue <C extends GamepadComponent> {
+public class GamepadComponentValue<C extends GamepadComponent> {
 
     private C component;
 

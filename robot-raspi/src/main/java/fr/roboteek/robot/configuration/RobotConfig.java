@@ -4,8 +4,8 @@ import org.aeonbits.owner.Config;
 
 import static org.aeonbits.owner.Config.*;
 
-@HotReload(type= HotReloadType.ASYNC)
-@Sources({ "file:${ROBOT_HOME}/configuration/robot.properties"})
+@HotReload(type = HotReloadType.ASYNC)
+@Sources({"file:${ROBOT_HOME}/configuration/robot.properties"})
 public interface RobotConfig extends Config {
 
     @Key("language.code")
@@ -14,6 +14,7 @@ public interface RobotConfig extends Config {
 
     /**
      * Name of the the webcam to select.
+     *
      * @return the the webcam to select
      */
     @Key("device.webcam.name")
@@ -21,6 +22,7 @@ public interface RobotConfig extends Config {
 
     /**
      * Name of the the microphone to select.
+     *
      * @return the the microphone to select
      */
     @Key("device.microphone.name")

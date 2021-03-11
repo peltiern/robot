@@ -9,7 +9,9 @@ import javax.microedition.io.StreamConnectionNotifier;
 
 public class WaitThread implements Runnable {
 
-    /** Constructor */
+    /**
+     * Constructor
+     */
     public WaitThread() {
     }
 
@@ -18,7 +20,9 @@ public class WaitThread implements Runnable {
         waitForConnection();
     }
 
-    /** Waiting for connection from devices */
+    /**
+     * Waiting for connection from devices
+     */
     private void waitForConnection() {
         // retrieve the local Bluetooth device object
         LocalDevice local = null;
@@ -39,7 +43,7 @@ public class WaitThread implements Runnable {
             return;
         }
         // waiting for connection
-        while(true) {
+        while (true) {
             try {
                 System.out.println("waiting for connection...");
                 connection = notifier.acceptAndOpen();

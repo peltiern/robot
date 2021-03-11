@@ -22,7 +22,9 @@ public class ConduiteDifferentielle extends AbstractOrgane {
      */
     private PhidgetDCMotor moteurDroit;
 
-    /** Phidgets configuration. */
+    /**
+     * Phidgets configuration.
+     */
     private PhidgetsConfig phidgetsConfig;
 
     /**
@@ -88,6 +90,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
 
     /**
      * Intercepte les évènements de mouvements.
+     *
      * @param mouvementRoueEvent évènement de mouvements
      */
     @Subscribe
@@ -121,7 +124,9 @@ public class ConduiteDifferentielle extends AbstractOrgane {
         moteurDroit.close();
     }
 
-    /** Arrête les moteurs. */
+    /**
+     * Arrête les moteurs.
+     */
     private void reset() {
         moteurGauche.stop();
         moteurDroit.stop();

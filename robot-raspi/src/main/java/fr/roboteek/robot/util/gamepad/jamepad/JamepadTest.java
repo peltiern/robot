@@ -12,7 +12,7 @@ public class JamepadTest {
         controllers.initSDLGamepad();
 
         int i = 0;
-        while(true) {
+        while (true) {
             i++;
             ControllerState currState = controllers.getState(0);
 
@@ -79,7 +79,7 @@ public class JamepadTest {
         controllers.quitSDLGamepad();
     }
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
 
         run();
     }

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class GamepadController <E extends GamepadEvent, L extends GamepadListener<E>> implements Runnable {
+public abstract class GamepadController<E extends GamepadEvent, L extends GamepadListener<E>> implements Runnable {
 
     private Controller controller;
 

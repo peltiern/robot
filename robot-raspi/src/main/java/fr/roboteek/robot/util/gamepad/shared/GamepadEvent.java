@@ -3,7 +3,7 @@ package fr.roboteek.robot.util.gamepad.shared;
 import java.util.List;
 import java.util.Map;
 
-public abstract class GamepadEvent <C> {
+public abstract class GamepadEvent<C> {
 
     private List<C> modifiedComponents;
 

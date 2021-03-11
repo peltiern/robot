@@ -2,7 +2,7 @@ package fr.roboteek.robot.util.gamepad.jamepad;
 
 public class JamepadManagerTest implements PS3Listener {
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         JamepadManager jamepadManager = new JamepadManager();
         jamepadManager.addListener(new JamepadManagerTest());
         jamepadManager.start();

@@ -2,24 +2,30 @@ package fr.roboteek.robot.systemenerveux.event;
 
 /**
  * Evènement de reconnaissance vocale.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class ReconnaissanceVocaleEvent extends RobotEvent {
-	
-	public static final String EVENT_TYPE = "ReconnaissanceVocale";
-    
-    /** Texte reconnu. */
+
+    public static final String EVENT_TYPE = "reconnaissance-vocale";
+
+    /**
+     * Texte reconnu.
+     */
     private String texteReconnu;
-    
-    /** Nom de la règle correspondant au texte reconnu. */
+
+    /**
+     * Nom de la règle correspondant au texte reconnu.
+     */
     private String nomRegle;
-    
-	public ReconnaissanceVocaleEvent() {
-		super(EVENT_TYPE);
-	}
+
+    public ReconnaissanceVocaleEvent() {
+        super(EVENT_TYPE);
+    }
 
     /**
      * Récupère la valeur de texteReconnu.
+     *
      * @return la valeur de texteReconnu
      */
     public String getTexteReconnu() {
@@ -28,6 +34,7 @@ public class ReconnaissanceVocaleEvent extends RobotEvent {
 
     /**
      * Définit la valeur de texteReconnu.
+     *
      * @param texteReconnu la nouvelle valeur de texteReconnu
      */
     public void setTexteReconnu(String texteReconnu) {
@@ -36,6 +43,7 @@ public class ReconnaissanceVocaleEvent extends RobotEvent {
 
     /**
      * Récupère la valeur de nomRegle.
+     *
      * @return la valeur de nomRegle
      */
     public String getNomRegle() {
@@ -44,6 +52,7 @@ public class ReconnaissanceVocaleEvent extends RobotEvent {
 
     /**
      * Définit la valeur de nomRegle.
+     *
      * @param nomRegle la nouvelle valeur de nomRegle
      */
     public void setNomRegle(String nomRegle) {

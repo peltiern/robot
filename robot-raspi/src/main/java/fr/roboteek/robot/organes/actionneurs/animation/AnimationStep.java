@@ -11,58 +11,94 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 public class AnimationStep {
 
-    /** Délai avant de jouer cette étape d'animation (en ms). */
+    /**
+     * Délai avant de jouer cette étape d'animation (en ms).
+     */
     private long delay;
 
-    /** Angle du roulis (si neutre, non pris en compte). */
+    /**
+     * Angle du roulis (si neutre, non pris en compte).
+     */
     private double angleRoulis;
 
-    /** Vitesse du roulis. */
+    /**
+     * Vitesse du roulis.
+     */
     private double vitesseRoulis;
 
-    /** Accélération du roulis. */
+    /**
+     * Accélération du roulis.
+     */
     private double accelerationRoulis;
 
-    /** Position de l'oeil gauche (0 : en bas, 180 : en haut). */
+    /**
+     * Position de l'oeil gauche (0 : en bas, 180 : en haut).
+     */
     private double positionOeilGauche;
 
-    /** Vitesse de l'oeil gauche. */
+    /**
+     * Vitesse de l'oeil gauche.
+     */
     private double vitesseOeilGauche;
 
-    /** Accélération de l'oeil gauche. */
+    /**
+     * Accélération de l'oeil gauche.
+     */
     private double accelerationOeilGauche;
 
-    /** Position de l'oeil droit (0 : en bas, 180 : en haut). */
+    /**
+     * Position de l'oeil droit (0 : en bas, 180 : en haut).
+     */
     private double positionOeilDroit;
 
-    /** Vitesse de l'oeil droit. */
+    /**
+     * Vitesse de l'oeil droit.
+     */
     private double vitesseOeilDroit;
 
-    /** Accélération de l'oeil droit. */
+    /**
+     * Accélération de l'oeil droit.
+     */
     private double accelerationOeilDroit;
 
-    /** Position du cou "Gauche - Droite" (0 : à gauche, 180 : à droite). */
+    /**
+     * Position du cou "Gauche - Droite" (0 : à gauche, 180 : à droite).
+     */
     private double positionCouGaucheDroite;
 
-    /** Vitesse du cou "Gauche - Droite". */
+    /**
+     * Vitesse du cou "Gauche - Droite".
+     */
     private double vitesseCouGaucheDroite;
 
-    /** Accélération cou "Gauche - Droite" */
+    /**
+     * Accélération cou "Gauche - Droite"
+     */
     private double accelerationCouGaucheDroite;
 
-    /** Position "Haut - Bas" (0 : en bas, 180 : en haut). */
+    /**
+     * Position "Haut - Bas" (0 : en bas, 180 : en haut).
+     */
     private double positionCouHautBas;
 
-    /** Vitesse du cou "Haut - Bas". */
+    /**
+     * Vitesse du cou "Haut - Bas".
+     */
     private double vitesseCouHautBas;
 
-    /** Accélération cou "Haut - Bas" */
+    /**
+     * Accélération cou "Haut - Bas"
+     */
     private double accelerationCouHautBas;
 
-    /** Son à jouer. */
+    /**
+     * Son à jouer.
+     */
     private RobotSound sound;
 
-    /** Constructeur sans roulis. */
+    /**
+     * Constructeur sans roulis.
+     */
     public AnimationStep(long delay, double positionOeilGauche, double positionOeilDroit, double positionCouGaucheDroite, double positionCouHautBas, RobotSound sound) {
 
         this(delay,
@@ -74,7 +110,8 @@ public class AnimationStep {
     }
 
     /**
-     * Constructeur pour effectuer un roulis. */
+     * Constructeur pour effectuer un roulis.
+     */
     public AnimationStep(long delay, double angleRoulis, double positionCouGaucheDroite, double positionCouHautBas, RobotSound sound) {
         this(delay,
                 angleRoulis, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
@@ -83,7 +120,9 @@ public class AnimationStep {
                 sound);
     }
 
-    /** Constructeur avec vitesse et accélération sans roulis. */
+    /**
+     * Constructeur avec vitesse et accélération sans roulis.
+     */
     public AnimationStep(long delay,
                          double positionOeilGauche, double vitesseOeilGauche, double accelerationOeilGauche,
                          double positionOeilDroit, double vitesseOeilDroit, double accelerationOeilDroit,
@@ -110,7 +149,9 @@ public class AnimationStep {
         this.sound = sound;
     }
 
-    /** Constructeur pour effectuer un roulis. */
+    /**
+     * Constructeur pour effectuer un roulis.
+     */
     public AnimationStep(long delay,
                          double angleRoulis, double vitesseRoulis, double accelerationRoulis,
                          double positionCouGaucheDroite, double vitesseCouGaucheDroite, double accelerationCouGaucheDroite,

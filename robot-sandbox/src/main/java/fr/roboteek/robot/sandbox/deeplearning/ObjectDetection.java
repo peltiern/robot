@@ -30,7 +30,7 @@ public class ObjectDetection implements VideoDisplayListener<MBFImage> {
     private VideoCapture capture;
     private VideoDisplay<MBFImage> videoFrame;
     private TinyYoloV2Detector yoloDetector;
-//    private YoloV2Detector yoloDetector;
+    //    private YoloV2Detector yoloDetector;
     private long idx = 0;
     private List<DetectedObject<String>> detectedObjects;
 

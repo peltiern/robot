@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package fr.roboteek.robot.sandbox.reconnaissance.vocale;
 
@@ -10,10 +10,10 @@ package fr.roboteek.robot.sandbox.reconnaissance.vocale;
  */
 public interface SpeechRecognizer {
 
-	/**
-	 * Reconnait le contenu d'un fichier WAV.
-	 * @param cheminFichierWav le chemin du fichier WAV
-	 * @return le contenu
-	 */
-	String reconnaitre(String cheminFichierWav);
+    /**
+     * Reconnait le contenu d'un fichier WAV.
+     * @param cheminFichierWav le chemin du fichier WAV
+     * @return le contenu
+     */
+    String reconnaitre(String cheminFichierWav);
 }

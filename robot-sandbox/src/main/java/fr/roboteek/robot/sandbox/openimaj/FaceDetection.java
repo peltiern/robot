@@ -17,17 +17,25 @@ import java.util.List;
 
 public class FaceDetection implements VideoDisplayListener<MBFImage> {
 
-    /** Capture vidéo.*/
+    /**
+     * Capture vidéo.
+     */
     private VideoCapture capture;
     private VideoDisplay<MBFImage> videoFrame;
 
-    /** Détecteur de visages. */
+    /**
+     * Détecteur de visages.
+     */
 //    private CLMFaceDetector detecteurVisages;
     private FKEFaceDetector detecteurVisages;
 
-    /** Largeur de la vidéo issue de la webcam. */
+    /**
+     * Largeur de la vidéo issue de la webcam.
+     */
     private static int LARGEUR_WEBCAM = 640;
-    /** Hauteur de la vidéo issue de la webcam. */
+    /**
+     * Hauteur de la vidéo issue de la webcam.
+     */
     private static int HAUTEUR_WEBCAM = 480;
 
 
@@ -73,6 +81,7 @@ public class FaceDetection implements VideoDisplayListener<MBFImage> {
     public void afterUpdate(VideoDisplay<MBFImage> display) {
         // do nothing
     }
+
     public synchronized void beforeUpdate(MBFImage frame) {
 
         // Recherche de visages

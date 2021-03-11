@@ -2,193 +2,224 @@ package fr.roboteek.robot.systemenerveux.event;
 
 /**
  * Evènement pour bouger les yeux.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class MouvementYeuxEvent extends RobotEvent {
-	
-	public static final String EVENT_TYPE = "MouvementYeux";
 
-    public static enum MOUVEMENTS_OEIL {TOURNER_BAS, TOURNER_HAUT, ROLL, STOPPER};
-    
-    public static enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER};
-    
+    public static final String EVENT_TYPE = "mouvement-yeux";
+
+    public static enum MOUVEMENTS_OEIL {TOURNER_BAS, TOURNER_HAUT, ROLL, STOPPER}
+
+    ;
+
+    public static enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER}
+
+    ;
+
     public static final double POSITION_NEUTRE = 9999;
-    
-    /** Mouvement de l'oeil gauche à effectuer. */
+
+    /**
+     * Mouvement de l'oeil gauche à effectuer.
+     */
     private MOUVEMENTS_OEIL mouvementOeilGauche;
-    
-    /** Position de l'oeil gauche (0 : en bas, 180 : en haut). */
+
+    /**
+     * Position de l'oeil gauche (0 : en bas, 180 : en haut).
+     */
     private double positionOeilGauche = POSITION_NEUTRE;
-    
-    /** Vitesse du mouvement de l'oeil gauche. */
+
+    /**
+     * Vitesse du mouvement de l'oeil gauche.
+     */
     private Double vitesseOeilGauche;
-    
-    /** Accélération du mouvement de l'oeil gauche. */
+
+    /**
+     * Accélération du mouvement de l'oeil gauche.
+     */
     private Double accelerationOeilGauche;
-    
-    /** Mouvement de l'oeil droit à effectuer. */
+
+    /**
+     * Mouvement de l'oeil droit à effectuer.
+     */
     private MOUVEMENTS_OEIL mouvementOeilDroit;
-    
-    /** Position de l'oeil droit (0 : en bas, 180 : en haut). */
+
+    /**
+     * Position de l'oeil droit (0 : en bas, 180 : en haut).
+     */
     private double positionOeilDroit = POSITION_NEUTRE;
-    
-    /** Vitesse du mouvement de l'oeil droit. */
+
+    /**
+     * Vitesse du mouvement de l'oeil droit.
+     */
     private Double vitesseOeilDroit;
-    
-    /** Accélération du mouvement de l'oeil droit. */
+
+    /**
+     * Accélération du mouvement de l'oeil droit.
+     */
     private Double accelerationOeilDroit;
-    
-    /** Mouvement "Roulis" à effectuer. */
+
+    /**
+     * Mouvement "Roulis" à effectuer.
+     */
     private MOUVEMENTS_ROULIS mouvementRoulis;
-    
-    /** Position du roulis (-90 : en bas, 90 : en haut). */
+
+    /**
+     * Position du roulis (-90 : en bas, 90 : en haut).
+     */
     private double positionRoulis = POSITION_NEUTRE;
-    
-    /** Vitesse du mouvement du roulis. */
+
+    /**
+     * Vitesse du mouvement du roulis.
+     */
     private Double vitesseRoulis;
-    
-    /** Accélération du mouvement du roulis. */
+
+    /**
+     * Accélération du mouvement du roulis.
+     */
     private Double accelerationRoulis;
-    
-    /** Flag indiquant que le mouvement doit être synchrone. */
+
+    /**
+     * Flag indiquant que le mouvement doit être synchrone.
+     */
     private boolean synchrone = false;
-    
-	public MouvementYeuxEvent() {
-		super(EVENT_TYPE);
-	}
 
-	public MouvementYeuxEvent(MOUVEMENTS_OEIL mouvementOeilGauche, double positionOeilGauche,
-			MOUVEMENTS_OEIL mouvementOeilDroit, double positionOeilDroit, MOUVEMENTS_ROULIS mouvementRoulis,
-			double positionRoulis) {
-		this();
-		this.mouvementOeilGauche = mouvementOeilGauche;
-		this.positionOeilGauche = positionOeilGauche;
-		this.mouvementOeilDroit = mouvementOeilDroit;
-		this.positionOeilDroit = positionOeilDroit;
-		this.mouvementRoulis = mouvementRoulis;
-		this.positionRoulis = positionRoulis;
-	}
+    public MouvementYeuxEvent() {
+        super(EVENT_TYPE);
+    }
 
-	public MouvementYeuxEvent(MOUVEMENTS_OEIL mouvementOeilGauche, double positionOeilGauche, MOUVEMENTS_OEIL mouvementOeilDroit, double positionOeilDroit) {
-		this(mouvementOeilGauche, positionOeilGauche, mouvementOeilDroit, positionOeilDroit, null, POSITION_NEUTRE);
-	}
-	
-	public MouvementYeuxEvent(MOUVEMENTS_ROULIS mouvementRoulis, double positionRoulis) {
-		this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementRoulis, positionRoulis);
-	}
+    public MouvementYeuxEvent(MOUVEMENTS_OEIL mouvementOeilGauche, double positionOeilGauche,
+                              MOUVEMENTS_OEIL mouvementOeilDroit, double positionOeilDroit, MOUVEMENTS_ROULIS mouvementRoulis,
+                              double positionRoulis) {
+        this();
+        this.mouvementOeilGauche = mouvementOeilGauche;
+        this.positionOeilGauche = positionOeilGauche;
+        this.mouvementOeilDroit = mouvementOeilDroit;
+        this.positionOeilDroit = positionOeilDroit;
+        this.mouvementRoulis = mouvementRoulis;
+        this.positionRoulis = positionRoulis;
+    }
 
-	public MOUVEMENTS_OEIL getMouvementOeilGauche() {
-		return mouvementOeilGauche;
-	}
+    public MouvementYeuxEvent(MOUVEMENTS_OEIL mouvementOeilGauche, double positionOeilGauche, MOUVEMENTS_OEIL mouvementOeilDroit, double positionOeilDroit) {
+        this(mouvementOeilGauche, positionOeilGauche, mouvementOeilDroit, positionOeilDroit, null, POSITION_NEUTRE);
+    }
 
-	public void setMouvementOeilGauche(MOUVEMENTS_OEIL mouvementOeilGauche) {
-		this.mouvementOeilGauche = mouvementOeilGauche;
-	}
+    public MouvementYeuxEvent(MOUVEMENTS_ROULIS mouvementRoulis, double positionRoulis) {
+        this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementRoulis, positionRoulis);
+    }
 
-	public double getPositionOeilGauche() {
-		return positionOeilGauche;
-	}
+    public MOUVEMENTS_OEIL getMouvementOeilGauche() {
+        return mouvementOeilGauche;
+    }
 
-	public void setPositionOeilGauche(double positionOeilGauche) {
-		this.positionOeilGauche = positionOeilGauche;
-	}
+    public void setMouvementOeilGauche(MOUVEMENTS_OEIL mouvementOeilGauche) {
+        this.mouvementOeilGauche = mouvementOeilGauche;
+    }
 
-	public MOUVEMENTS_OEIL getMouvementOeilDroit() {
-		return mouvementOeilDroit;
-	}
+    public double getPositionOeilGauche() {
+        return positionOeilGauche;
+    }
 
-	public void setMouvementOeilDroit(MOUVEMENTS_OEIL mouvementOeilDroit) {
-		this.mouvementOeilDroit = mouvementOeilDroit;
-	}
+    public void setPositionOeilGauche(double positionOeilGauche) {
+        this.positionOeilGauche = positionOeilGauche;
+    }
 
-	public double getPositionOeilDroit() {
-		return positionOeilDroit;
-	}
+    public MOUVEMENTS_OEIL getMouvementOeilDroit() {
+        return mouvementOeilDroit;
+    }
 
-	public void setPositionOeilDroit(double positionOeilDroit) {
-		this.positionOeilDroit = positionOeilDroit;
-	}
+    public void setMouvementOeilDroit(MOUVEMENTS_OEIL mouvementOeilDroit) {
+        this.mouvementOeilDroit = mouvementOeilDroit;
+    }
 
-	public MOUVEMENTS_ROULIS getMouvementRoulis() {
-		return mouvementRoulis;
-	}
+    public double getPositionOeilDroit() {
+        return positionOeilDroit;
+    }
 
-	public void setMouvementRoulis(MOUVEMENTS_ROULIS mouvementRoulis) {
-		this.mouvementRoulis = mouvementRoulis;
-	}
+    public void setPositionOeilDroit(double positionOeilDroit) {
+        this.positionOeilDroit = positionOeilDroit;
+    }
 
-	public double getPositionRoulis() {
-		return positionRoulis;
-	}
+    public MOUVEMENTS_ROULIS getMouvementRoulis() {
+        return mouvementRoulis;
+    }
 
-	public void setPositionRoulis(double positionRoulis) {
-		this.positionRoulis = positionRoulis;
-	}
+    public void setMouvementRoulis(MOUVEMENTS_ROULIS mouvementRoulis) {
+        this.mouvementRoulis = mouvementRoulis;
+    }
 
-	public boolean isSynchrone() {
-		return synchrone;
-	}
+    public double getPositionRoulis() {
+        return positionRoulis;
+    }
 
-	public void setSynchrone(boolean synchrone) {
-		this.synchrone = synchrone;
-	}
+    public void setPositionRoulis(double positionRoulis) {
+        this.positionRoulis = positionRoulis;
+    }
 
-	public Double getVitesseOeilGauche() {
-		return vitesseOeilGauche;
-	}
+    public boolean isSynchrone() {
+        return synchrone;
+    }
 
-	public void setVitesseOeilGauche(Double vitesseOeilGauche) {
-		this.vitesseOeilGauche = vitesseOeilGauche;
-	}
+    public void setSynchrone(boolean synchrone) {
+        this.synchrone = synchrone;
+    }
 
-	public Double getAccelerationOeilGauche() {
-		return accelerationOeilGauche;
-	}
+    public Double getVitesseOeilGauche() {
+        return vitesseOeilGauche;
+    }
 
-	public void setAccelerationOeilGauche(Double accelerationOeilGauche) {
-		this.accelerationOeilGauche = accelerationOeilGauche;
-	}
+    public void setVitesseOeilGauche(Double vitesseOeilGauche) {
+        this.vitesseOeilGauche = vitesseOeilGauche;
+    }
 
-	public Double getVitesseOeilDroit() {
-		return vitesseOeilDroit;
-	}
+    public Double getAccelerationOeilGauche() {
+        return accelerationOeilGauche;
+    }
 
-	public void setVitesseOeilDroit(Double vitesseOeilDroit) {
-		this.vitesseOeilDroit = vitesseOeilDroit;
-	}
+    public void setAccelerationOeilGauche(Double accelerationOeilGauche) {
+        this.accelerationOeilGauche = accelerationOeilGauche;
+    }
 
-	public Double getAccelerationOeilDroit() {
-		return accelerationOeilDroit;
-	}
+    public Double getVitesseOeilDroit() {
+        return vitesseOeilDroit;
+    }
 
-	public void setAccelerationOeilDroit(Double accelerationOeilDroit) {
-		this.accelerationOeilDroit = accelerationOeilDroit;
-	}
+    public void setVitesseOeilDroit(Double vitesseOeilDroit) {
+        this.vitesseOeilDroit = vitesseOeilDroit;
+    }
 
-	public Double getVitesseRoulis() {
-		return vitesseRoulis;
-	}
+    public Double getAccelerationOeilDroit() {
+        return accelerationOeilDroit;
+    }
 
-	public void setVitesseRoulis(Double vitesseRoulis) {
-		this.vitesseRoulis = vitesseRoulis;
-	}
+    public void setAccelerationOeilDroit(Double accelerationOeilDroit) {
+        this.accelerationOeilDroit = accelerationOeilDroit;
+    }
 
-	public Double getAccelerationRoulis() {
-		return accelerationRoulis;
-	}
+    public Double getVitesseRoulis() {
+        return vitesseRoulis;
+    }
 
-	public void setAccelerationRoulis(Double accelerationRoulis) {
-		this.accelerationRoulis = accelerationRoulis;
-	}
+    public void setVitesseRoulis(Double vitesseRoulis) {
+        this.vitesseRoulis = vitesseRoulis;
+    }
 
-	@Override
-	public String toString() {
-		return "MouvementYeuxEvent [mouvementOeilGauche=" + mouvementOeilGauche + ", positionOeilGauche="
-				+ positionOeilGauche + ", vitesseOeilGauche=" + vitesseOeilGauche + ", accelerationOeilGauche="
-				+ accelerationOeilGauche + ", mouvementOeilDroit=" + mouvementOeilDroit + ", positionOeilDroit="
-				+ positionOeilDroit + ", vitesseOeilDroit=" + vitesseOeilDroit + ", accelerationOeilDroit="
-				+ accelerationOeilDroit + ", mouvementRoulis=" + mouvementRoulis + ", positionRoulis=" + positionRoulis
-				+ ", vitesseRoulis=" + vitesseRoulis + ", accelerationRoulis=" + accelerationRoulis + ", synchrone="
-				+ synchrone + "]";
-	}
+    public Double getAccelerationRoulis() {
+        return accelerationRoulis;
+    }
+
+    public void setAccelerationRoulis(Double accelerationRoulis) {
+        this.accelerationRoulis = accelerationRoulis;
+    }
+
+    @Override
+    public String toString() {
+        return "MouvementYeuxEvent [mouvementOeilGauche=" + mouvementOeilGauche + ", positionOeilGauche="
+                + positionOeilGauche + ", vitesseOeilGauche=" + vitesseOeilGauche + ", accelerationOeilGauche="
+                + accelerationOeilGauche + ", mouvementOeilDroit=" + mouvementOeilDroit + ", positionOeilDroit="
+                + positionOeilDroit + ", vitesseOeilDroit=" + vitesseOeilDroit + ", accelerationOeilDroit="
+                + accelerationOeilDroit + ", mouvementRoulis=" + mouvementRoulis + ", positionRoulis=" + positionRoulis
+                + ", vitesseRoulis=" + vitesseRoulis + ", accelerationRoulis=" + accelerationRoulis + ", synchrone="
+                + synchrone + "]";
+    }
 }

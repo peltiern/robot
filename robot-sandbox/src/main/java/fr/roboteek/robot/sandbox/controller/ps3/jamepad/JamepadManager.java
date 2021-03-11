@@ -25,7 +25,7 @@ public class JamepadManager extends AbstractGamepadManager<PS3Listener> {
 
         ControllerState previousState = controller.getState(0);
 
-        while(true) {
+        while (true) {
             i++;
             ControllerState currentState = controller.getState(0);
 

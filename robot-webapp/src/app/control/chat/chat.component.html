@@ -1,0 +1,58 @@
+<div class="container chat-container">
+  <ul class="message-list" #scrollMe>
+    <li *ngFor="let message of messages" #item>
+      <div *ngIf="
+                  message.idLocuteur === -1;
+                 then robot_msg;
+                 else user_msg
+               "
+      ></div>
+      <ng-template #robot_msg>
+        <div class="message d-flex justify-content-start">
+          <div class="message-avatar pr-1">
+            <img src="assets/avatars/robot.jpeg" alt="Robot" class="message-icon icon-robot">
+            <div class="message-username">Robot</div>
+          </div>
+          <div class="message-container d-flex align-items-start flex-column">
+            <div class="message-text">
+              {{message.texte}}
+            </div>
+            <time class="message-time">
+              {{message.dateTime | date: 'dd/MM/yyyy, H:mm:ss'}}
+            </time>
+          </div>
+        </div>
+      </ng-template>
+      <ng-template #user_msg>
+        <div class="message d-flex justify-content-end">
+          <div class="message-container d-flex align-items-end flex-column">
+            <div class="message-text">
+              {{message.texte}}
+            </div>
+            <time class="message-time">
+              {{message.dateTime | date: 'dd/MM/yyyy, H:mm:ss'}}
+            </time>
+          </div>
+          <div class="message-avatar pl-1">
+            <img src="assets/avatars/user.png" alt="User" class="message-icon icon-user">
+            <div class="message-username">User</div>
+          </div>
+        </div>
+      </ng-template>
+    </li>
+  </ul>
+    <div class="message-bottom">
+      <form #chatForm="ngForm" (ngSubmit)="sendMessage()">
+        <div class="message-input-wrapper d-flex flex-row">
+            <input type="text"
+                   class="message-input"
+                   placeholder="Say ..."
+                   name="newMessage"
+                   [(ngModel)]="newMessage"/>
+            <div class="message-send-icon d-flex justify-content-center align-items-center" (click)="sendMessage()">
+              <i-bs name="play" width="30px" height="30px"></i-bs>
+            </div>
+        </div>
+      </form>
+    </div>
+</div>

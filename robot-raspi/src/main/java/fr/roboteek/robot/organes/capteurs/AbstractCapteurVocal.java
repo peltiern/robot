@@ -15,8 +15,10 @@ import com.google.common.primitives.Bytes;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.server.AudioWebSocket;
+import fr.roboteek.robot.spring.server.ContextProvider;
+import fr.roboteek.robot.spring.server.websocket.WebsocketBroadcaster;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -32,6 +34,7 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
@@ -41,6 +44,8 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * @author Nicolas
  */
 public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
+
+    private WebsocketBroadcaster websocketBroadcaster;
 
     /**
      * Fréquence d'échantillonage.
@@ -107,13 +112,17 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
      */
     private byte[] contenuParle;
 
-    /** Configuration. */
+    /**
+     * Configuration.
+     */
     private RobotConfig robotConfig;
 
 
     public AbstractCapteurVocal(String threadName) {
         super(threadName);
         robotConfig = robotConfig();
+
+        websocketBroadcaster = (WebsocketBroadcaster) ContextProvider.getBean("websocketBroadcaster");
     }
 
     @Override
@@ -135,7 +144,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             final TargetDataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, format);
             TargetDataLine line = null;
             Mixer.Info[] infoMixers = AudioSystem.getMixerInfo();
-            for(Mixer.Info infoMixer : infoMixers) {
+            for (Mixer.Info infoMixer : infoMixers) {
                 if (infoMixer.getName() != null && infoMixer.getName().contains(robotConfig.microphoneName())) {
                     Mixer mixer = AudioSystem.getMixer(infoMixer);
                     if (mixer.isLineSupported(dataLineInfo)) {
@@ -243,8 +252,12 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                         bufferNMoins5 = new byte[0];
                     }
 
-                    // Broadcast live du fichier WAV (entête + contenu)
-                    AudioWebSocket.broadcastAudio(creerFichierWav(e.getByteBuffer()));
+                    // Envoi de l'évènement audio : fichier WAV (entête + contenu)
+                    fr.roboteek.robot.systemenerveux.event.AudioEvent audioEvent = new fr.roboteek.robot.systemenerveux.event.AudioEvent();
+                    audioEvent.setAudioContentBase64(Base64.getEncoder().encodeToString(creerFichierWav(e.getByteBuffer())));
+                    audioEvent.setContent(creerFichierWav(e.getByteBuffer()));
+                    RobotEventBus.getInstance().publishAsync(audioEvent);
+                    //websocketBroadcaster.handleAudioEvent(audioEvent);
                 }
 
             });
@@ -305,8 +318,8 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
     /**
      * Intercepte les évènements de contrôle de la reconnaissance vocale.
-     *  @param reconnaissanceVocaleControleEvent évènement de contrôle de la reconnaissance vocale
      *
+     * @param reconnaissanceVocaleControleEvent évènement de contrôle de la reconnaissance vocale
      */
     @Subscribe
     public void handleReconnaissanceVocaleControleEvent(ReconnaissanceVocaleControleEvent reconnaissanceVocaleControleEvent) {

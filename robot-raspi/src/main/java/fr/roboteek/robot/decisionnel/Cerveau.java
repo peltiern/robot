@@ -9,7 +9,6 @@ import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
-import fr.roboteek.robot.server.RobotEventWebSocket;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
@@ -81,7 +80,7 @@ public class Cerveau extends AbstractOrganeWithThread {
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(reconnaissanceVocaleEvent.getTexteReconnu());
             conversationEvent.setIdLocuteur(0);
-            RobotEventWebSocket.broadcastEvent(conversationEvent);
+            RobotEventBus.getInstance().publishAsync(conversationEvent);
 
             System.out.println("==================>CERVEAU après : " + texteReconnu);
 
@@ -93,8 +92,7 @@ public class Cerveau extends AbstractOrganeWithThread {
                     dire("Au revoir.");
                 } else if (texteReconnu.trim().equalsIgnoreCase("akinator")) {
                     initNewCurrentActivity(new AkinatorActivity());
-                }
-                else {
+                } else {
                     ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
                     event.setProcessedByBrain(true);
                     event.setTexteReconnu(reconnaissanceVocaleEvent.getTexteReconnu());
@@ -109,16 +107,16 @@ public class Cerveau extends AbstractOrganeWithThread {
 //     *
 //     * @param paroleEvent évènement de lecture
 //     */
-//    @Subscribe
-//    public void handleParoleEvent(ParoleEvent paroleEvent) {
-//        if (!paroleEvent.isPourTest()) {
-//            // Envoi d'un évènement de conversation au serveur
-//            final ConversationEvent conversationEvent = new ConversationEvent();
-//            conversationEvent.setTexte(paroleEvent.getTexte());
-//            conversationEvent.setIdLocuteur(-1);
-//            RobotEventWebSocket.broadcastEvent(conversationEvent);
-//        }
-//    }
+    @Subscribe
+    public void handleParoleEvent(ParoleEvent paroleEvent) {
+        if (!paroleEvent.isPourTest()) {
+            // Envoi d'un évènement de conversation au serveur
+            final ConversationEvent conversationEvent = new ConversationEvent();
+            conversationEvent.setTexte(paroleEvent.getTexte());
+            conversationEvent.setIdLocuteur(-1);
+            RobotEventBus.getInstance().publishAsync(conversationEvent);
+        }
+    }
 
     /**
      * Arrête le cerveau.

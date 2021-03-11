@@ -7,7 +7,8 @@ import org.aeonbits.owner.ConfigCache;
 
 public class Configurations {
 
-    private Configurations() {}
+    private Configurations() {
+    }
 
     public static RobotConfig robotConfig() {
         return ConfigCache.getOrCreate(RobotConfig.class);

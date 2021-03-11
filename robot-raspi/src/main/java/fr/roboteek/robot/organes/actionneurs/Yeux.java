@@ -14,235 +14,267 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 /**
  * Classe représentant les yeux du robot.
+ *
  * @author Java Developer
  */
 public class Yeux extends AbstractOrgane {
 
-	/** Moteur Gauche / Droite. */
-	private PhidgetsServoMotor moteurOeilGauche;
+    /**
+     * Moteur Gauche / Droite.
+     */
+    private PhidgetsServoMotor moteurOeilGauche;
 
-	/** Moteur Haut / Bas. */
-	private PhidgetsServoMotor moteurOeilDroit;
-	
-	/** Flag indiquant que le roulis est en cours. */
-	private boolean roulisEnCours= false;
-	
-	/** Position relative de l'oeil gauche au début du roulis. */
-	private double positionRelativeOeilGaucheDebutRoulis = 0;
-	
-	/** Position relative de l'oeil droit au début du roulis. */
-	private double positionRelativeOeilDroitDebutRoulis = 0;
+    /**
+     * Moteur Haut / Bas.
+     */
+    private PhidgetsServoMotor moteurOeilDroit;
 
-	/** Angle roulis. */
-	private double angleRoulis = 0;
+    /**
+     * Flag indiquant que le roulis est en cours.
+     */
+    private boolean roulisEnCours = false;
 
-	/** Phidgets Configuration. */
-	private PhidgetsConfig phidgetsConfig;
+    /**
+     * Position relative de l'oeil gauche au début du roulis.
+     */
+    private double positionRelativeOeilGaucheDebutRoulis = 0;
 
-	/** Constructeur. */
-	public Yeux() {
-		super();
+    /**
+     * Position relative de l'oeil droit au début du roulis.
+     */
+    private double positionRelativeOeilDroitDebutRoulis = 0;
 
-		phidgetsConfig = phidgetsConfig();
-		
-		System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
+    /**
+     * Angle roulis.
+     */
+    private double angleRoulis = 0;
 
-		// Création et initialisation des moteurs
-		moteurOeilGauche = new PhidgetsServoMotor(
-				phidgetsConfig.eyeLeftMotorIndex(),
-				phidgetsConfig.eyeLeftMotorPositionZero(),
-				toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMax()),
-				toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMin()),
-				phidgetsConfig.eyeLeftMotorSpeed(),
-				phidgetsConfig.eyeLeftMotorAcceleration()
-		);
-		moteurOeilDroit = new PhidgetsServoMotor(
-				phidgetsConfig.eyeRightMotorIndex(),
-				phidgetsConfig.eyeRightMotorPositionZero(),
-				toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMax()),
-				toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMin()),
-				phidgetsConfig.eyeRightMotorSpeed(),
-				phidgetsConfig.eyeRightMotorAcceleration()
-		);
+    /**
+     * Phidgets Configuration.
+     */
+    private PhidgetsConfig phidgetsConfig;
 
-		moteurOeilGauche.setSpeedRampingState(true);
+    /**
+     * Constructeur.
+     */
+    public Yeux() {
+        super();
 
-		moteurOeilDroit.setSpeedRampingState(true);
+        phidgetsConfig = phidgetsConfig();
 
-	}
+        System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
 
-	@Override
-	public void initialiser() {
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		reset();
-	}
+        // Création et initialisation des moteurs
+        moteurOeilGauche = new PhidgetsServoMotor(
+                phidgetsConfig.eyeLeftMotorIndex(),
+                phidgetsConfig.eyeLeftMotorPositionZero(),
+                toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMax()),
+                toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMin()),
+                phidgetsConfig.eyeLeftMotorSpeed(),
+                phidgetsConfig.eyeLeftMotorAcceleration()
+        );
+        moteurOeilDroit = new PhidgetsServoMotor(
+                phidgetsConfig.eyeRightMotorIndex(),
+                phidgetsConfig.eyeRightMotorPositionZero(),
+                toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMax()),
+                toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMin()),
+                phidgetsConfig.eyeRightMotorSpeed(),
+                phidgetsConfig.eyeRightMotorAcceleration()
+        );
 
-	/** Tourne l'oeil gauche vers le bas sans s'arrêter. */
-	public void tournerOeilGaucheVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
-		moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
-	}
+        moteurOeilGauche.setSpeedRampingState(true);
 
-	/** Tourne l'oeil gauche vers le haut sans s'arrêter. */
-	public void tournerOeilGaucheVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
-		moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
-	}
+        moteurOeilDroit.setSpeedRampingState(true);
 
-	/**
-	 * Tourne l'oeil gauche d'un certain angle.
-	 * @param angle angle en degrés (négatif : vers le bas, positif : vers le haut)
-	 */
-	public void tournerOeilGauche(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
-		moteurOeilGauche.rotate(-angle, vitesse, acceleration, waitForPosition);
-	}
+    }
 
-	/**
-	 * Positionne l'oeil gauche à une position précise (0 : horizontal, min bas : -45, max haut : 15).
-	 * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
-	 */
-	public void positionnerOeilGauche(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
-		if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
-			double positionMoteur = toPositionAbsolueOeilGauche(positionRelative);
-			moteurOeilGauche.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
-		}
-	}
+    @Override
+    public void initialiser() {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        reset();
+    }
 
-	/**
-	 * Stoppe le mouvement de l'oeil gauche.
-	 */
-	public void stopperOeilGauche() {
-		moteurOeilGauche.stop();
-	}
+    /**
+     * Tourne l'oeil gauche vers le bas sans s'arrêter.
+     */
+    public void tournerOeilGaucheVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
+        moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
+    }
 
-	/** Tourne l'oeil droit vers le bas sans s'arrêter. */
-	public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
-		moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
-	}
+    /**
+     * Tourne l'oeil gauche vers le haut sans s'arrêter.
+     */
+    public void tournerOeilGaucheVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
+        moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
+    }
 
-	/** Tourne l'oeil droit vers le haut sans s'arrêter. */
-	public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
-		moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
-	}
+    /**
+     * Tourne l'oeil gauche d'un certain angle.
+     *
+     * @param angle angle en degrés (négatif : vers le bas, positif : vers le haut)
+     */
+    public void tournerOeilGauche(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+        moteurOeilGauche.rotate(-angle, vitesse, acceleration, waitForPosition);
+    }
 
-	/**
-	 * Tourne l'oeil droit d'un certain angle.
-	 * @param angle angle en degrés (négatif : en bas, positif : en haut)
-	 */
-	public void tournerOeilDroit(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
-		moteurOeilDroit.rotate(-angle, vitesse, acceleration, waitForPosition);
-	}
+    /**
+     * Positionne l'oeil gauche à une position précise (0 : horizontal, min bas : -45, max haut : 15).
+     *
+     * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
+     */
+    public void positionnerOeilGauche(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
+        if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
+            double positionMoteur = toPositionAbsolueOeilGauche(positionRelative);
+            moteurOeilGauche.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+        }
+    }
 
-	/**
-	 * Positionne l'oeil droit à une position précise (0 : horizontal, min bas : -45, max haut : 15).
-	 * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
-	 */
-	public void positionnerOeilDroit(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
-		if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
-			double positionMoteur = toPositionAbsolueOeilDroit(positionRelative);
-			moteurOeilDroit.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
-		}
-	}
+    /**
+     * Stoppe le mouvement de l'oeil gauche.
+     */
+    public void stopperOeilGauche() {
+        moteurOeilGauche.stop();
+    }
 
-	/**
-	 * Stoppe le mouvement de l'oeil droit.
-	 */
-	public void stopperOeilDroit() {
-		moteurOeilDroit.stop();
-	}
+    /**
+     * Tourne l'oeil droit vers le bas sans s'arrêter.
+     */
+    public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
+        moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
+    }
 
-	/**
-	 * Positionne le roulis à l'angle demandé (référence : oeil gauche de face).
-	 * @param newAngleRoulis l'angle de roulis
-	 */
-	public void setPositionRoulis(double newAngleRoulis, Double vitesse, Double acceleration, boolean waitForPosition) {
-		// Récupération des positions de chaque oeil si c'est le début du roulis
-		if (!roulisEnCours) {
-			positionRelativeOeilGaucheDebutRoulis = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
-			positionRelativeOeilDroitDebutRoulis = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
-		}
-		roulisEnCours = true;
-		
-		// Calcul de l'angle max (référence oeil gauche)
-		double angleRoulisAAffecter = newAngleRoulis;
-		if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
-			angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilGaucheDebutRoulis;
-		}
-		if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
-			angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilGaucheDebutRoulis;
-		}
-		if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
-			angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilDroitDebutRoulis);
-		}
-		if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
-			angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilDroitDebutRoulis);
-		}
-		final double nouvellePositionRelativeOeilGauche = positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter;
-		final double nouvellePositionRelativeOeilDroit = positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter;
-		//System.out.println("newAngleRoulis = " + newAngleRoulis + ", angleRoulis = " + angleRoulisAAffecter + ", positionOeilGaucheDebutRoulis = " + positionRelativeOeilGaucheDebutRoulis + ", nouvellePositionOeilGauche = " + nouvellePositionRelativeOeilGauche + ", positionOeilDroitDebutRoulis = " + positionRelativeOeilDroitDebutRoulis + ", nouvellePositionOeilDroit = " + nouvellePositionRelativeOeilDroit);
-		positionnerOeilGauche(nouvellePositionRelativeOeilGauche, vitesse, acceleration, false);
-		positionnerOeilDroit(nouvellePositionRelativeOeilDroit, vitesse, acceleration, waitForPosition);
-		angleRoulis = angleRoulisAAffecter;
-	}
+    /**
+     * Tourne l'oeil droit vers le haut sans s'arrêter.
+     */
+    public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
+        moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
+    }
+
+    /**
+     * Tourne l'oeil droit d'un certain angle.
+     *
+     * @param angle angle en degrés (négatif : en bas, positif : en haut)
+     */
+    public void tournerOeilDroit(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+        moteurOeilDroit.rotate(-angle, vitesse, acceleration, waitForPosition);
+    }
+
+    /**
+     * Positionne l'oeil droit à une position précise (0 : horizontal, min bas : -45, max haut : 15).
+     *
+     * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
+     */
+    public void positionnerOeilDroit(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
+        if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
+            double positionMoteur = toPositionAbsolueOeilDroit(positionRelative);
+            moteurOeilDroit.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+        }
+    }
+
+    /**
+     * Stoppe le mouvement de l'oeil droit.
+     */
+    public void stopperOeilDroit() {
+        moteurOeilDroit.stop();
+    }
+
+    /**
+     * Positionne le roulis à l'angle demandé (référence : oeil gauche de face).
+     *
+     * @param newAngleRoulis l'angle de roulis
+     */
+    public void setPositionRoulis(double newAngleRoulis, Double vitesse, Double acceleration, boolean waitForPosition) {
+        // Récupération des positions de chaque oeil si c'est le début du roulis
+        if (!roulisEnCours) {
+            positionRelativeOeilGaucheDebutRoulis = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
+            positionRelativeOeilDroitDebutRoulis = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
+        }
+        roulisEnCours = true;
+
+        // Calcul de l'angle max (référence oeil gauche)
+        double angleRoulisAAffecter = newAngleRoulis;
+        if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
+            angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilGaucheDebutRoulis;
+        }
+        if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
+            angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilGaucheDebutRoulis;
+        }
+        if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
+            angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilDroitDebutRoulis);
+        }
+        if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
+            angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilDroitDebutRoulis);
+        }
+        final double nouvellePositionRelativeOeilGauche = positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter;
+        final double nouvellePositionRelativeOeilDroit = positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter;
+        //System.out.println("newAngleRoulis = " + newAngleRoulis + ", angleRoulis = " + angleRoulisAAffecter + ", positionOeilGaucheDebutRoulis = " + positionRelativeOeilGaucheDebutRoulis + ", nouvellePositionOeilGauche = " + nouvellePositionRelativeOeilGauche + ", positionOeilDroitDebutRoulis = " + positionRelativeOeilDroitDebutRoulis + ", nouvellePositionOeilDroit = " + nouvellePositionRelativeOeilDroit);
+        positionnerOeilGauche(nouvellePositionRelativeOeilGauche, vitesse, acceleration, false);
+        positionnerOeilDroit(nouvellePositionRelativeOeilDroit, vitesse, acceleration, waitForPosition);
+        angleRoulis = angleRoulisAAffecter;
+    }
 
 
-	/**
-	 * Intercepte les évènements de mouvements.
-	 * @param mouvementYeuxEvent évènement de mouvements
-	 */
-	@Subscribe
-	public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
-		//System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
-		if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
-			// TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
-			roulisEnCours = false;
-			positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche(), mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), false/*mouvementYeuxEvent.isSynchrone()*/);
-		} else if (mouvementYeuxEvent.getMouvementOeilGauche() != null) {
-			if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.STOPPER) {
-				stopperOeilGauche();
-			} else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-				roulisEnCours = false;
-				tournerOeilGaucheVersBas(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
-			} else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-				roulisEnCours = false;
-				tournerOeilGaucheVersHaut(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
-			}
-		}
-		if (mouvementYeuxEvent.getPositionOeilDroit() != MouvementYeuxEvent.POSITION_NEUTRE) {
-			roulisEnCours = false;
-			positionnerOeilDroit(mouvementYeuxEvent.getPositionOeilDroit(), mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
-		} else if (mouvementYeuxEvent.getMouvementOeilDroit() != null) {
-			if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.STOPPER) {
-				stopperOeilDroit();
-			} else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-				roulisEnCours = false;
-				tournerOeilDroitVersBas(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
-			} else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-				roulisEnCours = false;
-				tournerOeilDroitVersHaut(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
-			}
-		}
-		roulisEnCours = false;
-	}
+    /**
+     * Intercepte les évènements de mouvements.
+     *
+     * @param mouvementYeuxEvent évènement de mouvements
+     */
+    @Subscribe
+    public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
+        //System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
+        if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
+            // TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
+            roulisEnCours = false;
+            positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche(), mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), false/*mouvementYeuxEvent.isSynchrone()*/);
+        } else if (mouvementYeuxEvent.getMouvementOeilGauche() != null) {
+            if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.STOPPER) {
+                stopperOeilGauche();
+            } else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_BAS) {
+                roulisEnCours = false;
+                tournerOeilGaucheVersBas(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
+            } else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
+                roulisEnCours = false;
+                tournerOeilGaucheVersHaut(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
+            }
+        }
+        if (mouvementYeuxEvent.getPositionOeilDroit() != MouvementYeuxEvent.POSITION_NEUTRE) {
+            roulisEnCours = false;
+            positionnerOeilDroit(mouvementYeuxEvent.getPositionOeilDroit(), mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
+        } else if (mouvementYeuxEvent.getMouvementOeilDroit() != null) {
+            if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.STOPPER) {
+                stopperOeilDroit();
+            } else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_BAS) {
+                roulisEnCours = false;
+                tournerOeilDroitVersBas(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
+            } else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
+                roulisEnCours = false;
+                tournerOeilDroitVersHaut(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
+            }
+        }
+        roulisEnCours = false;
+    }
 
-	/**
-	 * Intercepte les évènements de mouvements de cou.
-	 * @param mouvementCouEvent évènement de mouvements de cou
-	 */
-	@Subscribe
-	public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
-		//System.out.println("YEUX : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
-		if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
-			setPositionRoulis(mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
-		} else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
-			setPositionRoulis(-mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
-		} else {
-			roulisEnCours = false;
-		}
-	}
-	
+    /**
+     * Intercepte les évènements de mouvements de cou.
+     *
+     * @param mouvementCouEvent évènement de mouvements de cou
+     */
+    @Subscribe
+    public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
+        //System.out.println("YEUX : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
+        if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
+            setPositionRoulis(mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
+        } else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
+            setPositionRoulis(-mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
+        } else {
+            roulisEnCours = false;
+        }
+    }
+
 //	/**
 //	 * Intercepte les évènements de mouvements.
 //	 * @param mouvementYeuxEvent évènement de mouvements
@@ -290,86 +322,93 @@ public class Yeux extends AbstractOrgane {
 //		}
 //	}
 
-	@Override
-	public void arreter() {
-		reset();
-		// Attente du retour à la position initiale
-		while (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero() 
-				&& moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero())
-		{ }
-		moteurOeilGauche.stop();
-		moteurOeilDroit.stop();
-		moteurOeilGauche.setSpeedRampingState(true);
-		moteurOeilDroit.setSpeedRampingState(true);
-		moteurOeilGauche.setEngaged(false);
-		moteurOeilDroit.setEngaged(false);
-		moteurOeilGauche.close();
-		moteurOeilDroit.close();
-	}
+    @Override
+    public void arreter() {
+        reset();
+        // Attente du retour à la position initiale
+        while (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero()
+                && moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero()) {
+        }
+        moteurOeilGauche.stop();
+        moteurOeilDroit.stop();
+        moteurOeilGauche.setSpeedRampingState(true);
+        moteurOeilDroit.setSpeedRampingState(true);
+        moteurOeilGauche.setEngaged(false);
+        moteurOeilDroit.setEngaged(false);
+        moteurOeilGauche.close();
+        moteurOeilDroit.close();
+    }
 
-	/** Remet les yeux à leur position par défaut. */
-	private void reset() {
-		moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
-		moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
-		roulisEnCours = false;
-		positionRelativeOeilDroitDebutRoulis = 0;
-		positionRelativeOeilGaucheDebutRoulis = 0;
-		angleRoulis = 0;
-	}
-	
-	/**
-	 * Calcule la position absolue de l'oeil gauche à partir d'une position relative.
-	 * @param positionRelative la position relative
-	 */
-	private double toPositionAbsolueOeilGauche(double positionRelative) {
-		return phidgetsConfig.eyeLeftMotorPositionZero() - positionRelative;
-	}
-	
-	/**
-	 * Calcule la position relative de l'oeil gauche à partir d'une position absolue.
-	 * @param positionAbsolue la position absolue
-	 */
-	private double toPositionRelativeOeilGauche(double positionAbsolue) {
-		return phidgetsConfig.eyeLeftMotorPositionZero() - positionAbsolue;
-	}
-	
-	/**
-	 * Calcule la position absolue de l'oeil droit à partir d'une position relative.
-	 * @param positionRelative la position relative
-	 */
-	private double toPositionAbsolueOeilDroit(double positionRelative) {
-		return phidgetsConfig.eyeRightMotorPositionZero() - positionRelative;
-	}
-	
-	/**
-	 * Calcule la position relative de l'oeil droit à partir d'une position absolue.
-	 * @param positionAbsolue la position absolue
-	 */
-	private double toPositionRelativeOeilDroit(double positionAbsolue) {
-		return phidgetsConfig.eyeRightMotorPositionZero() - positionAbsolue;
-	}
+    /**
+     * Remet les yeux à leur position par défaut.
+     */
+    private void reset() {
+        moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
+        moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
+        roulisEnCours = false;
+        positionRelativeOeilDroitDebutRoulis = 0;
+        positionRelativeOeilGaucheDebutRoulis = 0;
+        angleRoulis = 0;
+    }
 
-	/**
-	 * Intercepte les évènements d'affichage de position.
-	 * @param displayPositionEvent évènement
-	 */
-	@Subscribe
-	public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
-		double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
-		double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
-		//System.out.println("YEUX\tgauche = " + positionRelativeOeilGauche + "\tdroit = " + positionRelativeOeilDroit);
-	}
+    /**
+     * Calcule la position absolue de l'oeil gauche à partir d'une position relative.
+     *
+     * @param positionRelative la position relative
+     */
+    private double toPositionAbsolueOeilGauche(double positionRelative) {
+        return phidgetsConfig.eyeLeftMotorPositionZero() - positionRelative;
+    }
 
-	public static void main(String[] args) {
-		Yeux tete = new Yeux();
-		tete.initialiser();
-		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		tete.positionnerOeilGauche(-15, null, null, true);
-		tete.positionnerOeilDroit(5, null, null, true);
-	}
+    /**
+     * Calcule la position relative de l'oeil gauche à partir d'une position absolue.
+     *
+     * @param positionAbsolue la position absolue
+     */
+    private double toPositionRelativeOeilGauche(double positionAbsolue) {
+        return phidgetsConfig.eyeLeftMotorPositionZero() - positionAbsolue;
+    }
+
+    /**
+     * Calcule la position absolue de l'oeil droit à partir d'une position relative.
+     *
+     * @param positionRelative la position relative
+     */
+    private double toPositionAbsolueOeilDroit(double positionRelative) {
+        return phidgetsConfig.eyeRightMotorPositionZero() - positionRelative;
+    }
+
+    /**
+     * Calcule la position relative de l'oeil droit à partir d'une position absolue.
+     *
+     * @param positionAbsolue la position absolue
+     */
+    private double toPositionRelativeOeilDroit(double positionAbsolue) {
+        return phidgetsConfig.eyeRightMotorPositionZero() - positionAbsolue;
+    }
+
+    /**
+     * Intercepte les évènements d'affichage de position.
+     *
+     * @param displayPositionEvent évènement
+     */
+    @Subscribe
+    public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
+        double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
+        double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
+        //System.out.println("YEUX\tgauche = " + positionRelativeOeilGauche + "\tdroit = " + positionRelativeOeilDroit);
+    }
+
+    public static void main(String[] args) {
+        Yeux tete = new Yeux();
+        tete.initialiser();
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        tete.positionnerOeilGauche(-15, null, null, true);
+        tete.positionnerOeilDroit(5, null, null, true);
+    }
 }
