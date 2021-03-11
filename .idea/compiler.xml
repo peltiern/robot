@@ -11,11 +11,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="robot-raspi" />
-      </profile>
-      <profile name="Annotation profile for robot-sandbox" enabled="true">
-        <sourceOutputDir name="../target/generated-sources/annotations" />
-        <sourceTestOutputDir name="../target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
         <module name="robot-sandbox" />
       </profile>
     </annotationProcessing>
