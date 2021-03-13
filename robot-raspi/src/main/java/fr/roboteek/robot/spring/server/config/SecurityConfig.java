@@ -23,10 +23,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable()
                 .authorizeRequests()
+                // TODO Gérer la sécurité de l'application Angular (pour l'instant, c'est open-bar !!!)
                 // Autorisation du endpoint pour le handshake de STOMP
-                .antMatchers("/wsendpoint").permitAll()
-                .anyRequest()
-                .authenticated();
+//                .antMatchers("/wsendpoint").permitAll()
+                .antMatchers("*").permitAll();
+//                .anyRequest()
+//                .authenticated();
         // @formatter:on
     }
 
