@@ -3,7 +3,7 @@ package fr.roboteek.robot.sandbox.controller.ps3.shared;
 import java.util.List;
 import java.util.Map;
 
-public abstract class GamepadEvent <C extends GamepadComponent> {
+public abstract class GamepadEvent<C extends GamepadComponent> {
 
     private List<C> modifiedComponents;
 

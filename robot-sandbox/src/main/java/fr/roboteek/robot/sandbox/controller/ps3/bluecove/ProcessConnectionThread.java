@@ -12,8 +12,7 @@ public class ProcessConnectionThread implements Runnable {
     private static final int KEY_RIGHT = 1;
     private static final int KEY_LEFT = 2;
 
-    public ProcessConnectionThread(StreamConnection connection)
-    {
+    public ProcessConnectionThread(StreamConnection connection) {
         mConnection = connection;
     }
 
@@ -41,6 +40,7 @@ public class ProcessConnectionThread implements Runnable {
 
     /**
      * Process the command from client
+     *
      * @param command the command code
      */
     private void processCommand(int command) {

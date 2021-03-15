@@ -22,8 +22,8 @@ public class CNNGenderDetector {
     private Net genderNet;
 
     public CNNGenderDetector() {
-            genderNet = new Net();
-            genderNet = readNetFromCaffe("/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/deploy_gendernet.prototxt", "/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/gender_net.caffemodel");
+        genderNet = new Net();
+        genderNet = readNetFromCaffe("/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/deploy_gendernet.prototxt", "/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/gender_net.caffemodel");
     }
 
     /**

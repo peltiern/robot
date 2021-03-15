@@ -23,13 +23,19 @@ public class AkinatorActivity extends AbstractActivity {
 
     public static final double PROBABILITY_THRESHOLD = 0.85;
 
-    /** Akinator engine. */
+    /**
+     * Akinator engine.
+     */
     private Akiwrapper akinator;
 
-    /** Flag to indicate if the game is finished. */
+    /**
+     * Flag to indicate if the game is finished.
+     */
     private boolean finish;
 
-    /** Waiting response. */
+    /**
+     * Waiting response.
+     */
     private String waitingResponse;
 
     @Override
@@ -37,7 +43,7 @@ public class AkinatorActivity extends AbstractActivity {
 
         initialized = false;
 
-       // TODO Gérer l'âge de la personne
+        // TODO Gérer l'âge de la personne
         Boolean filterProfanity = Boolean.TRUE;
 
         // TODO mettre une propriété dans le fichier de config

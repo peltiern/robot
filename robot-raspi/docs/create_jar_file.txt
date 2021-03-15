@@ -1,0 +1,5 @@
+# Génère les fichiers statiques de l'application Angular
+ng build --prod
+
+# Copie l'application Angular dans les ressources de l'application Spring Boot et génère le JAR
+mvn clean package

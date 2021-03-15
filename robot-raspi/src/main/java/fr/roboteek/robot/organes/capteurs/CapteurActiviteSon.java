@@ -7,7 +7,9 @@ public class CapteurActiviteSon extends AbstractOrganeWithThread {
 
     private MicArrayV2 micArrayV2;
 
-    /** Flag indiquant de stopper le thread. */
+    /**
+     * Flag indiquant de stopper le thread.
+     */
     private boolean stopperThread = false;
 
     private int doaAngleCourant;

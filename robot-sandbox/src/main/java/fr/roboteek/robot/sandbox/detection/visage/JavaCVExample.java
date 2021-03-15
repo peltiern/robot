@@ -90,24 +90,24 @@ public class JavaCVExample {
                 Mat mat = toMatConverter.convert(frame);
 //                if (i % 20 == 0) {
 
-                    Map<CvRect, Mat> detectedFaces = faceDetector.detect(frame);
+                Map<CvRect, Mat> detectedFaces = faceDetector.detect(frame);
 
-                    detectedFaces.entrySet().forEach(rectMatEntry -> {
-                        String age = ageDetector.predictAge(rectMatEntry.getValue(), frame);
-                        CNNGenderDetector.Gender gender = genderDetector.predictGender(rectMatEntry.getValue(), frame);
+                detectedFaces.entrySet().forEach(rectMatEntry -> {
+                    String age = ageDetector.predictAge(rectMatEntry.getValue(), frame);
+                    CNNGenderDetector.Gender gender = genderDetector.predictGender(rectMatEntry.getValue(), frame);
 
-                        String caption = String.format("%s:[%s]", gender, age);
-                        System.out.println("Face's caption : " + caption);
+                    String caption = String.format("%s:[%s]", gender, age);
+                    System.out.println("Face's caption : " + caption);
 
-                        rectangle(mat, new Point(rectMatEntry.getKey().x(), rectMatEntry.getKey().y()),
-                                new Point(rectMatEntry.getKey().width() + rectMatEntry.getKey().x(), rectMatEntry.getKey().height() + rectMatEntry.getKey().y()),
-                                Scalar.RED, 2, CV_AA, 0);
+                    rectangle(mat, new Point(rectMatEntry.getKey().x(), rectMatEntry.getKey().y()),
+                            new Point(rectMatEntry.getKey().width() + rectMatEntry.getKey().x(), rectMatEntry.getKey().height() + rectMatEntry.getKey().y()),
+                            Scalar.RED, 2, CV_AA, 0);
 
-                        int posX = Math.max(rectMatEntry.getKey().x() - 10, 0);
-                        int posY = Math.max(rectMatEntry.getKey().y() - 10, 0);
-                        putText(mat, caption, new Point(posX, posY), CV_FONT_HERSHEY_PLAIN, 1.0,
-                                new Scalar(255, 255, 255, 2.0));
-                    });
+                    int posX = Math.max(rectMatEntry.getKey().x() - 10, 0);
+                    int posY = Math.max(rectMatEntry.getKey().y() - 10, 0);
+                    putText(mat, caption, new Point(posX, posY), CV_FONT_HERSHEY_PLAIN, 1.0,
+                            new Scalar(255, 255, 255, 2.0));
+                });
 //                }
                 i++;
 

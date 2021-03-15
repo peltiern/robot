@@ -149,9 +149,9 @@
         </dependency>
 
         <!--<dependency>-->
-            <!--<groupId>org.sputnikdev</groupId>-->
-            <!--<artifactId>bluetooth-manager-bluegiga</artifactId>-->
-            <!--<version>1.2.3</version>-->
+        <!--<groupId>org.sputnikdev</groupId>-->
+        <!--<artifactId>bluetooth-manager-bluegiga</artifactId>-->
+        <!--<version>1.2.3</version>-->
         <!--</dependency>-->
 
         <dependency>
@@ -159,8 +159,6 @@
             <artifactId>bluetooth-gatt-parser</artifactId>
             <version>1.9.2</version>
         </dependency>
-
-
 
 
         <dependency>

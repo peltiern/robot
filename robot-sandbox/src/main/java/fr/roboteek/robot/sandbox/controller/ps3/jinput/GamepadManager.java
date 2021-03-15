@@ -19,7 +19,7 @@ public class GamepadManager extends AbstractGamepadManager<PS3Listener> {
 
     List<GamepadController> listeAuthorizedGamepadDummies = new ArrayList<>();
 
-    public GamepadManager(Class<? extends GamepadController> ... authorizedClasses) {
+    public GamepadManager(Class<? extends GamepadController>... authorizedClasses) {
         setAuthorizedGamepads(authorizedClasses);
     }
 
@@ -29,19 +29,19 @@ public class GamepadManager extends AbstractGamepadManager<PS3Listener> {
         Arrays.stream(controllers).forEach(this::addGamepad);
     }
 
-    public  synchronized void addGamepad(Controller controller) {
+    public synchronized void addGamepad(Controller controller) {
         System.out.println("TENTATIVE AJOUT GAMEPAD : " + controller.getType() + ", " + controller.getName());
         if (controller != null) {
 //            // On n'autorise qu'une seule manette Playstation pour le projet
 //            if (connectedControllers.isEmpty()) {
-                if (controller.getType() == Controller.Type.GAMEPAD) {
-                    // Le gamepad doit faire partie des gamepads autorisés
-                    listeAuthorizedGamepadDummies.forEach(gamepadController -> System.out.println("DUMMY = " + gamepadController.getType()));
-                    Optional<GamepadController> authorizedGamepad = listeAuthorizedGamepadDummies.stream().filter(gamepadController -> gamepadController.getType().toUpperCase().equals(controller.getName().toUpperCase())).findFirst();
-                    authorizedGamepad.ifPresent(gamepadControllerDummy -> {
-                        String identifier = controller.getName();
-                        if (!connectedControllers.containsKey(identifier)) {
-                            try {
+            if (controller.getType() == Controller.Type.GAMEPAD) {
+                // Le gamepad doit faire partie des gamepads autorisés
+                listeAuthorizedGamepadDummies.forEach(gamepadController -> System.out.println("DUMMY = " + gamepadController.getType()));
+                Optional<GamepadController> authorizedGamepad = listeAuthorizedGamepadDummies.stream().filter(gamepadController -> gamepadController.getType().toUpperCase().equals(controller.getName().toUpperCase())).findFirst();
+                authorizedGamepad.ifPresent(gamepadControllerDummy -> {
+                    String identifier = controller.getName();
+                    if (!connectedControllers.containsKey(identifier)) {
+                        try {
                             System.out.println("AJOUT GAMEPAD AUTORISE : " + controller.getName());
                             // TODO gérer la liste des gamepads autorisés
                             GamepadController gamepadController = gamepadControllerDummy.getClass().getConstructor(Controller.class).newInstance(controller);
@@ -52,18 +52,18 @@ public class GamepadManager extends AbstractGamepadManager<PS3Listener> {
                             filteredListeners.forEach(gamepadListener -> gamepadController.addListener(gamepadListener));
                             connectedControllers.put(identifier, gamepadController);
                             new Thread(gamepadController).start();
-                            } catch (InstantiationException e) {
-                                e.printStackTrace();
-                            } catch (IllegalAccessException e) {
-                                e.printStackTrace();
-                            } catch (InvocationTargetException e) {
-                                e.printStackTrace();
-                            } catch (NoSuchMethodException e) {
-                                e.printStackTrace();
-                            }
+                        } catch (InstantiationException e) {
+                            e.printStackTrace();
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        } catch (InvocationTargetException e) {
+                            e.printStackTrace();
+                        } catch (NoSuchMethodException e) {
+                            e.printStackTrace();
                         }
-                    });
-                }
+                    }
+                });
+            }
 //            }
         }
     }
@@ -98,7 +98,7 @@ public class GamepadManager extends AbstractGamepadManager<PS3Listener> {
 //        }
 //    }
 
-    private void setAuthorizedGamepads(Class<? extends GamepadController> ... authorizedClasses) {
+    private void setAuthorizedGamepads(Class<? extends GamepadController>... authorizedClasses) {
         if (authorizedClasses != null && authorizedClasses.length > 0) {
             listeAuthorizedGamepadDummies.clear();
             Arrays.stream(authorizedClasses).forEach(aClass -> {
@@ -117,7 +117,6 @@ public class GamepadManager extends AbstractGamepadManager<PS3Listener> {
                 }
             });
         }
-
 
 
     }

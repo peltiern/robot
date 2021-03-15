@@ -10,7 +10,7 @@ import java.nio.ByteOrder;
  * Reading DOA and voice activity parameters.
  * Using the usb4java library (http://usb4java.org/) and its sample.
  * Inspired by the python demo available on http://wiki.seeedstudio.com/ReSpeaker_Mic_Array_v2.0/#doa-direction-of-arrival
- *
+ * <p>
  * Nicolas Peltier (peltiern)
  */
 public class RespeakerMicArrayV2Test {

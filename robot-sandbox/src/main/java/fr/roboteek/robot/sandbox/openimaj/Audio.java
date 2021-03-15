@@ -6,26 +6,26 @@ import org.openimaj.video.xuggle.XuggleAudio;
 
 public class Audio {
 
-    /** The file we're going to play */
+    /**
+     * The file we're going to play
+     */
     public final static String AUDIO_FILE = "/home/npeltier/Robot/Programme/sounds/walle.mp3";
 
     /**
-     * 	Default constructor
+     * Default constructor
      */
-    public Audio()
-    {
+    public Audio() {
         XuggleAudio s = new XuggleAudio(AUDIO_FILE);
 
-        playNormalSound( s );
+        playNormalSound(s);
 //		playProcessedSound( s );
     }
 
     /**
-     * 	Plays a sound through the audio API.
+     * Plays a sound through the audio API.
      */
-    protected void playNormalSound( AudioStream s )
-    {
-        AudioPlayer ap = new AudioPlayer( s );
+    protected void playNormalSound(AudioStream s) {
+        AudioPlayer ap = new AudioPlayer(s);
         ap.run();
     }
 

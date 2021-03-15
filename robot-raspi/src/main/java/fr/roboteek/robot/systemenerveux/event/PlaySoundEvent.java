@@ -4,18 +4,21 @@ import fr.roboteek.robot.organes.actionneurs.RobotSound;
 
 /**
  * Evènement pour lire un fichier audio.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class PlaySoundEvent extends RobotEvent {
 
-	public static final String EVENT_TYPE = "PlaySound";
+    public static final String EVENT_TYPE = "play-sound";
 
-    /** Nom du fichier à jouer. */
+    /**
+     * Nom du fichier à jouer.
+     */
     private RobotSound sound;
 
-	public PlaySoundEvent() {
-		super(EVENT_TYPE);
-	}
+    public PlaySoundEvent() {
+        super(EVENT_TYPE);
+    }
 
     public RobotSound getSound() {
         return sound;

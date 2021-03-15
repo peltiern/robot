@@ -11,7 +11,9 @@ import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
  */
 public abstract class AbstractActivity {
 
-    /** Flag to indicate that the activity is stopped. */
+    /**
+     * Flag to indicate that the activity is stopped.
+     */
     protected boolean stopActivity;
 
     protected boolean initialized;
@@ -43,6 +45,7 @@ public abstract class AbstractActivity {
 
     /**
      * Sends an event to say a text.
+     *
      * @param text the text to say
      */
     public void say(String text) {

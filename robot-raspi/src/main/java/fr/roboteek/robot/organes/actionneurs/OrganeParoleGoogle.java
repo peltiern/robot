@@ -41,11 +41,15 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     private VoiceSelectionParams voice;
 
     private AudioConfig audioConfig;
-    
-    /** Logger. */
+
+    /**
+     * Logger.
+     */
     private Logger logger = Logger.getLogger(OrganeParoleGoogle.class);
 
-    /** Constructeur. */
+    /**
+     * Constructeur.
+     */
     public OrganeParoleGoogle() {
         super();
         config = googleSpeechSynthesisConfig();
@@ -53,10 +57,11 @@ public class OrganeParoleGoogle extends AbstractOrgane {
 
     /**
      * Lit un texte.
+     *
      * @param texte le texte à dire
      */
     public void lire(String texte) {
-        if(texte != null && !texte.isEmpty()) {
+        if (texte != null && !texte.isEmpty()) {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
@@ -98,8 +103,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -116,6 +120,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
 
     /**
      * Lit un texte issu d'un contenu audio.
+     *
      * @param audioContent le texte à dire
      */
     public void lire(byte[] audioContent) {
@@ -146,8 +151,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -161,16 +165,17 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             RobotEventBus.getInstance().publishAsync(eventRedemarrage);
         }
     }
-    
+
     /**
      * Intercepte les évènements pour lire du texte.
+     *
      * @param paroleEvent évènement pour lire du texte
      */
     @Subscribe
     public void handleParoleEvent(ParoleEvent paroleEvent) {
-    	System.out.println("ParoleEvent = " + paroleEvent);
-    	if (paroleEvent.getAudioContent() != null) {
-    	    lire(paroleEvent.getAudioContent());
+        System.out.println("ParoleEvent = " + paroleEvent);
+        if (paroleEvent.getAudioContent() != null) {
+            lire(paroleEvent.getAudioContent());
         } else if (paroleEvent.getTexte() != null && !paroleEvent.getTexte().trim().equals("")) {
             System.out.println(Thread.currentThread().getName() + " say (avant lecture) : " + paroleEvent.getTexte());
             lire(paroleEvent.getTexte().trim());
@@ -201,11 +206,11 @@ public class OrganeParoleGoogle extends AbstractOrgane {
 
     @Override
     public void arreter() {
-        
+
     }
-    
+
     public static void main(String[] args) {
-        
+
         final OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
         organeParole.initialiser();
 

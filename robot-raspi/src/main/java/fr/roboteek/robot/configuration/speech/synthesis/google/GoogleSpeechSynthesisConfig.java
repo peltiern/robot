@@ -4,8 +4,8 @@ import org.aeonbits.owner.Config;
 
 import static org.aeonbits.owner.Config.*;
 
-@HotReload(type= HotReloadType.ASYNC)
-@Sources({ "file:${ROBOT_HOME}/configuration/robot.properties"})
+@HotReload(type = HotReloadType.ASYNC)
+@Sources({"file:${ROBOT_HOME}/configuration/robot.properties"})
 public interface GoogleSpeechSynthesisConfig extends Config {
 
     @Key("speech.synthesis.google.language.code")

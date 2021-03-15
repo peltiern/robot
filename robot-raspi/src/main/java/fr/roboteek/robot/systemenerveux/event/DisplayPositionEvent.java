@@ -7,7 +7,7 @@ package fr.roboteek.robot.systemenerveux.event;
  */
 public class DisplayPositionEvent extends RobotEvent {
 
-    public static final String EVENT_TYPE = "DisplayPosition";
+    public static final String EVENT_TYPE = "display-position";
 
     public DisplayPositionEvent() {
         super(EVENT_TYPE);

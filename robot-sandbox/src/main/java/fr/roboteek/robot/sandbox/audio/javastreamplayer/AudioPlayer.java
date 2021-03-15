@@ -8,7 +8,7 @@ public class AudioPlayer {
 
     public static void main(String args[]) throws Exception {
         StreamPlayer streamPlayer = new StreamPlayer();
-        for(int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) {
             streamPlayer.open(new File("/home/npeltier/Robot/Programme/sounds/walle.ogg"));
             streamPlayer.play();
             //Thread.sleep(500);

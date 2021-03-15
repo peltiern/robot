@@ -12,7 +12,9 @@ import fr.roboteek.robot.util.speech.recognizer.google.GoogleSpeechRecognizer;
  */
 public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal {
 
-    /** Speech recognizer. */
+    /**
+     * Speech recognizer.
+     */
     private SpeechRecognizer speechRecognizer;
 
     public CapteurVocalAvecReconnaissance() {

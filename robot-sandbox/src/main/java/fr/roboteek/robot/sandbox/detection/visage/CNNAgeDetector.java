@@ -22,9 +22,9 @@ public class CNNAgeDetector {
     private Net ageNet;
 
     public CNNAgeDetector() {
-            ageNet = new Net();
+        ageNet = new Net();
 
-            ageNet = readNetFromCaffe("/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/deploy_agenet.prototxt", "/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/age_net.caffemodel");
+        ageNet = readNetFromCaffe("/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/deploy_agenet.prototxt", "/home/npeltier/Robot/Programme/detection-visage/reseaux-neurones/age_net.caffemodel");
     }
 
     /**
@@ -45,7 +45,7 @@ public class CNNAgeDetector {
 
            /* Blob inputBlob = new Blob(resizedMat);
             ageNet.setBlob(".data", inputBlob);*/
-           ageNet.setInput(blob);
+            ageNet.setInput(blob);
             Mat predictions = ageNet.forward();
 //            Blob prob = ageNet.getBlob("prob");
 

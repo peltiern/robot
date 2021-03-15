@@ -2,7 +2,7 @@ package fr.roboteek.robot.sandbox.controller.ps3.jinput;
 
 public class GamepadTest implements PS3Listener {
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         GamepadManager gamepadManager = new GamepadManager(Ps3Controller.class);
         gamepadManager.addListener(new GamepadTest());
         gamepadManager.start();

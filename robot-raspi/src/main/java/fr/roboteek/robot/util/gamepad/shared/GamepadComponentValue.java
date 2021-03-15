@@ -1,6 +1,6 @@
 package fr.roboteek.robot.util.gamepad.shared;
 
-public class GamepadComponentValue <C> {
+public class GamepadComponentValue<C> {
 
     private C component;
 

@@ -36,9 +36,11 @@ public enum PS3Component implements GamepadComponent {
     static {
         Arrays.stream(values()).forEach(ps3Component -> mapPs3Components.put(ps3Component.inputValue, ps3Component));
     }
-    
 
-    /** JInput Value. */
+
+    /**
+     * JInput Value.
+     */
     private String inputValue;
 
     PS3Component(String inputValue) {

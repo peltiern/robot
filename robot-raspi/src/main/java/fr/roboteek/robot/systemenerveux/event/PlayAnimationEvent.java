@@ -9,7 +9,7 @@ import fr.roboteek.robot.organes.actionneurs.animation.Animation;
  */
 public class PlayAnimationEvent extends RobotEvent {
 
-    public static final String EVENT_TYPE = "PlayAnimation";
+    public static final String EVENT_TYPE = "play-animation";
 
     /**
      * Animation à jouer.
@@ -39,5 +39,13 @@ public class PlayAnimationEvent extends RobotEvent {
 
     public void setAnimationName(String animationName) {
         this.animationName = animationName;
+    }
+
+    @Override
+    public String toString() {
+        return "PlayAnimationEvent{" +
+                "animation=" + animation +
+                ", animationName='" + animationName + '\'' +
+                "} " + super.toString();
     }
 }

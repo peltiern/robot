@@ -13,20 +13,25 @@ import java.io.IOException;
 
 public class SoundPlayer extends AbstractOrgane {
 
-    /** Logger. */
+    /**
+     * Logger.
+     */
     private Logger logger = Logger.getLogger(SoundPlayer.class);
 
-    /** Constructeur. */
+    /**
+     * Constructeur.
+     */
     public SoundPlayer() {
         super();
     }
 
     /**
      * Joue un son.
+     *
      * @param sound le son à jouer
      */
     public void play(RobotSound sound) {
-        if(sound != null) {
+        if (sound != null) {
 
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
@@ -42,8 +47,7 @@ public class SoundPlayer extends AbstractOrgane {
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -59,6 +63,7 @@ public class SoundPlayer extends AbstractOrgane {
 
     /**
      * Intercepte les évènements pour jouer un son.
+     *
      * @param playSoundEvent évènement pour jouer un son
      */
     @Subscribe

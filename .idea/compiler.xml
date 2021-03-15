@@ -10,11 +10,20 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="robot-sandbox" />
-        <module name="robot" />
-        <module name="ai-engine" />
         <module name="robot-raspi" />
+        <module name="robot-sandbox" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ai-engine" target="1.5" />
+      <module name="robot" target="1.8" />
+      <module name="robot-server" target="11" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="robot-raspi" options="-parameters" />
+      <module name="robot-server" options="-parameters" />
+    </option>
   </component>
 </project>

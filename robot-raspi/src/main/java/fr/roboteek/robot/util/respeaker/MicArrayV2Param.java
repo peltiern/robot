@@ -7,6 +7,7 @@ public enum MicArrayV2Param {
     DOAANGLE((short) 21, (short) 0, TYPE.INT, RIGHT.READ_ONLY, "DOA angle. Current value. Orientation depends on build configuration.");
 
     public enum TYPE {INT, FLOAT}
+
     public enum RIGHT {READ_WRITE, READ_ONLY}
 
     private short index;

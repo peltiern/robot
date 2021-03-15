@@ -29,6 +29,7 @@ public class HeartRateMonitorAsynchronous {
      * A single argument (device address) is required in the following format:
      * <br>/adapter address/device address
      * <br>E.g.: /88:6B:0F:30:63:AD/F7:EC:62:B9:CF:1F
+     *
      * @param args a single argument in the following format: /XX:XX:XX:XX:XX:XX/YY:YY:YY:YY:YY:YY
      */
     public static void main(String[] args) throws InterruptedException {

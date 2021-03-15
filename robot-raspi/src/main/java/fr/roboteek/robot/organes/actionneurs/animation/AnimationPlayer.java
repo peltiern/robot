@@ -19,12 +19,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class AnimationPlayer extends AbstractOrganeWithThread {
 
-    /** Flag indiquant de stopper le thread. */
+    /**
+     * Flag indiquant de stopper le thread.
+     */
     private boolean stopperThread = false;
 
     boolean automaticMode = false;
 
-    /** Liste des étapes d'animation à jouer. */
+    /**
+     * Liste des étapes d'animation à jouer.
+     */
     private ConcurrentLinkedQueue<AnimationStep> animationSteps = new ConcurrentLinkedQueue<>();
 
     public AnimationPlayer() {
@@ -72,6 +76,7 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
 
     /**
      * Intercepte les évènements pour jouer une animation.
+     *
      * @param playAnimationEvent évènement pour jouer une animation
      */
     @Subscribe
@@ -101,9 +106,9 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
         // Envoi des évènements dans le bus
         RobotEventBus.getInstance().publishAsync(mouvementYeuxEvent);
         RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-       if (playSoundEvent != null) {
-           RobotEventBus.getInstance().publishAsync(playSoundEvent);
-       }
+        if (playSoundEvent != null) {
+            RobotEventBus.getInstance().publishAsync(playSoundEvent);
+        }
     }
 
     private AnimationStep generateRandomAnimationStep() {
@@ -167,8 +172,8 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        Yeux yeux =  new Yeux();
-        Cou cou =  new Cou();
+        Yeux yeux = new Yeux();
+        Cou cou = new Cou();
 
         yeux.initialiser();
         cou.initialiser();

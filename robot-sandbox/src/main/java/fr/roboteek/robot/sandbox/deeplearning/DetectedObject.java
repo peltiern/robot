@@ -20,7 +20,9 @@ public class DetectedObject<T> {
      */
     private Rectangle bounds;
 
-    /** Indice de confiance. */
+    /**
+     * Indice de confiance.
+     */
     private double confidence;
 
     public DetectedObject(T object, String label, Rectangle bounds) {

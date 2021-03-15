@@ -1,28 +1,38 @@
 package fr.roboteek.robot.systemenerveux.event;
 
+import java.util.Arrays;
+
 /**
  * Evènement pour lire du texte.
+ *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class ParoleEvent extends RobotEvent {
-	
-	public static final String EVENT_TYPE = "Parole";
-    
-    /** Texte à dire. */
+
+    public static final String EVENT_TYPE = "parole";
+
+    /**
+     * Texte à dire.
+     */
     private String texte;
 
-    /** Contenu du fichier audio à traiter. */
+    /**
+     * Contenu du fichier audio à traiter.
+     */
     private byte[] audioContent;
-    
-    /** Pour test. */
+
+    /**
+     * Pour test.
+     */
     private boolean pourTest = false;
-    
-	public ParoleEvent() {
-		super(EVENT_TYPE);
-	}
+
+    public ParoleEvent() {
+        super(EVENT_TYPE);
+    }
 
     /**
      * Récupère la valeur de texte.
+     *
      * @return la valeur de texte
      */
     public String getTexte() {
@@ -31,6 +41,7 @@ public class ParoleEvent extends RobotEvent {
 
     /**
      * Définit la valeur de texte.
+     *
      * @param texte la nouvelle valeur de texte
      */
     public void setTexte(String texte) {
@@ -46,11 +57,18 @@ public class ParoleEvent extends RobotEvent {
     }
 
     public boolean isPourTest() {
-		return pourTest;
-	}
+        return pourTest;
+    }
 
-	public void setPourTest(boolean pourTest) {
-		this.pourTest = pourTest;
-	}
+    public void setPourTest(boolean pourTest) {
+        this.pourTest = pourTest;
+    }
 
+    @Override
+    public String toString() {
+        return "ParoleEvent{" +
+                "texte='" + texte + '\'' +
+                ", pourTest=" + pourTest +
+                "} " + super.toString();
+    }
 }

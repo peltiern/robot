@@ -49,7 +49,9 @@ public class IntelligenceArtificielleDialogFlow {
      */
     private String cheminFichierFlac;
 
-    /** Speech synthesis configuration. */
+    /**
+     * Speech synthesis configuration.
+     */
     private GoogleSpeechSynthesisConfig googleSpeechSynthesisConfig;
 
     /**

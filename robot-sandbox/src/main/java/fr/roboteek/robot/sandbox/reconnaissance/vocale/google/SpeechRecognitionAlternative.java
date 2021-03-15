@@ -3,28 +3,28 @@ package fr.roboteek.robot.sandbox.reconnaissance.vocale.google;
 
 public class SpeechRecognitionAlternative {
 
-	private String transcript;
-	
-	private float confidence;
-	
-	public String getTranscript() {
-		return transcript;
-	}
+    private String transcript;
 
-	public void setTranscript(String transcript) {
-		this.transcript = transcript;
-	}
+    private float confidence;
 
-	public float getConfidence() {
-		return confidence;
-	}
+    public String getTranscript() {
+        return transcript;
+    }
 
-	public void setConfidence(float confidence) {
-		this.confidence = confidence;
-	}
+    public void setTranscript(String transcript) {
+        this.transcript = transcript;
+    }
 
-	@Override
-	public String toString() {
-		return "SpeechRecognitionAlternative [transcript=" + transcript + ", confidence=" + confidence + "]";
-	}
+    public float getConfidence() {
+        return confidence;
+    }
+
+    public void setConfidence(float confidence) {
+        this.confidence = confidence;
+    }
+
+    @Override
+    public String toString() {
+        return "SpeechRecognitionAlternative [transcript=" + transcript + ", confidence=" + confidence + "]";
+    }
 }
