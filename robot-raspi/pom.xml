@@ -196,6 +196,12 @@
             <version>1.5</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.konghq</groupId>
+            <artifactId>unirest-java</artifactId>
+            <version>3.11.09</version>
+        </dependency>
+
     </dependencies>
 
 </project>

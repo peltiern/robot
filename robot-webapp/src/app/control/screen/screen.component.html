@@ -1,3 +1,49 @@
-<div class="container justify-content-center">
-  <img class="w-100" [src]="imgContent"/>
+<div *ngIf="imgContent" class="position-relative">
+  <img class="w-100" [src]="imgContent" alt="video" #image />
+  <!-- Faces -->
+  <div *ngIf="(showFaces || showLandmarks) && currentEvent.faceFound" id="divFaces" class="div-faces">
+    <div *ngFor="let face of currentEvent.faces; index as i" class="face">
+      <!-- Face bounds with name -->
+      <ng-container *ngIf="showFaces">
+        <div class="face-bounds" [style]="getBoundsStyle(face)"></div>
+        <div class="face-label" [style]="getLabelStyle(face)">
+          <span>{{face.name}}</span>
+        </div>
+      </ng-container>
+      <!-- Landmarks -->
+      <svg *ngIf="showLandmarks && face.landmarks" id="svgLandmarks" class="landmarks" width="100%" height="100%" [attr.viewBox]=getViewBox()>
+        <g>
+          <polygon [attr.points]="getLandmarkSvgPoints(face.landmarks.leftEye)" class="landmark-left-eye" />
+          <polygon [attr.points]="getLandmarkSvgPoints(face.landmarks.rightEye)" class="landmark-right-eye" />
+          <polyline [attr.points]="getLandmarkSvgPoints(face.landmarks.topLip)" class="landmark-top-lip" />
+          <polyline [attr.points]="getLandmarkSvgPoints(face.landmarks.bottomLip)" class="landmark-bottom-lip" />
+          <polyline [attr.points]="getLandmarkSvgPoints(face.landmarks.noseBridge)" class="landmark-nose-bridge" />
+          <polyline [attr.points]="getLandmarkSvgPoints(face.landmarks.noseTip)" class="landmark-nose-tip" />
+        </g>
+      </svg>
+    </div>
+  </div>
+  <!-- Objects -->
+  <div *ngIf="showObjects && currentEvent.objectFound" id="divObjects" class="div-objects">
+    <div *ngFor="let object of currentEvent.objects; index as i" class="object">
+      <div class="object-bounds" [style]="getBoundsStyle(object)"></div>
+      <div class="object-label" [style]="getLabelStyle(object)">
+        <span>{{object.name}}</span>
+      </div>
+    </div>
+  </div>
 </div>
+<form #videoForm="ngForm">
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="checkbox" id="checkboxShowFaces" name="cbShowFaces" [(ngModel)]="showFaces">
+    <label class="form-check-label" for="checkboxShowFaces">Faces</label>
+  </div>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="checkbox" id="checkboxShowLandmarks" name="cbShowLandmarks" [(ngModel)]="showLandmarks">
+    <label class="form-check-label" for="checkboxShowLandmarks">Landmarks</label>
+  </div>
+  <div class="form-check form-check-inline">
+    <input class="form-check-input" type="checkbox" id="checkboxShowObjects" name="cbShowObjects" [(ngModel)]="showObjects">
+    <label class="form-check-label" for="checkboxShowObjects">Objects</label>
+  </div>
+</form>

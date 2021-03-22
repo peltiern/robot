@@ -1,5 +1,6 @@
 package fr.roboteek.robot.memoire;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 import org.openimaj.math.geometry.point.Point2dImpl;
 

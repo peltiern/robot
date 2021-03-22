@@ -1,7 +1,13 @@
 package fr.roboteek.robot.memoire;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import org.openimaj.math.geometry.shape.Rectangle;
 
+@JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.ANY,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE
+)
 public class DetectedObject {
 
     private int x;

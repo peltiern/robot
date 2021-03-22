@@ -2,7 +2,7 @@ import {Observable} from 'rxjs';
 import {Message} from '@stomp/stompjs';
 import {RxStompService} from '@stomp/ng2-stompjs';
 import {Injectable} from '@angular/core';
-import {RobotEvent} from '../model/robot-event';
+import {RobotEvent} from '../model/events/robot-event';
 
 export const CONVERSATION_TOPIC = 'conversation';
 export const DETECTION_VOCALE_TOPIC = 'detection-vocale';

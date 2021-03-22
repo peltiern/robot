@@ -85,6 +85,21 @@ sudo reboot
 
 # Copier le fichier JSON des credentials Google
 
+# Installation de Python
+sudo apt install cmake
+sudo apt install python3 idle3
+sudo apt install python3-pip
+pip3 install numpy
+pip3 install pandas
+pip3 install cmake
+pip3 install face-recognition
+pip3 install flask
+pip3 install opencv-python
+
+# Copier le fichier des poids de YOLOV3 dans Robot/Programme/reconnaissance-visage/python-server/object/cfg
+# https://drive.google.com/file/d/1nw89NSkdleX_rfaKWZ3-WLigeUfF32Zp/view?usp=sharing
+
+
 
 
 

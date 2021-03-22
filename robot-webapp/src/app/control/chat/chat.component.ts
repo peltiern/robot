@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
 import {Message} from '@stomp/stompjs';
 import {CONVERSATION_TOPIC, RobotEventWebSocketService} from '../../service/robotevent.service';
-import {ParoleEvent} from '../../model/parole-event';
+import {ParoleEvent} from '../../model/events/parole-event';
 
 @Component({
   selector: 'app-chat',

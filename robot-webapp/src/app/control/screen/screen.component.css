@@ -1,0 +1,105 @@
+.div-faces {
+  z-index: 150;
+}
+
+.face-bounds {
+  border: 5px solid #88cc00;
+  border-radius: 10px 10px 0 0;
+  position: absolute;
+}
+.face-label {
+  border: 5px solid #88cc00;
+  border-radius: 0 0 10px 10px;
+  background-color: rgba(255, 255, 255, .7);
+  position: absolute;
+  display: table;
+}
+
+.face:hover>.face-bounds,.face:hover>.face-label {
+  border-color: red;
+}
+
+.face-label>span {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  vertical-align:middle;
+  display: table-cell;
+  text-align: center;
+  color: black;
+  text-transform: uppercase;
+}
+
+.div-objects {
+  z-index: 100;
+}
+
+.object-bounds {
+  border: 5px solid cyan;
+  border-radius: 10px 10px 0 0;
+  position: absolute;
+}
+.object-label {
+  border: 5px solid cyan;
+  border-radius: 0 0 10px 10px;
+  background-color: rgba(255, 255, 255, .7);
+  position: absolute;
+  display: table;
+}
+
+.object:hover>.object-bounds,.object:hover>.object-label {
+  border-color: red;
+}
+
+.object-label>span {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  vertical-align:middle;
+  display: table-cell;
+  text-align: center;
+  color: black;
+  text-transform: uppercase;
+}
+
+.landmarks {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.landmark-left-eye {
+  stroke: red;
+  stroke-width: 3;
+  fill: transparent;
+}
+
+.landmark-right-eye {
+  stroke: red;
+  stroke-width: 3;
+  fill: transparent;
+}
+
+.landmark-top-lip {
+  stroke: blue;
+  stroke-width: 3;
+  fill: transparent;
+}
+
+.landmark-bottom-lip {
+  stroke: blue;
+  stroke-width: 3;
+  fill: transparent;
+}
+
+.landmark-nose-bridge {
+  stroke: yellow;
+  stroke-width: 3;
+  fill: transparent;
+}
+
+.landmark-nose-tip {
+  stroke: yellow;
+  stroke-width: 3;
+  fill: transparent;
+}
