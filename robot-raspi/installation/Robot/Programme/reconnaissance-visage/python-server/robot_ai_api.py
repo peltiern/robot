@@ -28,7 +28,7 @@ from utils.utils import allowed_file
 
 app = Flask(__name__)
 
-logging.basicConfig(filename='test_log.log',level=logging.DEBUG,\
+logging.basicConfig(filename='test_log.log',level=logging.ERROR,\
       format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
 
 # Récupération des arguments en entrée
