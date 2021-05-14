@@ -1,2 +1,8 @@
 /robot-raspi/target/
-.idea/sonarlint/
+/.idea/sonarlint/
+/robot-raspi/installation/Robot/Programme/reconnaissance-visage/python-server/face/__pycache__/
+/robot-raspi/installation/Robot/Programme/reconnaissance-visage/python-server/object/__pycache__/
+/robot-raspi/installation/Robot/Programme/reconnaissance-visage/python-server/test_log.log
+/robot-raspi/installation/Robot/Programme/reconnaissance-visage/python-server/utils/__pycache__/
+test_log.log
+/null/
