@@ -5,13 +5,15 @@ import {ControlComponent} from './control.component';
 import { ChatComponent } from './chat/chat.component';
 import {play, NgxBootstrapIconsModule} from 'ngx-bootstrap-icons';
 import {FormsModule} from '@angular/forms';
+import { HeadControllerComponent } from './head-controller/head-controller.component';
+import {NgxSliderModule} from '@angular-slider/ngx-slider';
 
 const icons = {
   play,
 };
 
 @NgModule({
-  declarations: [ScreenComponent, ControlComponent, ChatComponent],
+  declarations: [ScreenComponent, ControlComponent, ChatComponent, HeadControllerComponent],
   exports: [
     ScreenComponent,
     ControlComponent,
@@ -20,7 +22,8 @@ const icons = {
   imports: [
     CommonModule,
     NgxBootstrapIconsModule.pick(icons),
-    FormsModule
+    FormsModule,
+    NgxSliderModule
   ]
 })
 export class ControlModule {

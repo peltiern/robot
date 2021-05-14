@@ -20,6 +20,7 @@ public class WebsocketController {
     @MessageMapping("/robotevents")
     public void processRobotEvent(@Payload RobotEvent robotEvent) {
         LOGGER.info(robotEvent.toString());
+        System.out.println(robotEvent);
         RobotEventBus.getInstance().publishAsync(robotEvent);
     }
 }

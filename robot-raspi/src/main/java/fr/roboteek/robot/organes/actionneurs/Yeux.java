@@ -225,7 +225,7 @@ public class Yeux extends AbstractOrgane {
      */
     @Subscribe
     public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
-        //System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
+        System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
         if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
             // TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
             roulisEnCours = false;

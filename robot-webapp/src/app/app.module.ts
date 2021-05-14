@@ -31,7 +31,7 @@ const icons = {
     RouterModule,
     AppRoutingModule,
     ControlModule,
-    DashboardModule,
+    DashboardModule
   ],
   providers: [
     VideoService,

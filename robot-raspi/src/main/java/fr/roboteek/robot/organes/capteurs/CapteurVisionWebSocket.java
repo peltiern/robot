@@ -131,7 +131,6 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
         // Recherche de visages
         if (indexFrame % 25 == 0 || facialRecognitionResponse == null) {
             facialRecognitionResponse = reconnaissanceFacialePython.recognizeFaces(frame);
-            System.out.println(facialRecognitionResponse);
         } else {
             facialRecognitionResponse = processFaceNameForDetection(reconnaissanceFacialePython.detectFaces(frame));
         }
@@ -141,7 +140,6 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
         if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
             objectDetectionResponse = reconnaissanceFacialePython.detectObjects(frame);
-            System.out.println(objectDetectionResponse);
         }
         if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
             objectDetectionResponse = null;

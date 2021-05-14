@@ -1,0 +1,35 @@
+<div class="row" style="height: 200px">
+  <div class="col-2" style="height: 100%">
+    O.G
+    <ngx-slider
+      [(value)]="leftEyePosition"
+      [options]="eyeOptions"
+      (userChange)="onEyePositionChange($event, LEFT_EYE)"
+    ></ngx-slider>
+  </div>
+  <div class="col-2" style="height: 100%">
+    O.D
+    <ngx-slider
+      [(value)]="rightEyePosition"
+      [options]="eyeOptions"
+      (userChange)="onEyePositionChange($event, RIGHT_EYE)"
+    ></ngx-slider>
+  </div>
+  <div class="col-2" style="height: 100%">
+    C-H-B
+    <ngx-slider
+      [(value)]="neckUpBottomPosition"
+      [options]="neckUpBottomOptions"
+      (userChange)="onNeckPositionChange($event, UP_BOTTOM_NECK)"
+    ></ngx-slider>
+  </div>
+  <div class="col-6" style="height: 100%">
+    C-G-D
+    <ngx-slider
+      [(value)]="neckLeftRightPosition"
+      [options]="neckLeftRightOptions"
+      (userChange)="onNeckPositionChange($event, LEFT_RIGHT_NECK)"
+    ></ngx-slider>
+  </div>
+</div>
+
