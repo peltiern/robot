@@ -12,6 +12,7 @@ import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
+import fr.roboteek.robot.systemenerveux.event.persistance.RobotEventPersistance;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 import org.apache.log4j.Logger;
 
@@ -78,6 +79,11 @@ public class Robot {
     private AnimationPlayer animationPlayer;
 
     /**
+     * Robot events interceptor to persist events.
+     */
+    private RobotEventPersistance robotEventPersistance;
+
+    /**
      * Flag d'arrêt du robot.
      */
     private boolean stopper = false;
@@ -140,6 +146,10 @@ public class Robot {
         soundPlayer = new SoundPlayer();
         soundPlayer.initialiser();
         RobotEventBus.getInstance().subscribe(soundPlayer);
+
+        // Robot events persistance
+        robotEventPersistance = new RobotEventPersistance();
+        RobotEventBus.getInstance().subscribe(robotEventPersistance);
 
 //        // Lecteur d'animations
 //        animationPlayer = new AnimationPlayer();
