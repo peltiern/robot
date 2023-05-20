@@ -25,7 +25,7 @@ public class MainActivity extends AbstractActivity {
 
     @Override
     public boolean run() {
-        playAnimation(Animation.RANDOM);
+        //playAnimation(Animation.RANDOM);
         while (!stopActivity) {
             try {
                 Thread.sleep(20);
@@ -56,7 +56,7 @@ public class MainActivity extends AbstractActivity {
                 }
                 playAnimation(Animation.NEUTRAL);
                 say(reponse);
-                playAnimation(Animation.RANDOM);
+                //playAnimation(Animation.RANDOM);
             }
         }
     }

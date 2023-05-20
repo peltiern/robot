@@ -7,12 +7,13 @@ import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.*;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
-import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocket;
+import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketRest;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import fr.roboteek.robot.systemenerveux.event.persistance.RobotEventPersistance;
+import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 import org.apache.log4j.Logger;
 
@@ -132,7 +133,7 @@ public class Robot {
         RobotEventBus.getInstance().subscribe(organeParole);
 
         // Capteurs
-        capteurVision = new CapteurVisionWebSocket();
+        capteurVision = new CapteurVisionWebSocketRest();
         capteurVocal = new CapteurVocalAvecReconnaissance();
 
         // Initialisation des capteurs
@@ -151,25 +152,25 @@ public class Robot {
         robotEventPersistance = new RobotEventPersistance();
         RobotEventBus.getInstance().subscribe(robotEventPersistance);
 
-//        // Lecteur d'animations
-//        animationPlayer = new AnimationPlayer();
-//        animationPlayer.initialiser();
-//        animationPlayer.start();
-//        RobotEventBus.getInstance().subscribe(animationPlayer);
-//
-//        // Manette
-//        robotGamepadController = new RobotJamepadController();
-//        robotGamepadController.start();
-//
-//        yeux = new Yeux();
-//        cou =  new Cou();
-//        conduiteDifferentielle = new ConduiteDifferentielle();
-//        cou.initialiser();
-//        yeux.initialiser();
-//        conduiteDifferentielle.initialiser();
-//        RobotEventBus.getInstance().subscribe(yeux);
-//        RobotEventBus.getInstance().subscribe(cou);
-//        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+        // Lecteur d'animations
+        animationPlayer = new AnimationPlayer();
+        animationPlayer.initialiser();
+        animationPlayer.start();
+        RobotEventBus.getInstance().subscribe(animationPlayer);
+
+        // Manette
+        robotGamepadController = new RobotJamepadController();
+        robotGamepadController.start();
+
+        yeux = new Yeux();
+        cou =  new Cou();
+        conduiteDifferentielle = new ConduiteDifferentielle();
+        cou.initialiser();
+        yeux.initialiser();
+        conduiteDifferentielle.initialiser();
+        RobotEventBus.getInstance().subscribe(yeux);
+        RobotEventBus.getInstance().subscribe(cou);
+        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
 
         cerveau.start();
 

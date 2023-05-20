@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class ReconnaissanceFacialePython {
+public class ReconnaissanceFacialePythonSocket {
 
     private String PYTHON_CMD = "/usr/bin/python3.8";
     private String FACE_RECOGNITION_PYTHON_SERVER_FILE = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "python-server" + File.separator + "robot_ai_api.py";
@@ -21,7 +21,7 @@ public class ReconnaissanceFacialePython {
     private String FACE_DETECTION_ENDPOINT_URL = "http://localhost:5001/face-detection";
     private String OBJECT_DETECTION_ENDPOINT_URL = "http://localhost:5001/object-detection";
 
-    public ReconnaissanceFacialePython() {
+    public ReconnaissanceFacialePythonSocket() {
 
         final Thread threadServer = new Thread("FacialRecognitionServer") {
             @Override
@@ -95,7 +95,7 @@ public class ReconnaissanceFacialePython {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        ReconnaissanceFacialePython rf = new ReconnaissanceFacialePython();
+        ReconnaissanceFacialePythonSocket rf = new ReconnaissanceFacialePythonSocket();
         Thread.sleep(5000);
         long start = System.currentTimeMillis();
         FacialRecognitionResponse response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));

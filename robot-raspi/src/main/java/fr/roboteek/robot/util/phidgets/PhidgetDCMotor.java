@@ -1,11 +1,6 @@
 package fr.roboteek.robot.util.phidgets;
 
-import com.phidget22.AttachEvent;
-import com.phidget22.AttachListener;
-import com.phidget22.DCMotor;
-import com.phidget22.DetachEvent;
-import com.phidget22.DetachListener;
-import com.phidget22.PhidgetException;
+import com.phidget22.*;
 
 public class PhidgetDCMotor implements AttachListener, DetachListener {
 

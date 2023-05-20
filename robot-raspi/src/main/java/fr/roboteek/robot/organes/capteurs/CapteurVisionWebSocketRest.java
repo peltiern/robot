@@ -3,16 +3,14 @@ package fr.roboteek.robot.organes.capteurs;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.memoire.FacialRecognitionResponse;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
-import fr.roboteek.robot.memoire.ReconnaissanceFacialePython;
+import fr.roboteek.robot.memoire.ReconnaissanceFacialePythonRest;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
+import org.apache.commons.geometry.euclidean.twod.Vector2D;
 import org.apache.log4j.Logger;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.MBFImage;
-import org.openimaj.math.geometry.line.Line2d;
-import org.openimaj.math.geometry.point.Point2d;
-import org.openimaj.math.geometry.shape.Rectangle;
 import org.openimaj.video.VideoDisplay;
 import org.openimaj.video.VideoDisplayListener;
 import org.openimaj.video.capture.Device;
@@ -31,7 +29,7 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDisplayListener<MBFImage> {
+public class CapteurVisionWebSocketRest extends AbstractOrgane implements VideoDisplayListener<MBFImage> {
 
     /**
      * Capture vidéo.
@@ -48,7 +46,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
      */
     private static final int HAUTEUR_WEBCAM = 480;
 
-    private ReconnaissanceFacialePython reconnaissanceFacialePython;
+    private ReconnaissanceFacialePythonRest reconnaissanceFacialePythonRest;
 
     private int indexFrame = 0;
 
@@ -64,14 +62,14 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
     /**
      * Logger.
      */
-    private Logger logger = Logger.getLogger(CapteurVisionWebSocket.class);
+    private Logger logger = Logger.getLogger(CapteurVisionWebSocketRest.class);
 
 
-    public CapteurVisionWebSocket() {
+    public CapteurVisionWebSocketRest() {
 
         robotConfig = robotConfig();
 
-        reconnaissanceFacialePython = new ReconnaissanceFacialePython();
+        //reconnaissanceFacialePython = new ReconnaissanceFacialePython();
 
         // Récupération de la webcam
         Device webcamRobot = null;
@@ -129,23 +127,23 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
     public synchronized void beforeUpdate(MBFImage frame) {
 
         // Recherche de visages
-        if (indexFrame % 25 == 0 || facialRecognitionResponse == null) {
-            facialRecognitionResponse = reconnaissanceFacialePython.recognizeFaces(frame);
-        } else {
-            facialRecognitionResponse = processFaceNameForDetection(reconnaissanceFacialePython.detectFaces(frame));
-        }
-        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
-            facialRecognitionResponse = null;
-        }
-
-        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
-            objectDetectionResponse = reconnaissanceFacialePython.detectObjects(frame);
-        }
-        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
-            objectDetectionResponse = null;
-        }
-
-        indexFrame++;
+//        if (indexFrame % 25 == 0 || facialRecognitionResponse == null) {
+//            facialRecognitionResponse = reconnaissanceFacialePython.recognizeFaces(frame);
+//        } else {
+//            facialRecognitionResponse = processFaceNameForDetection(reconnaissanceFacialePython.detectFaces(frame));
+//        }
+//        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
+//            facialRecognitionResponse = null;
+//        }
+//
+//        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
+//            objectDetectionResponse = reconnaissanceFacialePython.detectObjects(frame);
+//        }
+//        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
+//            objectDetectionResponse = null;
+//        }
+//
+//        indexFrame++;
 
         // Envoi d'un évènement de détection de visages
 ////        final VisagesEvent event = new VisagesEvent();
@@ -164,14 +162,14 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
         VideoEvent videoEvent = new VideoEvent();
         videoEvent.setImageBase64(Base64.getEncoder().encodeToString(baos.toByteArray()));
-        if (facialRecognitionResponse != null) {
-            videoEvent.setFaceFound(facialRecognitionResponse.isFaceFound());
-            videoEvent.setFaces(facialRecognitionResponse.getFaces());
-        }
-        if (objectDetectionResponse != null) {
-            videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
-            videoEvent.setObjects(objectDetectionResponse.getObjects());
-        }
+//        if (facialRecognitionResponse != null) {
+//            videoEvent.setFaceFound(facialRecognitionResponse.isFaceFound());
+//            videoEvent.setFaces(facialRecognitionResponse.getFaces());
+//        }
+//        if (objectDetectionResponse != null) {
+//            videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
+//            videoEvent.setObjects(objectDetectionResponse.getObjects());
+//        }
         RobotEventBus.getInstance().publishAsync(videoEvent);
     }
 
@@ -185,10 +183,9 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
 
         // Calcul des distances de chacun des visages détectés avec les visages de la reconnaissance précédente
         response.getFaces().forEach(recognizedFace -> {
-            Rectangle faceBounds = recognizedFace.getBounds();
-            Point2d faceCentroid = faceBounds.calculateCentroid();
+            Vector2D faceCentroid = recognizedFace.getCentroid();
             facialRecognitionResponse.getFaces().stream()
-                    .filter(oldRecognizedFace -> Line2d.distance(oldRecognizedFace.getBounds().calculateCentroid(), faceCentroid) < 40)
+                    .filter(oldRecognizedFace -> oldRecognizedFace.getBounds().getCentroid().distance(faceCentroid) < 40)
                     .findFirst()
                     .ifPresent(nearestOldRecognizedFace -> recognizedFace.setName(nearestOldRecognizedFace.getName()));
         });
@@ -197,7 +194,7 @@ public class CapteurVisionWebSocket extends AbstractOrgane implements VideoDispl
     }
 
     public static void main(String[] args) {
-        CapteurVisionWebSocket capteurVision = new CapteurVisionWebSocket();
+        CapteurVisionWebSocketRest capteurVision = new CapteurVisionWebSocketRest();
         capteurVision.initialiser();
     }
 

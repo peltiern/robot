@@ -9,9 +9,15 @@ unzip Robot.zip
 rm Robot.zip
 
 
-# Installation du JDK
+# Installation du JDK (voir SDKMan en dessous)
 sudo apt update
 sudo apt-get --assume-yes install default-jdk
+
+# Installation du JDK avec SDK Man (https://sdkman.io/install)
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+sdk version
+sdk install java 11.XX
 
 # Phidgets
 cd ~/Robot/third-party/phidgets/
@@ -48,6 +54,9 @@ java -classpath .:phidget22.jar RCServoExample
 # Installation Webcam
 sudo apt-get install libjpeg8
 
+# Outil permettant de trouver la webcam
+ sudo apt-get --assume-yes install v4l-utils
+
 # Respeaker (droits sur USB de la carte)
 sudo cp ~/Robot/third-party/respeaker/60-respeaker.rules /etc/udev/rules.d
 
@@ -76,7 +85,7 @@ sudo reboot
 sudo apt install cmake
 sudo apt install python3 idle3
 sudo apt install python3-pip
-pip3 install numpy
+pip3 install numpy==1.19.4
 pip3 install pandas
 pip3 install cmake
 pip3 install face-recognition

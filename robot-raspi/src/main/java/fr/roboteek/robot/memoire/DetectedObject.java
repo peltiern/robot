@@ -1,52 +1,22 @@
 package fr.roboteek.robot.memoire;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import org.openimaj.math.geometry.shape.Rectangle;
+import fr.roboteek.robot.util.commons.geometry.Rectangle;
 
 @JsonAutoDetect(
         fieldVisibility = JsonAutoDetect.Visibility.ANY,
         setterVisibility = JsonAutoDetect.Visibility.NONE,
         getterVisibility = JsonAutoDetect.Visibility.NONE
 )
-public class DetectedObject {
-
-    private int x;
-    private int y;
-    private int width;
-    private int height;
+public class DetectedObject extends Rectangle {
 
     private String name;
 
-    public int getX() {
-        return x;
+    public DetectedObject(int x, int y, int width, int height) {
+        super(x, y, width, height);
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
+    public DetectedObject() {
     }
 
     public String getName() {
@@ -57,19 +27,4 @@ public class DetectedObject {
         this.name = name;
     }
 
-    public Rectangle getBounds() {
-        return new Rectangle((float) x, (float) y, (float) width, (float) height);
-    }
-
-
-    @Override
-    public String toString() {
-        return "DetectedObject{" +
-                "x=" + x +
-                ", y=" + y +
-                ", width=" + width +
-                ", height=" + height +
-                ", name='" + name + '\'' +
-                '}';
-    }
 }

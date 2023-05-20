@@ -4,6 +4,13 @@ public class RecognizedFace extends DetectedObject {
 
     private FaceLandmarks landmarks;
 
+    public RecognizedFace() {
+    }
+
+    public RecognizedFace(int x, int y, int width, int height) {
+        super(x, y, width, height);
+    }
+
     public FaceLandmarks getLandmarks() {
         return landmarks;
     }
