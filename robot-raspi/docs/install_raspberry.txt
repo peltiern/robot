@@ -14,28 +14,14 @@ sudo apt update
 sudo apt-get --assume-yes install default-jdk
 
 # Phidgets
-sudo apt-get --assume-yes install libusb-1.0-0-dev
-
 cd ~/Robot/third-party/phidgets/
-wget https://www.phidgets.com/downloads/phidget22/libraries/linux/libphidget22.tar.gz
-wget https://www.phidgets.com/downloads/phidget22/libraries/linux/libphidget22java.tar.gz
-tar -xzvf libphidget22.tar.gz
-tar -xzvf libphidget22java.tar.gz
-
-cd libphidget22-1.6.20200921/
-./configure
-make
-sudo make install
-cd ..
-
-cd libphidget22java-1.6.20200921/
-./configure
-make
-sudo make install
-cd ..
+sudo apt-get update
+curl -fsSL https://www.phidgets.com/downloads/setup_linux | sudo -E bash - &&\
+sudo apt-get install -y libphidget22-dev
+sudo apt-get install -y libphidget22java
 
 #REGLES UDEV
-sudo cp ~/Robot/third-party/phidgets/libphidget22-1.6.20200921/plat/linux/udev/99-libphidget22.rules /etc/udev/rules.d
+sudo cp ~/Robot/third-party/phidgets/99-libphidget22.rules /etc/udev/rules.d
 
 #TESTS
 cd ~/Robot/third-party/phidgets/
