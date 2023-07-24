@@ -14,7 +14,8 @@ export class TemperatureComponent implements OnInit, OnDestroy {
 
 // Options du graphique
   public lineChartData: ChartDataSets[] = [
-    {data: [], label: 'Température', fill: false}
+    {data: [], label: 'Température 1', fill: false},
+    {data: [], label: 'Température 2', fill: false}
   ];
   public lineChartLabels: Label[] = [];
   public lineChartOptions: (ChartOptions) = {
@@ -48,20 +49,18 @@ export class TemperatureComponent implements OnInit, OnDestroy {
     plugins: {
       // Options pour le streaming
       streaming: {
-        duration: 10000,
-        delay: 1000
+        duration: 20000, // Durée de la fenêtre de données en millisecondes (20 secondes dans cet exemple)
+        refresh: 1000, // Fréquence de mise à jour du graphique en millisecondes (1 seconde dans cet exemple)
+        delay: 2000, // Délai avant le démarrage de l'animation du graphique en millisecondes (2 secondes dans cet exemple)
       },
     },
+    animation: {
+      duration: 0 // Désactiver les animations pour éviter la mise à jour saccadée du graphique
+    }
   };
   public lineChartColors: Color[] = [
-    {
-      backgroundColor: 'rgba(148,159,177,0.2)',
-      borderColor: 'rgba(148,159,177,1)',
-      pointBackgroundColor: [],
-      pointBorderColor: '#fff',
-      pointHoverBackgroundColor: [],
-      pointHoverBorderColor: 'rgba(148,159,177,0.8)'
-    }
+    { borderColor: 'blue', backgroundColor: 'rgba(0, 0, 255, 0.2)' },
+    { borderColor: 'green', backgroundColor: 'rgba(0, 255, 0, 0.2)' }
   ];
   public lineChartLegend = false;
   public lineChartType: ChartType = 'line';
@@ -95,16 +94,20 @@ export class TemperatureComponent implements OnInit, OnDestroy {
     //     this.lineChartLabels.splice(0, 1);
     //     this.lineChartData[0].data.splice(0, 1);
     //   }
-    // Affichage de la température sur 2 décimales
-    this.lineChartData[0].data.push(parseFloat(parseFloat(temperatureMsg.temperature).toFixed(2)));
-    // Couleurs des points en fonction de la température
-    if (temperatureMsg.temperature > 20) {
-      this.lineChartData[0].pointBackgroundColor[this.lineChartData[0].data.length - 1] = 'red';
-      this.lineChartData[0].pointHoverBackgroundColor[this.lineChartData[0].data.length - 1] = 'red';
-    } else {
-      this.lineChartData[0].pointBackgroundColor[this.lineChartData[0].data.length - 1] = 'blue';
-      this.lineChartData[0].pointHoverBackgroundColor[this.lineChartData[0].data.length - 1] = 'blue';
+    let indexChart = 0;
+    if (temperatureMsg.type === 'TYPE_2') {
+      indexChart = 1;
     }
+    // Affichage de la température sur 2 décimales
+    this.lineChartData[indexChart].data.push(parseFloat(parseFloat(temperatureMsg.temperature).toFixed(2)));
+    // // Couleurs des points en fonction de la température
+    // if (temperatureMsg.temperature > 20) {
+    //   this.lineChartData[indexChart].pointBackgroundColor[this.lineChartData[indexChart].data.length - 1] = 'red';
+    //   this.lineChartData[indexChart].pointHoverBackgroundColor[this.lineChartData[indexChart].data.length - 1] = 'red';
+    // } else {
+    //   this.lineChartData[indexChart].pointBackgroundColor[this.lineChartData[indexChart].data.length - 1] = 'blue';
+    //   this.lineChartData[indexChart].pointHoverBackgroundColor[this.lineChartData[indexChart].data.length - 1] = 'blue';
+    // }
     this.chart.update();
   }
 
