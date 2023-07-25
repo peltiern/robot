@@ -1,11 +1,12 @@
 package fr.roboteek.robot.activites.main;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -16,7 +17,7 @@ public class IntelligenceArtificielleGoogleKnowledge {
     /**
      * Logger.
      */
-    private Logger logger = Logger.getLogger(IntelligenceArtificielleGoogleKnowledge.class);
+    private Logger logger = LoggerFactory.getLogger(IntelligenceArtificielleGoogleKnowledge.class);
 
     public IntelligenceArtificielleGoogleKnowledge() {
 
@@ -56,7 +57,7 @@ public class IntelligenceArtificielleGoogleKnowledge {
                     .first();
 //            }
             if (element != null) {
-                Document cleanDoc = Jsoup.parse(Jsoup.clean(element.html(), Whitelist.none()));
+                Document cleanDoc = Jsoup.parse(Jsoup.clean(element.html(), Safelist.none()));
                 response.setOutputText(cleanDoc.text());
 //            for (TextNode textNode : textNodes) {
 //                System.out.println(textNode.text());

@@ -55,7 +55,7 @@ java -classpath .:phidget22.jar RCServoExample
 sudo apt-get install libjpeg8
 
 # Outil permettant de trouver la webcam
- sudo apt-get --assume-yes install v4l-utils
+sudo apt-get --assume-yes install v4l-utils
 
 # Respeaker (droits sur USB de la carte)
 sudo cp ~/Robot/third-party/respeaker/60-respeaker.rules /etc/udev/rules.d

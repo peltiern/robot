@@ -15,7 +15,8 @@ import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import fr.roboteek.robot.systemenerveux.event.persistance.RobotEventPersistance;
 import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Classe principale du robot.
@@ -37,7 +38,7 @@ public class Robot {
     /**
      * Capteur de vision (oeil du robot). Thread ?
      */
-    private AbstractOrgane capteurVision;
+    private AbstractOrganeWithThread capteurVision;
 
     /**
      * Capteur vocal.
@@ -92,7 +93,7 @@ public class Robot {
     /**
      * Logger.
      */
-    private Logger logger = Logger.getLogger(Robot.class);
+    private Logger logger = LoggerFactory.getLogger(Robot.class);
 
 
     public Robot() {
@@ -138,11 +139,12 @@ public class Robot {
 
         // Initialisation des capteurs
         capteurVision.initialiser();
+        capteurVision.start();
         capteurVocal.initialiser();
         capteurVocal.start();
 
         RobotEventBus.getInstance().subscribe(capteurVocal);
-
+//
         // Lecteur de sons
         soundPlayer = new SoundPlayer();
         soundPlayer.initialiser();

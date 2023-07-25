@@ -1,12 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import com.google.cloud.texttospeech.v1.AudioConfig;
-import com.google.cloud.texttospeech.v1.AudioEncoding;
-import com.google.cloud.texttospeech.v1.SsmlVoiceGender;
-import com.google.cloud.texttospeech.v1.SynthesisInput;
-import com.google.cloud.texttospeech.v1.SynthesizeSpeechResponse;
-import com.google.cloud.texttospeech.v1.TextToSpeechClient;
-import com.google.cloud.texttospeech.v1.VoiceSelectionParams;
+import com.google.cloud.texttospeech.v1.*;
 import com.google.common.eventbus.Subscribe;
 import com.google.protobuf.ByteString;
 import fr.roboteek.robot.Constantes;
@@ -16,13 +10,10 @@ import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 import static fr.roboteek.robot.configuration.Configurations.googleSpeechSynthesisConfig;
 
@@ -45,7 +36,7 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     /**
      * Logger.
      */
-    private Logger logger = Logger.getLogger(OrganeParoleGoogle.class);
+    private Logger logger = LoggerFactory.getLogger(OrganeParoleGoogle.class);
 
     /**
      * Constructeur.

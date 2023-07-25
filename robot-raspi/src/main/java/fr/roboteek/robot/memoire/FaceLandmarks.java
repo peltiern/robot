@@ -1,109 +1,108 @@
 package fr.roboteek.robot.memoire;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
-import org.openimaj.math.geometry.point.Point2dImpl;
+import org.apache.commons.geometry.euclidean.twod.Vector2D;
 
 import java.util.List;
 
 public class FaceLandmarks {
 
     @SerializedName("chin")
-    private List<Point2dImpl> chin;
+    private List<Vector2D> chin;
 
     @SerializedName("left_eyebrow")
-    private List<Point2dImpl> leftEyebrow;
+    private List<Vector2D> leftEyebrow;
 
     @SerializedName("right_eyebrow")
-    private List<Point2dImpl> rightEyebrow;
+    private List<Vector2D> rightEyebrow;
 
     @SerializedName("nose_bridge")
-    private List<Point2dImpl> noseBridge;
+    private List<Vector2D> noseBridge;
 
     @SerializedName("nose_tip")
-    private List<Point2dImpl> noseTip;
+    private List<Vector2D> noseTip;
 
     @SerializedName("left_eye")
-    private List<Point2dImpl> leftEye;
+    private List<Vector2D> leftEye;
 
     @SerializedName("right_eye")
-    private List<Point2dImpl> rightEye;
+    private List<Vector2D> rightEye;
 
     @SerializedName("top_lip")
-    private List<Point2dImpl> topLip;
+    private List<Vector2D> topLip;
 
     @SerializedName("bottom_lip")
-    private List<Point2dImpl> bottomLip;
+    private List<Vector2D> bottomLip;
 
-    public List<Point2dImpl> getChin() {
+    public List<Vector2D> getChin() {
         return chin;
     }
 
-    public void setChin(List<Point2dImpl> chin) {
+    public void setChin(List<Vector2D> chin) {
         this.chin = chin;
     }
 
-    public List<Point2dImpl> getLeftEyebrow() {
+    public List<Vector2D> getLeftEyebrow() {
         return leftEyebrow;
     }
 
-    public void setLeftEyebrow(List<Point2dImpl> leftEyebrow) {
+    public void setLeftEyebrow(List<Vector2D> leftEyebrow) {
         this.leftEyebrow = leftEyebrow;
     }
 
-    public List<Point2dImpl> getRightEyebrow() {
+    public List<Vector2D> getRightEyebrow() {
         return rightEyebrow;
     }
 
-    public void setRightEyebrow(List<Point2dImpl> rightEyebrow) {
+    public void setRightEyebrow(List<Vector2D> rightEyebrow) {
         this.rightEyebrow = rightEyebrow;
     }
 
-    public List<Point2dImpl> getNoseBridge() {
+    public List<Vector2D> getNoseBridge() {
         return noseBridge;
     }
 
-    public void setNoseBridge(List<Point2dImpl> noseBridge) {
+    public void setNoseBridge(List<Vector2D> noseBridge) {
         this.noseBridge = noseBridge;
     }
 
-    public List<Point2dImpl> getNoseTip() {
+    public List<Vector2D> getNoseTip() {
         return noseTip;
     }
 
-    public void setNoseTip(List<Point2dImpl> noseTip) {
+    public void setNoseTip(List<Vector2D> noseTip) {
         this.noseTip = noseTip;
     }
 
-    public List<Point2dImpl> getLeftEye() {
+    public List<Vector2D> getLeftEye() {
         return leftEye;
     }
 
-    public void setLeftEye(List<Point2dImpl> leftEye) {
+    public void setLeftEye(List<Vector2D> leftEye) {
         this.leftEye = leftEye;
     }
 
-    public List<Point2dImpl> getRightEye() {
+    public List<Vector2D> getRightEye() {
         return rightEye;
     }
 
-    public void setRightEye(List<Point2dImpl> rightEye) {
+    public void setRightEye(List<Vector2D> rightEye) {
         this.rightEye = rightEye;
     }
 
-    public List<Point2dImpl> getTopLip() {
+    public List<Vector2D> getTopLip() {
         return topLip;
     }
 
-    public void setTopLip(List<Point2dImpl> topLip) {
+    public void setTopLip(List<Vector2D> topLip) {
         this.topLip = topLip;
     }
 
-    public List<Point2dImpl> getBottomLip() {
+    public List<Vector2D> getBottomLip() {
         return bottomLip;
     }
 
-    public void setBottomLip(List<Point2dImpl> bottomLip) {
+    public void setBottomLip(List<Vector2D> bottomLip) {
         this.bottomLip = bottomLip;
     }
 }

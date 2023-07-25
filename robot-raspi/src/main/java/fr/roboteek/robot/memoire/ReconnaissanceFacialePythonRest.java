@@ -3,13 +3,9 @@ package fr.roboteek.robot.memoire;
 import fr.roboteek.robot.Constantes;
 import kong.unirest.Unirest;
 import kong.unirest.UnirestException;
-import org.openimaj.image.FImage;
-import org.openimaj.image.ImageUtilities;
-import org.openimaj.image.MBFImage;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 public class ReconnaissanceFacialePythonRest {
 
@@ -49,69 +45,69 @@ public class ReconnaissanceFacialePythonRest {
         threadServer.start();
     }
 
-    public FacialRecognitionResponse recognizeFaces(MBFImage image) {
-        return processFacialImage(image, FACE_RECOGNITION_ENDPOINT_URL, FacialRecognitionResponse.class);
-    }
-
-    public FacialRecognitionResponse detectFaces(MBFImage image) {
-        return processFacialImage(image, FACE_DETECTION_ENDPOINT_URL, FacialRecognitionResponse.class);
-    }
-
-    public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
-
-    }
-
-    public ObjectDetectionResponse detectObjects(MBFImage image) {
-        return processFacialImage(image, OBJECT_DETECTION_ENDPOINT_URL, ObjectDetectionResponse.class);
-    }
-
-    private <T> T processFacialImage(MBFImage image, String endpointUrl, Class<T> responseClass) {
-        long timestamp = System.currentTimeMillis();
-        File file = new File(IMAGE_TEMP_FOLDER + File.separator + "face_" + timestamp + ".jpg");
-        try {
-            ImageUtilities.write(image, file);
-            T response = Unirest.post(endpointUrl)
-                    .field("file", file)
-                    .asObject(responseClass).getBody();
-            asyncDeleteFile(file);
-            return response;
-        } catch (UnirestException | IOException e) {
-            e.printStackTrace();
-            asyncDeleteFile(file);
-        }
-        return null;
-    }
-
-    private void asyncDeleteFile(final File file) {
-        final Thread thread = new Thread("DeleteFileThread") {
-            @Override
-            public void run() {
-                if (file.exists()) {
-                    file.delete();
-                }
-            }
-        };
-        thread.start();
-    }
-
-    public static void main(String[] args) throws InterruptedException, IOException {
-        ReconnaissanceFacialePythonRest rf = new ReconnaissanceFacialePythonRest();
-        Thread.sleep(5000);
-        long start = System.currentTimeMillis();
-        FacialRecognitionResponse response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
-        long stop = System.currentTimeMillis();
-        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
-        start = System.currentTimeMillis();
-        response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
-        stop = System.currentTimeMillis();
-        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
-        start = System.currentTimeMillis();
-        response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
-        stop = System.currentTimeMillis();
-        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
-        start = System.currentTimeMillis();
-        response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
-        stop = System.currentTimeMillis();
-        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
-    }
+//    public FacialRecognitionResponse recognizeFaces(MBFImage image) {
+//        return processFacialImage(image, FACE_RECOGNITION_ENDPOINT_URL, FacialRecognitionResponse.class);
+//    }
+//
+//    public FacialRecognitionResponse detectFaces(MBFImage image) {
+//        return processFacialImage(image, FACE_DETECTION_ENDPOINT_URL, FacialRecognitionResponse.class);
+//    }
+//
+//    public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
+//
+//    }
+//
+//    public ObjectDetectionResponse detectObjects(MBFImage image) {
+//        return processFacialImage(image, OBJECT_DETECTION_ENDPOINT_URL, ObjectDetectionResponse.class);
+//    }
+//
+//    private <T> T processFacialImage(MBFImage image, String endpointUrl, Class<T> responseClass) {
+//        long timestamp = System.currentTimeMillis();
+//        File file = new File(IMAGE_TEMP_FOLDER + File.separator + "face_" + timestamp + ".jpg");
+//        try {
+//            ImageUtilities.write(image, file);
+//            T response = Unirest.post(endpointUrl)
+//                    .field("file", file)
+//                    .asObject(responseClass).getBody();
+//            asyncDeleteFile(file);
+//            return response;
+//        } catch (UnirestException | IOException e) {
+//            e.printStackTrace();
+//            asyncDeleteFile(file);
+//        }
+//        return null;
+//    }
+//
+//    private void asyncDeleteFile(final File file) {
+//        final Thread thread = new Thread("DeleteFileThread") {
+//            @Override
+//            public void run() {
+//                if (file.exists()) {
+//                    file.delete();
+//                }
+//            }
+//        };
+//        thread.start();
+//    }
+//
+//    public static void main(String[] args) throws InterruptedException, IOException {
+//        ReconnaissanceFacialePythonRest rf = new ReconnaissanceFacialePythonRest();
+//        Thread.sleep(5000);
+//        long start = System.currentTimeMillis();
+//        FacialRecognitionResponse response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
+//        long stop = System.currentTimeMillis();
+//        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
+//        start = System.currentTimeMillis();
+//        response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
+//        stop = System.currentTimeMillis();
+//        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
+//        start = System.currentTimeMillis();
+//        response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
+//        stop = System.currentTimeMillis();
+//        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
+//        start = System.currentTimeMillis();
+//        response = rf.recognizeFaces(ImageUtilities.readMBF(new File("/home/npeltier/Robot/Programme/reconnaissance-visage/known-faces/penny.jpg")));
+//        stop = System.currentTimeMillis();
+//        System.out.println(" Temps = " +(stop - start) + ", response = " + response);
+//    }
 }

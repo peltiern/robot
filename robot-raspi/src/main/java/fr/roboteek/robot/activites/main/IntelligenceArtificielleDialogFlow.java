@@ -1,25 +1,13 @@
 package fr.roboteek.robot.activites.main;
 
-import com.google.cloud.dialogflow.v2.AudioEncoding;
-import com.google.cloud.dialogflow.v2.DetectIntentRequest;
-import com.google.cloud.dialogflow.v2.DetectIntentResponse;
-import com.google.cloud.dialogflow.v2.InputAudioConfig;
-import com.google.cloud.dialogflow.v2.OutputAudioConfig;
-import com.google.cloud.dialogflow.v2.OutputAudioEncoding;
-import com.google.cloud.dialogflow.v2.QueryInput;
-import com.google.cloud.dialogflow.v2.QueryResult;
-import com.google.cloud.dialogflow.v2.SessionName;
-import com.google.cloud.dialogflow.v2.SessionsClient;
-import com.google.cloud.dialogflow.v2.SsmlVoiceGender;
-import com.google.cloud.dialogflow.v2.SynthesizeSpeechConfig;
-import com.google.cloud.dialogflow.v2.TextInput;
-import com.google.cloud.dialogflow.v2.VoiceSelectionParams;
+import com.google.cloud.dialogflow.v2.*;
 import com.google.protobuf.ByteString;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
 import net.sourceforge.javaflacencoder.FLAC_FileEncoder;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +45,7 @@ public class IntelligenceArtificielleDialogFlow {
     /**
      * Logger.
      */
-    private Logger logger = Logger.getLogger(IntelligenceArtificielleDialogFlow.class);
+    private Logger logger = LoggerFactory.getLogger(IntelligenceArtificielleDialogFlow.class);
 
     public IntelligenceArtificielleDialogFlow() {
 
