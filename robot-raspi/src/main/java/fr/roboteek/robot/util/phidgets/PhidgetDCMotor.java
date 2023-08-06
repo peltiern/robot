@@ -51,6 +51,7 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
 
     public void stop() {
         try {
+            motor.setAcceleration(100);
             motor.setTargetVelocity(0);
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block

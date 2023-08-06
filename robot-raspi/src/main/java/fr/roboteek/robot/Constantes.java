@@ -47,4 +47,14 @@ public class Constantes {
      */
     public static final String DOSSIER_TESTS = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "tests";
 
+    /**
+     * Chemin vers le dossier de JInput.
+     */
+    public static final String DOSSIER_JINPUT = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "jinput";
+
+    /**
+     * Chemin vers le dossier de SDL.
+     */
+    public static final String DOSSIER_SDL = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "sdl";
+
 }
