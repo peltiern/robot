@@ -265,6 +265,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         GamepadComponentValue<LogitechComponent> right2Value = event.getMapValues().get(LogitechComponent.BUTTON_RIGHT_2);
         GamepadComponentValue<LogitechComponent> triangleValue = event.getMapValues().get(LogitechComponent.BUTTON_X);
         if (!triangleValue.getCurrentPressed()) {
+
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
