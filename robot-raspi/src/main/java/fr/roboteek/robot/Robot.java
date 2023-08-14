@@ -13,6 +13,7 @@ import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import fr.roboteek.robot.systemenerveux.event.persistance.RobotEventPersistance;
+import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
 import fr.roboteek.robot.util.gamepad.jinput.RobotLogitechController;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 import org.slf4j.Logger;
@@ -169,6 +170,7 @@ public class Robot {
 
         // Manette
         robotGamepadController = new RobotLogitechController();
+//        robotGamepadController = new RobotJamepadController();
         robotGamepadController.start();
         System.out.println("#####      7      ########");
 

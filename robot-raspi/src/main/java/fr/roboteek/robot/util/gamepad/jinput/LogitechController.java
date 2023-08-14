@@ -62,7 +62,7 @@ public class LogitechController extends GamepadController<LogitechControllerEven
             pressed = value == 1.0f;
         }
 
-        System.out.println("COMPOSANT = " + component.getName() + "\tVALUE = " + value + "\tPRESSED = " + pressed);
+//        System.out.println("COMPOSANT = " + component.getName() + "\tVALUE = " + value + "\tPRESSED = " + pressed);
 
         LogitechComponent logitechComponent = LogitechComponent.fromComponentAndValue(component, value);
 
@@ -281,7 +281,7 @@ public class LogitechController extends GamepadController<LogitechControllerEven
                     buttonCrossCenterPressed = true;
                     break;
             }
-            return Optional.of(createPs3ControllerEvent(logitechComponent, oldValue, newValue, oldPressed, newPressed));
+            return Optional.of(createLogitechControllerEvent(logitechComponent, oldValue, newValue, oldPressed, newPressed));
         }
         return Optional.empty();
     }
@@ -291,7 +291,7 @@ public class LogitechController extends GamepadController<LogitechControllerEven
         return LogitechListener.class;
     }
 
-    private LogitechControllerEvent createPs3ControllerEvent(LogitechComponent logitechComponent, Float oldValue, Float newValue, Boolean oldPressed, Boolean newPressed) {
+    private LogitechControllerEvent createLogitechControllerEvent(LogitechComponent logitechComponent, Float oldValue, Float newValue, Boolean oldPressed, Boolean newPressed) {
         List<LogitechComponent> modifiedComponents = new ArrayList<>();
         modifiedComponents.add(logitechComponent);
 

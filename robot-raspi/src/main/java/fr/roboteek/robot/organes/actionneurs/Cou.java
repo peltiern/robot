@@ -34,6 +34,9 @@ public class Cou extends AbstractOrgane {
      */
     private PhidgetsConfig phidgetsConfig;
 
+    private MOUVEMENTS_GAUCHE_DROITE mouvementsGaucheDroiteEnCours = MOUVEMENTS_GAUCHE_DROITE.STOPPER;
+    private MOUVEMENTS_HAUT_BAS mouvementsHautBasEnCours = MOUVEMENTS_HAUT_BAS.STOPPER;
+
     /**
      * Constructeur.
      */
@@ -83,14 +86,24 @@ public class Cou extends AbstractOrgane {
      * Tourne la tête à gauche sans s'arrêter.
      */
     public void tournerAGauche(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurGaucheDroite.backward(vitesse, acceleration, waitForPosition);
+        if (mouvementsGaucheDroiteEnCours != MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE) {
+            mouvementsGaucheDroiteEnCours = MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE;
+            moteurGaucheDroite.backward(vitesse, acceleration, waitForPosition);
+        } else {
+            moteurGaucheDroite.setVitesse(vitesse);
+        }
     }
 
     /**
      * Tourne la tête à droite sans s'arrêter.
      */
     public void tournerADroite(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurGaucheDroite.forward(vitesse, acceleration, waitForPosition);
+        if (mouvementsGaucheDroiteEnCours != MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE) {
+            mouvementsGaucheDroiteEnCours = MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE;
+            moteurGaucheDroite.forward(vitesse, acceleration, waitForPosition);
+        } else {
+            moteurGaucheDroite.setVitesse(vitesse);
+        }
     }
 
     /**
@@ -138,20 +151,35 @@ public class Cou extends AbstractOrgane {
      */
     public void stopperTeteGaucheDroite() {
         moteurGaucheDroite.stop();
+        mouvementsGaucheDroiteEnCours = MOUVEMENTS_GAUCHE_DROITE.STOPPER;
     }
 
     /**
      * Tourne la tête en bas sans s'arrêter.
      */
     public void tournerEnBas(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurHautBas.forward(vitesse, acceleration, waitForPosition);
+        if (mouvementsHautBasEnCours != MOUVEMENTS_HAUT_BAS.TOURNER_BAS) {
+            System.out.println("BAS");
+            mouvementsHautBasEnCours = MOUVEMENTS_HAUT_BAS.TOURNER_BAS;
+            moteurHautBas.forward(vitesse, acceleration, waitForPosition);
+        } else {
+            System.out.println("BAS VITESSE");
+            moteurHautBas.setVitesse(vitesse);
+        }
     }
 
     /**
      * Tourne la tête en haut sans s'arrêter.
      */
     public void tournerEnHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurHautBas.backward(vitesse, acceleration, waitForPosition);
+        if (mouvementsHautBasEnCours != MOUVEMENTS_HAUT_BAS.TOURNER_HAUT) {
+            System.out.println("HAUT");
+            mouvementsHautBasEnCours = MOUVEMENTS_HAUT_BAS.TOURNER_HAUT;
+            moteurHautBas.backward(vitesse, acceleration, waitForPosition);
+        } else {
+            System.out.println("HAUT VITESSE");
+            moteurHautBas.setVitesse(vitesse);
+        }
     }
 
     /**
@@ -198,7 +226,9 @@ public class Cou extends AbstractOrgane {
      * Stoppe le mouvement de la tête sur le plan "Haut / Bas".
      */
     public void stopperTeteHautBas() {
+        System.out.println("STOP HAUT BAS");
         moteurHautBas.stop();
+        mouvementsHautBasEnCours = MOUVEMENTS_HAUT_BAS.STOPPER;
     }
 
     /**

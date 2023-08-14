@@ -31,6 +31,7 @@ public enum LogitechComponent implements GamepadComponent {
     JOYSTICK_LEFT_AXIS_Y(Component.Identifier.Axis.Y.getName()),
     JOYSTICK_RIGHT_AXIS_X(Component.Identifier.Axis.RX.getName()),
     JOYSTICK_RIGHT_AXIS_Y(Component.Identifier.Axis.RY.getName()),
+
     BUTTON_CROSS_TOP(null),
     BUTTON_CROSS_TOP_RIGHT(null),
     BUTTON_CROSS_RIGHT(null),
@@ -47,13 +48,13 @@ public enum LogitechComponent implements GamepadComponent {
         Arrays.stream(values()).forEach(logitechComponent -> mapPs3Components.put(logitechComponent.inputValue, logitechComponent));
     }
 
-    private static LogitechComponent[] crossDirections = { BUTTON_CROSS_TOP_RIGHT, BUTTON_CROSS_TOP, BUTTON_CROSS_TOP_LEFT, BUTTON_CROSS_LEFT, BUTTON_CROSS_BOTTOM_LEFT, BUTTON_CROSS_BOTTOM, BUTTON_CROSS_BOTTOM_RIGHT, BUTTON_CROSS_RIGHT };
+    private static final LogitechComponent[] crossDirections = { BUTTON_CROSS_TOP_LEFT, BUTTON_CROSS_TOP, BUTTON_CROSS_TOP_RIGHT, BUTTON_CROSS_RIGHT, BUTTON_CROSS_BOTTOM_RIGHT, BUTTON_CROSS_BOTTOM, BUTTON_CROSS_BOTTOM_LEFT, BUTTON_CROSS_LEFT };
 
 
     /**
      * JInput Value.
      */
-    private String inputValue;
+    private final String inputValue;
 
     LogitechComponent(String inputValue) {
         this.inputValue = inputValue;
@@ -73,6 +74,7 @@ public enum LogitechComponent implements GamepadComponent {
             throw new IllegalArgumentException("Valeur invalide");
         }
         else if (newValue != 0.0f) {
+            System.out.println(crossDirections[(int) newValue - 1]);
             return crossDirections[(int) newValue - 1];
         } else {
             return BUTTON_CROSS_CENTER;

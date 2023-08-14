@@ -45,7 +45,6 @@ public abstract class GamepadController<E extends GamepadEvent, L extends Gamepa
 
             /* For each object in the queue */
             while (queue.getNextEvent(event)) {
-
                 Optional<E> gamepadEvent = this.mapEvent(event);
 
                 gamepadEvent.ifPresent(e -> listeners.forEach(l -> l.onEvent(e)));
@@ -57,7 +56,7 @@ public abstract class GamepadController<E extends GamepadEvent, L extends Gamepa
              * thrash the system.
              */
             try {
-                Thread.sleep(20);
+                Thread.sleep(10);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

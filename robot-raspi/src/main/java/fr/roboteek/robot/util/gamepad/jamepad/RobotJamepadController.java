@@ -11,6 +11,7 @@ import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 
 import java.lang.reflect.Field;
+import java.time.LocalTime;
 import java.util.Arrays;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
@@ -194,6 +195,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         mouvementCouEvent.setAccelerationGaucheDroite(2000D);
         double absolute = Math.abs(leftXValue.getCurrentNumericValue());
         double value = (absolute < 0.15) ? 0 : leftXValue.getCurrentNumericValue();
+        System.out.println(LocalTime.now() +  " : JoystickRightX = " + value);
         if (value == 0) {
             mouvementCouEvent.setMouvementGaucheDroite(MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.STOPPER);
         } else {
@@ -210,6 +212,7 @@ public class RobotJamepadController implements RobotGamepadController, PS3Listen
         mouvementCouEvent.setAccelerationHautBas(2000D);
         double absolute = Math.abs(leftYValue.getCurrentNumericValue());
         double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
+        System.out.println(LocalTime.now() +  " : JoystickRightY = " + value);
         if (value == 0) {
             mouvementCouEvent.setMouvementHauBas(MouvementCouEvent.MOUVEMENTS_HAUT_BAS.STOPPER);
         } else {

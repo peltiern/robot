@@ -6,6 +6,7 @@ import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 
 import java.lang.reflect.Field;
+import java.time.LocalTime;
 import java.util.Arrays;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
@@ -32,7 +33,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     @Override
     public void onEvent(LogitechControllerEvent event) {
-        System.out.println("ESSAI = " + event.toString());
+//        System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(logitechComponent -> {
             switch (logitechComponent) {
                 case JOYSTICK_LEFT_AXIS_X:
@@ -165,34 +166,40 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     private void processJoystickRightX(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> leftXValue = event.getMapValues().get(LogitechComponent.JOYSTICK_RIGHT_AXIS_X);
-        MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setAccelerationGaucheDroite(2000D);
-        double absolute = Math.abs(leftXValue.getCurrentNumericValue());
-        double value = (absolute < 0.15) ? 0 : leftXValue.getCurrentNumericValue();
-        if (value == 0) {
-            mouvementCouEvent.setMouvementGaucheDroite(MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.STOPPER);
-        } else {
-            mouvementCouEvent.setMouvementGaucheDroite(value > 0 ? MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE);
-            mouvementCouEvent.setVitesseGaucheDroite(absolute * 60);
+        if (Math.abs(leftXValue.getCurrentNumericValue() - leftXValue.getOldNumericValue()) > 0.03) {
+            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            mouvementCouEvent.setAccelerationGaucheDroite(2000D);
+            double absolute = Math.abs(leftXValue.getCurrentNumericValue());
+            double value = (absolute < 0.25) ? 0 : leftXValue.getCurrentNumericValue();
+            System.out.println(LocalTime.now() + " : JoystickRightX = " + value);
+            if (value == 0) {
+                mouvementCouEvent.setMouvementGaucheDroite(MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.STOPPER);
+            } else {
+                mouvementCouEvent.setMouvementGaucheDroite(value > 0 ? MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE);
+                mouvementCouEvent.setVitesseGaucheDroite(60D);
+            }
+            mouvementCouEvent.setSynchrone(false);
+            RobotEventBus.getInstance().publish(mouvementCouEvent);
         }
-        mouvementCouEvent.setSynchrone(false);
-        RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
     }
 
     private void processJoystickRightY(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_RIGHT_AXIS_Y);
-        MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setAccelerationHautBas(2000D);
-        double absolute = Math.abs(leftYValue.getCurrentNumericValue());
-        double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
-        if (value == 0) {
-            mouvementCouEvent.setMouvementHauBas(MouvementCouEvent.MOUVEMENTS_HAUT_BAS.STOPPER);
-        } else {
-            mouvementCouEvent.setMouvementHauBas(value > 0 ? MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_HAUT : MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
-            mouvementCouEvent.setVitesseHautBas(absolute * 40);
+        if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
+            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            mouvementCouEvent.setAccelerationHautBas(2000D);
+            double absolute = Math.abs(leftYValue.getCurrentNumericValue());
+            double value = (absolute < 0.25) ? 0 : leftYValue.getCurrentNumericValue();
+            System.out.println(LocalTime.now() + " : JoystickRightY = " + value);
+            if (value == 0) {
+                mouvementCouEvent.setMouvementHauBas(MouvementCouEvent.MOUVEMENTS_HAUT_BAS.STOPPER);
+            } else {
+                mouvementCouEvent.setMouvementHauBas(value < 0 ? MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_HAUT : MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
+                mouvementCouEvent.setVitesseHautBas(40D);
+            }
+            mouvementCouEvent.setSynchrone(false);
+            RobotEventBus.getInstance().publish(mouvementCouEvent);
         }
-        mouvementCouEvent.setSynchrone(false);
-        RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
     }
 
     private void processButtonLeft1(LogitechControllerEvent event) {

@@ -17,51 +17,38 @@ public class JamepadManager extends AbstractGamepadManager<PS3Listener> {
 
     @Override
     public void start() {
-        System.out.println("#####      JAMEPADMANAGER 1      ########");
         controller = new ControllerManager(1);
-        System.out.println("#####      JAMEPADMANAGER 2      ########");
         try {
             controller.initSDLGamepad();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("#####      JAMEPADMANAGER 3      ########");
         Thread threadManager = new Thread(this::runManager);
         threadManager.start();
-        System.out.println("#####      JAMEPADMANAGER 4      ########");
     }
 
     private void runManager() {
         int i = 0;
 
         ControllerState previousState = controller.getState(0);
-        System.out.println("#####      JAMEPADMANAGER 5      ########");
 
         while (true) {
             i++;
             ControllerState currentState = controller.getState(0);
-            System.out.println("#####      JAMEPADMANAGER 6      ########");
 
             if (!currentState.isConnected) {
                 System.out.println("Deconnexion");
                 break;
             }
-            System.out.println("#####      JAMEPADMANAGER 7      ########");
 
             List<PS3Component> modifiedComponents = getModifiedComponents(previousState, currentState);
-            System.out.println("#####      JAMEPADMANAGER 8      ########");
             if (modifiedComponents != null && modifiedComponents.size() > 0) {
-                System.out.println("#####      JAMEPADMANAGER 9      ########");
                 Ps3ControllerEvent e = new Ps3ControllerEvent(modifiedComponents, mapControllerState(previousState, currentState));
-                System.out.println("#####      JAMEPADMANAGER 10      ########");
                 previousState = currentState;
-                System.out.println("#####      JAMEPADMANAGER 11      ########");
                 listeners.forEach(l -> l.onEvent(e));
-                System.out.println("#####      JAMEPADMANAGER 12      ########");
             }
 
             try {
-                System.out.println("#####      JAMEPADMANAGER 13      ########");
                 Thread.sleep(20);
             } catch (InterruptedException e) {
                 e.printStackTrace();
