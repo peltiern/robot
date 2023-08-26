@@ -5,7 +5,7 @@ import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.util.gamepad.jamepad.RobotJamepadController;
+import fr.roboteek.robot.util.gamepad.jinput.RobotLogitechController;
 import fr.roboteek.robot.util.phidgets.PhidgetDCMotor;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
@@ -144,7 +144,7 @@ public class ConduiteDifferentielle extends AbstractOrgane {
         ConduiteDifferentielle conduiteDifferentielle = new ConduiteDifferentielle();
         conduiteDifferentielle.initialiser();
         RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
-        RobotJamepadController robotGamepadController = new RobotJamepadController();
-        robotGamepadController.start();
+        RobotLogitechController robotLogitechController = new RobotLogitechController();
+        robotLogitechController.start();
     }
 }

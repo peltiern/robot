@@ -6,7 +6,6 @@ import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 
 import java.lang.reflect.Field;
-import java.time.LocalTime;
 import java.util.Arrays;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
@@ -35,6 +34,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     public void onEvent(LogitechControllerEvent event) {
 //        System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(logitechComponent -> {
+            System.out.println(event);
             switch (logitechComponent) {
                 case JOYSTICK_LEFT_AXIS_X:
                 case JOYSTICK_LEFT_AXIS_Y:
@@ -67,14 +67,14 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 case BUTTON_LEFT_1:
                     processButtonLeft1(event);
                     break;
-                case BUTTON_LEFT_2:
-                    processButtonLeft2(event);
+                case BUTTON_ANALOG_LEFT_2:
+                    processButtonAnalogLeft2(event);
                     break;
                 case BUTTON_RIGHT_1:
                     processButtonRight1(event);
                     break;
-                case BUTTON_RIGHT_2:
-                    processButtonRight2(event);
+                case BUTTON_ANALOG_RIGHT_2:
+                    processButtonAnalogRight2(event);
                     break;
                 case BUTTON_A:
                     processButtonA(event);
@@ -171,7 +171,6 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementCouEvent.setAccelerationGaucheDroite(2000D);
             double absolute = Math.abs(leftXValue.getCurrentNumericValue());
             double value = (absolute < 0.25) ? 0 : leftXValue.getCurrentNumericValue();
-            System.out.println(LocalTime.now() + " : JoystickRightX = " + value);
             if (value == 0) {
                 mouvementCouEvent.setMouvementGaucheDroite(MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.STOPPER);
             } else {
@@ -190,7 +189,6 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementCouEvent.setAccelerationHautBas(2000D);
             double absolute = Math.abs(leftYValue.getCurrentNumericValue());
             double value = (absolute < 0.25) ? 0 : leftYValue.getCurrentNumericValue();
-            System.out.println(LocalTime.now() + " : JoystickRightY = " + value);
             if (value == 0) {
                 mouvementCouEvent.setMouvementHauBas(MouvementCouEvent.MOUVEMENTS_HAUT_BAS.STOPPER);
             } else {
@@ -204,8 +202,8 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     private void processButtonLeft1(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> left1Value = event.getMapValues().get(LogitechComponent.BUTTON_LEFT_1);
-        GamepadComponentValue<LogitechComponent> triangleValue = event.getMapValues().get(LogitechComponent.BUTTON_X);
-        if (!triangleValue.getCurrentPressed()) {
+        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
+        if (!buttonYValue.getCurrentPressed()) {
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
@@ -215,14 +213,15 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         }
     }
 
-    private void processButtonLeft2(LogitechControllerEvent event) {
-        GamepadComponentValue<LogitechComponent> left2Value = event.getMapValues().get(LogitechComponent.BUTTON_LEFT_2);
-        GamepadComponentValue<LogitechComponent> triangleValue = event.getMapValues().get(LogitechComponent.BUTTON_X);
-        if (!triangleValue.getCurrentPressed()) {
+    private void processButtonAnalogLeft2(LogitechControllerEvent event) {
+        GamepadComponentValue<LogitechComponent> analogLeft2Value = event.getMapValues().get(LogitechComponent.BUTTON_ANALOG_LEFT_2);
+        boolean analogLeft2Pressed = analogLeft2Value.getCurrentNumericValue() >= -0.9F;
+        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
+        if (!buttonYValue.getCurrentPressed()) {
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setMouvementOeilGauche(left2Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+            mouvementYeuxEvent.setMouvementOeilGauche(analogLeft2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementYeuxEvent);
         }
@@ -230,8 +229,8 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     private void processButtonRight1(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> right1Value = event.getMapValues().get(LogitechComponent.BUTTON_RIGHT_1);
-        GamepadComponentValue<LogitechComponent> triangleValue = event.getMapValues().get(LogitechComponent.BUTTON_X);
-        if (!triangleValue.getCurrentPressed()) {
+        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
+        if (!buttonYValue.getCurrentPressed()) {
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
@@ -261,19 +260,20 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         }
     }
 
-    private void processButtonRight2(LogitechControllerEvent event) {
-        GamepadComponentValue<LogitechComponent> right2Value = event.getMapValues().get(LogitechComponent.BUTTON_RIGHT_2);
-        GamepadComponentValue<LogitechComponent> triangleValue = event.getMapValues().get(LogitechComponent.BUTTON_X);
-        if (!triangleValue.getCurrentPressed()) {
+    private void processButtonAnalogRight2(LogitechControllerEvent event) {
+        GamepadComponentValue<LogitechComponent> analogRight2Value = event.getMapValues().get(LogitechComponent.BUTTON_ANALOG_RIGHT_2);
+        boolean analogRight2Pressed = analogRight2Value.getCurrentNumericValue() >= -0.9F;
+        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
+        if (!buttonYValue.getCurrentPressed()) {
 
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
-            mouvementYeuxEvent.setMouvementOeilDroit(right2Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+            mouvementYeuxEvent.setMouvementOeilDroit(analogRight2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementYeuxEvent);
         } else {
-            if (right2Value.getCurrentPressed()) {
+            if (analogRight2Pressed) {
                 MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
                 mouvementCouEvent.setMouvementRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE);
                 mouvementCouEvent.setAccelerationRoulis(2000D);

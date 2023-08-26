@@ -54,6 +54,9 @@ public class Yeux extends AbstractOrgane {
      */
     private PhidgetsConfig phidgetsConfig;
 
+    private MOUVEMENTS_OEIL mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.STOPPER;
+    private MOUVEMENTS_OEIL mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
+
     /**
      * Constructeur.
      */
@@ -102,14 +105,20 @@ public class Yeux extends AbstractOrgane {
      * Tourne l'oeil gauche vers le bas sans s'arrêter.
      */
     public void tournerOeilGaucheVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
+        if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
+            mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
+            moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
+        }
     }
 
     /**
      * Tourne l'oeil gauche vers le haut sans s'arrêter.
      */
     public void tournerOeilGaucheVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
+        if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
+            mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
+            moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
+        }
     }
 
     /**
@@ -138,20 +147,27 @@ public class Yeux extends AbstractOrgane {
      */
     public void stopperOeilGauche() {
         moteurOeilGauche.stop();
+        mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.STOPPER;
     }
 
     /**
      * Tourne l'oeil droit vers le bas sans s'arrêter.
      */
     public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
+        if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
+            mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
+            moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
+        }
     }
 
     /**
      * Tourne l'oeil droit vers le haut sans s'arrêter.
      */
     public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
+        if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
+            mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
+            moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
+        }
     }
 
     /**
@@ -180,6 +196,7 @@ public class Yeux extends AbstractOrgane {
      */
     public void stopperOeilDroit() {
         moteurOeilDroit.stop();
+        mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
     }
 
     /**

@@ -151,16 +151,16 @@
             <version>2.11.0</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.WilliamAHartman</groupId>
-            <artifactId>Jamepad</artifactId>
-            <version>1.4.0</version>
-        </dependency>
-        <dependency>
-            <groupId>uk.co.electronstudio.sdl2gdx</groupId>
-            <artifactId>sdl2gdx</artifactId>
-            <version>1.0.4</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.github.WilliamAHartman</groupId>-->
+<!--            <artifactId>Jamepad</artifactId>-->
+<!--            <version>1.4.0</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>uk.co.electronstudio.sdl2gdx</groupId>-->
+<!--            <artifactId>sdl2gdx</artifactId>-->
+<!--            <version>1.0.4</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.usb4java</groupId>
