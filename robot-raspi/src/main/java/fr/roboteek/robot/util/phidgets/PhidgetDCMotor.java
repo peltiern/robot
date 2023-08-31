@@ -1,11 +1,6 @@
 package fr.roboteek.robot.util.phidgets;
 
-import com.phidget22.AttachEvent;
-import com.phidget22.AttachListener;
-import com.phidget22.DCMotor;
-import com.phidget22.DetachEvent;
-import com.phidget22.DetachListener;
-import com.phidget22.PhidgetException;
+import com.phidget22.*;
 
 public class PhidgetDCMotor implements AttachListener, DetachListener {
 
@@ -56,6 +51,7 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
 
     public void stop() {
         try {
+            motor.setAcceleration(100);
             motor.setTargetVelocity(0);
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block

@@ -6,7 +6,8 @@ import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class SoundPlayer extends AbstractOrgane {
     /**
      * Logger.
      */
-    private Logger logger = Logger.getLogger(SoundPlayer.class);
+    private Logger logger = LoggerFactory.getLogger(SoundPlayer.class);
 
     /**
      * Constructeur.

@@ -234,7 +234,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         }
     }
 
-    private void setVitesse(Double vitesse) {
+    public void setVitesse(Double vitesse) {
         try {
             if (vitesse != null) {
                 rcServo.setVelocityLimit(vitesse.doubleValue());
