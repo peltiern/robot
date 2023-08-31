@@ -64,6 +64,7 @@ public class LogitechController extends GamepadController<LogitechControllerEven
 
 //        System.out.println("COMPOSANT = " + component.getName() + "\tVALUE = " + value + "\tPRESSED = " + pressed);
 
+
         LogitechComponent logitechComponent = LogitechComponent.fromComponentAndValue(component, value);
 
         if (logitechComponent != null) {
