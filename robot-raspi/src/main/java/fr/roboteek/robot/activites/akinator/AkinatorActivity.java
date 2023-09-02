@@ -1,13 +1,6 @@
 package fr.roboteek.robot.activites.akinator;
 
 import com.google.common.eventbus.Subscribe;
-import com.markozajc.akiwrapper.Akiwrapper;
-import com.markozajc.akiwrapper.AkiwrapperBuilder;
-import com.markozajc.akiwrapper.core.entities.Guess;
-import com.markozajc.akiwrapper.core.entities.Question;
-import com.markozajc.akiwrapper.core.entities.Server;
-import com.markozajc.akiwrapper.core.entities.impl.immutable.ApiKey;
-import com.markozajc.akiwrapper.core.exceptions.ServerNotFoundException;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.actionneurs.animation.Animation;
@@ -15,6 +8,14 @@ import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import org.apache.commons.lang3.StringUtils;
+import org.eu.zajc.akiwrapper.Akiwrapper;
+import org.eu.zajc.akiwrapper.AkiwrapperBuilder;
+import org.eu.zajc.akiwrapper.core.entities.Guess;
+import org.eu.zajc.akiwrapper.core.entities.Question;
+import org.eu.zajc.akiwrapper.core.entities.Server;
+import org.eu.zajc.akiwrapper.core.exceptions.ServerNotFoundException;
+import org.eu.zajc.akiwrapper.core.utils.ApiKey;
+import org.eu.zajc.akiwrapper.core.utils.UnirestUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,9 +73,9 @@ public class AkinatorActivity extends AbstractActivity {
         List<Long> declined = new ArrayList<>();
 
         // Iterates while there are still questions left.
-        while (akinator.getCurrentQuestion() != null && !finish && !stopActivity) {
+        while (akinator.getQuestion() != null && !finish && !stopActivity) {
 
-            Question question = akinator.getCurrentQuestion();
+            Question question = akinator.getQuestion();
             // Breaks the loop if question is null; /should/ not occur, but safety is still
             // first.
             if (question == null)
@@ -119,33 +120,33 @@ public class AkinatorActivity extends AbstractActivity {
 
             if (StringUtils.isNotBlank(answer)) {
                 if (answer.equalsIgnoreCase("répète")) {
-                    if (akinator.getCurrentQuestion() != null) {
-                        say(akinator.getCurrentQuestion().getQuestion());
+                    if (akinator.getQuestion() != null) {
+                        say(akinator.getQuestion().getQuestion());
                         answered = false;
                         waitingResponse = null;
                     }
 
                 } else {
                     if (answer.equalsIgnoreCase("oui")) {
-                        akinator.answerCurrentQuestion(Akiwrapper.Answer.YES);
+                        akinator.answer(Akiwrapper.Answer.YES);
 
                     } else if (answer.equalsIgnoreCase("non")) {
-                        akinator.answerCurrentQuestion(Akiwrapper.Answer.NO);
+                        akinator.answer(Akiwrapper.Answer.NO);
 
                     } else if (answer.equalsIgnoreCase("je ne sais pas")) {
-                        akinator.answerCurrentQuestion(Akiwrapper.Answer.DONT_KNOW);
+                        akinator.answer(Akiwrapper.Answer.DONT_KNOW);
 
                     } else if (answer.equalsIgnoreCase("probablement")) {
-                        akinator.answerCurrentQuestion(Akiwrapper.Answer.PROBABLY);
+                        akinator.answer(Akiwrapper.Answer.PROBABLY);
 
                     } else if (answer.equalsIgnoreCase("probablement pas")) {
-                        akinator.answerCurrentQuestion(Akiwrapper.Answer.PROBABLY_NOT);
+                        akinator.answer(Akiwrapper.Answer.PROBABLY_NOT);
 
                     } else if (answer.equalsIgnoreCase("annuler")) {
                         akinator.undoAnswer();
 
                     } else if (answer.equalsIgnoreCase("resetkey")) {
-                        ApiKey.accquireApiKey();
+                        ApiKey.accquireApiKey(UnirestUtils.getInstance());
 
                     } else if (answer.equals("debug")) {
                         System.out.println("Debug information:\n\tCurrent API server: "
@@ -173,8 +174,8 @@ public class AkinatorActivity extends AbstractActivity {
     }
 
     private boolean reviewGuesses(List<Long> declined) {
-        for (Guess guess : akinator.getGuessesAboveProbability(PROBABILITY_THRESHOLD)) {
-            if (guess.getProbability() > 0.25d && !declined.contains(guess.getIdLong())) {
+            Guess guess = akinator.suggestGuess();
+            if (guess != null && guess.getProbability() > 0.25d && !declined.contains(guess.getIdLong())) {
                 // Checks if this guess complies with the conditions.
 
                 if (reviewGuess(guess)) {
@@ -187,7 +188,6 @@ public class AkinatorActivity extends AbstractActivity {
                 // Registers this guess as rejected.
             }
 
-        }
         return false;
     }
 
