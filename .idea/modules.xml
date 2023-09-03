@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/robot-python/robot-python.iml" filepath="$PROJECT_DIR$/robot-python/robot-python.iml" />
-      <module fileurl="file://$PROJECT_DIR$/robot-raspi/robot-raspi.iml" filepath="$PROJECT_DIR$/robot-raspi/robot-raspi.iml" />
       <module fileurl="file://$PROJECT_DIR$/robot-webapp/robot-webapp.iml" filepath="$PROJECT_DIR$/robot-webapp/robot-webapp.iml" />
     </modules>
   </component>

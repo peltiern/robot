@@ -11,12 +11,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="robot-raspi" />
-        <module name="robot-sandbox" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="ai-engine" target="1.5" />
       <module name="robot" target="1.8" />
+      <module name="robot-sandbox" target="1.8" />
       <module name="robot-server" target="11" />
     </bytecodeTargetLevel>
   </component>
