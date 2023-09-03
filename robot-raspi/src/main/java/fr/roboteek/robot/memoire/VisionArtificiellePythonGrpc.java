@@ -1,25 +1,23 @@
 package fr.roboteek.robot.memoire;
 
 import fr.roboteek.robot.Constantes;
-import kong.unirest.Unirest;
-import kong.unirest.UnirestException;
 
 import java.io.File;
 import java.io.IOException;
 
-public class ReconnaissanceFacialePythonRest {
+public class VisionArtificiellePythonGrpc {
 
     private String PYTHON_CMD = "/usr/bin/python3.8";
-    private String FACE_RECOGNITION_PYTHON_SERVER_FILE = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "python-server" + File.separator + "robot_ai_api.py";
-    private String KNOWN_FACES_FOLDER = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "known-faces";
-    private String IMAGE_TEMP_FOLDER = Constantes.DOSSIER_RECONNAISSANCE_FACIALE + File.separator + "tmp-img";
+    private String FACE_RECOGNITION_PYTHON_SERVER_FILE = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "serveur-python" + File.separator + "cv_serveur_grpc.py";
+    private String KNOWN_FACES_FOLDER = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "known-faces";
+    private String IMAGE_TEMP_FOLDER = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "tmp-img";
     private String FACE_RECOGNITION_ENDPOINT_URL = "http://localhost:5001/face-recognition";
     private String FACE_DETECTION_ENDPOINT_URL = "http://localhost:5001/face-detection";
     private String OBJECT_DETECTION_ENDPOINT_URL = "http://localhost:5001/object-detection";
 
-    public ReconnaissanceFacialePythonRest() {
+    public VisionArtificiellePythonGrpc() {
 
-        final Thread threadServer = new Thread("FacialRecognitionServer") {
+        final Thread threadServer = new Thread("VisionArtificielleServeur") {
             @Override
             public void run() {
                 // Lancement du serveur Python de reconnaissance faciale

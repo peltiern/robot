@@ -3,7 +3,7 @@ package fr.roboteek.robot.organes.capteurs;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.memoire.FacialRecognitionResponse;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
-import fr.roboteek.robot.memoire.ReconnaissanceFacialePythonRest;
+import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
@@ -43,7 +43,7 @@ public class CapteurVisionWebSocketRest extends AbstractOrganeWithThread {
      */
     private Mat image;
 
-    private ReconnaissanceFacialePythonRest reconnaissanceFacialePythonRest;
+    private VisionArtificiellePythonGrpc visionArtificiellePythonGrpc;
 
     private int indexFrame = 0;
 
