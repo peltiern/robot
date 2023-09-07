@@ -23,6 +23,7 @@ public class WebsocketBroadcaster {
     public void handleRobotEvent(RobotEvent robotEvent) {
         if (robotEvent instanceof VideoEvent) {
             simpMessagingTemplate.convertAndSend("/video", robotEvent);
+            System.out.println("Image envoyée");
         } else if (robotEvent instanceof AudioEvent) {
             simpMessagingTemplate.convertAndSend("/audio", robotEvent);
         } else {

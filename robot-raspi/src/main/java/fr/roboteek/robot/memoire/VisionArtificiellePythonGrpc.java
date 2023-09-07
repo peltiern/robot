@@ -1,6 +1,13 @@
 package fr.roboteek.robot.memoire;
 
+import com.google.gson.Gson;
+import com.google.protobuf.ByteString;
 import fr.roboteek.robot.Constantes;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import org.example.dto.image.ImageProcessingRequest;
+import org.example.dto.image.ImageProcessingResponse;
+import org.example.dto.image.ImageProcessingServiceGrpc;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,51 +22,72 @@ public class VisionArtificiellePythonGrpc {
     private String FACE_DETECTION_ENDPOINT_URL = "http://localhost:5001/face-detection";
     private String OBJECT_DETECTION_ENDPOINT_URL = "http://localhost:5001/object-detection";
 
+    private final ImageProcessingServiceGrpc.ImageProcessingServiceBlockingStub blockingStub;
+
+    private final Gson gson;
+
     public VisionArtificiellePythonGrpc() {
 
-        final Thread threadServer = new Thread("VisionArtificielleServeur") {
-            @Override
-            public void run() {
-                // Lancement du serveur Python de reconnaissance faciale
-                String[] params = {PYTHON_CMD, FACE_RECOGNITION_PYTHON_SERVER_FILE, KNOWN_FACES_FOLDER};
-                try {
-                    Process p = Runtime.getRuntime().exec(params);
-                    p.waitFor();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                while (true) {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        threadServer.start();
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+                .usePlaintext()
+                .build();
+        blockingStub = ImageProcessingServiceGrpc.newBlockingStub(channel);
+
+        gson = new Gson();
+
+//        final Thread threadServer = new Thread("VisionArtificielleServeur") {
+//            @Override
+//            public void run() {
+//                // Lancement du serveur Python de reconnaissance faciale
+//                String[] params = {PYTHON_CMD, FACE_RECOGNITION_PYTHON_SERVER_FILE, KNOWN_FACES_FOLDER};
+//                try {
+//                    Process p = Runtime.getRuntime().exec(params);
+//                    p.waitFor();
+//                } catch (IOException e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                while (true) {
+//                    try {
+//                        Thread.sleep(10);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        };
+//        threadServer.start();
     }
 
-//    public FacialRecognitionResponse recognizeFaces(MBFImage image) {
-//        return processFacialImage(image, FACE_RECOGNITION_ENDPOINT_URL, FacialRecognitionResponse.class);
+    public FacialRecognitionResponse recognizeFaces(byte[] image) {
+        return traiterImage(image, FacialRecognitionResponse.class);
+    }
+//
+//    public FacialRecognitionResponse detectFaces(byte[] image) {
+//        return traiterImage(image, FACE_DETECTION_ENDPOINT_URL, FacialRecognitionResponse.class);
 //    }
 //
-//    public FacialRecognitionResponse detectFaces(MBFImage image) {
-//        return processFacialImage(image, FACE_DETECTION_ENDPOINT_URL, FacialRecognitionResponse.class);
+////    public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
+////
+////    }
+//
+//    public ObjectDetectionResponse detectObjects(byte[] image) {
+//        return traiterImage(image, OBJECT_DETECTION_ENDPOINT_URL, ObjectDetectionResponse.class);
 //    }
 //
-//    public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
-//
-//    }
-//
-//    public ObjectDetectionResponse detectObjects(MBFImage image) {
-//        return processFacialImage(image, OBJECT_DETECTION_ENDPOINT_URL, ObjectDetectionResponse.class);
-//    }
-//
-//    private <T> T processFacialImage(MBFImage image, String endpointUrl, Class<T> responseClass) {
+    private <T> T traiterImage(byte[] image, Class<T> responseClass) {
+
+        ImageProcessingRequest request = ImageProcessingRequest.newBuilder()
+                .setImage(ByteString.copyFrom(image))
+                .setProcessingType("face-recognition")
+                .build();
+        ImageProcessingResponse response = blockingStub.processImage(request);
+
+        return gson.fromJson(response.getJsonResponse(), responseClass);
+
+
 //        long timestamp = System.currentTimeMillis();
 //        File file = new File(IMAGE_TEMP_FOLDER + File.separator + "face_" + timestamp + ".jpg");
 //        try {
@@ -74,19 +102,19 @@ public class VisionArtificiellePythonGrpc {
 //            asyncDeleteFile(file);
 //        }
 //        return null;
-//    }
-//
-//    private void asyncDeleteFile(final File file) {
-//        final Thread thread = new Thread("DeleteFileThread") {
-//            @Override
-//            public void run() {
-//                if (file.exists()) {
-//                    file.delete();
-//                }
-//            }
-//        };
-//        thread.start();
-//    }
+    }
+
+    private void asyncDeleteFile(final File file) {
+        final Thread thread = new Thread("DeleteFileThread") {
+            @Override
+            public void run() {
+                if (file.exists()) {
+                    file.delete();
+                }
+            }
+        };
+        thread.start();
+    }
 //
 //    public static void main(String[] args) throws InterruptedException, IOException {
 //        ReconnaissanceFacialePythonRest rf = new ReconnaissanceFacialePythonRest();
