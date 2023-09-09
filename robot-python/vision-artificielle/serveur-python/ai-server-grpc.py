@@ -72,14 +72,14 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
                 "name": name,
                 "landmarks": {
                     "chin": chin,
-                    "left_eyebrow": left_eyebrow,
-                    "right_eyebrow": right_eyebrow,
-                    "nose_bridge": nose_bridge,
-                    "nose_tip": nose_tip,
-                    "left_eye": left_eye,
-                    "right_eye": right_eye,
-                    "top_lip": top_lip,
-                    "bottom_lip": bottom_lip
+                    "leftEyebrow": left_eyebrow,
+                    "rightEyebrow": right_eyebrow,
+                    "noseBridge": nose_bridge,
+                    "noseTip": nose_tip,
+                    "leftEye": left_eye,
+                    "rightEye": right_eye,
+                    "topLip": top_lip,
+                    "bottomLip": bottom_lip
                 }
             })
 
