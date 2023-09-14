@@ -32,8 +32,8 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         # self.object_detector = YoloV3ObjectDetector()
 
     def processImage(self, request, context):
-        resultat = self.detect_faces_in_image(io.BytesIO(request.image), True)
-        return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType='face-recognition')
+        resultat = self.detect_faces_in_image(io.BytesIO(request.image), request.processingType == 'face-recognition')
+        return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType=request.processingType)
 
     def detect_faces_in_image(self, image_file, recognition):
         before = int(round(time.time() * 1000))

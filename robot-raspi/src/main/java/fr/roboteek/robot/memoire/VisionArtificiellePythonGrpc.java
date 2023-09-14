@@ -14,6 +14,8 @@ import java.io.IOException;
 
 public class VisionArtificiellePythonGrpc {
 
+    public static final String FACE_RECOGNITION = "face-recognition";
+    public static final String FACE_DETECTION = "face-detection";
     private String PYTHON_CMD = "/usr/bin/python3.8";
     private String FACE_RECOGNITION_PYTHON_SERVER_FILE = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "serveur-python" + File.separator + "cv_serveur_grpc.py";
     private String KNOWN_FACES_FOLDER = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "known-faces";
@@ -62,13 +64,13 @@ public class VisionArtificiellePythonGrpc {
     }
 
     public FacialRecognitionResponse recognizeFaces(byte[] image) {
-        return traiterImage(image, FacialRecognitionResponse.class);
+        return traiterImage(image, FacialRecognitionResponse.class, FACE_RECOGNITION);
     }
-//
-//    public FacialRecognitionResponse detectFaces(byte[] image) {
-//        return traiterImage(image, FACE_DETECTION_ENDPOINT_URL, FacialRecognitionResponse.class);
-//    }
-//
+
+    public FacialRecognitionResponse detectFaces(byte[] image) {
+        return traiterImage(image, FacialRecognitionResponse.class, FACE_DETECTION);
+    }
+
 ////    public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
 ////
 ////    }
@@ -77,11 +79,11 @@ public class VisionArtificiellePythonGrpc {
 //        return traiterImage(image, OBJECT_DETECTION_ENDPOINT_URL, ObjectDetectionResponse.class);
 //    }
 //
-    private <T> T traiterImage(byte[] image, Class<T> responseClass) {
+    private <T> T traiterImage(byte[] image, Class<T> responseClass, String type) {
 
         ImageProcessingRequest request = ImageProcessingRequest.newBuilder()
                 .setImage(ByteString.copyFrom(image))
-                .setProcessingType("face-recognition")
+                .setProcessingType(type)
                 .build();
         ImageProcessingResponse response = blockingStub.processImage(request);
 
