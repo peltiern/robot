@@ -207,7 +207,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 //        }
         RobotEventBus.getInstance().publishAsync(videoEvent);
         long fin = System.currentTimeMillis();
-        System.out.println("Temps traitement image : " + (fin - debut));
+//        System.out.println("Temps traitement image : " + (fin - debut));
     }
 
     private FacialRecognitionResponse processFaceNameForDetection(FacialRecognitionResponse response) {
