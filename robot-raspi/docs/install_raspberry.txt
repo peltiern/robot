@@ -81,10 +81,18 @@ sudo reboot
 
 # Copier le fichier JSON des credentials Google
 
-# Installation de Python
-sudo apt install cmake
-sudo apt install python3 idle3
-sudo apt install python3-pip
+# Installation de Python (https://medium.com/@ageitgey/build-a-face-recognition-system-for-60-with-the-new-nvidia-jetson-nano-2gb-and-python-46edbddd7264)
+# voir pour installer dlib avec support CUDA
+sudo apt-get update
+sudo apt-get install python3-pip cmake libopenblas-dev liblapack-dev libjpeg-dev
+sudo pip3 -v install Cython face_recognition
+pip3 install grpcio
+pip3 install scikit-build
+pip3 install -v opencv-python
+
+
+
+pip3 install cython
 pip3 install numpy==1.19.4
 pip3 install pandas
 pip3 install cmake

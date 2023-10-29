@@ -11,7 +11,7 @@ from face.face_recognizer import FaceRecognizer
 from proto import image_processing_pb2
 from proto import image_processing_pb2_grpc
 
-logging.basicConfig(filename='test_log.log',level=logging.ERROR, \
+logging.basicConfig(filename='vision-artificielle.log',level=logging.INFO, \
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
 
 # Récupération des arguments en entrée
@@ -96,8 +96,6 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         # Encoder la chaîne de caractères en UTF-8
         utf8_string = json_string.encode('utf-8')
 
-        after = int(round(time.time() * 1000))
-        print('(' + str(after - before) + " ms) : " + json_string)
         return utf8_string
 
 
@@ -131,8 +129,6 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         # Encoder la chaîne de caractères en UTF-8
         utf8_string = json_string.encode('utf-8')
 
-        after = int(round(time.time() * 1000))
-        print('(' + str(after - before) + " ms) : " + json_string)
         return utf8_string
 
 
@@ -141,7 +137,7 @@ def serve():
     image_processing_pb2_grpc.add_ImageProcessingServiceServicer_to_server(ImageProcessingService(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
-    print('Serveur démarré')
+    logging.info('Serveur - VISION ARTIFICIELLE - démarre')
     server.wait_for_termination()
 
 if __name__ == '__main__':
