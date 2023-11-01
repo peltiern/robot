@@ -1,7 +1,9 @@
 package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.configuration.RobotConfig;
+import fr.roboteek.robot.memoire.DetectedObject;
 import fr.roboteek.robot.memoire.FacialRecognitionResponse;
+import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -23,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
@@ -59,7 +62,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 
     private FacialRecognitionResponse facialRecognitionResponse;
 
-//    private ObjectDetectionResponse objectDetectionResponse;
+    private ObjectDetectionResponse objectDetectionResponse;
 
 
     /**
@@ -175,17 +178,17 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
         byte[] ba = mob.toArray();
 
         // Recherche de visages
-        if (indexFrame % 25 == 0 || facialRecognitionResponse == null) {
-            facialRecognitionResponse = visionArtificiellePythonGrpc.recognizeFaces(ba);
-        } else {
-            facialRecognitionResponse = processFaceNameForDetection(visionArtificiellePythonGrpc.detectFaces(ba));
-        }
-        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
-            facialRecognitionResponse = null;
-        }
+        //if (indexFrame % 1 == 0 || facialRecognitionResponse == null) {
+            //facialRecognitionResponse = visionArtificiellePythonGrpc.recognizeFaces(ba);
+//        } else {
+//            facialRecognitionResponse = processFaceNameForDetection(visionArtificiellePythonGrpc.detectFaces(ba));
+//        }
+//        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
+//            facialRecognitionResponse = null;
+//        }
 
 ////        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
-//            objectDetectionResponse = reconnaissanceFacialePython.detectObjects(frame);
+            objectDetectionResponse = visionArtificiellePythonGrpc.detectObjects(ba);
 ////        }
 //        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
 //            objectDetectionResponse = null;
@@ -207,6 +210,12 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 //        }
         RobotEventBus.getInstance().publishAsync(videoEvent);
         long fin = System.currentTimeMillis();
+        if (facialRecognitionResponse != null && CollectionUtils.isNotEmpty(facialRecognitionResponse.getFaces())) {
+            System.out.println("(" + (fin - debut) + ") : " + facialRecognitionResponse.getFaces().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+        }
+        if (objectDetectionResponse != null && CollectionUtils.isNotEmpty(objectDetectionResponse.getObjects())) {
+            System.out.println("(" + (fin - debut) + ") : " + objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+        }
 //        System.out.println("Temps traitement image : " + (fin - debut));
     }
 

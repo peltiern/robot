@@ -5,7 +5,10 @@ import cv2
 import face_recognition
 import numpy as np
 import pandas as pd
+
 import utils.utils as utils
+
+import multiprocessing
 
 
 class FaceRecognizer:
@@ -57,11 +60,12 @@ class FaceRecognizer:
 
         # Load the uploaded image file
         img = face_recognition.load_image_file(image_file)
-        small_img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+        small_img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
 
         # Find all the faces and face encodings in the current frame of video
-        face_boxes = face_recognition.face_locations(small_img)
+        face_boxes = face_recognition.face_locations(small_img, model="cnn")
         face_landmarks_list = face_recognition.face_landmarks(small_img, face_boxes)
+        #face_landmarks_list = []
 
         face_found = False
 
@@ -69,20 +73,14 @@ class FaceRecognizer:
             face_encodings = face_recognition.face_encodings(small_img, face_boxes)
 
             for face_encoding in face_encodings:
-                # See if the face is a match for the known face(s)
-                matches = face_recognition.compare_faces(self.known_faces_encodings, face_encoding)
-                name = ""
 
-                # # If a match was found in known_face_encodings, just use the first one.
-                # if True in matches:
-                #     first_match_index = matches.index(True)
-                #     name = known_face_names[first_match_index]
+                name = ""
 
                 # Or instead, use the known face with the smallest distance to the new face
                 face_distances = face_recognition.face_distance(self.known_faces_encodings, face_encoding)
                 best_match_index = np.argmin(face_distances)
 
-                if matches[best_match_index]:
+                if face_distances[best_match_index] < 0.6:
                     name = self.known_faces_names[best_match_index]
 
                 face_names.append(name)
@@ -92,7 +90,55 @@ class FaceRecognizer:
             for face_location in face_boxes:
                 face_names.append("")
 
+
         return face_boxes, face_names, face_landmarks_list
+
+    def __detect_faces_2(self, image_file, recognition=False):
+        # Initialize some variables
+        face_names = []
+
+        # Load the uploaded image file
+        img = face_recognition.load_image_file(image_file)
+        small_img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
+
+        # Find all the faces and face encodings in the current frame of video
+        face_boxes = face_recognition.face_locations(small_img)
+        face_landmarks_list = face_recognition.face_landmarks(small_img, face_boxes)
+
+        face_found = False
+
+        if recognition:
+            # num_processes = multiprocessing.cpu_count() - 1
+            num_processes = min(max(1, len(face_boxes)), multiprocessing.cpu_count() - 1)
+            face_boxes_split = np.array_split(face_boxes, num_processes)
+            results = []
+            with multiprocessing.Pool(processes=num_processes) as pool:
+                for face_boxes_part in face_boxes_split:
+                    result = pool.apply_async(face_recognition.face_encodings, args=(small_img, face_boxes_part))
+                    results.append(result)
+
+                for result in results:
+                    face_encodings = result.get()
+
+                    for i, face_encoding in enumerate(face_encodings):
+                        name = ""
+
+                        # Or instead, use the known face with the smallest distance to the new face
+                        face_distances = face_recognition.face_distance(self.known_faces_encodings, face_encoding)
+                        best_match_index = np.argmin(face_distances)
+
+                        if face_distances[best_match_index] < 0.6:
+                            name = self.known_faces_names[best_match_index]
+
+                        face_names.append(name)
+
+        else:
+            # Juste la détection
+            for face_location in face_boxes:
+                face_names.append("")
+
+        return face_boxes, face_names, face_landmarks_list
+
 
     def detect_faces(self, image_file):
         return self.__detect_faces(image_file, False)
