@@ -75,6 +75,12 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
         super("VisionActivty");
     }
 
+    public static void main(String[] args) {
+        CapteurVisionWebSocketGrpc capteurVision = new CapteurVisionWebSocketGrpc();
+        capteurVision.initialiser();
+        capteurVision.start();
+    }
+
     @Override
     public void initialiser() {
         robotConfig = robotConfig();
@@ -119,8 +125,8 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 
     private void rechercherWebcam() {
         // Recherche des liens symboliques de la webcam demandée
-//        String webcamRecherchee = robotConfig.webcamName();
-        String webcamRecherchee = "C525";
+        String webcamRecherchee = robotConfig.webcamName();
+//        String webcamRecherchee = "C525";
         List<String> liensSymboliquesWebcam = null;
 
         System.out.println("Recherche de la webcam : " + webcamRecherchee);
@@ -179,7 +185,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 
         // Recherche de visages
         //if (indexFrame % 1 == 0 || facialRecognitionResponse == null) {
-            //facialRecognitionResponse = visionArtificiellePythonGrpc.recognizeFaces(ba);
+        //facialRecognitionResponse = visionArtificiellePythonGrpc.recognizeFaces(ba);
 //        } else {
 //            facialRecognitionResponse = processFaceNameForDetection(visionArtificiellePythonGrpc.detectFaces(ba));
 //        }
@@ -188,7 +194,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 //        }
 
 ////        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
-            objectDetectionResponse = visionArtificiellePythonGrpc.detectObjects(ba);
+        objectDetectionResponse = visionArtificiellePythonGrpc.detectObjects(ba);
 ////        }
 //        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
 //            objectDetectionResponse = null;
@@ -204,10 +210,10 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
             videoEvent.setFaceFound(facialRecognitionResponse.isFaceFound());
             videoEvent.setFaces(facialRecognitionResponse.getFaces());
         }
-        //        if (objectDetectionResponse != null) {
-//            imageWithDetectedObjects.setObjectFound(objectDetectionResponse.isObjectFound());
-//            imageWithDetectedObjects.setObjects(objectDetectionResponse.getObjects());
-//        }
+        if (objectDetectionResponse != null) {
+            videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
+            videoEvent.setObjects(objectDetectionResponse.getObjects());
+        }
         RobotEventBus.getInstance().publishAsync(videoEvent);
         long fin = System.currentTimeMillis();
         if (facialRecognitionResponse != null && CollectionUtils.isNotEmpty(facialRecognitionResponse.getFaces())) {
@@ -238,12 +244,6 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
         });
 
         return response;
-    }
-
-    public static void main(String[] args) {
-        CapteurVisionWebSocketGrpc capteurVision = new CapteurVisionWebSocketGrpc();
-        capteurVision.initialiser();
-        capteurVision.start();
     }
 
 }

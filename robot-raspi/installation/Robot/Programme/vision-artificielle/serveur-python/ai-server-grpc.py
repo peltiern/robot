@@ -1,19 +1,18 @@
-from concurrent import futures
-import time
 import argparse
-import logging
-import json
 import io
-
-import image_processing_pb2_grpc
+import json
+import logging
+import time
+from concurrent import futures
 
 import grpc
 
-import image_processing_pb2
 from face.face_recognizer import FaceRecognizer
-from object.yolov3_object_detector import YoloV3ObjectDetector
+from object.jetson_inference.jetson_object_detector import JetsonObjectDetector
+from proto import image_processing_pb2
+from proto import image_processing_pb2_grpc
 
-logging.basicConfig(filename='test_log.log',level=logging.ERROR, \
+logging.basicConfig(filename='vision-artificielle.log',level=logging.INFO, \
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
 
 # Récupération des arguments en entrée
@@ -31,11 +30,15 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         # Création de l'objet de reconnaissance faciale
         self.face_recognizer = FaceRecognizer(known_faces_dir)
         # Création de l'objet de détection d'objets
-        # self.object_detector = YoloV3ObjectDetector()
+        self.object_detector = JetsonObjectDetector()
 
     def processImage(self, request, context):
-        resultat = self.detect_faces_in_image(io.BytesIO(request.image), True)
-        return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType='face-recognition')
+        if (request.processingType == 'object-detection'):
+            resultat = self.detect_objects_in_image(io.BytesIO(request.image))
+            return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType=request.processingType)
+        else:
+            resultat = self.detect_faces_in_image(io.BytesIO(request.image), request.processingType == 'face-recognition')
+            return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType=request.processingType)
 
     def detect_faces_in_image(self, image_file, recognition):
         before = int(round(time.time() * 1000))
@@ -74,14 +77,14 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
                 "name": name,
                 "landmarks": {
                     "chin": chin,
-                    "left_eyebrow": left_eyebrow,
-                    "right_eyebrow": right_eyebrow,
-                    "nose_bridge": nose_bridge,
-                    "nose_tip": nose_tip,
-                    "left_eye": left_eye,
-                    "right_eye": right_eye,
-                    "top_lip": top_lip,
-                    "bottom_lip": bottom_lip
+                    "leftEyebrow": left_eyebrow,
+                    "rightEyebrow": right_eyebrow,
+                    "noseBridge": nose_bridge,
+                    "noseTip": nose_tip,
+                    "leftEye": left_eye,
+                    "rightEye": right_eye,
+                    "topLip": top_lip,
+                    "bottomLip": bottom_lip
                 }
             })
 
@@ -98,8 +101,6 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         # Encoder la chaîne de caractères en UTF-8
         utf8_string = json_string.encode('utf-8')
 
-        after = int(round(time.time() * 1000))
-        print('(' + str(after - before) + " ms) : " + json_string)
         return utf8_string
 
 
@@ -107,17 +108,17 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         before = int(round(time.time() * 1000))
 
         # Detection
-        object_locations, object_names, object_scores = self.object_detector.detect_objects(image_file)
+        detections = self.object_detector.detect_objects(image_file)
 
         objects = []
-        for (x, y, width, height), name, score in zip(object_locations, object_names, object_scores):
+        for detection in detections:
             objects.append({
-                "x": x,
-                "y": y,
-                "width": width,
-                "height": height,
-                "name": name,
-                "score": score
+                "x": int(detection.Left),
+                "y": int(detection.Top),
+                "width": int(detection.Width),
+                "height": int(detection.Height),
+                "name": self.object_detector.getClassName(detection.ClassID),
+                "score": detection.Confidence
             })
 
         # Return the result as json
@@ -133,8 +134,6 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         # Encoder la chaîne de caractères en UTF-8
         utf8_string = json_string.encode('utf-8')
 
-        after = int(round(time.time() * 1000))
-        print('(' + str(after - before) + " ms) : " + json_string)
         return utf8_string
 
 
@@ -143,7 +142,7 @@ def serve():
     image_processing_pb2_grpc.add_ImageProcessingServiceServicer_to_server(ImageProcessingService(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
-    print('Serveur démarré')
+    logging.info('Serveur - VISION ARTIFICIELLE - demarre')
     server.wait_for_termination()
 
 if __name__ == '__main__':

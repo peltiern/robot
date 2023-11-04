@@ -32,7 +32,7 @@ public class VisionArtificiellePythonGrpc {
 
     public VisionArtificiellePythonGrpc() {
 
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("192.168.0.102", 50051)
+        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
                 .usePlaintext()
                 .build();
         blockingStub = ImageProcessingServiceGrpc.newBlockingStub(channel);
