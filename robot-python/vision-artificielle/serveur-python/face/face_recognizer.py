@@ -60,7 +60,7 @@ class FaceRecognizer:
 
         # Load the uploaded image file
         img = face_recognition.load_image_file(image_file)
-        small_img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
+        small_img = cv2.resize(img, (0, 0), fx=0.5, fy=0.5)
 
         # Find all the faces and face encodings in the current frame of video
         face_boxes = face_recognition.face_locations(small_img, model="cnn")
