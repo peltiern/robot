@@ -73,9 +73,12 @@ scp ~/Robot/Programme/google-credentials/Robot-xxxxxxxxx.json    jetson@192.168.
 # Copier le jar de l'application JAVA du robot
 scp target/robot-raspi.jar jetson@192.168.xxx.xxx:~/Robot/Programme/
 
+# Récupérer le contenu de jetson-inference pour pouvoir lancer le serveur de vision artificielle
+git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
+
 # Lancement du serveur de vision artificielle
 cd ~/jetson-inference
-sudo docker/run.sh -c peltiern/jetson-nano-computer-vision:0.1.0 -v /home/jetson/Robot/Programme/vision-artificielle/serveur-python:/face-recognition -v /home/jetson/Robot/Programme/vision-artificielle/known-faces:/face-recognition/known-faces
+sudo docker/run.sh -c peltiern/jetson-nano-computer-vision:0.1.0 -v /home/jetson/Robot/Programme/vision-artificielle:/vision-artificielle
 
 # Lancement du robot
 cd ~/Robot/Programme
