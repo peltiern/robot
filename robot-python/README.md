@@ -50,5 +50,5 @@ sudo docker pull peltiern/jetson-nano-computer-vision:0.1.0
 
 ### Lancer l'image
 ```
-sudo docker/run.sh -c peltiern/jetson-nano-computer-vision:0.1.0 -v /home/jetson/Robot/vision-artificielle/ ... :/face-recognition
+sudo docker/run.sh -c peltiern/jetson-nano-computer-vision:0.1.0 -v /home/jetson/Robot/Programme/vision-artificielle :/vision-artificielle
 ```

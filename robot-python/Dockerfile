@@ -34,12 +34,10 @@ ENV SHELL /bin/bash
 
 WORKDIR /jetson-inference
 
-# Installation de DLIB
-
 # Installation de face_recognition
 RUN pip3 install 'Pillow<9' && \
     pip3 install face-recognition==1.3.0 && \
     pip3 install grpcio-tools
 
 # Démarrage du serveur de vision artificielle
-CMD python3 /face-recognition/ai-server-grpc.py /face-recognition/known-faces/
+CMD python3 /vision-artificielle/serveur-python/ai-server-grpc.py /vision-artificielle/known-faces/
