@@ -12,7 +12,6 @@ class JetsonObjectDetector:
 
     def detect_objects(self, image_data):
         # Enregistrez le tableau de bytes dans un fichier temporaire
-        # Specify a different directory for the temporary file
         temp_file_path = "/jetson-inference/temp_image.jpg"
 
         # Save the bytes to the temporary file
@@ -26,7 +25,7 @@ class JetsonObjectDetector:
         return self.net.Detect(img_cuda, overlay="box,labels")
 
     def getClassName(self, idxClass):
-        return self.net.GetClassLabel(idxClass) 
+        return self.classesNames[idxClass] 
          
 
     # Load detector
@@ -34,8 +33,8 @@ class JetsonObjectDetector:
         # load the object detection network
         self.net = detectNet("ssd-mobilenet-v2", 0.5)
 
-        #base_path = Path(__file__).parent
-        #name_path = base_path / "cfg/coco_fr.names"
-        #self.classes = []
-        #with open(name_path) as f:
-        #    self.classes = [line.strip() for line in f.readlines()]
+        base_path = Path(__file__).parent
+        name_path = base_path / "cfg/ssd_coco_labels_fr.txt"
+        self.classesNames = []
+        with open(name_path, 'r', encoding='utf-8') as f:
+            self.classesNames = [line.strip() for line in f.readlines()]

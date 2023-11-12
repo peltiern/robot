@@ -105,7 +105,6 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
 
 
     def detect_objects_in_image(self, image_file):
-        before = int(round(time.time() * 1000))
 
         # Detection
         detections = self.object_detector.detect_objects(image_file)
