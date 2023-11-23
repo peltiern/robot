@@ -34,7 +34,7 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
 
     def processImage(self, request, context):
         if (request.processingType == 'object-detection'):
-            resultat = self.detect_objects_in_image(io.BytesIO(request.image))
+            resultat = self.detect_objects_in_image(request.image)
             return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType=request.processingType)
         else:
             resultat = self.detect_faces_in_image(io.BytesIO(request.image), request.processingType == 'face-recognition')
@@ -104,11 +104,11 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         return utf8_string
 
 
-    def detect_objects_in_image(self, image_file):
-        before = int(round(time.time() * 1000))
+    def detect_objects_in_image(self, image_data):
 
         # Detection
-        detections = self.object_detector.detect_objects(image_file)
+        detections = self.object_detector.detect_objects(image_data)
+
 
         objects = []
         for detection in detections:

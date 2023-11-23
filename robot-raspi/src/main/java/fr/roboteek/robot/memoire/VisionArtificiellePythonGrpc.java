@@ -38,36 +38,6 @@ public class VisionArtificiellePythonGrpc {
         blockingStub = ImageProcessingServiceGrpc.newBlockingStub(channel);
 
         gson = new Gson();
-
-//        // Lancement du serveur Python de reconnaissance faciale
-//        System.out.println("serveur = " + VISION_ARTIFICIELLE_PYTHON_SERVER_FILE + " " + KNOWN_FACES_FOLDER);
-//        ProcessBuilder processBuilder = new ProcessBuilder(PYTHON_CMD, VISION_ARTIFICIELLE_PYTHON_SERVER_FILE, KNOWN_FACES_FOLDER);
-//        final Process process;
-//        final BufferedReader reader;
-//        try {
-//            process = processBuilder.start();
-//            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        final Thread threadServer = new Thread("VisionArtificielleServeur") {
-//            @Override
-//            public void run() {
-//
-//                try {
-//
-//                    // Obligé de lire la sortie standard du processus pour ne pas que le processus JAVA se bloque ???
-//                    while (reader.readLine() != null);
-//
-//                } catch (IOException e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
-//                }
-//
-//            }
-//        };
-//        threadServer.start();
     }
 
     public FacialRecognitionResponse recognizeFaces(byte[] image) {
