@@ -1,0 +1,17 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package org.example.dto.image;
+
+message ImageProcessingRequest {
+  bytes image = 1;
+  string processingType = 2;
+}
+
+message ImageProcessingResponse {
+  string jsonResponse = 1;
+  string processingType = 2;
+}
+
+service ImageProcessingService {
+  rpc processImage(ImageProcessingRequest) returns (ImageProcessingResponse);
+}

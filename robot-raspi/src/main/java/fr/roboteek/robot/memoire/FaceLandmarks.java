@@ -7,31 +7,22 @@ import java.util.List;
 
 public class FaceLandmarks {
 
-    @SerializedName("chin")
     private List<Vector2D> chin;
 
-    @SerializedName("left_eyebrow")
     private List<Vector2D> leftEyebrow;
 
-    @SerializedName("right_eyebrow")
     private List<Vector2D> rightEyebrow;
 
-    @SerializedName("nose_bridge")
     private List<Vector2D> noseBridge;
 
-    @SerializedName("nose_tip")
     private List<Vector2D> noseTip;
 
-    @SerializedName("left_eye")
     private List<Vector2D> leftEye;
 
-    @SerializedName("right_eye")
     private List<Vector2D> rightEye;
 
-    @SerializedName("top_lip")
     private List<Vector2D> topLip;
 
-    @SerializedName("bottom_lip")
     private List<Vector2D> bottomLip;
 
     public List<Vector2D> getChin() {

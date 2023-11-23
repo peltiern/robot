@@ -1,0 +1,91 @@
+unlabeled
+personne
+vélo
+voiture
+moto
+avion
+bus
+train
+camion
+bateau
+feux de signalisation
+bouche incendie
+panneau de signalisation
+panneau stop
+parcmètre
+banc
+oiseau
+chat
+chien
+cheval
+mouton
+vache
+éléphant
+ours
+zèbre
+girafe
+chapeau
+sac à dos
+parapluie
+chaussure
+lunettes
+sac à main
+cravate
+valise
+frisbee
+skis
+snowboard
+sport de ballon
+cerf-volant
+batte de baseball
+gant de baseball
+skateboard
+planche de surf
+raquette
+bouteille
+assiette
+verre de vin
+tasse
+fourchette
+couteau
+cuillère
+bol
+banane
+pomme
+sandwich
+orange
+brocoli
+carotte
+hot dog
+pizza
+donut
+gâteau
+chaise
+canapé
+plante
+lit
+miroir
+table
+fenêtre
+bureau
+toilettes
+porte
+télé
+ordinateur portable
+souris
+télécommande
+clavier
+smartphone
+micro-ondes
+four
+grille-pain
+évier
+réfrigérateur
+mixeur
+livre
+horloge
+vase
+ciseaux
+peluche
+sèche-cheveux
+brosse à dents

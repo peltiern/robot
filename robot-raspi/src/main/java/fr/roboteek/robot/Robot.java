@@ -7,6 +7,7 @@ import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.*;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
+import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketGrpc;
 import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketRest;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
@@ -136,7 +137,7 @@ public class Robot {
         System.out.println("#####      1      ########");
 
         // Capteurs
-        capteurVision = new CapteurVisionWebSocketRest();
+        capteurVision = new CapteurVisionWebSocketGrpc();
         capteurVocal = new CapteurVocalAvecReconnaissance();
 
         // Initialisation des capteurs
