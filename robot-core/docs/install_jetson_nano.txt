@@ -1,0 +1,91 @@
+# Copier le ZIP contenant les dossiers et fichiers nécessaire au robot
+scp installation/Robot.zip   jetson@192.168.xxx.xxx.:~/
+
+# Connexion en ssh
+ssh jetson@192.168.xxx.xxx
+
+# Dézipper le dossier
+unzip Robot.zip
+rm Robot.zip
+
+# Mise à jour de la liste des paquets
+sudo apt-get update
+
+# Installation du JDK
+sudo apt-get --assume-yes install default-jdk
+
+# Installation du JDK avec SDK Man (https://sdkman.io/install)
+# sudo apt-get install curl
+# curl -s "https://get.sdkman.io" | bash
+# source "$HOME/.sdkman/bin/sdkman-init.sh"
+# sdk version
+# sdk install java 11.XX
+
+# Phidgets
+cd ~/Robot/third-party/phidgets/
+sudo apt-get install curl
+curl -fsSL https://www.phidgets.com/downloads/setup_linux | sudo -E bash -
+sudo apt-get install -y libphidget22-dev
+sudo apt-get install -y libphidget22java
+
+#REGLES UDEV
+sudo cp ~/Robot/third-party/phidgets/99-libphidget22.rules /etc/udev/rules.d
+
+#TESTS
+cd ~/Robot/third-party/phidgets/
+mkdir tests
+cd tests/
+wget https://www.phidgets.com/downloads/phidget22/examples/c/Manager/Phidget22_HelloWorld_C_Ex.zip
+unzip Phidget22_HelloWorld_C_Ex.zip
+cd HelloWorld_Example/
+gcc HelloWorld.c -o HelloWorld -lphidget22
+./HelloWorld
+
+#TESTS JAVA
+cd ~/Robot/third-party/phidgets/
+mkdir tests_java
+cd tests_java/
+wget https://www.phidgets.com/downloads/phidget22/examples/java/RCServo/Phidget22_RCServo_Java_Ex.zip
+unzip Phidget22_RCServo_Java_Ex.zip
+wget https://www.phidgets.com/downloads/phidget22/libraries/any/Phidget22Java.zip
+unzip Phidget22Java.zip
+javac -classpath .:phidget22.jar RCServoExample.java
+java -classpath .:phidget22.jar RCServoExample
+
+# Installation Webcam
+sudo apt-get install libjpeg8
+
+# Outil permettant de trouver la webcam
+sudo apt-get --assume-yes install v4l-utils
+
+# Respeaker (droits sur USB de la carte)
+sudo cp ~/Robot/third-party/respeaker/60-respeaker.rules /etc/udev/rules.d
+
+# Sox pour synthèse vocale
+sudo apt-get --assume-yes install sox
+
+# Sortir du SSH
+exit
+
+# Copier le fichier JSON des credentials Google
+scp ~/Robot/Programme/google-credentials/Robot-xxxxxxxxx.json    jetson@192.168.xxx.xxx:~/Robot/Programme/google-credentials
+
+# Copier le jar de l'application JAVA du robot
+scp target/robot-core.jar jetson@192.168.xxx.xxx:~/Robot/Programme/
+
+# Récupérer le contenu de jetson-inference pour pouvoir lancer le serveur de vision artificielle
+git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
+
+# Lancement du serveur de vision artificielle
+cd ~/jetson-inference
+sudo docker/run.sh -c peltiern/jetson-nano-computer-vision:0.1.0 -v /home/jetson/Robot/Programme/vision-artificielle:/vision-artificielle
+
+# Lancement du robot
+cd ~/Robot/Programme
+sh launch_robot.sh
+
+
+
+
+
+
