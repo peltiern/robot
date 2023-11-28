@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <name>robot-raspi</name>
+    <name>robot-core</name>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -14,7 +14,7 @@
     </parent>
 
     <groupId>fr.roboteek</groupId>
-    <artifactId>robot-raspi</artifactId>
+    <artifactId>robot-core</artifactId>
     <version>2.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 

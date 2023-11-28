@@ -71,7 +71,7 @@ exit
 scp ~/Robot/Programme/google-credentials/Robot-xxxxxxxxx.json    jetson@192.168.xxx.xxx:~/Robot/Programme/google-credentials
 
 # Copier le jar de l'application JAVA du robot
-scp target/robot-raspi.jar jetson@192.168.xxx.xxx:~/Robot/Programme/
+scp target/robot-core.jar jetson@192.168.xxx.xxx:~/Robot/Programme/
 
 # Récupérer le contenu de jetson-inference pour pouvoir lancer le serveur de vision artificielle
 git clone --recursive --depth=1 https://github.com/dusty-nv/jetson-inference
