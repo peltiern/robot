@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/robot-documentation/robot-documentation.iml" filepath="$PROJECT_DIR$/robot-documentation/robot-documentation.iml" />
       <module fileurl="file://$PROJECT_DIR$/robot-python/robot-python.iml" filepath="$PROJECT_DIR$/robot-python/robot-python.iml" />
       <module fileurl="file://$PROJECT_DIR$/robot-webapp/robot-webapp.iml" filepath="$PROJECT_DIR$/robot-webapp/robot-webapp.iml" />
     </modules>
