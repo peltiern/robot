@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE rules SYSTEM "https://resources.jetbrains.com/writerside/1.0/redirection-rules.dtd">
+<rules>
+    <!-- format is as follows
+    <rule id="<unique id>">
+        <accepts>page.html</accepts>
+    </rule>
+    -->
+    <rule id="1d438ba1">
+        <description>Created after removal of "How to" from Documentation du robot</description>
+        <accepts>How-to.html</accepts>
+    </rule>
+    <rule id="7973bc5f">
+        <description>Created after removal of "Présentation" from Documentation du robot</description>
+        <accepts>Default-topic.html</accepts>
+    </rule>
+</rules>

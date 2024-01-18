@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="ef88081c-2a42-4f9d-94ef-ffb8770972ae" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/c.list" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/cfg/buildprofiles.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/cfg/platforms.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/hi.tree" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/completion_procedure.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/completion_procedure_dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/convert_table_to_xml.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/convert_table_to_xml_dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/find_files_lib.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/find_files_lib_dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/generate_popup.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/generate_popup_dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/new_topic_options.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/new_topic_options_dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/images/wall-e.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/keymap.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/redirection-rules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/si.tree" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Add-Mermaid-diagrams.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Add-math-formulas.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Add-semantic-elements-to-Markdown.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Convert-Markdown-to-XML.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Default-topic.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Play-with-semantic-attributes.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Quickly-add-images-links-and-tables.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Reuse-content.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/Tutorial-Wall-E.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/second-instance.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/topics/snippets-library.topic" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/v.list" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Writerside/writerside.cfg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/robot-documentation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/robot-documentation.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/webHelpHI2-all.zip" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="InstanceColorv3">
+    <option name="map">
+      <map>
+        <entry key="hi.tree">
+          <value>
+            <ColorState>
+              <option name="customOrder" value="1" />
+              <option name="first">
+                <RgbState>
+                  <option name="blue" value="60" />
+                  <option name="darkBlue" value="60" />
+                  <option name="darkGreen" value="68" />
+                  <option name="darkRed" value="206" />
+                  <option name="green" value="68" />
+                  <option name="red" value="206" />
+                </RgbState>
+              </option>
+              <option name="second">
+                <RgbState>
+                  <option name="blue" value="65" />
+                  <option name="darkBlue" value="65" />
+                  <option name="darkGreen" value="126" />
+                  <option name="darkRed" value="231" />
+                  <option name="green" value="126" />
+                  <option name="red" value="231" />
+                </RgbState>
+              </option>
+            </ColorState>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 6
+}]]></component>
+  <component name="ProjectId" id="2bECCdbgk7PtkT2JrgEWxEah4oe" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "feature/documentation",
+    "kotlin-language-version-configured": "true",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "stardust.markdown.MarkdownSplitEditorSuppressor:keyList": [
+    ]
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ef88081c-2a42-4f9d-94ef-ffb8770972ae" name="Changes" comment="" />
+      <created>1705770727720</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1705770727720</updated>
+      <workItem from="1705770728760" duration="5000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
