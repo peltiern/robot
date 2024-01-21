@@ -7,5 +7,6 @@
                  start-page="Présentation.md">
 
     <toc-element topic="Présentation.md"/>
+    <toc-element topic="Vidéos.md"/>
     <toc-element topic="Installation.md"/>
 </instance-profile>

@@ -14,4 +14,12 @@
         <description>Created after removal of "Présentation" from Documentation du robot</description>
         <accepts>Default-topic.html</accepts>
     </rule>
+    <rule id="1bee2851">
+        <description>Created after removal of "Vidéos Markdown" from Documentation du robot</description>
+        <accepts>Vidéos.html</accepts>
+    </rule>
+    <rule id="3a8cdb92">
+        <description>Created after removal of "Vidéo XML" from Documentation du robot</description>
+        <accepts>Vidéo-XML.html</accepts>
+    </rule>
 </rules>
