@@ -1,0 +1,8 @@
+# Remerciements
+
+- **[Jonathon Hare](https://github.com/jonhare){:target="_blank"}**, un des concepteurs et développeurs de la librairie JAVA [OpenIMAJ](https://openimaj.org/){:target="_blank"}, qui m'a permis, au début du projet, de faire du traitement d'images, de la détection et de la reconnaissance de visage
+- **[Philippe Guitton](https://www.facebook.com/SixOfOne34){:target="_blank"}**, de l'association [LAPLLA.net](https://laplla.net/){:target="_blank"}, pour m'avoir fait (re)découvrir les principes de l'électronique grâce à ses cours sur Arduino. Malheureusement, je n'ai pas trop appliqué ces connaissances car je me suis rabattu vers des modules électroniques prêts à l'emploi ;-)
+- **[Dustin Franklin](https://www.linkedin.com/in/dustin-franklin-b3aaa173/){:target="_blank"}**, ingénieur chez NVIDIA, pour m'avoir aidé, grâce à ses [projets GitHub](https://github.com/dusty-nv){:target="_blank"}, à configurer le [Jetson Nano](https://www.nvidia.com/fr-fr/autonomous-machines/embedded-systems/jetson-nano/){:target="_blank"} afin qu'il puisse faire de la reconnaissance d'objets et de visages.
+- **[Svetlana Novikova](https://www.linkedin.com/in/svetlana-novikova){:target="_blank"}**, rédacteur technique chez JetBrains, pour ces conseils sur le plugin [Writerside](https://www.jetbrains.com/help/writerside/discover-writerside.html){:target="_blank"} de l'éditeur de code [IntelliJ](https://www.jetbrains.com/fr-fr/idea/){:target="_blank"}, qui m'a permis d'écrire cette documentation.
+
+En cours d'écriture
