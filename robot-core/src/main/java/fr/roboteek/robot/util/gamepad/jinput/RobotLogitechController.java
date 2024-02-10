@@ -34,11 +34,11 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     public void onEvent(LogitechControllerEvent event) {
 //        System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(logitechComponent -> {
-            System.out.println(event);
+//            System.out.println(event);
             switch (logitechComponent) {
-                case JOYSTICK_LEFT_AXIS_X:
+                //case JOYSTICK_LEFT_AXIS_X:
                 case JOYSTICK_LEFT_AXIS_Y:
-                    processJoystickLeft(event);
+                    processJoystickLeftY(event);
                     break;
                 case JOYSTICK_RIGHT_AXIS_X:
                     processJoystickRightX(event);
@@ -89,7 +89,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         });
     }
 
-    private void processJoystickLeft(LogitechControllerEvent event) {
+//    private void processJoystickLeft(LogitechControllerEvent event) {
 //        double amplitude = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AMPLITUDE).getCurrentNumericValue();
 //        // Ceil amplitude to 1
 //        amplitude = amplitude > 1 ? 1 : amplitude;
@@ -116,6 +116,25 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 //            mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
 //        }
 //        RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+//    }
+
+        private void processJoystickLeftY(LogitechControllerEvent event) {
+            GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_LEFT_AXIS_Y);
+            if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
+                MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+                mouvementCouEvent.setAccelerationMonterDescendre(2000D);
+                double absolute = Math.abs(leftYValue.getCurrentNumericValue());
+                double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
+                if (value == 0) {
+                    mouvementCouEvent.setMouvementMonterDescendre(MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.STOPPER);
+                } else {
+                    mouvementCouEvent.setMouvementMonterDescendre(value > 0 ? MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE : MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.MONTER);
+                    mouvementCouEvent.setVitesseMonterDescendre(60D);
+                }
+                mouvementCouEvent.setSynchrone(false);
+                System.out.println("GAMEPAD processJoystickLeftY = " + mouvementCouEvent);
+                RobotEventBus.getInstance().publish(mouvementCouEvent);
+            }
     }
 
     private void processButtonCrossTop(LogitechControllerEvent event) {
@@ -168,14 +187,14 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         GamepadComponentValue<LogitechComponent> leftXValue = event.getMapValues().get(LogitechComponent.JOYSTICK_RIGHT_AXIS_X);
         if (Math.abs(leftXValue.getCurrentNumericValue() - leftXValue.getOldNumericValue()) > 0.03) {
             MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-            mouvementCouEvent.setAccelerationGaucheDroite(2000D);
+            mouvementCouEvent.setAccelerationPanoramique(2000D);
             double absolute = Math.abs(leftXValue.getCurrentNumericValue());
-            double value = (absolute < 0.25) ? 0 : leftXValue.getCurrentNumericValue();
+            double value = (absolute < 0.15) ? 0 : leftXValue.getCurrentNumericValue();
             if (value == 0) {
-                mouvementCouEvent.setMouvementGaucheDroite(MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.STOPPER);
+                mouvementCouEvent.setMouvementPanoramique(MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.STOPPER);
             } else {
-                mouvementCouEvent.setMouvementGaucheDroite(value > 0 ? MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE);
-                mouvementCouEvent.setVitesseGaucheDroite(60D);
+                mouvementCouEvent.setMouvementPanoramique(value > 0 ? MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE);
+                mouvementCouEvent.setVitessePanoramique(60D);
             }
             mouvementCouEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementCouEvent);
@@ -186,14 +205,14 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_RIGHT_AXIS_Y);
         if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
             MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-            mouvementCouEvent.setAccelerationHautBas(2000D);
+            mouvementCouEvent.setAccelerationInclinaison(2000D);
             double absolute = Math.abs(leftYValue.getCurrentNumericValue());
-            double value = (absolute < 0.25) ? 0 : leftYValue.getCurrentNumericValue();
+            double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
             if (value == 0) {
-                mouvementCouEvent.setMouvementHauBas(MouvementCouEvent.MOUVEMENTS_HAUT_BAS.STOPPER);
+                mouvementCouEvent.setMouvementInclinaison(MouvementCouEvent.MOUVEMENTS_INCLINAISON.STOPPER);
             } else {
-                mouvementCouEvent.setMouvementHauBas(value < 0 ? MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_HAUT : MouvementCouEvent.MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
-                mouvementCouEvent.setVitesseHautBas(40D);
+                mouvementCouEvent.setMouvementInclinaison(value < 0 ? MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_BAS : MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_HAUT);
+                mouvementCouEvent.setVitesseInclinaison(40D);
             }
             mouvementCouEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementCouEvent);
@@ -295,12 +314,15 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         GamepadComponentValue<LogitechComponent> startValue = event.getMapValues().get(LogitechComponent.BUTTON_START);
         if (startValue.getCurrentPressed()) {
             MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-            mouvementCouEvent.setAccelerationHautBas(80D);
-            mouvementCouEvent.setVitesseHautBas(40D);
-            mouvementCouEvent.setPositionHautBas(0);
-            mouvementCouEvent.setAccelerationGaucheDroite(100D);
-            mouvementCouEvent.setVitesseGaucheDroite(60D);
-            mouvementCouEvent.setPositionGaucheDroite(0);
+            mouvementCouEvent.setAccelerationInclinaison(80D);
+            mouvementCouEvent.setVitesseInclinaison(40D);
+            mouvementCouEvent.setPositionInclinaison(0);
+            mouvementCouEvent.setAccelerationPanoramique(100D);
+            mouvementCouEvent.setVitessePanoramique(60D);
+            mouvementCouEvent.setPositionPanoramique(0);
+            mouvementCouEvent.setAccelerationMonterDescendre(100D);
+            mouvementCouEvent.setVitesseMonterDescendre(40D);
+            mouvementCouEvent.setPositionMonterDescendre(0);
             mouvementCouEvent.setSynchrone(false);
             RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();

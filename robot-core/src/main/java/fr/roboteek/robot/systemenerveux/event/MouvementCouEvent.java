@@ -15,17 +15,13 @@ public class MouvementCouEvent extends RobotEvent {
 
     public static final String EVENT_TYPE = "mouvement-cou";
 
-    public static enum MOUVEMENTS_GAUCHE_DROITE {TOURNER_GAUCHE, TOURNER_DROITE, STOPPER}
+    public enum MOUVEMENTS_PANORAMIQUE {TOURNER_GAUCHE, TOURNER_DROITE, STOPPER}
 
-    ;
+    public enum MOUVEMENTS_INCLINAISON {TOURNER_HAUT, TOURNER_BAS, STOPPER}
 
-    public static enum MOUVEMENTS_HAUT_BAS {TOURNER_HAUT, TOURNER_BAS, STOPPER}
+    public enum MOUVEMENTS_MONTER_DESCENDRE {MONTER, DESCENDRE, STOPPER}
 
-    ;
-
-    public static enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER}
-
-    ;
+    public enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER}
 
     public static final double POSITION_NEUTRE = 99999;
 
@@ -36,69 +32,99 @@ public class MouvementCouEvent extends RobotEvent {
     public static final double ACCELERATION_NEUTRE = 99999;
 
     /**
-     * Mouvement "Gauche - Droite" à effectuer.
+     * Mouvement "Panoramique à effectuer.
      */
     @Column(name = "text_1")
-    private MOUVEMENTS_GAUCHE_DROITE mouvementGaucheDroite;
+    private MOUVEMENTS_PANORAMIQUE mouvementPanoramique;
 
     /**
-     * Position "Gauche - Droite" (0 : à gauche, 180 : à droite).
+     * Position "Panoramique" (0 : à gauche, 180 : à droite).
      */
     @Column(name = "double_1")
-    private double positionGaucheDroite = POSITION_NEUTRE;
+    private double positionPanoramique = POSITION_NEUTRE;
 
     /**
-     * Angle "Gauche - Droite".
+     * Angle "Panoramique".
      */
     @Column(name = "double_2")
-    private double angleGaucheDroite = ANGLE_NEUTRE;
+    private double anglePanoramique = ANGLE_NEUTRE;
 
     /**
-     * Vitesse du mouvement "Gauche - Droite".
+     * Vitesse du mouvement "Panoramique".
      */
     @Column(name = "double_3")
-    private Double vitesseGaucheDroite;
+    private Double vitessePanoramique;
 
     /**
-     * Accélération du mouvement "Gauche - Droite".
+     * Accélération du mouvement "Panoramique".
      */
     @Column(name = "double_4")
-    private Double accelerationGaucheDroite;
+    private Double accelerationPanoramique;
 
     /**
-     * Mouvement "Haut - Bas" à effectuer.
+     * Mouvement "Inclinaison" à effectuer.
      */
     @Column(name = "text_2")
-    private MOUVEMENTS_HAUT_BAS mouvementHauBas;
+    private MOUVEMENTS_INCLINAISON mouvementInclinaison;
 
     /**
-     * Position "Haut - Bas" (0 : en bas, 180 : en haut).
+     * Position "Inclinaison" (0 : en bas, 180 : en haut).
      */
     @Column(name = "double_5")
-    private double positionHautBas = POSITION_NEUTRE;
+    private double positionInclinaison = POSITION_NEUTRE;
 
     /**
-     * Angle "Haut - Bas".
+     * Angle "Inclinaison".
      */
     @Column(name = "double_6")
-    private double angleHautBas = ANGLE_NEUTRE;
+    private double angleInclinaison = ANGLE_NEUTRE;
 
     /**
-     * Vitesse du mouvement "Haut - Bas".
+     * Vitesse du mouvement "Inclinaison".
      */
     @Column(name = "double_7")
-    private Double vitesseHautBas;
+    private Double vitesseInclinaison;
 
     /**
-     * Accélération du mouvement "Haut - Bas".
+     * Accélération du mouvement "Inclinaison".
      */
     @Column(name = "double_8")
-    private Double accelerationHautBas;
+    private Double accelerationInclinaison;
+
+    /**
+     * Mouvement "Monter - Descendre" à effectuer.
+     */
+    @Column(name = "text_3")
+    private MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre;
+
+    /**
+     * Position "Monter - Descendre" (0 : en bas, 180 : en haut).
+     */
+    @Column(name = "double_9")
+    private double positionMonterDescendre = POSITION_NEUTRE;
+
+    /**
+     * Angle "Monter - Descendre".
+     */
+    @Column(name = "double_10")
+    private double angleMonterDescendre = ANGLE_NEUTRE;
+
+    /**
+     * Vitesse du mouvement "Monter - Descendre".
+     */
+    @Column(name = "double_11")
+    private Double vitesseMonterDescendre;
+
+    /**
+     * Accélération du mouvement "Monter - Descendre".
+     */
+    @Column(name = "double_12")
+    private Double accelerationMonterDescendre;
 
     /**
      * Mouvement "Roulis" à effectuer.
      */
-    @Column(name = "test_3")
+    @Column(name = "text_4")
     private MOUVEMENTS_ROULIS mouvementRoulis;
 
     /**
@@ -109,13 +135,13 @@ public class MouvementCouEvent extends RobotEvent {
     /**
      * Vitesse du mouvement "Roulis".
      */
-    @Column(name = "double_9")
+    @Column(name = "double_13")
     private Double vitesseRoulis;
 
     /**
      * Accélération du mouvement "Roulis".
      */
-    @Column(name = "double_10")
+    @Column(name = "double_14")
     private Double accelerationRoulis;
 
     /**
@@ -128,60 +154,83 @@ public class MouvementCouEvent extends RobotEvent {
         super(EVENT_TYPE);
     }
 
-    public MouvementCouEvent(MOUVEMENTS_GAUCHE_DROITE mouvementGaucheDroite,
-                             double positionGaucheDroite, MOUVEMENTS_HAUT_BAS mouvementHauBas, double positionHautBas,
+    public MouvementCouEvent(MOUVEMENTS_PANORAMIQUE mouvementPanoramique, double positionPanoramique,
+                             MOUVEMENTS_INCLINAISON mouvementInclinaison, double positionInclinaison,
+                             MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre, double positionMonterDescendre,
                              MOUVEMENTS_ROULIS mouvementRoulis, double positionRoulis) {
         this();
-        this.mouvementGaucheDroite = mouvementGaucheDroite;
-        this.positionGaucheDroite = positionGaucheDroite;
-        this.mouvementHauBas = mouvementHauBas;
-        this.positionHautBas = positionHautBas;
+        this.mouvementPanoramique = mouvementPanoramique;
+        this.positionPanoramique = positionPanoramique;
+        this.mouvementInclinaison = mouvementInclinaison;
+        this.positionInclinaison = positionInclinaison;
+        this.mouvementMonterDescendre = mouvementMonterDescendre;
+        this.positionMonterDescendre = positionMonterDescendre;
         this.mouvementRoulis = mouvementRoulis;
         this.positionRoulis = positionRoulis;
     }
 
-    public MouvementCouEvent(MOUVEMENTS_GAUCHE_DROITE mouvementGaucheDroite, double positionGaucheDroite) {
-        this(mouvementGaucheDroite, positionGaucheDroite, null, POSITION_NEUTRE, null, POSITION_NEUTRE);
+    public MouvementCouEvent(MOUVEMENTS_PANORAMIQUE mouvementPanoramique, double positionPanoramique) {
+        this(mouvementPanoramique, positionPanoramique, null, POSITION_NEUTRE, null, POSITION_NEUTRE, null, POSITION_NEUTRE);
     }
 
-    public MouvementCouEvent(MOUVEMENTS_HAUT_BAS mouvementHauBas, double positionHautBas) {
-        this(null, POSITION_NEUTRE, mouvementHauBas, positionHautBas, null, POSITION_NEUTRE);
+    public MouvementCouEvent(MOUVEMENTS_INCLINAISON mouvementInclinaison, double positionInclinaison) {
+        this(null, POSITION_NEUTRE, mouvementInclinaison, positionInclinaison, null, POSITION_NEUTRE, null, POSITION_NEUTRE);
+    }
+
+    public MouvementCouEvent(MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre, double positionMonterDescendre) {
+        this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementMonterDescendre, positionMonterDescendre, null, POSITION_NEUTRE);
     }
 
     public MouvementCouEvent(MOUVEMENTS_ROULIS mouvementRoulis, double positionRoulis) {
-        this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementRoulis, positionRoulis);
+        this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementRoulis, positionRoulis);
     }
 
-    public MOUVEMENTS_GAUCHE_DROITE getMouvementGaucheDroite() {
-        return mouvementGaucheDroite;
+    public MOUVEMENTS_PANORAMIQUE getMouvementPanoramique() {
+        return mouvementPanoramique;
     }
 
-    public void setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE mouvementGaucheDroite) {
-        this.mouvementGaucheDroite = mouvementGaucheDroite;
+    public void setMouvementPanoramique(MOUVEMENTS_PANORAMIQUE mouvementPanoramique) {
+        this.mouvementPanoramique = mouvementPanoramique;
     }
 
-    public MOUVEMENTS_HAUT_BAS getMouvementHauBas() {
-        return mouvementHauBas;
+    public MOUVEMENTS_INCLINAISON getMouvementInclinaison() {
+        return mouvementInclinaison;
     }
 
-    public void setMouvementHauBas(MOUVEMENTS_HAUT_BAS mouvementHauBas) {
-        this.mouvementHauBas = mouvementHauBas;
+    public void setMouvementInclinaison(MOUVEMENTS_INCLINAISON mouvementHauBas) {
+        this.mouvementInclinaison = mouvementHauBas;
     }
 
-    public double getPositionGaucheDroite() {
-        return positionGaucheDroite;
+    public MOUVEMENTS_MONTER_DESCENDRE getMouvementMonterDescendre() {
+        return mouvementMonterDescendre;
     }
 
-    public void setPositionGaucheDroite(double positionGaucheDroite) {
-        this.positionGaucheDroite = positionGaucheDroite;
+    public void setMouvementMonterDescendre(MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre) {
+        this.mouvementMonterDescendre = mouvementMonterDescendre;
     }
 
-    public double getPositionHautBas() {
-        return positionHautBas;
+    public double getPositionPanoramique() {
+        return positionPanoramique;
     }
 
-    public void setPositionHautBas(double positionHautBas) {
-        this.positionHautBas = positionHautBas;
+    public void setPositionPanoramique(double positionPanoramique) {
+        this.positionPanoramique = positionPanoramique;
+    }
+
+    public double getPositionInclinaison() {
+        return positionInclinaison;
+    }
+
+    public void setPositionInclinaison(double positionInclinaison) {
+        this.positionInclinaison = positionInclinaison;
+    }
+
+    public double getPositionMonterDescendre() {
+        return positionMonterDescendre;
+    }
+
+    public void setPositionMonterDescendre(double positionMonterDescendre) {
+        this.positionMonterDescendre = positionMonterDescendre;
     }
 
     public MOUVEMENTS_ROULIS getMouvementRoulis() {
@@ -208,38 +257,53 @@ public class MouvementCouEvent extends RobotEvent {
         this.synchrone = synchrone;
     }
 
-    public Double getVitesseGaucheDroite() {
-        return vitesseGaucheDroite;
+    public Double getVitessePanoramique() {
+        return vitessePanoramique;
     }
 
-    public void setVitesseGaucheDroite(Double vitesseGaucheDroite) {
-        this.vitesseGaucheDroite = vitesseGaucheDroite;
+    public void setVitessePanoramique(Double vitessePanoramique) {
+        this.vitessePanoramique = vitessePanoramique;
     }
 
-    public Double getAccelerationGaucheDroite() {
-        return accelerationGaucheDroite;
+    public Double getAccelerationPanoramique() {
+        return accelerationPanoramique;
     }
 
-    public void setAccelerationGaucheDroite(Double accelerationGaucheDroite) {
-        this.accelerationGaucheDroite = accelerationGaucheDroite;
+    public void setAccelerationPanoramique(Double accelerationPanoramique) {
+        this.accelerationPanoramique = accelerationPanoramique;
     }
 
-    public Double getVitesseHautBas() {
-        return vitesseHautBas;
+    public Double getVitesseInclinaison() {
+        return vitesseInclinaison;
     }
 
-    public void setVitesseHautBas(Double vitesseHautBas) {
-        this.vitesseHautBas = vitesseHautBas;
+    public void setVitesseInclinaison(Double vitesseInclinaison) {
+        this.vitesseInclinaison = vitesseInclinaison;
     }
 
-    public Double getAccelerationHautBas() {
-        return accelerationHautBas;
+    public Double getAccelerationInclinaison() {
+        return accelerationInclinaison;
     }
 
-    public void setAccelerationHautBas(Double accelerationHautBas) {
-        this.accelerationHautBas = accelerationHautBas;
+    public void setAccelerationInclinaison(Double accelerationInclinaison) {
+        this.accelerationInclinaison = accelerationInclinaison;
     }
 
+    public Double getVitesseMonterDescendre() {
+        return vitesseMonterDescendre;
+    }
+
+    public void setVitesseMonterDescendre(Double vitesseMonterDescendre) {
+        this.vitesseMonterDescendre = vitesseMonterDescendre;
+    }
+
+    public Double getAccelerationMonterDescendre() {
+        return accelerationMonterDescendre;
+    }
+
+    public void setAccelerationMonterDescendre(Double accelerationMonterDescendre) {
+        this.accelerationMonterDescendre = accelerationMonterDescendre;
+    }
 
     public Double getVitesseRoulis() {
         return vitesseRoulis;
@@ -257,35 +321,48 @@ public class MouvementCouEvent extends RobotEvent {
         this.accelerationRoulis = accelerationRoulis;
     }
 
-    public double getAngleGaucheDroite() {
-        return angleGaucheDroite;
+    public double getAnglePanoramique() {
+        return anglePanoramique;
     }
 
-    public void setAngleGaucheDroite(double angleGaucheDroite) {
-        this.angleGaucheDroite = angleGaucheDroite;
+    public void setAnglePanoramique(double anglePanoramique) {
+        this.anglePanoramique = anglePanoramique;
     }
 
-    public double getAngleHautBas() {
-        return angleHautBas;
+    public double getAngleInclinaison() {
+        return angleInclinaison;
     }
 
-    public void setAngleHautBas(double angleHautBas) {
-        this.angleHautBas = angleHautBas;
+    public void setAngleInclinaison(double angleInclinaison) {
+        this.angleInclinaison = angleInclinaison;
+    }
+
+    public double getAngleMonterDescendre() {
+        return angleMonterDescendre;
+    }
+
+    public void setAngleMonterDescendre(double angleMonterDescendre) {
+        this.angleMonterDescendre = angleMonterDescendre;
     }
 
     @Override
     public String toString() {
         return "MouvementCouEvent{" +
-                "mouvementGaucheDroite=" + mouvementGaucheDroite +
-                ", positionGaucheDroite=" + positionGaucheDroite +
-                ", angleGaucheDroite=" + angleGaucheDroite +
-                ", vitesseGaucheDroite=" + vitesseGaucheDroite +
-                ", accelerationGaucheDroite=" + accelerationGaucheDroite +
-                ", mouvementHauBas=" + mouvementHauBas +
-                ", positionHautBas=" + positionHautBas +
-                ", angleHautBas=" + angleHautBas +
-                ", vitesseHautBas=" + vitesseHautBas +
-                ", accelerationHautBas=" + accelerationHautBas +
+                "mouvementPanoramique=" + mouvementPanoramique +
+                ", positionPanoramique=" + positionPanoramique +
+                ", anglePanoramique=" + anglePanoramique +
+                ", vitessePanoramique=" + vitessePanoramique +
+                ", accelerationPanoramique=" + accelerationPanoramique +
+                ", mouvementInclinaison=" + mouvementInclinaison +
+                ", positionInclinaison=" + positionInclinaison +
+                ", angleInclinaison=" + angleInclinaison +
+                ", vitesseInclinaison=" + vitesseInclinaison +
+                ", accelerationInclinaison=" + accelerationInclinaison +
+                ", mouvementMonterDescendre=" + mouvementMonterDescendre +
+                ", positionMonterDescendre=" + positionMonterDescendre +
+                ", angleMonterDescendre=" + angleMonterDescendre +
+                ", vitesseMonterDescendre=" + vitesseMonterDescendre +
+                ", accelerationMonterDescendre=" + accelerationMonterDescendre +
                 ", mouvementRoulis=" + mouvementRoulis +
                 ", positionRoulis=" + positionRoulis +
                 ", vitesseRoulis=" + vitesseRoulis +
