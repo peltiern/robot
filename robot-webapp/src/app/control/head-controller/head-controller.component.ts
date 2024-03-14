@@ -13,8 +13,8 @@ export class HeadControllerComponent implements OnInit {
 
   readonly LEFT_EYE = 'left';
   readonly RIGHT_EYE = 'right';
-  readonly UP_BOTTOM_NECK = 'up-bottom';
-  readonly LEFT_RIGHT_NECK = 'left-right';
+  readonly TILT_NECK = 'tilt';
+  readonly PAN_NECK = 'pan';
 
   // Oeil gauche
   leftEyePosition = 0;
@@ -31,12 +31,12 @@ export class HeadControllerComponent implements OnInit {
     }
   };
 
-  // Cou "Haut-Bas"
-  neckUpBottomPosition = 0;
-  // Cou "Gauche-Droite"
-  neckLeftRightPosition = 0;
+  // Cou "Inclinaison"
+  neckTiltPosition = 0;
+  // Cou "Panoramique"
+  neckPanPosition = 0;
 // Options des sliders du cou
-  neckUpBottomOptions = {
+  neckTiltOptions = {
     floor: -35,
     ceil: 35,
     step: 1,
@@ -45,7 +45,7 @@ export class HeadControllerComponent implements OnInit {
       return value + '°';
     }
   };
-  neckLeftRightOptions = {
+  neckPanOptions = {
     floor: -65,
     ceil: 65,
     step: 1,
@@ -81,15 +81,15 @@ export class HeadControllerComponent implements OnInit {
   /**
    * Envoie un évènement de mouvement du cou dans le websocket.
    * @param changeContext l'évènement de changement de valeur du slider
-   * @param source "Haut-Bas" ou "Gauche-Droite"
+   * @param source "Inclinaison" ou "Panoramique"
    */
   onNeckPositionChange(changeContext: ChangeContext, source: string): void {
-    if (changeContext && source && (source === this.UP_BOTTOM_NECK || source === this.LEFT_RIGHT_NECK)) {
+    if (changeContext && source && (source === this.TILT_NECK || source === this.PAN_NECK)) {
       const neckMovementEvent = new NeckMovementEvent();
-      if (source === this.UP_BOTTOM_NECK) {
-        neckMovementEvent.positionHautBas = changeContext.value;
+      if (source === this.TILT_NECK) {
+        neckMovementEvent.positionInclinaison = changeContext.value;
       } else {
-        neckMovementEvent.positionGaucheDroite = changeContext.value;
+        neckMovementEvent.positionPanoramique = changeContext.value;
       }
       this.robotEventWebSocketService.sendMessage(neckMovementEvent);
     }

@@ -18,17 +18,17 @@
   <div class="col-2" style="height: 100%">
     C-H-B
     <ngx-slider
-      [(value)]="neckUpBottomPosition"
-      [options]="neckUpBottomOptions"
-      (userChange)="onNeckPositionChange($event, UP_BOTTOM_NECK)"
+      [(value)]="neckTiltPosition"
+      [options]="neckTiltOptions"
+      (userChange)="onNeckPositionChange($event, TILT_NECK)"
     ></ngx-slider>
   </div>
   <div class="col-6" style="height: 100%">
     C-G-D
     <ngx-slider
-      [(value)]="neckLeftRightPosition"
-      [options]="neckLeftRightOptions"
-      (userChange)="onNeckPositionChange($event, LEFT_RIGHT_NECK)"
+      [(value)]="neckPanPosition"
+      [options]="neckPanOptions"
+      (userChange)="onNeckPositionChange($event, PAN_NECK)"
     ></ngx-slider>
   </div>
 </div>

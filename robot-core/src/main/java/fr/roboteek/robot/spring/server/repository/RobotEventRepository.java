@@ -12,6 +12,6 @@ public interface RobotEventRepository extends JpaRepository<RobotEvent, Long> {
 
     List<RobotEvent> findByOrderByDateTimeDesc();
 
-    @Query("SELECT e FROM MouvementCouEvent e WHERE e.positionGaucheDroite < ?1")
+    @Query("SELECT e FROM MouvementCouEvent e WHERE e.positionPanoramique < ?1")
     List<RobotEvent> findByEventTypeAndPositionGaucheDroiteLessThan(Double position);
 }

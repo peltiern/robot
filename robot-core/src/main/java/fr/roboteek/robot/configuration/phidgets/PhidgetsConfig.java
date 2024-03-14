@@ -28,52 +28,76 @@ public interface PhidgetsConfig extends Config {
     @DefaultValue("1")
     double differentialDrivingMotorAcceleration();
 
-    @Key("phidgets.neck.motor.left_right.index")
+    @Key("phidgets.neck.motor.pan.index")
     @DefaultValue("0")
     int neckLeftRightMotorIndex();
 
-    @Key("phidgets.neck.motor.left_right.position.init")
+    @Key("phidgets.neck.motor.pan.position.init")
     @DefaultValue("85")
     double neckLeftRightMotorInitialPosition();
 
-    @Key("phidgets.neck.motor.left_right.position.min")
+    @Key("phidgets.neck.motor.pan.position.min")
     @DefaultValue("20")
     double neckLeftRightMotorMinPosition();
 
-    @Key("phidgets.neck.motor.left_right.position.max")
+    @Key("phidgets.neck.motor.pan.position.max")
     @DefaultValue("150")
     double neckLeftRightMotorMaxPosition();
 
-    @Key("phidgets.neck.motor.left_right.speed")
+    @Key("phidgets.neck.motor.pan.speed")
     @DefaultValue("100")
     double neckLeftRightMotorSpeed();
 
-    @Key("phidgets.neck.motor.left_right.acceleration")
+    @Key("phidgets.neck.motor.pan.acceleration")
     @DefaultValue("200")
     double neckLeftRightMotorAcceleration();
 
+    @Key("phidgets.neck.motor.tilt.index")
+    @DefaultValue("1")
+    int neckTiltMotorIndex();
+
+    @Key("phidgets.neck.motor.tilt.position.init")
+    @DefaultValue("85")
+    double neckTiltMotorInitialPosition();
+
+    @Key("phidgets.neck.motor.tilt.position.min")
+    @DefaultValue("35")
+    double neckTiltMotorMinPosition();
+
+    @Key("phidgets.neck.motor.tilt.position.max")
+    @DefaultValue("110")
+    double neckTiltMotorMaxPosition();
+
+    @Key("phidgets.neck.motor.tilt.speed")
+    @DefaultValue("100")
+    double neckTiltMotorSpeed();
+
+    @Key("phidgets.neck.motor.tilt.acceleration")
+    @DefaultValue("200")
+    double neckTiltMotorAcceleration();
+
     @Key("phidgets.neck.motor.up_down.index")
-    @DefaultValue("0")
+    @DefaultValue("3")
     int neckUpDownMotorIndex();
 
     @Key("phidgets.neck.motor.up_down.position.init")
-    @DefaultValue("85")
+    //@DefaultValue("85")
     double neckUpDownMotorInitialPosition();
 
     @Key("phidgets.neck.motor.up_down.position.min")
-    @DefaultValue("35")
+    //@DefaultValue("35")
     double neckUpDownMotorMinPosition();
 
     @Key("phidgets.neck.motor.up_down.position.max")
-    @DefaultValue("110")
+    //@DefaultValue("110")
     double neckUpDownMotorMaxPosition();
 
     @Key("phidgets.neck.motor.up_down.speed")
-    @DefaultValue("100")
+    //@DefaultValue("100")
     double neckUpDownMotorSpeed();
 
     @Key("phidgets.neck.motor.up_down.acceleration")
-    @DefaultValue("200")
+    //@DefaultValue("200")
     double neckUpDownMotorAcceleration();
 
     @Key("phidgets.eyes.motor.left.index")

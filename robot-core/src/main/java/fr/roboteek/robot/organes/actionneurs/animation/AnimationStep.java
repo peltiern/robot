@@ -105,7 +105,7 @@ public class AnimationStep {
                 positionOeilGauche, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
                 positionOeilDroit, phidgetsConfig().eyeRightMotorSpeed(), phidgetsConfig().eyeRightMotorAcceleration(),
                 positionCouGaucheDroite, phidgetsConfig().neckLeftRightMotorSpeed(), phidgetsConfig().neckLeftRightMotorAcceleration(),
-                positionCouHautBas, phidgetsConfig().neckUpDownMotorSpeed(), phidgetsConfig().neckUpDownMotorAcceleration(),
+                positionCouHautBas, phidgetsConfig().neckTiltMotorSpeed(), phidgetsConfig().neckTiltMotorAcceleration(),
                 sound);
     }
 
@@ -116,7 +116,7 @@ public class AnimationStep {
         this(delay,
                 angleRoulis, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
                 positionCouGaucheDroite, phidgetsConfig().neckLeftRightMotorSpeed(), phidgetsConfig().neckLeftRightMotorAcceleration(),
-                positionCouHautBas, phidgetsConfig().neckUpDownMotorSpeed(), phidgetsConfig().neckUpDownMotorAcceleration(),
+                positionCouHautBas, phidgetsConfig().neckTiltMotorSpeed(), phidgetsConfig().neckTiltMotorAcceleration(),
                 sound);
     }
 
@@ -191,12 +191,12 @@ public class AnimationStep {
             mouvementCouEvent.setVitesseRoulis(vitesseRoulis);
             mouvementCouEvent.setAccelerationRoulis(accelerationRoulis);
         } else {
-            mouvementCouEvent.setPositionGaucheDroite(positionCouGaucheDroite);
-            mouvementCouEvent.setVitesseGaucheDroite(vitesseCouGaucheDroite);
-            mouvementCouEvent.setAccelerationGaucheDroite(accelerationCouGaucheDroite);
-            mouvementCouEvent.setPositionHautBas(positionCouHautBas);
-            mouvementCouEvent.setVitesseHautBas(vitesseCouHautBas);
-            mouvementCouEvent.setAccelerationHautBas(accelerationCouHautBas);
+            mouvementCouEvent.setPositionPanoramique(positionCouGaucheDroite);
+            mouvementCouEvent.setVitessePanoramique(vitesseCouGaucheDroite);
+            mouvementCouEvent.setAccelerationPanoramique(accelerationCouGaucheDroite);
+            mouvementCouEvent.setPositionInclinaison(positionCouHautBas);
+            mouvementCouEvent.setVitesseInclinaison(vitesseCouHautBas);
+            mouvementCouEvent.setAccelerationInclinaison(accelerationCouHautBas);
         }
         return mouvementCouEvent;
     }
