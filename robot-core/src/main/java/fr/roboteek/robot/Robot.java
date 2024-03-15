@@ -184,7 +184,7 @@ public class Robot {
         yeux.initialiser();
         System.out.println("#####      12      ########");
         conduiteDifferentielle.initialiser();
-//        RobotEventBus.getInstance().subscribe(yeux);
+        RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(cou);
         RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
         System.out.println("#####      13      ########");

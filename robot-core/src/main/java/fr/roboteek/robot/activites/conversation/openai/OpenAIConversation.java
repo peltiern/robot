@@ -5,12 +5,12 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModelName;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
 import fr.roboteek.robot.configuration.ApiKeys;
 import fr.roboteek.robot.memoire.conversation.openai.PersistentChatMemoryStore;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class OpenAIConversation {
@@ -39,11 +39,6 @@ public class OpenAIConversation {
                 )
                 .chatMemoryProvider(chatMemoryProvider)
                 .build();
-
-        if (CollectionUtils.isEmpty(store.getMessages(MEMORY_ID))) {
-            String initPrompt = "Dans cette discussion, tu t'appelleras Wall-E et tu seras un robot. On est en 2024. Tu répondras par des phrases courtes et rigolotes de moins de 15 mots. Tu me tutoieras. Je suis Nicolas, né en 1981, ton créateur";
-            chatBot.chat(initPrompt);
-        }
     }
 
     public void close() {
@@ -74,6 +69,7 @@ public class OpenAIConversation {
 
     interface ChatBot {
 
+        @SystemMessage("Dans cette discussion, tu t'appelleras Wall-E et tu seras un robot. On est le {{current_date}}. Tu répondras par des phrases courtes et rigolotes de moins de 15 mots. Tu me tutoieras. Je suis Nicolas, né en 1981, ton créateur")
         String chat(@UserMessage String userMessage);
     }
 }
