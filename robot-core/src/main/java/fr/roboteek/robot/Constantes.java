@@ -53,8 +53,13 @@ public class Constantes {
     public static final String DOSSIER_JINPUT = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "jinput";
 
     /**
-     * Chemin vers le dossier de SDL.
+     * Chemin vers le dossier de mémoire.
      */
-    public static final String DOSSIER_SDL = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "sdl";
+    public static final String DOSSIER_MEMOIRE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "memoire";
+
+    /**
+     * Chemin vers le dossier de mémoire des conversations.
+     */
+    public static final String DOSSIER_MEMOIRE_CONVERSATIONS = DOSSIER_MEMOIRE + File.separator + "conversations";
 
 }

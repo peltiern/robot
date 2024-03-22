@@ -22,6 +22,7 @@
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <grpc-version>1.56.0</grpc-version>
+        <langchain4j.version>0.27.1</langchain4j.version>
     </properties>
 
     <build>
@@ -114,6 +115,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>central-apache</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
     </repositories>
 
     <dependencyManagement>
@@ -172,7 +177,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.13.0</version>
+            <version>3.14.0</version>
         </dependency>
 
         <dependency>
@@ -196,7 +201,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.13.0</version>
+            <version>2.15.1</version>
         </dependency>
 
         <dependency>
@@ -290,6 +295,35 @@
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
             <version>${grpc-version}</version>
+        </dependency>
+
+        <!-- Langchain4j pour l'utilisation de LLM (IA) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai</artifactId>
+            <version>${langchain4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapdb</groupId>
+            <artifactId>mapdb</artifactId>
+            <version>3.0.9</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.collections</groupId>
+                    <artifactId>eclipse-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.collections</groupId>
+                    <artifactId>eclipse-collections-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
     </dependencies>

@@ -3,6 +3,7 @@ package fr.roboteek.robot.decisionnel;
 import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.akinator.AkinatorActivity;
+import fr.roboteek.robot.activites.conversation.openai.ConversationActivity;
 import fr.roboteek.robot.activites.main.MainActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
@@ -39,7 +40,7 @@ public class Cerveau extends AbstractOrganeWithThread {
 
     @Override
     public void initialiser() {
-        initNewCurrentActivity(new MainActivity());
+        initNewCurrentActivity(new ConversationActivity());
     }
 
     @Override
@@ -50,7 +51,7 @@ public class Cerveau extends AbstractOrganeWithThread {
                 System.out.println("Lancement de l'activité");
                 boolean hasBeenStopped = currentActivity.run();
                 if (!hasBeenStopped) {
-                    initNewCurrentActivity(new MainActivity());
+                    initNewCurrentActivity(new ConversationActivity());
                 }
             } else {
                 try {
