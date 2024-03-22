@@ -107,7 +107,7 @@ public class Yeux extends AbstractOrgane {
     public void tournerOeilGaucheVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
-            moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
+            moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
         }
     }
 
@@ -117,7 +117,7 @@ public class Yeux extends AbstractOrgane {
     public void tournerOeilGaucheVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
-            moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
+            moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
         }
     }
 
@@ -156,7 +156,7 @@ public class Yeux extends AbstractOrgane {
     public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
-            moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
         }
     }
 
@@ -166,7 +166,7 @@ public class Yeux extends AbstractOrgane {
     public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
-            moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
         }
     }
 

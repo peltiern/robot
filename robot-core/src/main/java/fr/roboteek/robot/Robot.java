@@ -59,7 +59,7 @@ public class Robot {
     /**
      * Yeux du robot.
      */
-//    private Yeux yeux;
+    private Yeux yeux;
 
     /**
      * Conduite différentielle.
@@ -173,7 +173,7 @@ public class Robot {
         robotGamepadController.start();
         System.out.println("#####      7      ########");
 
-//        yeux = new Yeux();
+        yeux = new Yeux();
         System.out.println("#####      8      ########");
         cou =  new Cou();
         System.out.println("#####      9      ########");
@@ -181,7 +181,7 @@ public class Robot {
         System.out.println("#####      10      ########");
         cou.initialiser();
         System.out.println("#####      11      ########");
-//        yeux.initialiser();
+        yeux.initialiser();
         System.out.println("#####      12      ########");
         conduiteDifferentielle.initialiser();
 //        RobotEventBus.getInstance().subscribe(yeux);
@@ -209,7 +209,7 @@ public class Robot {
             logger.debug("Début de l'arrêt du robot");
 
             // Désabonnement des organes au système nerveux
-//            RobotEventBus.getInstance().unsubscribe(yeux);
+            RobotEventBus.getInstance().unsubscribe(yeux);
             RobotEventBus.getInstance().unsubscribe(cou);
             RobotEventBus.getInstance().unsubscribe(conduiteDifferentielle);
             RobotEventBus.getInstance().unsubscribe(animationPlayer);
