@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="ddr"
+                 name="Documentation du robot"
+                 start-page="Présentation.md">
+
+    <toc-element topic="Présentation.md"/>
+    <toc-element topic="Conception.md"/>
+    <toc-element topic="Installation.md"/>
+    <toc-element topic="Remerciements.md"/>
+    <toc-element topic="Vidéos.md"/>
+</instance-profile>
