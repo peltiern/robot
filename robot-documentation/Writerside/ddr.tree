@@ -9,6 +9,9 @@
     <toc-element topic="Présentation.md"/>
     <toc-element topic="Conception.md"/>
     <toc-element topic="Installation.md"/>
+    <toc-element topic="Développement.md">
+        <toc-element topic="Documentation.md"/>
+    </toc-element>
     <toc-element topic="Remerciements.md"/>
     <toc-element topic="Vidéos.md"/>
 </instance-profile>
