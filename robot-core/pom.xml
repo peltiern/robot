@@ -21,8 +21,23 @@
     <properties>
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <google.cloud-version>26.43.0</google.cloud-version>
         <grpc-version>1.56.0</grpc-version>
-        <langchain4j.version>0.29.1</langchain4j.version>
+        <langchain4j.version>0.33.0</langchain4j.version>
+        <opencv.version>4.9.0-0</opencv.version>
+        <commons-lang3.version>3.15.0</commons-lang3.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <commons-geometry-core.version>1.0</commons-geometry-core.version>
+        <commons-io.version>2.16.1</commons-io.version>
+        <usb4java.version>1.3.0</usb4java.version>
+        <phidgets.version>2.2</phidgets.version>
+        <dsp.version>2.4</dsp.version>
+        <java-flac-encoder.version>0.3.7</java-flac-encoder.version>
+        <owner.version>1.0.12</owner.version>
+        <mapdb.version>3.0.9</mapdb.version>
+        <jinput.version>2.0.9</jinput.version>
+        <akiwrapper.version>1.6.1</akiwrapper.version>
+        <google-libraries-bom.version>26.44.0</google-libraries-bom.version>
     </properties>
 
     <build>
@@ -33,7 +48,7 @@
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>1.6.1</version>
+                <version>${akiwrapper.version}</version>
             </extension>
         </extensions>
 
@@ -126,7 +141,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.22.0</version>
+                <version>${google-libraries-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -171,49 +186,49 @@
         <dependency>
             <groupId>org.openpnp</groupId>
             <artifactId>opencv</artifactId>
-            <version>4.7.0-0</version>
+            <version>${opencv.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.14.0</version>
+            <version>${commons-lang3.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
+            <version>${commons-collections4.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-geometry-core</artifactId>
-            <version>1.0</version>
+            <version>${commons-geometry-core.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-geometry-euclidean</artifactId>
-            <version>1.0</version>
+            <version>${commons-geometry-core.version}</version>
         </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.15.1</version>
+            <version>${commons-io.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.usb4java</groupId>
             <artifactId>usb4java</artifactId>
-            <version>1.3.0</version>
+            <version>${usb4java.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.phidgets</groupId>
             <artifactId>phidgets</artifactId>
-            <version>2.2</version>
+            <version>${phidgets.version}</version>
         </dependency>
 
         <dependency>
@@ -227,56 +242,39 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-dialogflow</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.16.1</version>
-        </dependency>
-
-        <dependency>
             <groupId>be.tarsos</groupId>
             <artifactId>dsp</artifactId>
-            <version>2.4</version>
+            <version>${dsp.version}</version>
         </dependency>
 
         <dependency>
             <groupId>net.sourceforge.javaflacencoder</groupId>
             <artifactId>java-flac-encoder</artifactId>
-            <version>0.3.7</version>
+            <version>${java-flac-encoder.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.aeonbits.owner</groupId>
             <artifactId>owner</artifactId>
-            <version>1.0.12</version>
+            <version>${owner.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.eu.zajc</groupId>
             <artifactId>akiwrapper</artifactId>
-            <version>1.6.1</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>com.konghq</groupId>
-            <artifactId>unirest-java</artifactId>
-            <version>3.14.5</version>
+            <version>${akiwrapper.version}</version>
         </dependency>
 
         <dependency>
             <groupId>net.java.jinput</groupId>
             <artifactId>jinput</artifactId>
-            <version>2.0.9</version>
+            <!-- La 2.0.10 a besoin de Java 17 -->
+            <version>${jinput.version}</version>
         </dependency>
         <dependency>
             <groupId>net.java.jinput</groupId>
             <artifactId>jinput</artifactId>
-            <version>2.0.9</version>
+            <version>${jinput.version}</version>
             <classifier>natives-all</classifier>
         </dependency>
 
@@ -313,7 +311,7 @@
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
-            <version>3.0.9</version>
+            <version>${mapdb.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.eclipse.collections</groupId>

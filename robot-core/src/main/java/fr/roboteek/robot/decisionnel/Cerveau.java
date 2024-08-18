@@ -4,17 +4,12 @@ import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.akinator.AkinatorActivity;
 import fr.roboteek.robot.activites.conversation.openai.ConversationActivity;
-import fr.roboteek.robot.activites.main.MainActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
-import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
-import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
-import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.systemenerveux.event.StopEvent;
+import fr.roboteek.robot.systemenerveux.event.*;
 
 /**
  * Cerveau du robot nécessaire à la prise de décisions.
@@ -92,7 +87,8 @@ public class Cerveau extends AbstractOrganeWithThread {
                     RobotEventBus.getInstance().publish(stopEvent);
                     dire("Au revoir.");
                 } else if (texteReconnu.trim().equalsIgnoreCase("akinator")) {
-                    initNewCurrentActivity(new AkinatorActivity());
+//                    initNewCurrentActivity(new AkinatorActivity());
+                    dire("Cette activité n'est pour l'instant pas disponible");
                 } else {
                     ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
                     event.setProcessedByBrain(true);
