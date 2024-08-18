@@ -34,7 +34,7 @@ public class OpenAIConversation {
                 .chatLanguageModel(OpenAiChatModel
                         .builder()
                         .apiKey(ApiKeys.OPENAI_API_KEY)
-                        .modelName(OpenAiChatModelName.GPT_3_5_TURBO)
+                        .modelName(OpenAiChatModelName.GPT_4_O_MINI)
                         .build()
                 )
                 .chatMemoryProvider(chatMemoryProvider)
