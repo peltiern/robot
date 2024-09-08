@@ -48,7 +48,7 @@
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>${akiwrapper.version}</version>
+                <version>1.6.1</version>
             </extension>
         </extensions>
 
