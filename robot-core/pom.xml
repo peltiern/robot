@@ -25,7 +25,6 @@
         <grpc-version>1.56.0</grpc-version>
         <langchain4j.version>0.33.0</langchain4j.version>
         <opencv.version>4.9.0-0</opencv.version>
-        <commons-lang3.version>3.15.0</commons-lang3.version>
         <commons-collections4.version>4.4</commons-collections4.version>
         <commons-geometry-core.version>1.0</commons-geometry-core.version>
         <commons-io.version>2.16.1</commons-io.version>
@@ -191,20 +190,8 @@
 
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${commons-lang3.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${commons-collections4.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-geometry-core</artifactId>
-            <version>${commons-geometry-core.version}</version>
         </dependency>
 
         <dependency>
