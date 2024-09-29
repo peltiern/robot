@@ -1,9 +1,9 @@
 package fr.roboteek.robot.organes.capteurs;
 
+import fr.roboteek.robot.services.providers.google.speech.recognizer.GoogleSpeechRecognizerService;
+import fr.roboteek.robot.services.recognizer.SpeechRecognizerService;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.util.speech.recognizer.SpeechRecognizer;
-import fr.roboteek.robot.util.speech.recognizer.google.GoogleSpeechRecognizer;
 
 /**
  * Capteur vocal avec appel d'un web service externe pour effectuer la reconnaisance vocale.
@@ -15,7 +15,7 @@ public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal {
     /**
      * Speech recognizer.
      */
-    private SpeechRecognizer speechRecognizer;
+    private SpeechRecognizerService speechRecognizerService;
 
     public CapteurVocalAvecReconnaissance() {
         super("CapteurVocalAvecReconnaissance");
@@ -26,14 +26,14 @@ public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal {
         super.initialiser();
 
         // TODO Gestion dynamique de la reconnaisance vocale (par fichier de config à un niveau supérieur)
-        speechRecognizer = GoogleSpeechRecognizer.getInstance();
+        speechRecognizerService = GoogleSpeechRecognizerService.getInstance();
     }
 
     @Override
     public void traiterDetectionVocale(String cheminFichierWav) {
         // Appel du moteur de reconnaissance
         long debut = System.currentTimeMillis();
-        final String resultat = speechRecognizer.recognize(cheminFichierWav);
+        final String resultat = speechRecognizerService.recognize(cheminFichierWav);
         long fin = System.currentTimeMillis();
         System.out.println("Temps reconnaissance : " + (fin - debut));
 
