@@ -35,6 +35,7 @@
         <mapdb.version>3.0.9</mapdb.version>
         <jinput.version>2.0.9</jinput.version>
         <akiwrapper.version>1.6.1</akiwrapper.version>
+        <feign.version>13.4</feign.version>
     </properties>
 
     <build>
@@ -340,13 +341,13 @@
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-core</artifactId>
-            <version>13.4</version>
+            <version>${feign.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-gson</artifactId>
-            <version>13.4</version>
+            <version>${feign.version}</version>
         </dependency>
 
 
