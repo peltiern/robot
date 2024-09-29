@@ -22,11 +22,6 @@ public class ParoleEvent extends RobotEvent {
     private String texte;
 
     /**
-     * Contenu du fichier audio à traiter.
-     */
-    private byte[] audioContent;
-
-    /**
      * Pour test.
      */
     private boolean pourTest = false;
@@ -51,14 +46,6 @@ public class ParoleEvent extends RobotEvent {
      */
     public void setTexte(String texte) {
         this.texte = texte;
-    }
-
-    public byte[] getAudioContent() {
-        return audioContent;
-    }
-
-    public void setAudioContent(byte[] audioContent) {
-        this.audioContent = audioContent;
     }
 
     public boolean isPourTest() {
