@@ -1,16 +1,10 @@
 package fr.roboteek.robot.systemenerveux.event;
 
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-
 /**
  * Evènement de conversation.
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-@Entity
-@DiscriminatorValue(ConversationEvent.EVENT_TYPE)
 public class ConversationEvent extends RobotEvent {
 
     public static final String EVENT_TYPE = "conversation";
@@ -18,7 +12,6 @@ public class ConversationEvent extends RobotEvent {
     /**
      * Texte.
      */
-    @Column(name = "text_1")
     private String texte;
 
     /**
@@ -27,7 +20,6 @@ public class ConversationEvent extends RobotEvent {
      * 0 : inconnu
      * > 0 : identifiant de la personne
      */
-    @Column(name = "integer_1")
     private int idLocuteur = -1;
 
     public ConversationEvent() {
