@@ -67,9 +67,6 @@ sudo apt-get --assume-yes install sox
 # Sortir du SSH
 exit
 
-# Copier le fichier JSON des credentials Google
-scp ~/Robot/Programme/google-credentials/Robot-xxxxxxxxx.json    jetson@192.168.xxx.xxx:~/Robot/Programme/google-credentials
-
 # Copier le jar de l'application JAVA du robot
 scp target/robot-core.jar jetson@192.168.xxx.xxx:~/Robot/Programme/
 
