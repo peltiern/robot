@@ -1,16 +1,10 @@
 package fr.roboteek.robot.systemenerveux.event;
 
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-
 /**
  * Evènement pour bouger la tête.
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-@Entity
-@DiscriminatorValue(MouvementCouEvent.EVENT_TYPE)
 public class MouvementCouEvent extends RobotEvent {
 
     public static final String EVENT_TYPE = "mouvement-cou";
@@ -34,97 +28,81 @@ public class MouvementCouEvent extends RobotEvent {
     /**
      * Mouvement "Panoramique à effectuer.
      */
-    @Column(name = "text_1")
     private MOUVEMENTS_PANORAMIQUE mouvementPanoramique;
 
     /**
      * Position "Panoramique" (0 : à gauche, 180 : à droite).
      */
-    @Column(name = "double_1")
     private double positionPanoramique = POSITION_NEUTRE;
 
     /**
      * Angle "Panoramique".
      */
-    @Column(name = "double_2")
     private double anglePanoramique = ANGLE_NEUTRE;
 
     /**
      * Vitesse du mouvement "Panoramique".
      */
-    @Column(name = "double_3")
     private Double vitessePanoramique;
 
     /**
      * Accélération du mouvement "Panoramique".
      */
-    @Column(name = "double_4")
     private Double accelerationPanoramique;
 
     /**
      * Mouvement "Inclinaison" à effectuer.
      */
-    @Column(name = "text_2")
     private MOUVEMENTS_INCLINAISON mouvementInclinaison;
 
     /**
      * Position "Inclinaison" (0 : en bas, 180 : en haut).
      */
-    @Column(name = "double_5")
     private double positionInclinaison = POSITION_NEUTRE;
 
     /**
      * Angle "Inclinaison".
      */
-    @Column(name = "double_6")
     private double angleInclinaison = ANGLE_NEUTRE;
 
     /**
      * Vitesse du mouvement "Inclinaison".
      */
-    @Column(name = "double_7")
     private Double vitesseInclinaison;
 
     /**
      * Accélération du mouvement "Inclinaison".
      */
-    @Column(name = "double_8")
     private Double accelerationInclinaison;
 
     /**
      * Mouvement "Monter - Descendre" à effectuer.
      */
-    @Column(name = "text_3")
     private MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre;
 
     /**
      * Position "Monter - Descendre" (0 : en bas, 180 : en haut).
      */
-    @Column(name = "double_9")
     private double positionMonterDescendre = POSITION_NEUTRE;
 
     /**
      * Angle "Monter - Descendre".
      */
-    @Column(name = "double_10")
     private double angleMonterDescendre = ANGLE_NEUTRE;
 
     /**
      * Vitesse du mouvement "Monter - Descendre".
      */
-    @Column(name = "double_11")
     private Double vitesseMonterDescendre;
 
     /**
      * Accélération du mouvement "Monter - Descendre".
      */
-    @Column(name = "double_12")
     private Double accelerationMonterDescendre;
 
     /**
      * Mouvement "Roulis" à effectuer.
      */
-    @Column(name = "text_4")
     private MOUVEMENTS_ROULIS mouvementRoulis;
 
     /**
@@ -135,19 +113,16 @@ public class MouvementCouEvent extends RobotEvent {
     /**
      * Vitesse du mouvement "Roulis".
      */
-    @Column(name = "double_13")
     private Double vitesseRoulis;
 
     /**
      * Accélération du mouvement "Roulis".
      */
-    @Column(name = "double_14")
     private Double accelerationRoulis;
 
     /**
      * Flag indiquant que le mouvement doit être synchrone.
      */
-    @Column(name = "boolean_1")
     private boolean synchrone = false;
 
     public MouvementCouEvent() {
