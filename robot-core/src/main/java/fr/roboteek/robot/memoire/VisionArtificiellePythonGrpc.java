@@ -2,19 +2,11 @@ package fr.roboteek.robot.memoire;
 
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
-import fr.roboteek.robot.Constantes;
+import fr.roboteek.robot.services.visionartificielle.dto.image.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import org.example.dto.image.ImageProcessingRequest;
-import org.example.dto.image.ImageProcessingResponse;
-import org.example.dto.image.ImageProcessingServiceGrpc;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class VisionArtificiellePythonGrpc {
 
@@ -22,9 +14,6 @@ public class VisionArtificiellePythonGrpc {
     public static final String FACE_DETECTION = "face-detection";
 
     public static final String OBJECT_DETECTION = "object-detection";
-    private final String PYTHON_CMD = "/usr/bin/python3.10";
-    private final String VISION_ARTIFICIELLE_PYTHON_SERVER_FILE = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "serveur-python" + File.separator + "ai-server-grpc.py";
-    private final String KNOWN_FACES_FOLDER = Constantes.DOSSIER_VISION_ARTIFICIELLE + File.separator + "known-faces";
 
     private final ImageProcessingServiceGrpc.ImageProcessingServiceBlockingStub blockingStub;
 
@@ -48,9 +37,25 @@ public class VisionArtificiellePythonGrpc {
         return traiterImage(image, FacialRecognitionResponse.class, FACE_DETECTION);
     }
 
-    ////    public void apprendreVisagesPersonne(List<FImage> listeVisages, String prenomPersonne) {
-////
-////    }
+    public void apprendreVisagesPersonne(byte[] image, String prenomPersonne) {
+        try {
+            AddFaceRequest request = AddFaceRequest.newBuilder()
+                    .setImage(ByteString.copyFrom(image))
+                    .setName(prenomPersonne)
+                    .build();
+            AddFaceResponse response = blockingStub.addFace(request);
+
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode().value() != Status.UNAVAILABLE.getCode().value()) {
+                e.printStackTrace();
+                throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+        }
+
+    }
 
     public ObjectDetectionResponse detectObjects(byte[] image) {
         return traiterImage(image, ObjectDetectionResponse.class, OBJECT_DETECTION);
@@ -58,7 +63,6 @@ public class VisionArtificiellePythonGrpc {
 
     private <T> T traiterImage(byte[] image, Class<T> responseClass, String type) {
         try {
-//            System.out.println("Traitement image");
             ImageProcessingRequest request = ImageProcessingRequest.newBuilder()
                     .setImage(ByteString.copyFrom(image))
                     .setProcessingType(type)
