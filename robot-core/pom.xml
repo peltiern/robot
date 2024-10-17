@@ -21,7 +21,7 @@
     <properties>
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <grpc-version>1.56.0</grpc-version>
+        <grpc-version>1.68.0</grpc-version>
         <langchain4j.version>0.33.0</langchain4j.version>
         <opencv.version>4.9.0-0</opencv.version>
         <commons-collections4.version>4.4</commons-collections4.version>

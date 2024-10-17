@@ -1,0 +1,13 @@
+Créer ou modifier le fichier image-processing.proto.
+
+Java :
+clean / compile s'occupe de créer les fichiers JAVA nécessaires
+
+Python :
+Lancer la commande suivante à partir du dossier robot-python/vision-artificielle/serveur-python
+python -m grpc_tools.protoc -I=proto --python_out=. --grpc_python_out=. proto/image-processing.proto
+-I= précise le répertoire source qui contient les fichiers proto
+--python_out= and --grpc_python_out= précise le répertoire de destination des fichiers Python générés
+enfin, le fichier proto à compiler est indiqué
+
+Pour tester : Postman

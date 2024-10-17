@@ -9,8 +9,8 @@ import grpc
 
 from face.face_recognizer import FaceRecognizer
 from object.jetson_inference.jetson_object_detector import JetsonObjectDetector
-from proto import image_processing_pb2
-from proto import image_processing_pb2_grpc
+import image_processing_pb2
+import image_processing_pb2_grpc
 
 logging.basicConfig(filename='vision-artificielle.log',level=logging.INFO, \
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
@@ -39,6 +39,12 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         else:
             resultat = self.detect_faces_in_image(io.BytesIO(request.image), request.processingType == 'face-recognition')
             return image_processing_pb2.ImageProcessingResponse(jsonResponse=resultat, processingType=request.processingType)
+
+    def addFace(self, request, context):
+        face_id, face_name = self.face_recognizer.addFaceFromByteAndName(io.BytesIO(request.image), request.name)
+        response = image_processing_pb2.AddFaceResponse(id=face_id, name=face_name)
+        return response
+
 
     def detect_faces_in_image(self, image_file, recognition):
         before = int(round(time.time() * 1000))
@@ -142,7 +148,8 @@ def serve():
     image_processing_pb2_grpc.add_ImageProcessingServiceServicer_to_server(ImageProcessingService(), server)
     server.add_insecure_port('[::]:50051')
     server.start()
-    logging.info('Serveur - VISION ARTIFICIELLE - demarre')
+    logging.debug('Serveur - VISION ARTIFICIELLE - demarre')
+    print("SERVEUR DEMARRE")
     server.wait_for_termination()
 
 if __name__ == '__main__':

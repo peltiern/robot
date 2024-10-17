@@ -1,6 +1,7 @@
 syntax = "proto3";
 option java_multiple_files = true;
-package org.example.dto.image;
+
+package fr.roboteek.robot.services.visionartificielle.dto.image;
 
 message ImageProcessingRequest {
   bytes image = 1;
@@ -12,6 +13,17 @@ message ImageProcessingResponse {
   string processingType = 2;
 }
 
+message FaceRequest {
+  bytes image = 1;
+  string name = 2;
+}
+
+message FaceResponse {
+  string id = 1;
+  string name = 2;
+}
+
 service ImageProcessingService {
   rpc processImage(ImageProcessingRequest) returns (ImageProcessingResponse);
+  rpc addFace(FaceRequest) returns (FaceResponse);
 }
