@@ -156,7 +156,7 @@ public class Yeux extends AbstractOrgane {
     public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
-            moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
         }
     }
 
@@ -166,7 +166,7 @@ public class Yeux extends AbstractOrgane {
     public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
-            moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
         }
     }
 
@@ -392,7 +392,7 @@ public class Yeux extends AbstractOrgane {
      * @param positionRelative la position relative
      */
     private double toPositionAbsolueOeilDroit(double positionRelative) {
-        return phidgetsConfig.eyeRightMotorPositionZero() - positionRelative;
+        return phidgetsConfig.eyeRightMotorPositionZero() + positionRelative;
     }
 
     /**
@@ -401,7 +401,7 @@ public class Yeux extends AbstractOrgane {
      * @param positionAbsolue la position absolue
      */
     private double toPositionRelativeOeilDroit(double positionAbsolue) {
-        return phidgetsConfig.eyeRightMotorPositionZero() - positionAbsolue;
+        return phidgetsConfig.eyeRightMotorPositionZero() + positionAbsolue;
     }
 
     /**

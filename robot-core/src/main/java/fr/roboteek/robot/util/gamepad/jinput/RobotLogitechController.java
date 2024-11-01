@@ -12,7 +12,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 public class RobotLogitechController implements RobotGamepadController, LogitechListener {
 
-    private GamepadManager gamepadManager;
+    private final GamepadManager gamepadManager;
 
     public RobotLogitechController() {
         // Ajout de la librairie native JInput
@@ -194,7 +194,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementPanoramique(MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.STOPPER);
             } else {
                 mouvementCouEvent.setMouvementPanoramique(value > 0 ? MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE);
-                mouvementCouEvent.setVitessePanoramique(60D);
+                mouvementCouEvent.setVitessePanoramique(40D);
             }
             mouvementCouEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementCouEvent);
@@ -211,8 +211,8 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             if (value == 0) {
                 mouvementCouEvent.setMouvementInclinaison(MouvementCouEvent.MOUVEMENTS_INCLINAISON.STOPPER);
             } else {
-                mouvementCouEvent.setMouvementInclinaison(value < 0 ? MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_BAS : MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_HAUT);
-                mouvementCouEvent.setVitesseInclinaison(40D);
+                mouvementCouEvent.setMouvementInclinaison(value > 0 ? MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_BAS : MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_HAUT);
+                mouvementCouEvent.setVitesseInclinaison(10D);
             }
             mouvementCouEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementCouEvent);
@@ -226,7 +226,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setMouvementOeilGauche(left1Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+            mouvementYeuxEvent.setMouvementOeilGauche(left1Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementYeuxEvent);
         }
@@ -240,7 +240,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setMouvementOeilGauche(analogLeft2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+            mouvementYeuxEvent.setMouvementOeilGauche(analogLeft2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
             RobotEventBus.getInstance().publish(mouvementYeuxEvent);
         }
