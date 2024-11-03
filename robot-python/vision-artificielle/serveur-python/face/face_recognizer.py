@@ -26,7 +26,7 @@ class FaceRecognizer:
 
         # Recherche du fichier des encodages des visages connus
         if os.path.exists(self.known_faces_file) and os.path.isfile(self.known_faces_file):
-            df_known_names_encodings = pd.read_csv(self.known_faces_file, header=0)
+            df_known_names_encodings = pd.read_csv(self.known_faces_file, dtype={'id': str}, header=0)
             if not df_known_names_encodings.empty:
                 self.known_faces_ids = df_known_names_encodings['id'].tolist()
                 self.known_faces_names = df_known_names_encodings['name'].tolist()
@@ -60,7 +60,7 @@ class FaceRecognizer:
             logging.warning("WARNING: No faces found in {}. Ignoring file.".format(file))
         else:
             # Mise à jour des tableaux en mémoire
-            self.known_faces_ids.append(id_name[0])
+            self.known_faces_ids.append(str(id_name[0]))
             self.known_faces_names.append(id_name[1])
             self.known_faces_encodings.append(encodings[0])
 
@@ -89,9 +89,38 @@ class FaceRecognizer:
 
         return next_id, faceName
 
+    def updateFace(self, faceId, faceName):
+
+        # Rechercher l'index de l'identifiant du visage
+        if len(faceName) > 0 and self.known_faces_ids.count(faceId) > 0:
+            face_index = self.known_faces_ids.index(faceId)
+            # Récupération de l'ancien nom
+            old_name = self.known_faces_names[face_index]
+            oldFaceFileName = faceId + '_' + old_name + '.jpg'
+            oldFaceFilePath = os.path.join(self.known_faces_dir, oldFaceFileName)
+
+            # Renommage de l'ancien fichier
+            if os.path.exists(oldFaceFilePath) and os.path.isfile(oldFaceFilePath):
+                # Nouveau nom de fichier
+                newFaceFileName = faceId + '_' + faceName + '.jpg'
+                newFaceFilePath = os.path.join(self.known_faces_dir, newFaceFileName)
+                os.rename(oldFaceFilePath, newFaceFilePath)
+
+            # Mise à jour du nom dans la liste des noms
+            self.known_faces_names[face_index] = faceName
+            if os.path.exists(self.known_faces_file) and os.path.isfile(self.known_faces_file):
+                # Charger le fichier CSV en spécifiant que l'ID est une chaîne de caractères
+                df = pd.read_csv(self.known_faces_file, dtype={'id': str}, header=0)
+                # Localiser la ligne où l'ID correspond à id_cherche et mettre à jour le nom
+                df.loc[df['id'] == faceId, 'name'] = faceName
+                # Sauvegarder les changements dans le fichier CSV
+                df.to_csv(self.known_faces_file, index=False)
+
+                return faceId, faceName
+
 
     def findNextId(self):
-        # Lire le fichier CSV (remplacez 'fichier.csv' par le nom de votre fichier)
+        # Lire le fichier CSV
         df = pd.read_csv(self.known_faces_file)
         # Vérifier si le DataFrame est vide
         if df.empty:
@@ -137,7 +166,7 @@ class FaceRecognizer:
 
         else:
             # Juste la détection
-            for face_location in face_boxes:
+            for _ in face_boxes:
                 face_names.append("")
 
         return face_boxes, face_names, face_landmarks_list

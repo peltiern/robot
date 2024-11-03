@@ -42,7 +42,12 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
 
     def addFace(self, request, context):
         face_id, face_name = self.face_recognizer.addFaceFromByteAndName(io.BytesIO(request.image), request.name)
-        response = image_processing_pb2.AddFaceResponse(id=face_id, name=face_name)
+        response = image_processing_pb2.FaceResponse(id=face_id, name=face_name)
+        return response
+
+    def updateFace(self, request, context):
+        face_id, face_name = self.face_recognizer.updateFace(request.id, request.name)
+        response = image_processing_pb2.FaceResponse(id=face_id, name=face_name)
         return response
 
 
