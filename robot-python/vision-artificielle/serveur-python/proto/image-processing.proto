@@ -13,17 +13,19 @@ message ImageProcessingResponse {
   string processingType = 2;
 }
 
-message AddFaceRequest {
-  bytes image = 1;
+message FaceRequest {
+  string id = 1;
   string name = 2;
+  bytes image = 3;
 }
 
-message AddFaceResponse {
+message FaceResponse {
   string id = 1;
   string name = 2;
 }
 
 service ImageProcessingService {
   rpc processImage(ImageProcessingRequest) returns (ImageProcessingResponse);
-  rpc addFace(AddFaceRequest) returns (AddFaceResponse);
+  rpc addFace(FaceRequest) returns (FaceResponse);
+  rpc updateFace(FaceRequest) returns (FaceResponse);
 }

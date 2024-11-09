@@ -37,13 +37,33 @@ public class VisionArtificiellePythonGrpc {
         return traiterImage(image, FacialRecognitionResponse.class, FACE_DETECTION);
     }
 
-    public void apprendreVisagesPersonne(byte[] image, String prenomPersonne) {
+    public void apprendreVisagePersonne(byte[] image, String prenomPersonne) {
         try {
-            AddFaceRequest request = AddFaceRequest.newBuilder()
+            FaceRequest request = FaceRequest.newBuilder()
                     .setImage(ByteString.copyFrom(image))
                     .setName(prenomPersonne)
                     .build();
-            AddFaceResponse response = blockingStub.addFace(request);
+            FaceResponse response = blockingStub.addFace(request);
+
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode().value() != Status.UNAVAILABLE.getCode().value()) {
+                e.printStackTrace();
+                throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+        }
+
+    }
+
+    public void mettreAJourVisagePersonne(String idVisage, String prenomPersonne) {
+        try {
+            FaceRequest request = FaceRequest.newBuilder()
+                    .setId(idVisage)
+                    .setName(prenomPersonne)
+                    .build();
+            FaceResponse response = blockingStub.updateFace(request);
 
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode().value() != Status.UNAVAILABLE.getCode().value()) {
