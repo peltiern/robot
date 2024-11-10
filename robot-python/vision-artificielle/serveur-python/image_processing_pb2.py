@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16image-processing.proto\x12\x37\x66r.roboteek.robot.services.visionartificielle.dto.image\"?\n\x16ImageProcessingRequest\x12\r\n\x05image\x18\x01 \x01(\x0c\x12\x16\n\x0eprocessingType\x18\x02 \x01(\t\"G\n\x17ImageProcessingResponse\x12\x14\n\x0cjsonResponse\x18\x01 \x01(\t\x12\x16\n\x0eprocessingType\x18\x02 \x01(\t\"6\n\x0b\x46\x61\x63\x65Request\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05image\x18\x03 \x01(\x0c\"(\n\x0c\x46\x61\x63\x65Response\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t2\x81\x04\n\x16ImageProcessingService\x12\xb1\x01\n\x0cprocessImage\x12O.fr.roboteek.robot.services.visionartificielle.dto.image.ImageProcessingRequest\x1aP.fr.roboteek.robot.services.visionartificielle.dto.image.ImageProcessingResponse\x12\x96\x01\n\x07\x61\x64\x64\x46\x61\x63\x65\x12\x44.fr.roboteek.robot.services.visionartificielle.dto.image.FaceRequest\x1a\x45.fr.roboteek.robot.services.visionartificielle.dto.image.FaceResponse\x12\x99\x01\n\nupdateFace\x12\x44.fr.roboteek.robot.services.visionartificielle.dto.image.FaceRequest\x1a\x45.fr.roboteek.robot.services.visionartificielle.dto.image.FaceResponseB\x02P\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16image-processing.proto\x12\x37\x66r.roboteek.robot.services.visionartificielle.dto.image\x1a\x1bgoogle/protobuf/empty.proto\"?\n\x16ImageProcessingRequest\x12\r\n\x05image\x18\x01 \x01(\x0c\x12\x16\n\x0eprocessingType\x18\x02 \x01(\t\"G\n\x17ImageProcessingResponse\x12\x14\n\x0cjsonResponse\x18\x01 \x01(\t\x12\x16\n\x0eprocessingType\x18\x02 \x01(\t\"6\n\x0b\x46\x61\x63\x65Request\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05image\x18\x03 \x01(\x0c\"(\n\x0c\x46\x61\x63\x65Response\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x1f\n\x11\x44\x65leteFaceRequest\x12\n\n\x02id\x18\x01 \x01(\t2\xf3\x04\n\x16ImageProcessingService\x12\xb1\x01\n\x0cprocessImage\x12O.fr.roboteek.robot.services.visionartificielle.dto.image.ImageProcessingRequest\x1aP.fr.roboteek.robot.services.visionartificielle.dto.image.ImageProcessingResponse\x12\x96\x01\n\x07\x61\x64\x64\x46\x61\x63\x65\x12\x44.fr.roboteek.robot.services.visionartificielle.dto.image.FaceRequest\x1a\x45.fr.roboteek.robot.services.visionartificielle.dto.image.FaceResponse\x12\x99\x01\n\nupdateFace\x12\x44.fr.roboteek.robot.services.visionartificielle.dto.image.FaceRequest\x1a\x45.fr.roboteek.robot.services.visionartificielle.dto.image.FaceResponse\x12p\n\ndeleteFace\x12J.fr.roboteek.robot.services.visionartificielle.dto.image.DeleteFaceRequest\x1a\x16.google.protobuf.EmptyB\x02P\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,14 +33,16 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'image_processing_pb2', _glo
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'P\001'
-  _globals['_IMAGEPROCESSINGREQUEST']._serialized_start=83
-  _globals['_IMAGEPROCESSINGREQUEST']._serialized_end=146
-  _globals['_IMAGEPROCESSINGRESPONSE']._serialized_start=148
-  _globals['_IMAGEPROCESSINGRESPONSE']._serialized_end=219
-  _globals['_FACEREQUEST']._serialized_start=221
-  _globals['_FACEREQUEST']._serialized_end=275
-  _globals['_FACERESPONSE']._serialized_start=277
-  _globals['_FACERESPONSE']._serialized_end=317
-  _globals['_IMAGEPROCESSINGSERVICE']._serialized_start=320
-  _globals['_IMAGEPROCESSINGSERVICE']._serialized_end=833
+  _globals['_IMAGEPROCESSINGREQUEST']._serialized_start=112
+  _globals['_IMAGEPROCESSINGREQUEST']._serialized_end=175
+  _globals['_IMAGEPROCESSINGRESPONSE']._serialized_start=177
+  _globals['_IMAGEPROCESSINGRESPONSE']._serialized_end=248
+  _globals['_FACEREQUEST']._serialized_start=250
+  _globals['_FACEREQUEST']._serialized_end=304
+  _globals['_FACERESPONSE']._serialized_start=306
+  _globals['_FACERESPONSE']._serialized_end=346
+  _globals['_DELETEFACEREQUEST']._serialized_start=348
+  _globals['_DELETEFACEREQUEST']._serialized_end=379
+  _globals['_IMAGEPROCESSINGSERVICE']._serialized_start=382
+  _globals['_IMAGEPROCESSINGSERVICE']._serialized_end=1009
 # @@protoc_insertion_point(module_scope)

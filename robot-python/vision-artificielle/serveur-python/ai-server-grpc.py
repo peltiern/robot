@@ -11,6 +11,7 @@ from face.face_recognizer import FaceRecognizer
 from object.jetson_inference.jetson_object_detector import JetsonObjectDetector
 import image_processing_pb2
 import image_processing_pb2_grpc
+from google.protobuf import empty_pb2
 
 logging.basicConfig(filename='vision-artificielle.log',level=logging.INFO, \
                     format='%(asctime)s -- %(name)s -- %(levelname)s -- %(message)s')
@@ -49,6 +50,10 @@ class ImageProcessingService(image_processing_pb2_grpc.ImageProcessingServiceSer
         face_id, face_name = self.face_recognizer.updateFace(request.id, request.name)
         response = image_processing_pb2.FaceResponse(id=face_id, name=face_name)
         return response
+
+    def deleteFace(self, request, context):
+        self.face_recognizer.deleteFace(request.id)
+        return empty_pb2.Empty()
 
 
     def detect_faces_in_image(self, image_file, recognition):

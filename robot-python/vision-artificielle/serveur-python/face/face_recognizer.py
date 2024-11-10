@@ -118,6 +118,34 @@ class FaceRecognizer:
 
                 return faceId, faceName
 
+    def deleteFace(self, faceId):
+
+        # Rechercher l'index de l'identifiant du visage
+        if self.known_faces_ids.count(faceId) > 0:
+            face_index = self.known_faces_ids.index(faceId)
+            # Récupération du nom
+            name = self.known_faces_names[face_index]
+            faceFileName = faceId + '_' + name + '.jpg'
+            faceFilePath = os.path.join(self.known_faces_dir, faceFileName)
+
+            # Suppression des lignes correspondant au visage dans des différentes listes
+            del self.known_faces_ids[face_index]
+            del self.known_faces_names[face_index]
+            del self.known_faces_encodings[face_index]
+
+            # Suppression de la ligne dans le fichier CSV
+            if os.path.exists(self.known_faces_file) and os.path.isfile(self.known_faces_file):
+                # Charger le fichier CSV en spécifiant que l'ID est une chaîne de caractères
+                df = pd.read_csv(self.known_faces_file, dtype={'id': str}, header=0)
+                # Suppression de la ligne correspondant à l'ID
+                df = df.drop(df[df['id'] == faceId].index)
+                # Sauvegarder les changements dans le fichier CSV
+                df.to_csv(self.known_faces_file, index=False)
+
+            # Suppression du fichier
+            if os.path.exists(faceFilePath) and os.path.isfile(faceFilePath):
+                os.remove(faceFilePath)
+
 
     def findNextId(self):
         # Lire le fichier CSV
