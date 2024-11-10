@@ -3,6 +3,8 @@ option java_multiple_files = true;
 
 package fr.roboteek.robot.services.visionartificielle.dto.image;
 
+import "google/protobuf/empty.proto";
+
 message ImageProcessingRequest {
   bytes image = 1;
   string processingType = 2;
@@ -24,8 +26,13 @@ message FaceResponse {
   string name = 2;
 }
 
+message DeleteFaceRequest {
+  string id = 1;
+}
+
 service ImageProcessingService {
   rpc processImage(ImageProcessingRequest) returns (ImageProcessingResponse);
   rpc addFace(FaceRequest) returns (FaceResponse);
   rpc updateFace(FaceRequest) returns (FaceResponse);
+  rpc deleteFace(DeleteFaceRequest) returns (google.protobuf.Empty);
 }

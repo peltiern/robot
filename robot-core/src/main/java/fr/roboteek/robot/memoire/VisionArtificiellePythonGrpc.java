@@ -2,6 +2,7 @@ package fr.roboteek.robot.memoire;
 
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Empty;
 import fr.roboteek.robot.services.visionartificielle.dto.image.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -48,11 +49,11 @@ public class VisionArtificiellePythonGrpc {
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode().value() != Status.UNAVAILABLE.getCode().value()) {
                 e.printStackTrace();
-                throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+                throw new RuntimeException("Erreur lors de l'ajout d'un visage");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+            throw new RuntimeException("Erreur lors de l'ajout d'un visage");
         }
 
     }
@@ -68,11 +69,30 @@ public class VisionArtificiellePythonGrpc {
         } catch (StatusRuntimeException e) {
             if (e.getStatus().getCode().value() != Status.UNAVAILABLE.getCode().value()) {
                 e.printStackTrace();
-                throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+                throw new RuntimeException("Erreur lors de la mise à jour d'un visage");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("Erreur lors de l'apprentissage d'une personne");
+            throw new RuntimeException("Erreur lors de la mise à jour d'un visage");
+        }
+
+    }
+
+    public void supprimerVisagePersonne(String idVisage) {
+        try {
+            DeleteFaceRequest request = DeleteFaceRequest.newBuilder()
+                    .setId(idVisage)
+                    .build();
+            Empty response = blockingStub.deleteFace(request);
+
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode().value() != Status.UNAVAILABLE.getCode().value()) {
+                e.printStackTrace();
+                throw new RuntimeException("Erreur lors de la suppression d'un visage");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de la suppression d'un visage");
         }
 
     }
