@@ -6,10 +6,10 @@ import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.*;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
+import fr.roboteek.robot.organes.actionneurs.roues.PiloteDifferentiel;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
-import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketGrpc;
-import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketRest;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
+import fr.roboteek.robot.organes.capteurs.Odometre;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
@@ -63,7 +63,12 @@ public class Robot {
     /**
      * Conduite différentielle.
      */
-    private ConduiteDifferentielle conduiteDifferentielle;
+    private PiloteDifferentiel piloteDifferentiel;
+
+    /**
+     * Odomètre.
+     */
+    private Odometre odometre;
 
     /**
      * Controleur de manette.
@@ -166,16 +171,20 @@ public class Robot {
         System.out.println("#####      8      ########");
         cou =  new Cou();
         System.out.println("#####      9      ########");
-        conduiteDifferentielle = new ConduiteDifferentielle();
+        piloteDifferentiel = new PiloteDifferentiel();
         System.out.println("#####      10      ########");
         cou.initialiser();
         System.out.println("#####      11      ########");
         yeux.initialiser();
         System.out.println("#####      12      ########");
-        conduiteDifferentielle.initialiser();
+        piloteDifferentiel.initialiser();
+
+        odometre = new Odometre(piloteDifferentiel.getChassis());
+
+        RobotEventBus.getInstance().subscribe(odometre);
         RobotEventBus.getInstance().subscribe(yeux);
         RobotEventBus.getInstance().subscribe(cou);
-        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+        RobotEventBus.getInstance().subscribe(piloteDifferentiel);
         System.out.println("#####      13      ########");
 
         cerveau.start();
@@ -200,7 +209,7 @@ public class Robot {
             // Désabonnement des organes au système nerveux
             RobotEventBus.getInstance().unsubscribe(yeux);
             RobotEventBus.getInstance().unsubscribe(cou);
-            RobotEventBus.getInstance().unsubscribe(conduiteDifferentielle);
+            RobotEventBus.getInstance().unsubscribe(piloteDifferentiel);
             RobotEventBus.getInstance().unsubscribe(animationPlayer);
             RobotEventBus.getInstance().unsubscribe(soundPlayer);
             RobotEventBus.getInstance().unsubscribe(capteurVocal);

@@ -1,6 +1,7 @@
 package fr.roboteek.robot.util.phidgets;
 
 import com.phidget22.*;
+import lombok.Getter;
 
 public class PhidgetDCMotor implements AttachListener, DetachListener {
 
@@ -8,6 +9,12 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
      * Moteur Phidget associé.
      */
     private DCMotor motor;
+
+    /**
+     * Encodeur Phidget associé.
+     */
+    @Getter
+    private Encoder encodeur;
 
     /**
      * Accélération par défaut.
@@ -30,6 +37,17 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
             // Ouverture du moteur
             motor.open(5000);
 
+            encodeur = new Encoder();
+            encodeur.setDeviceSerialNumber(deviceSerialNumber);
+            encodeur.setHubPort(hubPort);
+            encodeur.addAttachListener(this);
+            encodeur.addDetachListener(this);
+
+            // Ouverture de l'encodeur
+            encodeur.open(5000);
+            encodeur.setIOMode(EncoderIOMode.OPEN_COLLECTOR_2K2);
+            encodeur.setPosition(0);
+
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -45,8 +63,32 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
         }
     }
 
+    public void forwardToPosition(Double vitesse, Double acceleration, long position) {
+        try {
+            forward(vitesse, acceleration);
+            while (encodeur.getPosition() < position) {
+                Thread.sleep(20);
+            }
+        } catch (PhidgetException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        stop();
+    }
+
     public void backward(Double vitesse, Double acceleration) {
         forward(-vitesse, acceleration);
+    }
+
+    public void backwardToPosition(Double vitesse, Double acceleration, long position) {
+        try {
+            backward(vitesse, acceleration);
+            while (encodeur.getPosition() > position) {
+                Thread.sleep(20);
+            }
+        } catch (PhidgetException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        stop();
     }
 
     public void stop() {
@@ -61,6 +103,7 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
 
     public void close() {
         try {
+            encodeur.close();
             motor.close();
         } catch (PhidgetException e) {
             e.printStackTrace();
@@ -88,11 +131,20 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
     public void onDetach(DetachEvent detachEvent) {
 
     }
+    
+    public long getPositionEncodeur() {
+        try {
+            return encodeur.getPosition();
+        } catch (PhidgetException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     public static void main(String args[]) {
-        PhidgetDCMotor m = new PhidgetDCMotor(561050, 0, 1);
+        PhidgetDCMotor m = new PhidgetDCMotor(561050, 2, 1);
         try {
-            Thread.sleep(10000);
+            Thread.sleep(3000);
             m.forward(0.5, 1.0);
             Thread.sleep(3000);
             m.backward(0.5, 1.0);

@@ -1,43 +1,52 @@
-package fr.roboteek.robot.organes.actionneurs;
+package fr.roboteek.robot.organes.actionneurs.roues;
 
 import com.google.common.eventbus.Subscribe;
+import com.phidget22.EncoderPositionChangeEvent;
+import com.phidget22.EncoderPositionChangeListener;
+import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.systemenerveux.event.EncodeurRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.util.gamepad.jinput.RobotLogitechController;
 import fr.roboteek.robot.util.phidgets.PhidgetDCMotor;
+import lombok.Getter;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
-public class ConduiteDifferentielle extends AbstractOrgane {
+public class PiloteDifferentiel extends AbstractOrgane implements EncoderPositionChangeListener {
 
-    /**
-     * Moteur pour la roue gauche.
-     */
-    private PhidgetDCMotor moteurGauche;
+    /** Chassis à piloter. */
+    @Getter
+    private final Chassis chassis;
 
-    /**
-     * Moteur pour la roue droite.
-     */
-    private PhidgetDCMotor moteurDroit;
-
-    /**
-     * Phidgets configuration.
-     */
-    private PhidgetsConfig phidgetsConfig;
+    private final PhidgetsConfig phidgetsConfig;
 
     /**
      * Constructeur.
      */
-    public ConduiteDifferentielle() {
+    public PiloteDifferentiel() {
         super();
 
         phidgetsConfig = phidgetsConfig();
+        RobotConfig robotConfig = robotConfig();
 
         // Création et initialisation des moteurs
-        moteurGauche = new PhidgetDCMotor(phidgetsConfig.hubSerialNumber(), phidgetsConfig.differentialDrivingLeftMotorPort(), phidgetsConfig.differentialDrivingMotorAcceleration());
-        moteurDroit = new PhidgetDCMotor(phidgetsConfig.hubSerialNumber(), phidgetsConfig.differentialDrivingRightMotorPort(), phidgetsConfig.differentialDrivingMotorAcceleration());
+        PhidgetDCMotor moteurGauche = new PhidgetDCMotor(phidgetsConfig.hubSerialNumber(), phidgetsConfig.differentialDrivingLeftMotorPort(), phidgetsConfig.differentialDrivingMotorAcceleration());
+        PhidgetDCMotor moteurDroit = new PhidgetDCMotor(phidgetsConfig.hubSerialNumber(), phidgetsConfig.differentialDrivingRightMotorPort(), phidgetsConfig.differentialDrivingMotorAcceleration());
+
+        chassis = Chassis.builder()
+                .moteurGauche(moteurGauche)
+                .moteurDroit(moteurDroit)
+                .largeurRoues(robotConfig().distanceRoues())
+                .diametreRoue(robotConfig.diametreRoue())
+                .rapportTransmission(robotConfig.rapportTransmission())
+                .ticksParRotation(robotConfig().ticksParRotation())
+                .build();
+
+        moteurDroit.getEncodeur().addPositionChangeListener(this);
 
     }
 
@@ -45,15 +54,15 @@ public class ConduiteDifferentielle extends AbstractOrgane {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
         System.out.println("vitesseFormatee = " + vitesseFormatee + ", accelerationFormatee = " + accelerationFormatee);
-        moteurGauche.forward(vitesseFormatee, accelerationFormatee);
-        moteurDroit.forward(vitesseFormatee, accelerationFormatee);
+        chassis.getMoteurGauche().forward(vitesseFormatee, accelerationFormatee);
+        chassis.getMoteurDroit().forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void reculer(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
-        moteurGauche.forward(-vitesseFormatee, accelerationFormatee);
-        moteurDroit.forward(-vitesseFormatee, accelerationFormatee);
+        chassis.getMoteurGauche().forward(-vitesseFormatee, accelerationFormatee);
+        chassis.getMoteurDroit().forward(-vitesseFormatee, accelerationFormatee);
     }
 
     public void pivoterAGauche(Double vitesse, Double acceleration) {
@@ -74,18 +83,18 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     public void tournerRoueGauche(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
-        moteurGauche.forward(vitesseFormatee, accelerationFormatee);
+        chassis.getMoteurGauche().forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void tournerRoueDroite(Double vitesse, Double acceleration) {
         double vitesseFormatee = toVitesse(vitesse);
         double accelerationFormatee = toAcceleration(acceleration);
-        moteurDroit.forward(vitesseFormatee, accelerationFormatee);
+        chassis.getMoteurDroit().forward(vitesseFormatee, accelerationFormatee);
     }
 
     public void stop() {
-        moteurGauche.stop();
-        moteurDroit.stop();
+        chassis.getMoteurGauche().stop();
+        chassis.getMoteurDroit().stop();
     }
 
     /**
@@ -120,16 +129,24 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     @Override
     public void arreter() {
         reset();
-        moteurGauche.close();
-        moteurDroit.close();
+        chassis.getMoteurGauche().close();
+        chassis.getMoteurDroit().close();
+    }
+
+    @Override
+    public void onPositionChange(EncoderPositionChangeEvent encoderPositionChangeEvent) {
+        if (encoderPositionChangeEvent.getSource() == chassis.getMoteurDroit().getEncodeur()) {
+            EncodeurRoueEvent event = new EncodeurRoueEvent(-chassis.getMoteurGauche().getPositionEncodeur(), chassis.getMoteurDroit().getPositionEncodeur());
+            RobotEventBus.getInstance().publishAsync(event);
+        }
     }
 
     /**
      * Arrête les moteurs.
      */
     private void reset() {
-        moteurGauche.stop();
-        moteurDroit.stop();
+        chassis.getMoteurGauche().stop();
+        chassis.getMoteurDroit().stop();
     }
 
     private double toVitesse(Double vitesse) {
@@ -141,9 +158,9 @@ public class ConduiteDifferentielle extends AbstractOrgane {
     }
 
     public static void main(String[] args) {
-        ConduiteDifferentielle conduiteDifferentielle = new ConduiteDifferentielle();
-        conduiteDifferentielle.initialiser();
-        RobotEventBus.getInstance().subscribe(conduiteDifferentielle);
+        PiloteDifferentiel piloteDifferentiel = new PiloteDifferentiel();
+        piloteDifferentiel.initialiser();
+        RobotEventBus.getInstance().subscribe(piloteDifferentiel);
         RobotLogitechController robotLogitechController = new RobotLogitechController();
         robotLogitechController.start();
     }

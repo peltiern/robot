@@ -12,19 +12,25 @@ public interface RobotConfig extends Config {
     @DefaultValue("fr-FR")
     String languageCode();
 
-    /**
-     * Name of the the webcam to select.
-     *
-     * @return the the webcam to select
-     */
     @Key("device.webcam.name")
     String webcamName();
 
-    /**
-     * Name of the the microphone to select.
-     *
-     * @return the the microphone to select
-     */
     @Key("device.microphone.name")
     String microphoneName();
+
+    @Key("pilote.differentiel.roue.diametre")
+    @DefaultValue("98")
+    int diametreRoue();
+
+    @Key("pilote.differentiel.roue.distance")
+    @DefaultValue("300")
+    int distanceRoues();
+
+    @Key("pilote.differentiel.roue.rapport_transmission")
+    @DefaultValue("0.5")
+    float rapportTransmission();
+
+    @Key("pilote.differentiel.roue.encodeur.ticks_par_rotation")
+    @DefaultValue("1993")
+    int ticksParRotation();
 }
