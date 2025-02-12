@@ -114,13 +114,17 @@ public class Robot {
 
         // Instanciation des différents organes du robot
         cerveau = new Cerveau();
+        System.out.println("#####      0a      ########");
         cerveau.initialiser();
+        System.out.println("#####      0b      ########");
 
         // Actionneurs
         organeParole = new OrganeParoleGoogle();
+        System.out.println("#####      0c      ########");
 
         // Initialisation des actionneurs
         organeParole.initialiser();
+        System.out.println("#####      0d      ########");
 
 
         // Abonnement aux évènements du système nerveux

@@ -131,9 +131,12 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
         try {
 
             final Path dossierReconnaissanceVocaleGoogle = Paths.get(Constantes.DOSSIER_RECONNAISSANCE_VOCALE);
+            System.out.println("dossierReconnaissanceVocaleGoogle = " + dossierReconnaissanceVocaleGoogle);
             if (!Files.exists(dossierReconnaissanceVocaleGoogle)) {
+                System.out.println("Avant Création dossierReconnaissanceVocaleGoogle = " + dossierReconnaissanceVocaleGoogle);
                 // Création du dossier
                 Files.createDirectories(dossierReconnaissanceVocaleGoogle);
+                System.out.println("Création dossierReconnaissanceVocaleGoogle = " + dossierReconnaissanceVocaleGoogle);
             }
             cheminFichierWav = Constantes.DOSSIER_RECONNAISSANCE_VOCALE + File.separator + "reconnaissance.wav";
 
@@ -142,9 +145,12 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
             // Recherche de la ligne correspondant au micro recherché
             final TargetDataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, format);
+            System.out.println("Recherche dataline");
             TargetDataLine line = null;
             Mixer.Info[] infoMixers = AudioSystem.getMixerInfo();
+            System.out.println("Recherche dataline taille = " + infoMixers.length);
             for (Mixer.Info infoMixer : infoMixers) {
+                System.out.println("Mixer: " + infoMixer.getName());
                 if (infoMixer.getName() != null && infoMixer.getName().contains(robotConfig.microphoneName())) {
                     Mixer mixer = AudioSystem.getMixer(infoMixer);
                     if (mixer.isLineSupported(dataLineInfo)) {
@@ -156,8 +162,11 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             }
             // Si le micro n'est pas trouvée, on prend une ligne par défaut
             if (line == null) {
+                System.out.println("Pas de dataline");
                 line = (TargetDataLine) AudioSystem.getLine(dataLineInfo);
             }
+
+            System.out.println("après Recherche dataline");
 
             // Récupération du flux du micro au format souhaité
             final AudioInputStream stream = new AudioInputStream(line);
