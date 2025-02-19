@@ -1,14 +1,13 @@
 FROM ubuntu:22.04
+# Test avec openJDK 11 en image de base ne fonctionne pas. Les moteurs ne sont pas initialisés (problèmes avec l'USB ?)
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 
-# Install package dependencies
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        alsa-base \
         alsa-utils \
-        libsndfile1-dev && \
+        libsndfile1 && \
     apt-get install -y sox && \
     apt-get install -y libjpeg8 && \
     apt-get -y install v4l-utils && \
@@ -24,5 +23,4 @@ COPY /installation/Robot/third-party/phidgets/99-libphidget22.rules /etc/udev/ru
 
 EXPOSE 8080
 
-CMD udevadm trigger && \
-    java -jar /Robot/Programme/robot-core.jar
+CMD ["/bin/sh", "-c", "udevadm trigger && exec java -jar /Robot/Programme/robot-core.jar"]

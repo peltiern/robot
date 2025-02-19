@@ -38,7 +38,7 @@ public class Robot {
     /**
      * Capteur de vision (oeil du robot). Thread ?
      */
-//    private AbstractOrganeWithThread capteurVision;
+    private AbstractOrganeWithThread capteurVision;
 
     /**
      * Capteur vocal.
@@ -135,12 +135,12 @@ public class Robot {
         System.out.println("#####      1      ########");
 
         // Capteurs
-//        capteurVision = new CapteurVisionWebSocketGrpc();
+        capteurVision = new CapteurVisionWebSocketGrpc();
         capteurVocal = new CapteurVocalAvecReconnaissance();
 
         // Initialisation des capteurs
-//        capteurVision.initialiser();
-//        capteurVision.start();
+        capteurVision.initialiser();
+        capteurVision.start();
         System.out.println("#####      2      ########");
         capteurVocal.initialiser();
         capteurVocal.start();
@@ -208,7 +208,7 @@ public class Robot {
             RobotEventBus.getInstance().unsubscribe(animationPlayer);
             RobotEventBus.getInstance().unsubscribe(soundPlayer);
             RobotEventBus.getInstance().unsubscribe(capteurVocal);
-//            RobotEventBus.getInstance().unsubscribe(capteurVision);
+            RobotEventBus.getInstance().unsubscribe(capteurVision);
             RobotEventBus.getInstance().unsubscribe(organeParole);
             RobotEventBus.getInstance().unsubscribe(cerveau);
             RobotEventBus.getInstance().unsubscribe(Robot.this);
