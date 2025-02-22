@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  robot-core:
+    image: peltiern/robot-docker-java-arm64
+    build:
+      context: .
+    user: "root"
+    env_file:
+      - ${HOME}/Robot/Programme/configuration/.env
+    privileged: true  # Permet au conteneur d’accéder aux périphériques matériels
+    volumes:
+      - ${HOME}/Robot/Programme:/Robot/Programme
+      - /dev:/dev
+    ports:
+      - "8080:8080"

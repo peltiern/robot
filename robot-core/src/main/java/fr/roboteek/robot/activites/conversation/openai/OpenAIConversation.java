@@ -22,13 +22,16 @@ public class OpenAIConversation {
     private final ChatBot chatBot;
 
     public OpenAIConversation() {
+        //System.out.println("OpenAIConversation = " + ApiKeys.OPENAI_API_KEY);
         store = new PersistentChatMemoryStore();
+        System.out.println("OPENAI_API_KEY = " + ApiKeys.OPENAI_API_KEY);
 
         ChatMemoryProvider chatMemoryProvider = memoryId -> MessageWindowChatMemory.builder()
                 .id(MEMORY_ID)
                 .maxMessages(100)
                 .chatMemoryStore(store)
                 .build();
+        System.out.println("OpenAI Conversation 2");
 
         chatBot = AiServices.builder(ChatBot.class)
                 .chatLanguageModel(OpenAiChatModel
@@ -39,6 +42,7 @@ public class OpenAIConversation {
                 )
                 .chatMemoryProvider(chatMemoryProvider)
                 .build();
+        System.out.println("OpenAI Conversation 3");
     }
 
     public void close() {

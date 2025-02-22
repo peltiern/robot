@@ -134,6 +134,7 @@ public class Cerveau extends AbstractOrganeWithThread {
         currentActivity = activity;
         System.out.println("initNewCurrentActivity : " + currentActivity.getClass().getName());
         currentActivity.init();
+        System.out.println("initNewCurrentActivity : 2");
         // Subscribe to event bus
         RobotEventBus.getInstance().subscribe(currentActivity);
     }

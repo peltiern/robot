@@ -10,6 +10,7 @@
     <toc-element topic="Conception.md"/>
     <toc-element topic="Installation.md"/>
     <toc-element topic="Développement.md">
+        <toc-element topic="Docker.md"/>
         <toc-element topic="Documentation.md"/>
     </toc-element>
     <toc-element topic="Remerciements.md"/>

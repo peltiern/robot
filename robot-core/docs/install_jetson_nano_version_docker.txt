@@ -1,0 +1,42 @@
+# Pousser l'image docker (se placer dans le dossier robot-core/installation/Robot/docker)
+docker login -u xxx -p xxxx
+docker buildx build -f Dockerfile --platform linux/arm64,linux/amd64 -t peltiern/robot-wall-e --push ../../../
+
+
+# Copier le ZIP contenant les dossiers et fichiers nécessaire au robot
+scp installation/Robot.zip   jetson@192.168.xxx.xxx.:~/
+
+# Connexion en ssh sur le Jetson Nano
+ssh jetson@192.168.xxx.xxx
+
+# Dézipper le dossier
+unzip Robot.zip
+rm Robot.zip
+
+# Mise à jour de la liste des paquets
+sudo apt-get update
+
+# Test pour voir si Docker est installé
+docker --version
+
+# Installation de Docker
+sudo apt-get install -y docker.io
+
+# Ajout de l'utilisateur au groupe docker pour éviter d'utiliser sudo
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Vérification que Docker fonctionne
+docker run --rm hello-world
+
+# Test pour voir si docker-compose est installé
+docker-compose --version
+
+# Installation de docker-compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+
+# Lancer le docker java
+cd ~/
+docker-compose -f Robot/docker/docker-compose.yml up
