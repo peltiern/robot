@@ -1,6 +1,6 @@
 # Pousser l'image docker (se placer dans le dossier robot-core/installation/Robot/docker)
 docker login -u xxx -p xxxx
-docker buildx build -f Dockerfile --platform linux/arm64 -t peltiern/robot-wall-e --push ../../../
+docker buildx build -f Dockerfile --platform linux/arm64,linux/amd64 -t peltiern/robot-wall-e --push ../../../
 
 
 # Copier le ZIP contenant les dossiers et fichiers nécessaire au robot
