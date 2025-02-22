@@ -1,6 +1,7 @@
 # Installation de l'application sur le Jetson Nano
 
-# A distance
+**Sur une machine, à distance :**
+
 Copier le ZIP contenant les dossiers et fichiers nécessaire au robot :
 ```shell
 scp installation/Robot.zip   jetson@192.168.xxx.xxx.:~/
