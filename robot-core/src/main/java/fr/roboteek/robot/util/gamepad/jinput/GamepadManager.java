@@ -11,16 +11,19 @@ import java.util.stream.Collectors;
 
 public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
 
+    List<GamepadController> listeAuthorizedGamepadDummies = new ArrayList<>();
     private volatile boolean running = false;
 
-    private Map<String, GamepadController> connectedControllers = new HashMap<>();
-
     // TODO Liste de controller autorisé (spécifier un identifiant reconnaissable dans le Controller)
-
-    List<GamepadController> listeAuthorizedGamepadDummies = new ArrayList<>();
+    private Map<String, GamepadController> connectedControllers = new HashMap<>();
 
     public GamepadManager(Class<? extends GamepadController>... authorizedClasses) {
         setAuthorizedGamepads(authorizedClasses);
+    }
+
+    public static void main(String[] args) {
+        GamepadManager gamepadManager = new GamepadManager();
+        gamepadManager.start();
     }
 
     @Override
@@ -68,6 +71,11 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
         }
     }
 
+//    @Override
+//    public void run() {
+//        running = true;
+//        while (running) {
+
     public synchronized void removeGamepad(Controller controller) {
         String identifier = controller.getName();
         if (connectedControllers.containsKey(identifier)) {
@@ -76,18 +84,14 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
         }
     }
 
-//    @Override
-//    public void run() {
-//        running = true;
-//        while (running) {
-////            // Vérifie la déconnexion de gamepads
-////            List<Controller> deconnectedGamepads = new ArrayList<>();
-////            connectedControllers.values().stream().filter(gamepadController -> !gamepadController.isConnected()).map(GamepadController::getController).forEach(deconnectedGamepads::add);
-////            deconnectedGamepads.forEach(this::removeGamepad);
-////
-////            // Vérifie la connexion de nouveaux gamepads
-////            Controller[] controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
-////            Arrays.stream(controllers).forEach(this::addGamepad);
+    /// /            // Vérifie la déconnexion de gamepads
+    /// /            List<Controller> deconnectedGamepads = new ArrayList<>();
+    /// /            connectedControllers.values().stream().filter(gamepadController -> !gamepadController.isConnected()).map(GamepadController::getController).forEach(deconnectedGamepads::add);
+    /// /            deconnectedGamepads.forEach(this::removeGamepad);
+    /// /
+    /// /            // Vérifie la connexion de nouveaux gamepads
+    /// /            Controller[] controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
+    /// /            Arrays.stream(controllers).forEach(this::addGamepad);
 //
 //            try {
 //                Thread.sleep(1000);
@@ -97,7 +101,6 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
 //            }
 //        }
 //    }
-
     private void setAuthorizedGamepads(Class<? extends GamepadController>... authorizedClasses) {
         if (authorizedClasses != null && authorizedClasses.length > 0) {
             listeAuthorizedGamepadDummies.clear();
@@ -119,10 +122,5 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
         }
 
 
-    }
-
-    public static void main(String[] args) {
-        GamepadManager gamepadManager = new GamepadManager();
-        gamepadManager.start();
     }
 }

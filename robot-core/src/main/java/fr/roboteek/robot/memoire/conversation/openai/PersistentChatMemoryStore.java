@@ -18,8 +18,13 @@ import java.util.Map;
  */
 public class PersistentChatMemoryStore implements ChatMemoryStore {
 
-    private final DB db = DBMaker.fileDB(Constantes.DOSSIER_MEMOIRE_CONVERSATIONS + File.separator + "memoire-conversations-openai.db").transactionEnable().make();
-    private final Map<Integer, String> map = db.hashMap("messages", Serializer.INTEGER, Serializer.STRING).createOrOpen();
+    private DB db;
+    private Map<Integer, String> map;
+
+    public PersistentChatMemoryStore() {
+        db = DBMaker.fileDB(Constantes.DOSSIER_MEMOIRE_CONVERSATIONS + File.separator + "memoire-conversations-openai.db").transactionEnable().make();
+        map = db.hashMap("messages", Serializer.INTEGER, Serializer.STRING).createOrOpen();
+    }
 
     @Override
     public List<ChatMessage> getMessages(Object memoryId) {

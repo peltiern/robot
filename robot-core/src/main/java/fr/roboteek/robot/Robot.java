@@ -7,8 +7,6 @@ import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.*;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
 import fr.roboteek.robot.organes.capteurs.CapteurActiviteSon;
-import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketGrpc;
-import fr.roboteek.robot.organes.capteurs.CapteurVisionWebSocketRest;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -38,7 +36,7 @@ public class Robot {
     /**
      * Capteur de vision (oeil du robot). Thread ?
      */
-    private AbstractOrganeWithThread capteurVision;
+//    private AbstractOrganeWithThread capteurVision;
 
     /**
      * Capteur vocal.
@@ -106,6 +104,11 @@ public class Robot {
         System.exit(0);
     }
 
+    public static void main(String args[]) {
+        new Robot();
+        System.exit(0);
+    }
+
     /**
      * Initialisation du robot.
      */
@@ -135,12 +138,12 @@ public class Robot {
         System.out.println("#####      1      ########");
 
         // Capteurs
-        capteurVision = new CapteurVisionWebSocketGrpc();
+//        capteurVision = new CapteurVisionWebSocketGrpc();
         capteurVocal = new CapteurVocalAvecReconnaissance();
 
         // Initialisation des capteurs
-        capteurVision.initialiser();
-        capteurVision.start();
+//        capteurVision.initialiser();
+//        capteurVision.start();
         System.out.println("#####      2      ########");
         capteurVocal.initialiser();
         capteurVocal.start();
@@ -168,7 +171,7 @@ public class Robot {
 
         yeux = new Yeux();
         System.out.println("#####      8      ########");
-        cou =  new Cou();
+        cou = new Cou();
         System.out.println("#####      9      ########");
         conduiteDifferentielle = new ConduiteDifferentielle();
         System.out.println("#####      10      ########");
@@ -208,7 +211,7 @@ public class Robot {
             RobotEventBus.getInstance().unsubscribe(animationPlayer);
             RobotEventBus.getInstance().unsubscribe(soundPlayer);
             RobotEventBus.getInstance().unsubscribe(capteurVocal);
-            RobotEventBus.getInstance().unsubscribe(capteurVision);
+//            RobotEventBus.getInstance().unsubscribe(capteurVision);
             RobotEventBus.getInstance().unsubscribe(organeParole);
             RobotEventBus.getInstance().unsubscribe(cerveau);
             RobotEventBus.getInstance().unsubscribe(Robot.this);
@@ -232,11 +235,6 @@ public class Robot {
     @Subscribe
     public void handleStopEvent(StopEvent stopEvent) {
         arreter();
-    }
-
-    public static void main(String args[]) {
-        new Robot();
-        System.exit(0);
     }
 
 }
