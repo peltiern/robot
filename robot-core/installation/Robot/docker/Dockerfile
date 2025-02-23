@@ -11,7 +11,7 @@ RUN apt-get update -y && \
     apt-get install -y sox && \
     apt-get install -y libjpeg8 && \
     apt-get -y install v4l-utils && \
-    apt-get install -y openjdk-11-jre && \
+    apt-get install -y openjdk-21-jre && \
     apt-get install -y curl && \
     curl -fsSL https://www.phidgets.com/downloads/setup_linux | bash -  && \
     apt-get install -y libphidget22-dev \

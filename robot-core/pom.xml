@@ -19,7 +19,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <grpc-version>1.68.0</grpc-version>
         <langchain4j.version>0.33.0</langchain4j.version>
@@ -33,7 +33,7 @@
         <java-flac-encoder.version>0.3.7</java-flac-encoder.version>
         <owner.version>1.0.12</owner.version>
         <mapdb.version>3.0.9</mapdb.version>
-        <jinput.version>2.0.9</jinput.version>
+        <jinput.version>2.0.10</jinput.version>
         <akiwrapper.version>1.6.1</akiwrapper.version>
         <feign.version>13.4</feign.version>
     </properties>
@@ -55,8 +55,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
 
@@ -114,54 +114,19 @@
                 </executions>
             </plugin>
 
-<!--            &lt;!&ndash; Étape 1: Extraire le JAR final et modifier le JAR opencv &ndash;&gt;-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-antrun-plugin</artifactId>-->
-<!--                <version>1.8</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>modify-jar</id>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>run</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <tasks>-->
-<!--                                &lt;!&ndash; 1. Extraire le JAR final dans un répertoire temporaire &ndash;&gt;-->
-<!--                                <unzip src="${project.build.directory}/${project.build.finalName}.jar" dest="${project.build.directory}/extracted-jar"/>-->
-
-<!--                                &lt;!&ndash; Vérifier si opencv-4.9.0-0.jar est extrait correctement &ndash;&gt;-->
-<!--                                <echo message="Extraction de opencv-${opencv.version}.jar en cours..."/>-->
-
-<!--                                &lt;!&ndash; 2. Extraire opencv-4.9.0-0.jar pour modification &ndash;&gt;-->
-<!--                                <unzip src="${project.build.directory}/extracted-jar/BOOT-INF/lib/opencv-${opencv.version}.jar" dest="${project.build.directory}/opencv-extracted"/>-->
-
-<!--                                &lt;!&ndash; 3. Supprimer les répertoires windows et osx de opencv-4.9.0-0.jar &ndash;&gt;-->
-<!--                                <echo message="Suppression des répertoires windows et osx en cours..."/>-->
-<!--                                <delete dir="${project.build.directory}/opencv-extracted/nu/pattern/opencv/windows"/>-->
-<!--                                <delete dir="${project.build.directory}/opencv-extracted/nu/pattern/opencv/osx"/>-->
-<!--                                <delete dir="${project.build.directory}/opencv-extracted/nu/pattern/opencv/osx"/>-->
-<!--                                <delete dir="${project.build.directory}/opencv-extracted/nu/pattern/opencv/linux/ARMv7"/>-->
-<!--                                <delete dir="${project.build.directory}/opencv-extracted/nu/pattern/opencv/linux/x86_32"/>-->
-<!--                                <delete file="${project.build.directory}/extracted-jar/BOOT-INF/lib/opencv-${opencv.version}.jar"/>-->
-
-<!--                                &lt;!&ndash; 4. Recompresser le JAR opencv après modification &ndash;&gt;-->
-<!--                                <echo message="Recompression de opencv-${opencv.version}.jar après modification..."/>-->
-<!--                                <zip destfile="${project.build.directory}/extracted-jar/BOOT-INF/lib/opencv-${opencv.version}.jar" compress="false">-->
-<!--                                    <fileset dir="${project.build.directory}/opencv-extracted"/>-->
-<!--                                </zip>-->
-
-<!--                                &lt;!&ndash; 5. Recompresser le JAR final après modification du JAR opencv &ndash;&gt;-->
-<!--                                <echo message="Recompression du JAR final après modification du JAR opencv..."/>-->
-<!--                                <zip destfile="${project.build.directory}/${project.build.finalName}.jar" compress="false">-->
-<!--                                    <fileset dir="${project.build.directory}/extracted-jar"/>-->
-<!--                                </zip>-->
-<!--                            </tasks>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>com.googlecode.mavennatives</groupId>
+                <artifactId>maven-nativedependencies-plugin</artifactId>
+                <version>0.0.7</version>
+                <executions>
+                    <execution>
+                        <id>unpacknatives</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
         </plugins>
     </build>

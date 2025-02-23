@@ -15,12 +15,14 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private final GamepadManager gamepadManager;
 
     public RobotLogitechController() {
-        // Ajout de la librairie native JInput
-        try {
-            addLibraryPath(Constantes.DOSSIER_JINPUT);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+//        // Ajout de la librairie native JInput
+//        try {
+//            System.out.println("Tentative de chargement de : " + Constantes.DOSSIER_JINPUT + "/jinput-linux64.so");
+//            System.load(Constantes.DOSSIER_JINPUT + "/jinput-linux64.so");
+//            //addLibraryPath(Constantes.DOSSIER_JINPUT);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
         gamepadManager = new GamepadManager(LogitechController.class);
         gamepadManager.addListener(this);
     }
