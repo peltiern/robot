@@ -1,0 +1,87 @@
+.panel {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.section {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+}
+.section.flex1 { flex: 1; }
+
+.sectionTitle {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--dim);
+  margin-bottom: 8px;
+}
+
+.robotSvg { width: 196px; height: 196px; display: block; }
+
+/* Vitesse / Accel */
+.speedGrid  { display: flex; flex-direction: column; gap: 8px; }
+.speedGroup { display: flex; flex-direction: column; gap: 4px; }
+.speedLabel { font-size: 10px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.speedRow   { display: flex; align-items: center; gap: 6px; }
+.speedRow label { font-size: 10px; color: var(--dim); width: 28px; }
+
+.numInput {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  width: 70px;
+  font-family: monospace;
+}
+.numInput:focus { outline: none; border-color: var(--accent); }
+
+/* Keyframe editor */
+.kfEditor    { display: flex; flex-direction: column; gap: 7px; }
+.kfTrackName { font-weight: 600; font-size: 11px; }
+
+.propRow  { display: flex; align-items: center; gap: 7px; }
+.propLbl  { font-size: 11px; color: var(--dim); width: 44px; flex-shrink: 0; }
+.propIn   {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  width: 72px;
+  font-family: monospace;
+}
+.propIn:focus { outline: none; border-color: var(--accent); }
+.propUnit { font-size: 10px; color: var(--dim); }
+
+.deleteBtn {
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--danger);
+  padding: 4px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  width: 100%;
+  transition: background 0.1s, border-color 0.1s;
+}
+.deleteBtn:hover { background: #f8514922; border-color: var(--danger); }
+
+.noSel {
+  font-size: 11px;
+  color: var(--dim);
+  font-style: italic;
+  text-align: center;
+  padding: 8px 0;
+  line-height: 1.6;
+}

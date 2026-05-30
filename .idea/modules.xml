@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/robot-documentation/robot-documentation.iml" filepath="$PROJECT_DIR$/robot-documentation/robot-documentation.iml" />
       <module fileurl="file://$PROJECT_DIR$/robot-python/robot-python.iml" filepath="$PROJECT_DIR$/robot-python/robot-python.iml" />
       <module fileurl="file://$PROJECT_DIR$/robot-webapp/robot-webapp.iml" filepath="$PROJECT_DIR$/robot-webapp/robot-webapp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/robot-webapp-v2/robot-webapp-v2.iml" filepath="$PROJECT_DIR$/robot-webapp-v2/robot-webapp-v2.iml" />
     </modules>
   </component>
 </project>

@@ -1,0 +1,105 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Footer ──────────────────────────────────── */
+
+.footer {
+  height: 26px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--dim);
+  flex-shrink: 0;
+}
+
+.dotOn  { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.dotOff { width: 6px; height: 6px; border-radius: 50%; background: var(--danger);  flex-shrink: 0; }
+
+.footerRight { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.statusMsg   { color: var(--success); font-size: 11px; }
+
+.saveBtn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: border-color 0.1s;
+}
+.saveBtn:hover { border-color: var(--accent); }
+
+/* ── Modals ───────────────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #00000099;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  width: 560px;
+  max-width: 94vw;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modalTitle { font-size: 15px; font-weight: 700; color: var(--text); }
+
+.modalArea {
+  flex: 1;
+  min-height: 260px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 11px;
+  resize: vertical;
+}
+.modalArea:focus { outline: none; border-color: var(--accent); }
+
+.modalFooter {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+.btn:hover { background: #2d333b; border-color: #58a6ff66; }
