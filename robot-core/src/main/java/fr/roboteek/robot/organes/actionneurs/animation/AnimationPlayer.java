@@ -1,231 +1,248 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
 import com.google.common.eventbus.Subscribe;
+import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.Configurations;
-import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.organes.actionneurs.Cou;
+import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
-import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
-import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.event.StopAnimationEvent;
 import fr.roboteek.robot.util.commons.RandomUtils;
-import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-public class AnimationPlayer extends AbstractOrganeWithThread {
+public class AnimationPlayer extends AbstractOrgane {
 
-    /**
-     * Flag indiquant de stopper le thread.
-     */
-    private boolean stopperThread = false;
+    private static final Logger logger = LoggerFactory.getLogger(AnimationPlayer.class);
 
-    boolean automaticMode = false;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            r -> new Thread(r, "AnimationPlayer"));
 
-    /**
-     * Liste des étapes d'animation à jouer.
-     */
-    private ConcurrentLinkedQueue<AnimationStep> animationSteps = new ConcurrentLinkedQueue<>();
+    private final List<ScheduledFuture<?>> currentTasks = new CopyOnWriteArrayList<>();
 
-    public AnimationPlayer() {
-        super("AnimationPlayer");
-    }
+    private volatile boolean automaticMode = false;
+    private volatile ScheduledFuture<?> randomTask = null;
+
+    private final AnimationValidator validator = new AnimationValidator(
+            MotorConstraintsFactory.fromConfig(Configurations.phidgetsConfig()));
+
+    private final AnimationRepository repository = new AnimationRepository(Constantes.DOSSIER_ANIMATIONS);
 
     @Override
     public void initialiser() {
-
+        logger.info("AnimationPlayer initialisé");
     }
 
     @Override
-    public void loop() {
-        long nextAnimationEventTimer = System.currentTimeMillis();
-        AnimationStep nextAnimationStep = null;
-        while (!Thread.interrupted()) {
-            //System.out.println("LOOP : " + System.currentTimeMillis());
-            // Récupération de la prochaine étape d'animation s'il n'y en a pas
-            if (nextAnimationStep == null) {
-                nextAnimationStep = animationSteps.poll();
-                if (nextAnimationStep != null) {
-                    // Calcul du timer de la prochaine étape d'animation
-                    nextAnimationEventTimer = System.currentTimeMillis() + nextAnimationStep.getDelay();
-                } else if (automaticMode) {
-                    // En mode automatique, s'il n'y a plus d'étape d'animation en attente, on en génère une aléatoirement
-                    nextAnimationStep = generateRandomAnimationStep();
-                    // Calcul du timer de la prochaine étape d'animation
-                    nextAnimationEventTimer = System.currentTimeMillis() + nextAnimationStep.getDelay();
-                }
-            }
-
-            if (nextAnimationStep != null && nextAnimationEventTimer <= System.currentTimeMillis()) {
-                // L'étape d'animation en attente doit être jouée
-                playAnimationStep(nextAnimationStep);
-                nextAnimationStep = null;
-            }
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    public void arreter() {
+        cancelCurrentAnimation();
+        scheduler.shutdown();
+        logger.info("AnimationPlayer arrêté");
     }
 
-    /**
-     * Intercepte les évènements pour jouer une animation.
-     *
-     * @param playAnimationEvent évènement pour jouer une animation
-     */
     @Subscribe
-    public void handlePlayAnimationEvent(PlayAnimationEvent playAnimationEvent) {
-        if (playAnimationEvent != null) {
-            Animation animation = playAnimationEvent.getAnimation() != null ?
-                    playAnimationEvent.getAnimation() : Animation.getAnimationByName(playAnimationEvent.getAnimationName());
-            if (animation != null) {
-                automaticMode = false;
-                if (animation == Animation.RANDOM) {
-                    automaticMode = true;
-                } else if (CollectionUtils.isNotEmpty(animation.getSteps())) {
-                    // Nettoyage de la liste des animations en cours
-                    animationSteps.addAll(animation.getSteps());
-                }
-            }
+    public void handleStopAnimationEvent(StopAnimationEvent event) {
+        logger.debug("Arrêt de l'animation en cours");
+        cancelCurrentAnimation();
+    }
+
+    @Subscribe
+    public void handlePlayAnimationEvent(PlayAnimationEvent event) {
+        if (event == null) return;
+
+        Animation animation = resolveAnimation(event);
+        if (animation == null) {
+            logger.warn("Animation introuvable : {}", event.getAnimationName());
+            return;
+        }
+
+        cancelCurrentAnimation();
+
+        if (animation.isRandom()) {
+            logger.debug("Mode aléatoire activé");
+            automaticMode = true;
+            scheduleNextRandom();
+        } else {
+            logger.debug("Lecture de l'animation '{}'", animation.getName());
+            validateAndWarn(animation);
+            scheduleAnimation(animation);
         }
     }
 
-    private void playAnimationStep(AnimationStep animationStep) {
-        //System.out.println("playAnimationStep = " + animationStep);
-        // Transformation de l'étape en évènement
-        MouvementYeuxEvent mouvementYeuxEvent = animationStep.buildMouvementYeuxEvent();
-        MouvementCouEvent mouvementCouEvent = animationStep.buildMouvementCouEvent();
-        PlaySoundEvent playSoundEvent = animationStep.buildPlaySoundEvent();
+    // ── Scheduling ────────────────────────────────────────────────────────────
 
-        // Envoi des évènements dans le bus
-        RobotEventBus.getInstance().publishAsync(mouvementYeuxEvent);
-        RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-        if (playSoundEvent != null) {
-            RobotEventBus.getInstance().publishAsync(playSoundEvent);
+    private void scheduleAnimation(Animation animation) {
+        Set<Long> times = animation.getAllKeyframeTimes();
+        for (Long time : times) {
+            ScheduledFuture<?> task = scheduler.schedule(
+                    () -> playAtTime(animation, time),
+                    time, TimeUnit.MILLISECONDS);
+            currentTasks.add(task);
         }
     }
 
-    private AnimationStep generateRandomAnimationStep() {
-        // TODO
+    private void cancelCurrentAnimation() {
+        automaticMode = false;
+        if (randomTask != null) {
+            randomTask.cancel(false);
+            randomTask = null;
+        }
+        currentTasks.forEach(t -> t.cancel(false));
+        currentTasks.clear();
+    }
+
+    // ── Playback ──────────────────────────────────────────────────────────────
+
+    private void playAtTime(Animation animation, long time) {
+        MouvementYeuxEvent yeuxEvent = buildYeuxEvent(animation, time);
+        MouvementCouEvent couEvent = buildCouEvent(animation, time);
+
+        if (hasYeuxCommands(yeuxEvent)) {
+            RobotEventBus.getInstance().publishAsync(yeuxEvent);
+        }
+        if (hasCouCommands(couEvent)) {
+            RobotEventBus.getInstance().publishAsync(couEvent);
+        }
+    }
+
+    private MouvementYeuxEvent buildYeuxEvent(Animation animation, long time) {
+        MouvementYeuxEvent event = new MouvementYeuxEvent();
+        applyEyeTrack(animation, time, TrackId.OEIL_GAUCHE, event, true);
+        applyEyeTrack(animation, time, TrackId.OEIL_DROIT, event, false);
+        return event;
+    }
+
+    private void applyEyeTrack(Animation animation, long time, TrackId trackId,
+                                MouvementYeuxEvent event, boolean gauche) {
+        animation.getTrack(trackId)
+                .flatMap(t -> t.getKeyframeAt(time).map(kf -> new Object[]{t, kf}))
+                .ifPresent(pair -> {
+                    Track track = (Track) pair[0];
+                    Keyframe kf = (Keyframe) pair[1];
+                    if (gauche) {
+                        event.setPositionOeilGauche(kf.getValue());
+                        event.setVitesseOeilGauche(track.resolveVelocity(kf));
+                        event.setAccelerationOeilGauche(track.resolveAcceleration(kf));
+                    } else {
+                        event.setPositionOeilDroit(kf.getValue());
+                        event.setVitesseOeilDroit(track.resolveVelocity(kf));
+                        event.setAccelerationOeilDroit(track.resolveAcceleration(kf));
+                    }
+                });
+    }
+
+    private MouvementCouEvent buildCouEvent(Animation animation, long time) {
+        MouvementCouEvent event = new MouvementCouEvent();
+        animation.getTrack(TrackId.COU_GAUCHE_DROITE)
+                .flatMap(t -> t.getKeyframeAt(time).map(kf -> new Object[]{t, kf}))
+                .ifPresent(pair -> {
+                    Track t = (Track) pair[0]; Keyframe kf = (Keyframe) pair[1];
+                    event.setPositionPanoramique(kf.getValue());
+                    event.setVitessePanoramique(t.resolveVelocity(kf));
+                    event.setAccelerationPanoramique(t.resolveAcceleration(kf));
+                });
+        animation.getTrack(TrackId.COU_HAUT_BAS)
+                .flatMap(t -> t.getKeyframeAt(time).map(kf -> new Object[]{t, kf}))
+                .ifPresent(pair -> {
+                    Track t = (Track) pair[0]; Keyframe kf = (Keyframe) pair[1];
+                    event.setPositionInclinaison(kf.getValue());
+                    event.setVitesseInclinaison(t.resolveVelocity(kf));
+                    event.setAccelerationInclinaison(t.resolveAcceleration(kf));
+                });
+        animation.getTrack(TrackId.COU_MONTER_DESCENDRE)
+                .flatMap(t -> t.getKeyframeAt(time).map(kf -> new Object[]{t, kf}))
+                .ifPresent(pair -> {
+                    Track t = (Track) pair[0]; Keyframe kf = (Keyframe) pair[1];
+                    event.setPositionMonterDescendre(kf.getValue());
+                    event.setVitesseMonterDescendre(t.resolveVelocity(kf));
+                    event.setAccelerationMonterDescendre(t.resolveAcceleration(kf));
+                });
+        return event;
+    }
+
+    private boolean hasYeuxCommands(MouvementYeuxEvent event) {
+        return event.getPositionOeilGauche() != null
+                || event.getPositionOeilDroit() != null;
+    }
+
+    private boolean hasCouCommands(MouvementCouEvent event) {
+        return event.getPositionPanoramique() != null
+                || event.getPositionInclinaison() != null
+                || event.getPositionMonterDescendre() != null;
+    }
+
+    // ── Mode aléatoire ────────────────────────────────────────────────────────
+
+    private void scheduleNextRandom() {
+        if (!automaticMode) return;
         long delay = RandomUtils.nextLong(500, 3000);
+        randomTask = scheduler.schedule(() -> {
+            playRandomStep();
+            scheduleNextRandom();
+        }, delay, TimeUnit.MILLISECONDS);
+    }
 
-        // Mouvements des yeux
-        // Mouvements des yeux qu'une fois sur 3
-        int moveYeux = RandomUtils.nextInt(0, 3);
-        double positionOeilGauche = MouvementYeuxEvent.POSITION_NEUTRE;
-        double positionOeilDroit = MouvementYeuxEvent.POSITION_NEUTRE;
-        if (moveYeux % 3 == 0) {
-            double positionOeil = RandomUtils.nextDouble(Configurations.phidgetsConfig().eyeMotorRelativePositionMin(), 0);
-            boolean moveYeuxSymetrique = RandomUtils.nextBoolean();
-            if (moveYeuxSymetrique) {
-                positionOeilGauche = positionOeil;
-                positionOeilDroit = positionOeil;
+    private void playRandomStep() {
+        MouvementYeuxEvent yeuxEvent = new MouvementYeuxEvent();
+        MouvementCouEvent couEvent = new MouvementCouEvent();
+
+        if (RandomUtils.nextInt(0, 3) % 3 == 0) {
+            double pos = RandomUtils.nextDouble(Configurations.phidgetsConfig().eyeMotorRelativePositionMin(), 0);
+            if (RandomUtils.nextBoolean()) {
+                yeuxEvent.setPositionOeilGauche(pos);
+                yeuxEvent.setPositionOeilDroit(pos);
+            } else if (RandomUtils.nextBoolean()) {
+                yeuxEvent.setPositionOeilGauche(0.0);
+                yeuxEvent.setPositionOeilDroit(pos);
             } else {
-                if (RandomUtils.nextBoolean()) {
-                    positionOeilGauche = 0;
-                    positionOeilDroit = positionOeil;
-                } else {
-                    positionOeilGauche = positionOeil;
-                    positionOeilDroit = 0;
-                }
+                yeuxEvent.setPositionOeilGauche(pos);
+                yeuxEvent.setPositionOeilDroit(0.0);
             }
         }
 
-        // Mouvements du cou
-        // Mouvements du cou qu'une fois sur 2
-        int moveCouGaucheDroite = RandomUtils.nextInt(0, 2);
-        int moveCouHautBas = RandomUtils.nextInt(0, 2);
-
-        double positionCouGaucheDroite = MouvementCouEvent.POSITION_NEUTRE;
-        double positionCouHautBas = MouvementCouEvent.POSITION_NEUTRE;
-
-        // TODO : utiliser les MIN et MAX de chaque moteur
-        double minCouGaucheDroite = -40;
-        double maxCouGaucheDroite = 40;
-        if (moveCouGaucheDroite % 2 == 0) {
-            positionCouGaucheDroite = RandomUtils.nextDouble(minCouGaucheDroite, maxCouGaucheDroite);
+        if (RandomUtils.nextInt(0, 2) % 2 == 0) {
+            couEvent.setPositionPanoramique(RandomUtils.nextDouble(-40, 40));
         }
-        double minCouHautBas = -30;
-        double maxCouHautBas = 30;
-        if (moveCouHautBas % 2 == 0) {
-            positionCouHautBas = RandomUtils.nextDouble(minCouHautBas, maxCouHautBas);
+        if (RandomUtils.nextInt(0, 2) % 2 == 0) {
+            couEvent.setPositionInclinaison(RandomUtils.nextDouble(-30, 30));
         }
 
-        // Lecture d'un son
-        RobotSound sound = null;
-        // TODO Gérer le son en animation aléatoire
-        // TODO PB : le capteur vocal est mis en pause lorsqu'un son est joué ce qui altère la reconnaissance
-//        int playSound = RandomUtils.nextInt(0, 5);
-//        if (playSound % 5 == 0) {
-//            int soundIndex = RandomUtils.nextInt(0, 4);
-//            sound = RobotSound.values()[soundIndex];
-//        }
-
-        AnimationStep animationStep = new AnimationStep(delay, positionOeilGauche, positionOeilDroit, positionCouGaucheDroite, positionCouHautBas, sound);
-        return animationStep;
+        if (hasYeuxCommands(yeuxEvent)) RobotEventBus.getInstance().publishAsync(yeuxEvent);
+        if (hasCouCommands(couEvent))   RobotEventBus.getInstance().publishAsync(couEvent);
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        Yeux yeux = new Yeux();
-        Cou cou = new Cou();
+    // ── Résolution et validation ───────────────────────────────────────────────
 
-        yeux.initialiser();
-        cou.initialiser();
+    private Animation resolveAnimation(PlayAnimationEvent event) {
+        if (event.getAnimation() != null) return event.getAnimation();
+        if (event.getAnimationName() != null) {
+            // Priorité : fichier JSON > presets hardcodés
+            Optional<Animation> fromFile = repository.load(event.getAnimationName());
+            if (fromFile.isPresent()) return fromFile.get();
+            return AnimationPresets.getByName(event.getAnimationName());
+        }
+        return null;
+    }
 
-        RobotEventBus.getInstance().subscribe(yeux);
-        RobotEventBus.getInstance().subscribe(cou);
-
-        // Lecteur de sons
-        SoundPlayer soundPlayer = new SoundPlayer();
-        soundPlayer.initialiser();
-        RobotEventBus.getInstance().subscribe(soundPlayer);
-
-        // Lecteur d'animations
-        AnimationPlayer animationPlayer = new AnimationPlayer();
-        animationPlayer.initialiser();
-        animationPlayer.start();
-        RobotEventBus.getInstance().subscribe(animationPlayer);
-
-        Thread.sleep(2000);
-        PlayAnimationEvent playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.SAD);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.AMAZED);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.SURPRISED);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.TEST);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.TEST_2);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        yeux.arreter();
-        cou.arreter();
-        soundPlayer.arreter();
-        animationPlayer.arreter();
-
-        System.exit(0);
+    private void validateAndWarn(Animation animation) {
+        List<AnimationValidator.ValidationWarning> warnings = validator.validate(animation);
+        for (AnimationValidator.ValidationWarning w : warnings) {
+            logger.warn("Animation '{}' — track {} [{} → {}ms] : {}",
+                    animation.getName(), w.trackId(), w.timeFrom(), w.timeTo(), w.message());
+        }
     }
 }

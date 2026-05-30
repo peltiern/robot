@@ -10,6 +10,11 @@ import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent.MOUVEMENTS_OEIL;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 /**
@@ -18,6 +23,8 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
  * @author Java Developer
  */
 public class Yeux extends AbstractOrgane {
+
+    private static final Logger logger = LoggerFactory.getLogger(Yeux.class);
 
     /**
      * Moteur Gauche / Droite.
@@ -32,7 +39,7 @@ public class Yeux extends AbstractOrgane {
     /**
      * Flag indiquant que le roulis est en cours.
      */
-    private boolean roulisEnCours = false;
+    private final AtomicBoolean roulisEnCours = new AtomicBoolean(false);
 
     /**
      * Position relative de l'oeil gauche au début du roulis.
@@ -65,7 +72,7 @@ public class Yeux extends AbstractOrgane {
 
         phidgetsConfig = phidgetsConfig();
 
-        System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
+        logger.info("Initialisation des yeux, thread = {}", Thread.currentThread().getName());
 
         // Création et initialisation des moteurs
         moteurOeilGauche = new PhidgetsServoMotor(
@@ -96,7 +103,7 @@ public class Yeux extends AbstractOrgane {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
         reset();
     }
@@ -206,11 +213,11 @@ public class Yeux extends AbstractOrgane {
      */
     public void setPositionRoulis(double newAngleRoulis, Double vitesse, Double acceleration, boolean waitForPosition) {
         // Récupération des positions de chaque oeil si c'est le début du roulis
-        if (!roulisEnCours) {
+        if (!roulisEnCours.get()) {
             positionRelativeOeilGaucheDebutRoulis = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
             positionRelativeOeilDroitDebutRoulis = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
         }
-        roulisEnCours = true;
+        roulisEnCours.set(true);
 
         // Calcul de l'angle max (référence oeil gauche)
         double angleRoulisAAffecter = newAngleRoulis;
@@ -242,37 +249,37 @@ public class Yeux extends AbstractOrgane {
      */
     @Subscribe
     public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
-        System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
-        if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
+        logger.debug("Event reçu : {}, thread = {}", mouvementYeuxEvent, Thread.currentThread().getName());
+        if (mouvementYeuxEvent.getPositionOeilGauche() != null) {
             // TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
-            roulisEnCours = false;
+            roulisEnCours.set(false);
             positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche(), mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), false/*mouvementYeuxEvent.isSynchrone()*/);
         } else if (mouvementYeuxEvent.getMouvementOeilGauche() != null) {
             if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.STOPPER) {
                 stopperOeilGauche();
             } else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-                roulisEnCours = false;
+                roulisEnCours.set(false);
                 tournerOeilGaucheVersBas(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
             } else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-                roulisEnCours = false;
+                roulisEnCours.set(false);
                 tournerOeilGaucheVersHaut(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
             }
         }
-        if (mouvementYeuxEvent.getPositionOeilDroit() != MouvementYeuxEvent.POSITION_NEUTRE) {
-            roulisEnCours = false;
+        if (mouvementYeuxEvent.getPositionOeilDroit() != null) {
+            roulisEnCours.set(false);
             positionnerOeilDroit(mouvementYeuxEvent.getPositionOeilDroit(), mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
         } else if (mouvementYeuxEvent.getMouvementOeilDroit() != null) {
             if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.STOPPER) {
                 stopperOeilDroit();
             } else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-                roulisEnCours = false;
+                roulisEnCours.set(false);
                 tournerOeilDroitVersBas(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
             } else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-                roulisEnCours = false;
+                roulisEnCours.set(false);
                 tournerOeilDroitVersHaut(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
             }
         }
-        roulisEnCours = false;
+        roulisEnCours.set(false);
     }
 
     /**
@@ -288,7 +295,7 @@ public class Yeux extends AbstractOrgane {
         } else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
             setPositionRoulis(-mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
         } else {
-            roulisEnCours = false;
+            roulisEnCours.set(false);
         }
     }
 
@@ -341,11 +348,8 @@ public class Yeux extends AbstractOrgane {
 
     @Override
     public void arreter() {
-        reset();
-        // Attente du retour à la position initiale
-        while (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero()
-                && moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero()) {
-        }
+        moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, true);
+        moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, true);
         moteurOeilGauche.stop();
         moteurOeilDroit.stop();
         moteurOeilGauche.setSpeedRampingState(true);
@@ -362,7 +366,7 @@ public class Yeux extends AbstractOrgane {
     private void reset() {
         moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
         moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
-        roulisEnCours = false;
+        roulisEnCours.set(false);
         positionRelativeOeilDroitDebutRoulis = 0;
         positionRelativeOeilGaucheDebutRoulis = 0;
         angleRoulis = 0;
@@ -422,8 +426,7 @@ public class Yeux extends AbstractOrgane {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            Thread.currentThread().interrupt();
         }
         tete.positionnerOeilGauche(-15, null, null, true);
         tete.positionnerOeilDroit(5, null, null, true);

@@ -4,7 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
-import fr.roboteek.robot.organes.actionneurs.animation.Animation;
+import fr.roboteek.robot.organes.actionneurs.animation.AnimationPresets;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 
 public class ConversationActivity extends AbstractActivity {
@@ -49,7 +49,7 @@ public class ConversationActivity extends AbstractActivity {
                 requete.setInputText(texteReconnu);
                 ReponseIntelligenceArtificielle reponse = openAIConversation.repondreARequete(requete);
                 ReponseIntelligenceArtificielle firstResponse = reponse;
-                playAnimation(Animation.NEUTRAL);
+                playAnimation(AnimationPresets.NEUTRAL);
                 say(reponse.getOutputText());
             }
         }

@@ -2,6 +2,7 @@ package fr.roboteek.robot.systemenerveux.event;
 
 /**
  * Evènement pour bouger la tête.
+ * Les champs de position et d'angle sont null quand l'axe n'est pas concerné par l'événement.
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
@@ -17,122 +18,62 @@ public class MouvementCouEvent extends RobotEvent {
 
     public enum MOUVEMENTS_ROULIS {HORAIRE, ANTI_HORAIRE, STOPPER}
 
-    public static final double POSITION_NEUTRE = 99999;
-
-    public static final double ANGLE_NEUTRE = 99999;
-
-    public static final double VITESSE_NEUTRE = 99999;
-
-    public static final double ACCELERATION_NEUTRE = 99999;
-
-    /**
-     * Mouvement "Panoramique à effectuer.
-     */
+    /** Mouvement continu panoramique. */
     private MOUVEMENTS_PANORAMIQUE mouvementPanoramique;
 
-    /**
-     * Position "Panoramique" (0 : à gauche, 180 : à droite).
-     */
-    private double positionPanoramique = POSITION_NEUTRE;
+    /** Position absolue panoramique en degrés. Null = pas de commande. */
+    private Double positionPanoramique;
 
-    /**
-     * Angle "Panoramique".
-     */
-    private double anglePanoramique = ANGLE_NEUTRE;
+    /** Angle relatif panoramique en degrés. Null = pas de commande. */
+    private Double anglePanoramique;
 
-    /**
-     * Vitesse du mouvement "Panoramique".
-     */
     private Double vitessePanoramique;
-
-    /**
-     * Accélération du mouvement "Panoramique".
-     */
     private Double accelerationPanoramique;
 
-    /**
-     * Mouvement "Inclinaison" à effectuer.
-     */
+    /** Mouvement continu inclinaison. */
     private MOUVEMENTS_INCLINAISON mouvementInclinaison;
 
-    /**
-     * Position "Inclinaison" (0 : en bas, 180 : en haut).
-     */
-    private double positionInclinaison = POSITION_NEUTRE;
+    /** Position absolue inclinaison en degrés. Null = pas de commande. */
+    private Double positionInclinaison;
 
-    /**
-     * Angle "Inclinaison".
-     */
-    private double angleInclinaison = ANGLE_NEUTRE;
+    /** Angle relatif inclinaison en degrés. Null = pas de commande. */
+    private Double angleInclinaison;
 
-    /**
-     * Vitesse du mouvement "Inclinaison".
-     */
     private Double vitesseInclinaison;
-
-    /**
-     * Accélération du mouvement "Inclinaison".
-     */
     private Double accelerationInclinaison;
 
-    /**
-     * Mouvement "Monter - Descendre" à effectuer.
-     */
+    /** Mouvement continu monter/descendre. */
     private MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre;
 
-    /**
-     * Position "Monter - Descendre" (0 : en bas, 180 : en haut).
-     */
-    private double positionMonterDescendre = POSITION_NEUTRE;
+    /** Position absolue monter/descendre en degrés. Null = pas de commande. */
+    private Double positionMonterDescendre;
 
-    /**
-     * Angle "Monter - Descendre".
-     */
-    private double angleMonterDescendre = ANGLE_NEUTRE;
+    /** Angle relatif monter/descendre en degrés. Null = pas de commande. */
+    private Double angleMonterDescendre;
 
-    /**
-     * Vitesse du mouvement "Monter - Descendre".
-     */
     private Double vitesseMonterDescendre;
-
-    /**
-     * Accélération du mouvement "Monter - Descendre".
-     */
     private Double accelerationMonterDescendre;
 
-    /**
-     * Mouvement "Roulis" à effectuer.
-     */
+    /** Mouvement de roulis. */
     private MOUVEMENTS_ROULIS mouvementRoulis;
 
-    /**
-     * Position du roulis (-90 : en bas, 90 : en haut).
-     */
-    private double positionRoulis = POSITION_NEUTRE;
+    /** Position du roulis en degrés. Null = pas de commande. */
+    private Double positionRoulis;
 
-    /**
-     * Vitesse du mouvement "Roulis".
-     */
     private Double vitesseRoulis;
-
-    /**
-     * Accélération du mouvement "Roulis".
-     */
     private Double accelerationRoulis;
 
-    /**
-     * Flag indiquant que le mouvement doit être synchrone.
-     */
+    /** Flag indiquant que le mouvement doit être synchrone. */
     private boolean synchrone = false;
 
     public MouvementCouEvent() {
         super(EVENT_TYPE);
     }
 
-    public MouvementCouEvent(MOUVEMENTS_PANORAMIQUE mouvementPanoramique, double positionPanoramique,
-                             MOUVEMENTS_INCLINAISON mouvementInclinaison, double positionInclinaison,
-                             MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre, double positionMonterDescendre,
-                             MOUVEMENTS_ROULIS mouvementRoulis, double positionRoulis) {
+    public MouvementCouEvent(MOUVEMENTS_PANORAMIQUE mouvementPanoramique, Double positionPanoramique,
+                              MOUVEMENTS_INCLINAISON mouvementInclinaison, Double positionInclinaison,
+                              MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre, Double positionMonterDescendre,
+                              MOUVEMENTS_ROULIS mouvementRoulis, Double positionRoulis) {
         this();
         this.mouvementPanoramique = mouvementPanoramique;
         this.positionPanoramique = positionPanoramique;
@@ -144,205 +85,89 @@ public class MouvementCouEvent extends RobotEvent {
         this.positionRoulis = positionRoulis;
     }
 
-    public MouvementCouEvent(MOUVEMENTS_PANORAMIQUE mouvementPanoramique, double positionPanoramique) {
-        this(mouvementPanoramique, positionPanoramique, null, POSITION_NEUTRE, null, POSITION_NEUTRE, null, POSITION_NEUTRE);
+    public MouvementCouEvent(MOUVEMENTS_PANORAMIQUE mouvementPanoramique, Double positionPanoramique) {
+        this(mouvementPanoramique, positionPanoramique, null, null, null, null, null, null);
     }
 
-    public MouvementCouEvent(MOUVEMENTS_INCLINAISON mouvementInclinaison, double positionInclinaison) {
-        this(null, POSITION_NEUTRE, mouvementInclinaison, positionInclinaison, null, POSITION_NEUTRE, null, POSITION_NEUTRE);
+    public MouvementCouEvent(MOUVEMENTS_INCLINAISON mouvementInclinaison, Double positionInclinaison) {
+        this(null, null, mouvementInclinaison, positionInclinaison, null, null, null, null);
     }
 
-    public MouvementCouEvent(MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre, double positionMonterDescendre) {
-        this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementMonterDescendre, positionMonterDescendre, null, POSITION_NEUTRE);
+    public MouvementCouEvent(MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre, Double positionMonterDescendre) {
+        this(null, null, null, null, mouvementMonterDescendre, positionMonterDescendre, null, null);
     }
 
-    public MouvementCouEvent(MOUVEMENTS_ROULIS mouvementRoulis, double positionRoulis) {
-        this(null, POSITION_NEUTRE, null, POSITION_NEUTRE, null, POSITION_NEUTRE, mouvementRoulis, positionRoulis);
+    public MouvementCouEvent(MOUVEMENTS_ROULIS mouvementRoulis, Double positionRoulis) {
+        this(null, null, null, null, null, null, mouvementRoulis, positionRoulis);
     }
 
-    public MOUVEMENTS_PANORAMIQUE getMouvementPanoramique() {
-        return mouvementPanoramique;
-    }
+    public MOUVEMENTS_PANORAMIQUE getMouvementPanoramique() { return mouvementPanoramique; }
+    public void setMouvementPanoramique(MOUVEMENTS_PANORAMIQUE mouvementPanoramique) { this.mouvementPanoramique = mouvementPanoramique; }
 
-    public void setMouvementPanoramique(MOUVEMENTS_PANORAMIQUE mouvementPanoramique) {
-        this.mouvementPanoramique = mouvementPanoramique;
-    }
+    public Double getPositionPanoramique() { return positionPanoramique; }
+    public void setPositionPanoramique(Double positionPanoramique) { this.positionPanoramique = positionPanoramique; }
 
-    public MOUVEMENTS_INCLINAISON getMouvementInclinaison() {
-        return mouvementInclinaison;
-    }
+    public Double getAnglePanoramique() { return anglePanoramique; }
+    public void setAnglePanoramique(Double anglePanoramique) { this.anglePanoramique = anglePanoramique; }
 
-    public void setMouvementInclinaison(MOUVEMENTS_INCLINAISON mouvementHauBas) {
-        this.mouvementInclinaison = mouvementHauBas;
-    }
+    public Double getVitessePanoramique() { return vitessePanoramique; }
+    public void setVitessePanoramique(Double vitessePanoramique) { this.vitessePanoramique = vitessePanoramique; }
 
-    public MOUVEMENTS_MONTER_DESCENDRE getMouvementMonterDescendre() {
-        return mouvementMonterDescendre;
-    }
+    public Double getAccelerationPanoramique() { return accelerationPanoramique; }
+    public void setAccelerationPanoramique(Double accelerationPanoramique) { this.accelerationPanoramique = accelerationPanoramique; }
 
-    public void setMouvementMonterDescendre(MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre) {
-        this.mouvementMonterDescendre = mouvementMonterDescendre;
-    }
+    public MOUVEMENTS_INCLINAISON getMouvementInclinaison() { return mouvementInclinaison; }
+    public void setMouvementInclinaison(MOUVEMENTS_INCLINAISON mouvementInclinaison) { this.mouvementInclinaison = mouvementInclinaison; }
 
-    public double getPositionPanoramique() {
-        return positionPanoramique;
-    }
+    public Double getPositionInclinaison() { return positionInclinaison; }
+    public void setPositionInclinaison(Double positionInclinaison) { this.positionInclinaison = positionInclinaison; }
 
-    public void setPositionPanoramique(double positionPanoramique) {
-        this.positionPanoramique = positionPanoramique;
-    }
+    public Double getAngleInclinaison() { return angleInclinaison; }
+    public void setAngleInclinaison(Double angleInclinaison) { this.angleInclinaison = angleInclinaison; }
 
-    public double getPositionInclinaison() {
-        return positionInclinaison;
-    }
+    public Double getVitesseInclinaison() { return vitesseInclinaison; }
+    public void setVitesseInclinaison(Double vitesseInclinaison) { this.vitesseInclinaison = vitesseInclinaison; }
 
-    public void setPositionInclinaison(double positionInclinaison) {
-        this.positionInclinaison = positionInclinaison;
-    }
+    public Double getAccelerationInclinaison() { return accelerationInclinaison; }
+    public void setAccelerationInclinaison(Double accelerationInclinaison) { this.accelerationInclinaison = accelerationInclinaison; }
 
-    public double getPositionMonterDescendre() {
-        return positionMonterDescendre;
-    }
+    public MOUVEMENTS_MONTER_DESCENDRE getMouvementMonterDescendre() { return mouvementMonterDescendre; }
+    public void setMouvementMonterDescendre(MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre) { this.mouvementMonterDescendre = mouvementMonterDescendre; }
 
-    public void setPositionMonterDescendre(double positionMonterDescendre) {
-        this.positionMonterDescendre = positionMonterDescendre;
-    }
+    public Double getPositionMonterDescendre() { return positionMonterDescendre; }
+    public void setPositionMonterDescendre(Double positionMonterDescendre) { this.positionMonterDescendre = positionMonterDescendre; }
 
-    public MOUVEMENTS_ROULIS getMouvementRoulis() {
-        return mouvementRoulis;
-    }
+    public Double getAngleMonterDescendre() { return angleMonterDescendre; }
+    public void setAngleMonterDescendre(Double angleMonterDescendre) { this.angleMonterDescendre = angleMonterDescendre; }
 
-    public void setMouvementRoulis(MOUVEMENTS_ROULIS mouvementRoulis) {
-        this.mouvementRoulis = mouvementRoulis;
-    }
+    public Double getVitesseMonterDescendre() { return vitesseMonterDescendre; }
+    public void setVitesseMonterDescendre(Double vitesseMonterDescendre) { this.vitesseMonterDescendre = vitesseMonterDescendre; }
 
-    public double getPositionRoulis() {
-        return positionRoulis;
-    }
+    public Double getAccelerationMonterDescendre() { return accelerationMonterDescendre; }
+    public void setAccelerationMonterDescendre(Double accelerationMonterDescendre) { this.accelerationMonterDescendre = accelerationMonterDescendre; }
 
-    public void setPositionRoulis(double positionRoulis) {
-        this.positionRoulis = positionRoulis;
-    }
+    public MOUVEMENTS_ROULIS getMouvementRoulis() { return mouvementRoulis; }
+    public void setMouvementRoulis(MOUVEMENTS_ROULIS mouvementRoulis) { this.mouvementRoulis = mouvementRoulis; }
 
-    public boolean isSynchrone() {
-        return synchrone;
-    }
+    public Double getPositionRoulis() { return positionRoulis; }
+    public void setPositionRoulis(Double positionRoulis) { this.positionRoulis = positionRoulis; }
 
-    public void setSynchrone(boolean synchrone) {
-        this.synchrone = synchrone;
-    }
+    public Double getVitesseRoulis() { return vitesseRoulis; }
+    public void setVitesseRoulis(Double vitesseRoulis) { this.vitesseRoulis = vitesseRoulis; }
 
-    public Double getVitessePanoramique() {
-        return vitessePanoramique;
-    }
+    public Double getAccelerationRoulis() { return accelerationRoulis; }
+    public void setAccelerationRoulis(Double accelerationRoulis) { this.accelerationRoulis = accelerationRoulis; }
 
-    public void setVitessePanoramique(Double vitessePanoramique) {
-        this.vitessePanoramique = vitessePanoramique;
-    }
-
-    public Double getAccelerationPanoramique() {
-        return accelerationPanoramique;
-    }
-
-    public void setAccelerationPanoramique(Double accelerationPanoramique) {
-        this.accelerationPanoramique = accelerationPanoramique;
-    }
-
-    public Double getVitesseInclinaison() {
-        return vitesseInclinaison;
-    }
-
-    public void setVitesseInclinaison(Double vitesseInclinaison) {
-        this.vitesseInclinaison = vitesseInclinaison;
-    }
-
-    public Double getAccelerationInclinaison() {
-        return accelerationInclinaison;
-    }
-
-    public void setAccelerationInclinaison(Double accelerationInclinaison) {
-        this.accelerationInclinaison = accelerationInclinaison;
-    }
-
-    public Double getVitesseMonterDescendre() {
-        return vitesseMonterDescendre;
-    }
-
-    public void setVitesseMonterDescendre(Double vitesseMonterDescendre) {
-        this.vitesseMonterDescendre = vitesseMonterDescendre;
-    }
-
-    public Double getAccelerationMonterDescendre() {
-        return accelerationMonterDescendre;
-    }
-
-    public void setAccelerationMonterDescendre(Double accelerationMonterDescendre) {
-        this.accelerationMonterDescendre = accelerationMonterDescendre;
-    }
-
-    public Double getVitesseRoulis() {
-        return vitesseRoulis;
-    }
-
-    public void setVitesseRoulis(Double vitesseRoulis) {
-        this.vitesseRoulis = vitesseRoulis;
-    }
-
-    public Double getAccelerationRoulis() {
-        return accelerationRoulis;
-    }
-
-    public void setAccelerationRoulis(Double accelerationRoulis) {
-        this.accelerationRoulis = accelerationRoulis;
-    }
-
-    public double getAnglePanoramique() {
-        return anglePanoramique;
-    }
-
-    public void setAnglePanoramique(double anglePanoramique) {
-        this.anglePanoramique = anglePanoramique;
-    }
-
-    public double getAngleInclinaison() {
-        return angleInclinaison;
-    }
-
-    public void setAngleInclinaison(double angleInclinaison) {
-        this.angleInclinaison = angleInclinaison;
-    }
-
-    public double getAngleMonterDescendre() {
-        return angleMonterDescendre;
-    }
-
-    public void setAngleMonterDescendre(double angleMonterDescendre) {
-        this.angleMonterDescendre = angleMonterDescendre;
-    }
+    public boolean isSynchrone() { return synchrone; }
+    public void setSynchrone(boolean synchrone) { this.synchrone = synchrone; }
 
     @Override
     public String toString() {
         return "MouvementCouEvent{" +
-                "mouvementPanoramique=" + mouvementPanoramique +
-                ", positionPanoramique=" + positionPanoramique +
-                ", anglePanoramique=" + anglePanoramique +
-                ", vitessePanoramique=" + vitessePanoramique +
-                ", accelerationPanoramique=" + accelerationPanoramique +
-                ", mouvementInclinaison=" + mouvementInclinaison +
-                ", positionInclinaison=" + positionInclinaison +
-                ", angleInclinaison=" + angleInclinaison +
-                ", vitesseInclinaison=" + vitesseInclinaison +
-                ", accelerationInclinaison=" + accelerationInclinaison +
-                ", mouvementMonterDescendre=" + mouvementMonterDescendre +
-                ", positionMonterDescendre=" + positionMonterDescendre +
-                ", angleMonterDescendre=" + angleMonterDescendre +
-                ", vitesseMonterDescendre=" + vitesseMonterDescendre +
-                ", accelerationMonterDescendre=" + accelerationMonterDescendre +
-                ", mouvementRoulis=" + mouvementRoulis +
-                ", positionRoulis=" + positionRoulis +
-                ", vitesseRoulis=" + vitesseRoulis +
-                ", accelerationRoulis=" + accelerationRoulis +
-                ", synchrone=" + synchrone +
-                '}';
+                "panoramique=" + positionPanoramique + "/" + anglePanoramique + "/" + mouvementPanoramique +
+                ", inclinaison=" + positionInclinaison + "/" + angleInclinaison + "/" + mouvementInclinaison +
+                ", monterDescendre=" + positionMonterDescendre + "/" + angleMonterDescendre + "/" + mouvementMonterDescendre +
+                ", roulis=" + positionRoulis + "/" + mouvementRoulis +
+                ", synchrone=" + synchrone + "}";
     }
 }

@@ -62,4 +62,9 @@ public class Constantes {
      */
     public static final String DOSSIER_MEMOIRE_CONVERSATIONS = DOSSIER_MEMOIRE + File.separator + "conversations";
 
+    /**
+     * Chemin vers le dossier des animations.
+     */
+    public static final String DOSSIER_ANIMATIONS = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "animations";
+
 }

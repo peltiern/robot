@@ -170,7 +170,6 @@ public class Cerveau extends AbstractOrganeWithThread {
 
         AnimationPlayer animationPlayer = new AnimationPlayer();
         animationPlayer.initialiser();
-        animationPlayer.start();
         RobotEventBus.getInstance().subscribe(animationPlayer);
 
         Cerveau cerveau = new Cerveau();

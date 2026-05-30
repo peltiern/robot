@@ -160,7 +160,6 @@ public class Robot {
         // Lecteur d'animations
         animationPlayer = new AnimationPlayer();
         animationPlayer.initialiser();
-        animationPlayer.start();
         RobotEventBus.getInstance().subscribe(animationPlayer);
         System.out.println("#####      6      ########");
 

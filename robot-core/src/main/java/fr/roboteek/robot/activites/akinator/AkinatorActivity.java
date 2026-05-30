@@ -3,7 +3,7 @@ package fr.roboteek.robot.activites.akinator;
 import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
-import fr.roboteek.robot.organes.actionneurs.animation.Animation;
+import fr.roboteek.robot.organes.actionneurs.animation.AnimationPresets;
 import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
@@ -66,7 +66,7 @@ public class AkinatorActivity extends AbstractActivity {
 
     @Override
     public boolean run() {
-        playAnimation(Animation.RANDOM);
+        playAnimation(AnimationPresets.RANDOM);
         say("Commençons à jouer !");
 
         // A list of rejected guesses, used to prevent them from repeating.
@@ -84,7 +84,7 @@ public class AkinatorActivity extends AbstractActivity {
             // Say question
             System.out.println("Question #" + (question.getStep() + 1));
             System.out.println("\t" + question.getQuestion());
-            playAnimation(Animation.NEUTRAL);
+            playAnimation(AnimationPresets.NEUTRAL);
             say(question.getQuestion());
 
             // Wait for answer
@@ -112,7 +112,7 @@ public class AkinatorActivity extends AbstractActivity {
     private void answerQuestion() {
         boolean answered = false;
         waitingResponse = null;
-        playAnimation(Animation.RANDOM);
+        playAnimation(AnimationPresets.RANDOM);
         while (!answered && !stopActivity) {
             // Iterates while the questions remains unanswered.
 
@@ -237,11 +237,11 @@ public class AkinatorActivity extends AbstractActivity {
         if (win) {
             // If Akinator has won.
             System.out.println("ANIMATION VICTOIRE");
-            playAnimation(Animation.AMAZED);
+            playAnimation(AnimationPresets.AMAZED);
             say("Cool ! J'ai trouvé !");
         } else {
             // If the user has won.
-            playAnimation(Animation.SAD);
+            playAnimation(AnimationPresets.SAD);
             say("Bravo ! Tu as réussi à me battre !");
         }
     }

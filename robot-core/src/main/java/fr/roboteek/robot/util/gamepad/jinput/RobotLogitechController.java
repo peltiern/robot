@@ -264,7 +264,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE);
                 mouvementCouEvent.setAccelerationRoulis(2000D);
                 mouvementCouEvent.setVitesseRoulis(50D);
-                mouvementCouEvent.setPositionRoulis(180);
+                mouvementCouEvent.setPositionRoulis(180.0);
                 mouvementCouEvent.setSynchrone(false);
                 RobotEventBus.getInstance().publish(mouvementCouEvent);
             } else {
@@ -299,7 +299,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE);
                 mouvementCouEvent.setAccelerationRoulis(2000D);
                 mouvementCouEvent.setVitesseRoulis(50D);
-                mouvementCouEvent.setPositionRoulis(-179);
+                mouvementCouEvent.setPositionRoulis(-179.0);
                 mouvementCouEvent.setSynchrone(false);
                 RobotEventBus.getInstance().publish(mouvementCouEvent);
             } else {
@@ -318,22 +318,22 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
             mouvementCouEvent.setAccelerationInclinaison(80D);
             mouvementCouEvent.setVitesseInclinaison(40D);
-            mouvementCouEvent.setPositionInclinaison(0);
+            mouvementCouEvent.setPositionInclinaison(0.0);
             mouvementCouEvent.setAccelerationPanoramique(100D);
             mouvementCouEvent.setVitessePanoramique(60D);
-            mouvementCouEvent.setPositionPanoramique(0);
+            mouvementCouEvent.setPositionPanoramique(0.0);
             mouvementCouEvent.setAccelerationMonterDescendre(100D);
             mouvementCouEvent.setVitesseMonterDescendre(40D);
-            mouvementCouEvent.setPositionMonterDescendre(0);
+            mouvementCouEvent.setPositionMonterDescendre(0.0);
             mouvementCouEvent.setSynchrone(false);
             RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilDroit(80D);
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
-            mouvementYeuxEvent.setPositionOeilDroit(0);
+            mouvementYeuxEvent.setPositionOeilDroit(0.0);
             mouvementYeuxEvent.setAccelerationOeilGauche(80D);
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setPositionOeilGauche(0);
+            mouvementYeuxEvent.setPositionOeilGauche(0.0);
             mouvementYeuxEvent.setSynchrone(false);
             RobotEventBus.getInstance().publishAsync(mouvementYeuxEvent);
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
