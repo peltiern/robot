@@ -42,8 +42,9 @@
   line-height: 1;
   transition: background 0.1s, color 0.1s;
 }
-.iconBtn:hover  { background: var(--surface2); color: var(--text); }
+.iconBtn:hover:not(:disabled)  { background: var(--surface2); color: var(--text); }
 .iconBtn.active { color: var(--accent); }
+.iconBtn:disabled { opacity: 0.28; cursor: default; }
 
 .timeDisp {
   font-family: 'Courier New', monospace;

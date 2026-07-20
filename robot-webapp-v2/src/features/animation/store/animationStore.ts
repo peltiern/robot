@@ -12,6 +12,7 @@ export interface EditorTrack {
   min: number
   max: number
   color: string
+  enabled: boolean
   defaultVelocity: number
   defaultAcceleration: number
   kfs: EditorKeyframe[]
@@ -41,8 +42,9 @@ function buildEditorTracks(defs: TrackDefinition[], totalMs: number): EditorTrac
   const colors = assignTrackColors(defs.map(d => d.id))
   return defs.map(def => ({
     id: def.id,
-    name:  def.name ?? FALLBACK_NAMES[def.id] ?? def.id,
-    color: colors[def.id],
+    name:    def.name ?? FALLBACK_NAMES[def.id] ?? def.id,
+    color:   colors[def.id],
+    enabled: true,
     min: def.minPosition,
     max: def.maxPosition,
     defaultVelocity:     def.defaultVelocity,
@@ -54,11 +56,23 @@ function buildEditorTracks(defs: TrackDefinition[], totalMs: number): EditorTrac
   }))
 }
 
+interface HistorySnapshot {
+  tracks: EditorTrack[]
+  animationName: string
+  totalMs: number
+}
+
+const MAX_HISTORY = 50
+
 export interface AnimationEditorState {
   // Données
   animationName: string
   totalMs: number
   tracks: EditorTrack[]
+
+  // Historique
+  past: HistorySnapshot[]
+  future: HistorySnapshot[]
 
   // Lecture
   playhead: number
@@ -73,6 +87,11 @@ export interface AnimationEditorState {
   // Vitesse/accel globales
   globalVelocity: Record<string, number>
   globalAcceleration: Record<string, number>
+
+  // Actions — historique
+  snapshot: () => void
+  undo:     () => void
+  redo:     () => void
 
   // Actions — lecture
   setPlayhead:    (t: number) => void
@@ -96,132 +115,188 @@ export interface AnimationEditorState {
   // Actions — animation
   setAnimationName:       (n: string) => void
   setGlobalParam:         (group: string, key: 'velocity' | 'acceleration', val: number) => void
+  toggleTrack:            (trackId: TrackId) => void
   loadPreset:             (steps: Array<{ t: number; vals: Partial<Record<TrackId, number>> }>, totalMs: number) => void
   reset:                  () => void
   loadTracksFromBackend:  () => Promise<void>
 }
 
-export const useAnimationStore = create<AnimationEditorState>((set, get) => ({
-  animationName: 'NouvellAnimation',
-  totalMs: 3000,
-  tracks: buildEditorTracks(FALLBACK_TRACKS, 3000),
-  playhead: 0,
-  playing: false,
-  looping: true,
-  pxPerMs: 0.17,
-  scrollX: 0,
-  selectedKf: null,
-  globalVelocity:     { eyes: 250, neck: 250 },
-  globalAcceleration: { eyes: 200, neck: 200 },
+export const useAnimationStore = create<AnimationEditorState>((set, get) => {
 
-  setPlayhead:  t  => set({ playhead: Math.max(0, Math.min(t, get().totalMs)) }),
-  setPlaying:   b  => set({ playing: b }),
-  toggleLoop:   ()  => set(s => ({ looping: !s.looping })),
-  setTotalMs:   ms => set({ totalMs: ms }),
+  // Fonction locale — accès direct à set/get, pas via get().snapshot()
+  function pushSnapshot() {
+    const { past, tracks, animationName, totalMs } = get()
+    set({ past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, animationName, totalMs }], future: [] })
+  }
 
-  setPxPerMs: v  => set({ pxPerMs: Math.max(0.015, Math.min(3, v)) }),
-  setScrollX: v  => set({ scrollX: Math.max(0, v) }),
+  return {
+    animationName: 'NouvellAnimation',
+    totalMs: 3000,
+    tracks: buildEditorTracks(FALLBACK_TRACKS, 3000),
+    past: [],
+    future: [],
+    playhead: 0,
+    playing: false,
+    looping: true,
+    pxPerMs: 0.17,
+    scrollX: 0,
+    selectedKf: null,
+    globalVelocity:     { eyes: 250, neck: 250 },
+    globalAcceleration: { eyes: 200, neck: 200 },
 
-  zoom(factor, atPx, _canvasW) {
-    const { pxPerMs, scrollX } = get()
-    const atT = (atPx + scrollX) / pxPerMs
-    const next = Math.max(0.015, Math.min(3, pxPerMs * factor))
-    set({ pxPerMs: next, scrollX: Math.max(0, atT * next - atPx) })
-  },
+    snapshot: pushSnapshot,
 
-  selectKf: (trackId, kfId) => set({ selectedKf: { trackId, kfId } }),
-  clearSel:  ()              => set({ selectedKf: null }),
+    undo() {
+      const { past, future, tracks, animationName, totalMs } = get()
+      if (past.length === 0) return
+      const prev = past[past.length - 1]
+      set({
+        past: past.slice(0, -1),
+        future: [{ tracks, animationName, totalMs }, ...future.slice(0, MAX_HISTORY - 1)],
+        tracks: prev.tracks,
+        animationName: prev.animationName,
+        totalMs: prev.totalMs,
+        selectedKf: null,
+      })
+    },
 
-  addKf(trackId, tRaw, v) {
-    const t = Math.round(tRaw / SNAP) * SNAP
-    const kf: EditorKeyframe = { id: uid(), t, v }
-    set(s => ({
-      tracks: s.tracks.map(tr =>
-        tr.id === trackId ? { ...tr, kfs: [...tr.kfs, kf] } : tr
-      ),
-    }))
-    return kf
-  },
+    redo() {
+      const { past, future, tracks, animationName, totalMs } = get()
+      if (future.length === 0) return
+      const next = future[0]
+      set({
+        past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, animationName, totalMs }],
+        future: future.slice(1),
+        tracks: next.tracks,
+        animationName: next.animationName,
+        totalMs: next.totalMs,
+        selectedKf: null,
+      })
+    },
 
-  moveKf(trackId, kfId, tRaw, v) {
-    const t = Math.max(0, Math.round(tRaw / SNAP) * SNAP)
-    set(s => ({
-      tracks: s.tracks.map(tr =>
-        tr.id !== trackId ? tr : {
-          ...tr,
-          kfs: tr.kfs.map(k => k.id === kfId ? { ...k, t: Math.min(t, s.totalMs), v } : k),
+    setPlayhead:  t  => set({ playhead: Math.max(0, Math.min(t, get().totalMs)) }),
+    setPlaying:   b  => set({ playing: b }),
+    toggleLoop:   ()  => set(s => ({ looping: !s.looping })),
+    setTotalMs(ms) {
+      pushSnapshot()
+      set({ totalMs: ms })
+    },
+
+    setPxPerMs: v  => set({ pxPerMs: Math.max(0.015, Math.min(3, v)) }),
+    setScrollX: v  => set({ scrollX: Math.max(0, v) }),
+
+    zoom(factor, atPx, _canvasW) {
+      const { pxPerMs, scrollX } = get()
+      const atT = (atPx + scrollX) / pxPerMs
+      const next = Math.max(0.015, Math.min(3, pxPerMs * factor))
+      set({ pxPerMs: next, scrollX: Math.max(0, atT * next - atPx) })
+    },
+
+    selectKf: (trackId, kfId) => set({ selectedKf: { trackId, kfId } }),
+    clearSel:  ()              => set({ selectedKf: null }),
+
+    addKf(trackId, tRaw, v) {
+      pushSnapshot()
+      const t = Math.round(tRaw / SNAP) * SNAP
+      const kf: EditorKeyframe = { id: uid(), t, v }
+      set(s => ({
+        tracks: s.tracks.map(tr =>
+          tr.id === trackId ? { ...tr, kfs: [...tr.kfs, kf] } : tr
+        ),
+      }))
+      return kf
+    },
+
+    moveKf(trackId, kfId, tRaw, v) {
+      const t = Math.max(0, Math.round(tRaw / SNAP) * SNAP)
+      set(s => ({
+        tracks: s.tracks.map(tr =>
+          tr.id !== trackId ? tr : {
+            ...tr,
+            kfs: tr.kfs.map(k => k.id === kfId ? { ...k, t: Math.min(t, s.totalMs), v } : k),
+          }
+        ),
+      }))
+    },
+
+    deleteKf(trackId, kfId) {
+      pushSnapshot()
+      set(s => ({
+        selectedKf: s.selectedKf?.kfId === kfId ? null : s.selectedKf,
+        tracks: s.tracks.map(tr =>
+          tr.id !== trackId ? tr : { ...tr, kfs: tr.kfs.filter(k => k.id !== kfId) }
+        ),
+      }))
+    },
+
+    updateSelKf(t, v) {
+      const sel = get().selectedKf
+      if (!sel) return
+      get().moveKf(sel.trackId, sel.kfId, t, v)
+    },
+
+    setAnimationName: n => set({ animationName: n }),
+
+    toggleTrack(trackId) {
+      pushSnapshot()
+      set(s => ({
+        tracks: s.tracks.map(t =>
+          t.id === trackId ? { ...t, enabled: !t.enabled } : t
+        ),
+      }))
+    },
+
+    setGlobalParam(group, key, val) {
+      if (key === 'velocity')
+        set(s => ({ globalVelocity: { ...s.globalVelocity, [group]: val } }))
+      else
+        set(s => ({ globalAcceleration: { ...s.globalAcceleration, [group]: val } }))
+    },
+
+    loadPreset(steps, totalMs) {
+      pushSnapshot()
+      const currentDefs: TrackDefinition[] = get().tracks.map(t => ({
+        id: t.id, name: t.name, minPosition: t.min, maxPosition: t.max,
+        defaultVelocity: t.defaultVelocity, defaultAcceleration: t.defaultAcceleration,
+      }))
+      const tracks = buildEditorTracks(currentDefs, totalMs)
+      steps.forEach(({ t, vals }) => {
+        Object.entries(vals).forEach(([id, v]) => {
+          if (v === undefined) return
+          const tr = tracks.find(x => x.id === id)
+          if (tr) tr.kfs.push({ id: uid(), t, v })
+        })
+      })
+      tracks.forEach(tr => {
+        if (tr.kfs.length < 2) {
+          tr.kfs = [{ id: uid(), t: 0, v: 0 }, { id: uid(), t: totalMs, v: 0 }]
         }
-      ),
-    }))
-  },
-
-  deleteKf(trackId, kfId) {
-    set(s => ({
-      selectedKf: s.selectedKf?.kfId === kfId ? null : s.selectedKf,
-      tracks: s.tracks.map(tr =>
-        tr.id !== trackId ? tr : { ...tr, kfs: tr.kfs.filter(k => k.id !== kfId) }
-      ),
-    }))
-  },
-
-  updateSelKf(t, v) {
-    const sel = get().selectedKf
-    if (!sel) return
-    get().moveKf(sel.trackId, sel.kfId, t, v)
-  },
-
-  setAnimationName: n => set({ animationName: n }),
-
-  setGlobalParam(group, key, val) {
-    if (key === 'velocity')
-      set(s => ({ globalVelocity: { ...s.globalVelocity, [group]: val } }))
-    else
-      set(s => ({ globalAcceleration: { ...s.globalAcceleration, [group]: val } }))
-  },
-
-  loadPreset(steps, totalMs) {
-    const currentDefs: TrackDefinition[] = get().tracks.map(t => ({
-      id: t.id, name: t.name, minPosition: t.min, maxPosition: t.max,
-      defaultVelocity: t.defaultVelocity, defaultAcceleration: t.defaultAcceleration,
-    }))
-    const tracks = buildEditorTracks(currentDefs, totalMs)
-    steps.forEach(({ t, vals }) => {
-      Object.entries(vals).forEach(([id, v]) => {
-        if (v === undefined) return
-        const tr = tracks.find(x => x.id === id)
-        if (tr) tr.kfs.push({ id: uid(), t, v })
       })
-    })
-    // S'assurer qu'il y a au moins 2 kfs par track
-    tracks.forEach(tr => {
-      if (tr.kfs.length < 2) {
-        tr.kfs = [{ id: uid(), t: 0, v: 0 }, { id: uid(), t: totalMs, v: 0 }]
+      set({ tracks, totalMs, playhead: 0, selectedKf: null })
+    },
+
+    reset() {
+      pushSnapshot()
+      const { totalMs, tracks } = get()
+      const defs: TrackDefinition[] = tracks.map(t => ({
+        id: t.id, name: t.name, minPosition: t.min, maxPosition: t.max,
+        defaultVelocity: t.defaultVelocity, defaultAcceleration: t.defaultAcceleration,
+      }))
+      set({ tracks: buildEditorTracks(defs, totalMs), playhead: 0, selectedKf: null })
+    },
+
+    async loadTracksFromBackend() {
+      try {
+        const defs = await trackApi.getAll()
+        const { totalMs, tracks: current } = get()
+        const updated = buildEditorTracks(defs, totalMs).map(newTrack => {
+          const existing = current.find(t => t.id === newTrack.id)
+          return existing ? { ...newTrack, kfs: existing.kfs, enabled: existing.enabled } : newTrack
+        })
+        set({ tracks: updated })
+      } catch {
+        // Backend non disponible — on garde les tracks fallback
       }
-    })
-    set({ tracks, totalMs, playhead: 0, selectedKf: null })
-  },
-
-  reset() {
-    const { totalMs, tracks } = get()
-    const defs: TrackDefinition[] = tracks.map(t => ({
-      id: t.id, name: t.name, minPosition: t.min, maxPosition: t.max,
-      defaultVelocity: t.defaultVelocity, defaultAcceleration: t.defaultAcceleration,
-    }))
-    set({ tracks: buildEditorTracks(defs, totalMs), playhead: 0, selectedKf: null })
-  },
-
-  async loadTracksFromBackend() {
-    try {
-      const defs = await trackApi.getAll()
-      const { totalMs, tracks: current } = get()
-      // Conserver les kfs existants si le track existe déjà
-      const updated = buildEditorTracks(defs, totalMs).map(newTrack => {
-        const existing = current.find(t => t.id === newTrack.id)
-        return existing ? { ...newTrack, kfs: existing.kfs } : newTrack
-      })
-      set({ tracks: updated })
-    } catch {
-      // Backend non disponible — on garde les tracks fallback
-    }
-  },
-}))
+    },
+  }
+})

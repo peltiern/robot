@@ -11,12 +11,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="robot-core" />
+        <module name="robot-sandbox" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="ai-engine" target="1.5" />
       <module name="robot" target="1.8" />
-      <module name="robot-sandbox" target="1.8" />
       <module name="robot-server" target="11" />
     </bytecodeTargetLevel>
   </component>
@@ -25,5 +25,10 @@
       <module name="robot-core" options="-parameters" />
       <module name="robot-server" options="-parameters" />
     </option>
+  </component>
+  <component name="TypeScriptCompiler">
+    <option name="typeScriptCompilerParams" value="~/IdeaProjects/robot/robot-webapp-v2/tsconfig.json." />
+    <option name="typeScriptServiceDirectory" value="$PROJECT_DIR$/robot-webapp-v2/node_modules/typescript" />
+    <option name="versionType" value="SERVICE_DIRECTORY" />
   </component>
 </project>

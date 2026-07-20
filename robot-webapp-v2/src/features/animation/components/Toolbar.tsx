@@ -26,7 +26,7 @@ export function Toolbar({ onPlay, onPause, onStop, onExport, onImport }: Props) 
   const {
     playing, looping, playhead, totalMs, animationName,
     setPlaying, toggleLoop, setTotalMs, setAnimationName, loadPreset,
-    setPxPerMs, pxPerMs,
+    setPxPerMs, pxPerMs, past, future, undo, redo,
   } = useAnimationStore()
 
   const selectRef = useRef<HTMLSelectElement>(null)
@@ -48,6 +48,12 @@ export function Toolbar({ onPlay, onPause, onStop, onExport, onImport }: Props) 
         onChange={e => setAnimationName(e.target.value)}
         title="Nom de l'animation"
       />
+
+      <div className={styles.sep} />
+
+      {/* Undo / Redo */}
+      <button className={styles.iconBtn} onClick={undo} disabled={past.length === 0} title="Annuler (Ctrl+Z)">↩</button>
+      <button className={styles.iconBtn} onClick={redo} disabled={future.length === 0} title="Rétablir (Ctrl+Y)">↪</button>
 
       <div className={styles.sep} />
 

@@ -3,8 +3,10 @@ import { useAnimationStore } from './store/animationStore'
 import { Toolbar }         from './components/Toolbar'
 import { Timeline }        from './components/Timeline'
 import { PropertiesPanel } from './components/PropertiesPanel'
+import { LibraryPanel }    from './components/LibraryPanel'
 import { toAnimation }     from './utils/convert'
 import { animationApi }    from '../../shared/api/animationApi'
+import type { Animation }  from '../../shared/types/animation'
 import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import styles from './AnimationPage.module.css'
 
@@ -20,6 +22,7 @@ export function AnimationPage() {
   const [exportJson, setExportJson]   = useState('')
   const [importJson, setImportJson]   = useState('')
   const [statusMsg, setStatusMsg]     = useState('')
+  const [libraryKey, setLibraryKey]   = useState(0)
 
   // ── Boucle de lecture (RAF) ────────────────────────────────────────────────
 
@@ -48,8 +51,8 @@ export function AnimationPage() {
     originRef.current = performance.now() - (playhead >= totalMs ? 0 : playhead)
     store.setPlaying(true)
     rafRef.current = requestAnimationFrame(tick)
-    // Envoyer au robot
-    ws.playAnimation(buildAnimation())
+    // Envoyer au robot (tracks désactivées exclues)
+    ws.playAnimation(buildAnimationForRobot())
   }
 
   function pause() {
@@ -74,7 +77,7 @@ export function AnimationPage() {
   // Scrubbing vers le robot quand le playhead bouge sans lecture
   useEffect(() => {
     if (!store.playing && ws.connected) {
-      ws.scrubAnimation(buildAnimation(), store.playhead)
+      ws.scrubAnimation(buildAnimationForRobot(), store.playhead)
     }
   }, [store.playhead])
 
@@ -97,10 +100,32 @@ export function AnimationPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [store.playing])
 
+  useEffect(() => {
+    function onUndoRedo(e: KeyboardEvent) {
+      if (!e.ctrlKey && !e.metaKey) return
+      const key = e.key.toLowerCase()
+      if (key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        useAnimationStore.getState().undo()
+      } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+        e.preventDefault()
+        useAnimationStore.getState().redo()
+      }
+    }
+    window.addEventListener('keydown', onUndoRedo)
+    return () => window.removeEventListener('keydown', onUndoRedo)
+  }, [])
+
   // ── Helpers ────────────────────────────────────────────────────────────────
 
+  /** Toutes les tracks — pour la sauvegarde JSON (les désactivées restent dans le fichier) */
   function buildAnimation() {
     return toAnimation(store.animationName, store.totalMs, store.tracks)
+  }
+
+  /** Seulement les tracks actives — pour le play/scrub vers le robot */
+  function buildAnimationForRobot() {
+    return toAnimation(store.animationName, store.totalMs, store.tracks.filter(t => t.enabled))
   }
 
   // ── Import / Export ────────────────────────────────────────────────────────
@@ -149,9 +174,16 @@ export function AnimationPage() {
       const warnCount = res.warnings.length
       setStatusMsg(warnCount > 0 ? `Sauvegardé avec ${warnCount} avertissement(s)` : 'Sauvegardé ✓')
       setTimeout(() => setStatusMsg(''), 3000)
+      setLibraryKey(k => k + 1)
     } catch {
       setStatusMsg('Erreur lors de la sauvegarde')
     }
+  }
+
+  function handleLoadFromLibrary(anim: Animation) {
+    const steps = buildStepsFromAnimation(anim)
+    store.loadPreset(steps, anim.totalDuration ?? store.totalMs)
+    store.setAnimationName(anim.name)
   }
 
   return (
@@ -162,6 +194,7 @@ export function AnimationPage() {
       />
 
       <div className={styles.main}>
+        <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} />
         <Timeline />
         <PropertiesPanel />
       </div>

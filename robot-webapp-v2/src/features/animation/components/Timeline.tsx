@@ -39,6 +39,10 @@ function renderTimeline(
 
   tracks.forEach((tr, ti) => {
     const y0 = ti * TH
+    const disabled = !tr.enabled
+
+    ctx.save()
+    if (disabled) ctx.globalAlpha = 0.28
 
     // Fond alterné
     ctx.fillStyle = ti % 2 === 0 ? '#161b22' : '#0d1117'
@@ -55,7 +59,7 @@ function renderTimeline(
     // Courbe Catmull-Rom
     const sorted = [...tr.kfs].sort((a, b) => a.t - b.t)
     if (sorted.length >= 2) {
-      ctx.strokeStyle = tr.color + 'aa'
+      ctx.strokeStyle = disabled ? '#555' : tr.color + 'aa'
       ctx.lineWidth = 1.5
       ctx.beginPath()
       const step = Math.max(1, Math.round(1 / pxPerMs))
@@ -76,7 +80,7 @@ function renderTimeline(
       ctx.save()
       ctx.translate(x, y)
       ctx.rotate(Math.PI / 4)
-      ctx.fillStyle = isSelected ? '#fff' : tr.color
+      ctx.fillStyle = disabled ? '#444' : (isSelected ? '#fff' : tr.color)
       ctx.strokeStyle = isSelected ? tr.color : '#000a'
       ctx.lineWidth = isSelected ? 2 : 1
       ctx.fillRect(-KR, -KR, KR * 2, KR * 2)
@@ -84,7 +88,9 @@ function renderTimeline(
       ctx.restore()
     })
 
-    // Séparateur bas
+    ctx.restore()
+
+    // Séparateur bas (toujours pleine opacité)
     ctx.strokeStyle = '#30363d'
     ctx.lineWidth = 1
     ctx.beginPath()
@@ -197,6 +203,24 @@ export function Timeline() {
     return () => obs.disconnect()
   }, [resize])
 
+  // Les événements wheel doivent être non-passifs pour pouvoir appeler preventDefault()
+  // et éviter que Ctrl+Wheel déclenche le zoom du navigateur.
+  useEffect(() => {
+    const tl  = tlRef.current
+    const rul = rulRef.current
+    if (!tl || !rul) return
+
+    const handleTlWheel  = (e: WheelEvent) => { e.preventDefault(); onWheelNative(e, false) }
+    const handleRulWheel = (e: WheelEvent) => { e.preventDefault(); onWheelNative(e, true)  }
+
+    tl.addEventListener ('wheel', handleTlWheel,  { passive: false })
+    rul.addEventListener('wheel', handleRulWheel, { passive: false })
+    return () => {
+      tl.removeEventListener ('wheel', handleTlWheel)
+      rul.removeEventListener('wheel', handleRulWheel)
+    }
+  })
+
   // ── Hit tests ────────────────────────────────────────────────────────────
 
   function hitKf(x: number, y: number) {
@@ -233,6 +257,7 @@ export function Timeline() {
 
     const hit = hitKf(x, y)
     if (hit) {
+      store.snapshot()
       store.selectKf(hit.trackId, hit.kfId)
       drag.current = { type: 'kf', trackId: hit.trackId, kfId: hit.kfId, startX: x, startY: y, origT: hit.kf.t, origV: hit.kf.v }
       return
@@ -285,14 +310,14 @@ export function Timeline() {
     if (hit) store.deleteKf(hit.trackId, hit.kfId)
   }
 
-  function onWheel(e: React.WheelEvent<HTMLCanvasElement>, fromRuler = false) {
-    e.preventDefault()
+  function onWheelNative(e: WheelEvent, fromRuler: boolean) {
     const rect = (fromRuler ? rulRef.current! : tlRef.current!).getBoundingClientRect()
     const x = e.clientX - rect.left
     if (e.ctrlKey || e.metaKey) {
       store.zoom(e.deltaY < 0 ? 1.18 : 1 / 1.18, x, rect.width)
     } else {
-      store.setScrollX(Math.max(0, store.scrollX + (e.deltaX || 0) + e.deltaY * 0.4))
+      const { scrollX } = useAnimationStore.getState()
+      store.setScrollX(Math.max(0, scrollX + (e.deltaX || 0) + e.deltaY * 0.4))
     }
   }
 
@@ -324,7 +349,6 @@ export function Timeline() {
             onMouseDown={onRulerDown}
             onMouseMove={onRulerMove}
             onMouseUp={onMouseUp}
-            onWheel={e => onWheel(e, true)}
           />
         </div>
       </div>
@@ -336,9 +360,19 @@ export function Timeline() {
           {store.tracks.map(tr => {
             const v = trackVal([...tr.kfs].sort((a, b) => a.t - b.t), store.playhead, tr.min, tr.max)
             return (
-              <div key={tr.id} className={styles.trackLabel} style={{ height: TH }}>
+              <div
+                key={tr.id}
+                className={`${styles.trackLabel} ${!tr.enabled ? styles.trackDisabled : ''}`}
+                style={{ height: TH }}
+              >
                 <div className={styles.tlName}>
-                  <span className={styles.dot} style={{ background: tr.color }} />
+                  <button
+                    className={styles.trackToggle}
+                    onClick={() => store.toggleTrack(tr.id)}
+                    title={tr.enabled ? 'Désactiver la track' : 'Activer la track'}
+                  >
+                    <span className={styles.dot} style={{ background: tr.enabled ? tr.color : '#444' }} />
+                  </button>
                   {tr.name}
                 </div>
                 <div className={styles.tlRange}>{tr.min}° / {tr.max}°</div>
@@ -356,7 +390,6 @@ export function Timeline() {
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             onDoubleClick={onDblClick}
-            onWheel={e => onWheel(e, false)}
           />
         </div>
       </div>
