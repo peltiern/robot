@@ -55,6 +55,15 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     private double accelerationParDefaut;
 
     /**
+     * Position à laquelle engager le servo à l'attachement : la position physique probable
+     * (position de repos laissée par le dernier arrêt). Engager ailleurs ferait sauter le
+     * servo à pleine vitesse matérielle — sans retour de position, le contrôleur ne peut
+     * pas appliquer de rampe sur ce premier mouvement. Optionnelle : à défaut, la position
+     * initiale est utilisée (comportement historique).
+     */
+    private Double positionEngagement;
+
+    /**
      * Flag indiquant que la position est atteinte.
      */
     private AtomicBoolean positionAtteinte = new AtomicBoolean(true);
@@ -65,7 +74,19 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
      * @param index index du moteur sur le contrôleur
      */
     public PhidgetsServoMotor(int index, double positionInitiale, double positionMin, double positionMax, double vitesseParDefaut, double accelerationParDefaut) {
+        this(index, positionInitiale, positionMin, positionMax, vitesseParDefaut, accelerationParDefaut, null);
+    }
+
+    /**
+     * Constructeur d'un moteur Phidget avec position d'engagement.
+     *
+     * @param index              index du moteur sur le contrôleur
+     * @param positionEngagement position physique probable du servo, à laquelle l'engager
+     *                           sans saut (voir {@link #positionEngagement}) ; peut être null
+     */
+    public PhidgetsServoMotor(int index, double positionInitiale, double positionMin, double positionMax, double vitesseParDefaut, double accelerationParDefaut, Double positionEngagement) {
         try {
+            this.positionEngagement = positionEngagement;
             this.positionInitiale = positionInitiale;
             this.positionMin = positionMin;
             this.positionMax = positionMax;
@@ -267,7 +288,10 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
             if (attachEvent.getSource().equals(rcServo)) {
                 //rcServo.setDataInterval(32);
                 rcServo.setAcceleration(accelerationParDefaut);
-                rcServo.setTargetPosition(positionInitiale);
+                // Engagement à la position physique probable pour éviter un saut à pleine
+                // vitesse matérielle (la rampe ne s'applique qu'entre deux consignes,
+                // jamais sur le rattrapage initial de la position réelle, inconnue)
+                rcServo.setTargetPosition(positionEngagement != null ? positionEngagement : positionInitiale);
                 rcServo.setVelocityLimit(vitesseParDefaut);
                 rcServo.setEngaged(true);
                 System.out.println("Servo " + rcServo.getChannel() + " attached");

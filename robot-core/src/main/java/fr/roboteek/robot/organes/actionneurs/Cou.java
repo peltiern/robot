@@ -62,6 +62,18 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
     private final Logger logger = LoggerFactory.getLogger(Cou.class);
 
     /**
+     * Tolérance (en degrés) pour considérer une position servo atteinte.
+     */
+    private static final double TOLERANCE_POSITION = 1.0;
+
+    /**
+     * Marge (en degrés) dont la position de repos peut dépasser les butées logicielles de
+     * mouvement : l'appui mécanique stable se trouve juste au-delà des angles autorisés
+     * en fonctionnement. Garde-fou contre une valeur aberrante dans robot.properties.
+     */
+    private static final double MARGE_REPOS = 5.0;
+
+    /**
      * Flag de démarrage de l'organe (cycle de vie Spring).
      */
     private volatile boolean running = false;
@@ -76,14 +88,18 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
 
     @Override
     public void initialiser() {
-        // Création des moteurs au démarrage de la phase (et non à la construction du bean)
+        // Création des moteurs au démarrage de la phase (et non à la construction du bean).
+        // Chaque servo est engagé à sa position de repos — sa position physique probable,
+        // laissée par le dernier arrêt — pour éviter le saut à pleine vitesse à l'engagement ;
+        // le retour à la position initiale se fait ensuite en rampe douce (reset()).
         moteurPanoramique = new PhidgetsServoMotor(
                 phidgetsConfig.neckLeftRightMotorIndex(),
                 phidgetsConfig.neckLeftRightMotorInitialPosition(),
                 phidgetsConfig.neckLeftRightMotorMinPosition(),
                 phidgetsConfig.neckLeftRightMotorMaxPosition(),
                 phidgetsConfig.neckLeftRightMotorSpeed(),
-                phidgetsConfig.neckLeftRightMotorAcceleration()
+                phidgetsConfig.neckLeftRightMotorAcceleration(),
+                positionReposPanoramique()
         );
         moteurInclinaison = new PhidgetsServoMotor(
                 phidgetsConfig.neckTiltMotorIndex(),
@@ -91,7 +107,8 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
                 phidgetsConfig.neckTiltMotorMinPosition(),
                 phidgetsConfig.neckTiltMotorMaxPosition(),
                 phidgetsConfig.neckTiltMotorSpeed(),
-                phidgetsConfig.neckTiltMotorAcceleration()
+                phidgetsConfig.neckTiltMotorAcceleration(),
+                positionReposInclinaison()
         );
         moteurMonterDescendre = new PhidgetsServoMotor(
                 phidgetsConfig.neckUpDownMotorIndex(),
@@ -99,7 +116,8 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
                 phidgetsConfig.neckUpDownMotorMinPosition(),
                 phidgetsConfig.neckUpDownMotorMaxPosition(),
                 phidgetsConfig.neckUpDownMotorSpeed(),
-                phidgetsConfig.neckUpDownMotorAcceleration()
+                phidgetsConfig.neckUpDownMotorAcceleration(),
+                positionReposMonterDescendre()
         );
 
         moteurPanoramique.setEngaged(true);
@@ -349,19 +367,42 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
 
     @Override
     public void arreter() {
-        reset();
-        // Attente (bornée) du retour à la position initiale
+        // Rejoint une position de repos mécaniquement stable (tête baissée) AVANT le
+        // désengagement des servos, pour éviter que la tête ne tombe d'un coup.
+        // Positions réglables dans robot.properties (clés *.position.rest) ; à défaut,
+        // la position initiale est visée (comportement historique).
+        double reposPanoramique = positionReposPanoramique();
+        double reposInclinaison = positionReposInclinaison();
+        double reposMonterDescendre = positionReposMonterDescendre();
+        // Aide au réglage des positions de repos : placer la tête comme souhaité (manette)
+        // puis relever ces valeurs dans les logs à l'arrêt
+        logger.info("Positions au moment de l'arrêt : pan={} tilt={} up_down={} — cibles de repos : pan={} tilt={} up_down={}",
+                moteurPanoramique.getPositionReelle(), moteurInclinaison.getPositionReelle(),
+                moteurMonterDescendre.getPositionReelle(), reposPanoramique, reposInclinaison, reposMonterDescendre);
+        moteurPanoramique.setPositionCible(reposPanoramique, null, null, false);
+        moteurInclinaison.setPositionCible(reposInclinaison, null, null, false);
+        moteurMonterDescendre.setPositionCible(reposMonterDescendre, null, null, false);
+        // Attente (bornée) de l'arrivée en position de repos, à la tolérance près
+        // (une comparaison stricte de doubles n'est jamais vraie et épuisait les 5 s)
         long limite = System.currentTimeMillis() + 5000;
         while (System.currentTimeMillis() < limite
-                && (moteurPanoramique.getPositionReelle() != phidgetsConfig.neckLeftRightMotorInitialPosition()
-                || moteurInclinaison.getPositionReelle() != phidgetsConfig.neckTiltMotorInitialPosition()
-                || moteurMonterDescendre.getPositionReelle() != phidgetsConfig.neckUpDownMotorInitialPosition())) {
+                && !(estAtteinte(moteurPanoramique, reposPanoramique)
+                && estAtteinte(moteurInclinaison, reposInclinaison)
+                && estAtteinte(moteurMonterDescendre, reposMonterDescendre))) {
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
             }
+        }
+        // Temps de stabilisation : la position remontée par le Phidget est celle de la
+        // trajectoire commandée, pas celle du servo réel qui traîne un peu derrière —
+        // on lui laisse le temps de se poser avant de couper.
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
         moteurPanoramique.stop();
         moteurInclinaison.stop();
@@ -375,6 +416,38 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
         moteurPanoramique.close();
         moteurInclinaison.close();
         moteurMonterDescendre.close();
+    }
+
+    /**
+     * Position de repos configurée, ou position de secours si absente. Bornée aux limites
+     * de mouvement élargies de {@link #MARGE_REPOS} (les butées logicielles protègent le
+     * mouvement ; l'appui stable de repos peut être juste au-delà).
+     */
+    private static double positionRepos(Double positionConfiguree, double positionParDefaut, double positionMin, double positionMax) {
+        double position = positionConfiguree != null ? positionConfiguree : positionParDefaut;
+        return Math.max(positionMin - MARGE_REPOS, Math.min(positionMax + MARGE_REPOS, position));
+    }
+
+    private double positionReposPanoramique() {
+        return positionRepos(phidgetsConfig.neckLeftRightMotorRestPosition(), phidgetsConfig.neckLeftRightMotorInitialPosition(),
+                phidgetsConfig.neckLeftRightMotorMinPosition(), phidgetsConfig.neckLeftRightMotorMaxPosition());
+    }
+
+    private double positionReposInclinaison() {
+        return positionRepos(phidgetsConfig.neckTiltMotorRestPosition(), phidgetsConfig.neckTiltMotorInitialPosition(),
+                phidgetsConfig.neckTiltMotorMinPosition(), phidgetsConfig.neckTiltMotorMaxPosition());
+    }
+
+    private double positionReposMonterDescendre() {
+        return positionRepos(phidgetsConfig.neckUpDownMotorRestPosition(), phidgetsConfig.neckUpDownMotorInitialPosition(),
+                phidgetsConfig.neckUpDownMotorMinPosition(), phidgetsConfig.neckUpDownMotorMaxPosition());
+    }
+
+    /**
+     * Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près.
+     */
+    private static boolean estAtteinte(PhidgetsServoMotor moteur, double cible) {
+        return Math.abs(moteur.getPositionReelle() - cible) < TOLERANCE_POSITION;
     }
 
     /**

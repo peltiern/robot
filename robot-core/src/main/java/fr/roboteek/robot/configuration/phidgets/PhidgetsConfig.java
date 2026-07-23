@@ -139,4 +139,22 @@ public interface PhidgetsConfig extends Config {
     @Key("phidgets.eyes.motor.relative.position.max")
     @DefaultValue("20")
     double eyeMotorRelativePositionMax();
+
+    // Positions de repos, rejointes AVANT le désengagement des servos à l'arrêt du robot
+    // pour éviter que la tête et les yeux ne tombent d'un coup (position mécaniquement
+    // stable, tête baissée). Optionnelles (type Double) : à défaut, la position
+    // initiale/zéro est utilisée. Pour trouver les bonnes valeurs : placer la tête à la
+    // manette puis lire les « Positions au moment de l'arrêt » dans les logs.
+
+    @Key("phidgets.neck.motor.pan.position.rest")
+    Double neckLeftRightMotorRestPosition();
+
+    @Key("phidgets.neck.motor.tilt.position.rest")
+    Double neckTiltMotorRestPosition();
+
+    @Key("phidgets.neck.motor.up_down.position.rest")
+    Double neckUpDownMotorRestPosition();
+
+    @Key("phidgets.eyes.motor.relative.position.rest")
+    Double eyeMotorRelativeRestPosition();
 }

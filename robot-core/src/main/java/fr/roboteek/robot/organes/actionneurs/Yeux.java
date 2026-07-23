@@ -76,6 +76,18 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     private final Logger logger = LoggerFactory.getLogger(Yeux.class);
 
     /**
+     * Tolérance (en degrés) pour considérer une position servo atteinte.
+     */
+    private static final double TOLERANCE_POSITION = 1.0;
+
+    /**
+     * Marge (en degrés) dont la position de repos peut dépasser les butées logicielles de
+     * mouvement : l'appui mécanique stable se trouve juste au-delà des angles autorisés
+     * en fonctionnement. Garde-fou contre une valeur aberrante dans robot.properties.
+     */
+    private static final double MARGE_REPOS = 5.0;
+
+    /**
      * Flag de démarrage de l'organe (cycle de vie Spring).
      */
     private volatile boolean running = false;
@@ -90,14 +102,18 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
 
     @Override
     public void initialiser() {
-        // Création des moteurs au démarrage de la phase (et non à la construction du bean)
+        // Création des moteurs au démarrage de la phase (et non à la construction du bean).
+        // Chaque servo est engagé à sa position de repos — sa position physique probable,
+        // laissée par le dernier arrêt — pour éviter le saut à pleine vitesse à l'engagement ;
+        // le retour à la position zéro se fait ensuite en rampe douce (reset()).
         moteurOeilGauche = new PhidgetsServoMotor(
                 phidgetsConfig.eyeLeftMotorIndex(),
                 phidgetsConfig.eyeLeftMotorPositionZero(),
                 toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMax()),
                 toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMin()),
                 phidgetsConfig.eyeLeftMotorSpeed(),
-                phidgetsConfig.eyeLeftMotorAcceleration()
+                phidgetsConfig.eyeLeftMotorAcceleration(),
+                toPositionAbsolueOeilGauche(positionReposRelative())
         );
         moteurOeilDroit = new PhidgetsServoMotor(
                 phidgetsConfig.eyeRightMotorIndex(),
@@ -105,7 +121,8 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
                 toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMax()),
                 toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMin()),
                 phidgetsConfig.eyeRightMotorSpeed(),
-                phidgetsConfig.eyeRightMotorAcceleration()
+                phidgetsConfig.eyeRightMotorAcceleration(),
+                toPositionAbsolueOeilDroit(positionReposRelative())
         );
 
         moteurOeilGauche.setSpeedRampingState(true);
@@ -368,18 +385,37 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
 
     @Override
     public void arreter() {
-        reset();
-        // Attente (bornée) du retour à la position initiale
+        // Rejoint une position de repos mécaniquement stable (yeux baissés) AVANT le
+        // désengagement des servos, pour éviter que les yeux ne tombent d'un coup.
+        // Position relative réglable dans robot.properties (clé eyes.motor.relative.position.rest,
+        // négatif = baissés) ; à défaut, la position zéro est visée (comportement historique).
+        double reposRelatif = positionReposRelative();
+        double reposOeilGauche = toPositionAbsolueOeilGauche(reposRelatif);
+        double reposOeilDroit = toPositionAbsolueOeilDroit(reposRelatif);
+        logger.info("Positions au moment de l'arrêt : gauche={} droit={} — cible de repos relative : {}",
+                moteurOeilGauche.getPositionReelle(), moteurOeilDroit.getPositionReelle(), reposRelatif);
+        moteurOeilGauche.setPositionCible(reposOeilGauche, null, null, false);
+        moteurOeilDroit.setPositionCible(reposOeilDroit, null, null, false);
+        // Attente (bornée) de l'arrivée en position de repos, à la tolérance près
+        // (une comparaison stricte de doubles n'est jamais vraie et épuisait les 5 s)
         long limite = System.currentTimeMillis() + 5000;
         while (System.currentTimeMillis() < limite
-                && (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero()
-                || moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero())) {
+                && !(estAtteinte(moteurOeilGauche, reposOeilGauche)
+                && estAtteinte(moteurOeilDroit, reposOeilDroit))) {
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;
             }
+        }
+        // Temps de stabilisation : la position remontée par le Phidget est celle de la
+        // trajectoire commandée, pas celle du servo réel qui traîne un peu derrière —
+        // on lui laisse le temps de se poser avant de couper.
+        try {
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
         moteurOeilGauche.stop();
         moteurOeilDroit.stop();
@@ -389,6 +425,25 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
         moteurOeilDroit.setEngaged(false);
         moteurOeilGauche.close();
         moteurOeilDroit.close();
+    }
+
+    /**
+     * Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près.
+     */
+    private static boolean estAtteinte(PhidgetsServoMotor moteur, double cible) {
+        return Math.abs(moteur.getPositionReelle() - cible) < TOLERANCE_POSITION;
+    }
+
+    /**
+     * Position de repos relative configurée (négatif = yeux baissés), ou position zéro si
+     * absente. Bornée aux limites relatives élargies de {@link #MARGE_REPOS} — le travail
+     * se fait en relatif car les bornes absolues des deux yeux sont inversées.
+     */
+    private double positionReposRelative() {
+        Double reposConfigure = phidgetsConfig.eyeMotorRelativeRestPosition();
+        double repos = reposConfigure != null ? reposConfigure : 0;
+        return Math.max(phidgetsConfig.eyeMotorRelativePositionMin() - MARGE_REPOS,
+                Math.min(phidgetsConfig.eyeMotorRelativePositionMax() + MARGE_REPOS, repos));
     }
 
     /**

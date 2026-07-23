@@ -162,6 +162,37 @@ Si le `docker-compose.yml` lui-même a changé, le recopier aussi sur le Jetson
 puis `up -d`. Et si le code **et** l'environnement ont changé (ex. montée de version
 Java), enchaîner les deux : nouveau jar, puis pull + up.
 
+## 5. Position de repos des servos (tête et yeux)
+
+À l'arrêt (« au revoir », `docker-compose stop`…), la tête et les yeux rejoignent une
+**position de repos mécaniquement stable** (tête baissée sur son appui) avant le
+désengagement des servos — sans cela, la coupure du couple les ferait tomber d'un coup.
+Au démarrage, les servos sont **engagés à cette même position de repos** (leur position
+physique probable) puis remontent en rampe douce vers la position initiale : sans retour
+de position sur des servos RC, engager ailleurs provoquerait un saut à pleine vitesse
+matérielle, qu'aucun réglage de vitesse ne peut adoucir.
+
+Configuration dans `~/Robot/Programme/configuration/robot.properties` (clés optionnelles,
+relues à chaud — modifiables entre deux essais sans redémarrer) :
+
+```properties
+phidgets.neck.motor.pan.position.rest=95
+phidgets.neck.motor.tilt.position.rest=77
+phidgets.neck.motor.up_down.position.rest=140
+# Relatif : négatif = yeux baissés
+phidgets.eyes.motor.relative.position.rest=-7
+```
+
+Pour trouver les bonnes valeurs : placer la tête et les yeux en position souhaitée à la
+manette, dire « au revoir », puis relever les « Positions au moment de l'arrêt » dans les
+logs. La position de repos peut dépasser les butées logicielles de mouvement (min/max) de
+**5° au maximum** : l'appui mécanique se trouve souvent juste au-delà des angles autorisés
+en fonctionnement. Sans ces clés, la position initiale/zéro est visée (comportement
+historique).
+
+> ℹ️ Si la tête est déplacée à la main robot éteint, l'engagement au prochain démarrage
+> fera un saut vers la position de repos — inévitable sans retour de position.
+
 ## Contenu du dossier Robot
 
 | Dossier | Rôle |
