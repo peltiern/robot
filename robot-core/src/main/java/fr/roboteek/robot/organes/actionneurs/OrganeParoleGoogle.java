@@ -70,7 +70,7 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
             applicationEventPublisher.publishEvent(eventPause);
 
-            logger.debug("Lecture :\t{}", texte);
+            logger.info("Lecture :\t{}", texte);
 
             // Perform the text-to-speech request on the text input with the selected voice parameters and
             // audio file type

@@ -82,9 +82,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     @Override
     public void onEvent(LogitechControllerEvent event) {
-//        System.out.println("ESSAI = " + event.toString());
         event.getModifiedComponents().forEach(logitechComponent -> {
-//            System.out.println(event);
             switch (logitechComponent) {
                 //case JOYSTICK_LEFT_AXIS_X:
                 case JOYSTICK_LEFT_AXIS_Y:

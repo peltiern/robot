@@ -17,6 +17,8 @@ import fr.roboteek.robot.services.providers.google.speech.recognizer.client.dto.
 import fr.roboteek.robot.services.providers.google.speech.recognizer.client.dto.response.SpeechRecognitionResult;
 import fr.roboteek.robot.services.recognizer.SpeechRecognizerService;
 import net.sourceforge.javaflacencoder.FLAC_FileEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +32,8 @@ import java.util.List;
  * Speech recognition engine with Google Cloud Speech Service.
  */
 public class GoogleSpeechRecognizerService implements SpeechRecognizerService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GoogleSpeechRecognizerService.class);
 
     /**
      * Class singleton.
@@ -89,7 +93,6 @@ public class GoogleSpeechRecognizerService implements SpeechRecognizerService {
     }
 
     public String recognize(String wavFilePath) {
-        //System.out.println("RECOGNIZER = " + wavFilePath + ", " + flacFilePath);
         File wavFile = new File(wavFilePath);
         File flacFile = new File(flacFilePath);
         flacEncoder.encode(wavFile, flacFile);
@@ -111,7 +114,6 @@ public class GoogleSpeechRecognizerService implements SpeechRecognizerService {
             // Get the result
             if (response != null) {
                 List<SpeechRecognitionResult> listeRecognitionResults = response.getResults();
-                //		System.out.println("Reponse = " + response);
                 if (listeRecognitionResults != null && !listeRecognitionResults.isEmpty()) {
                     SpeechRecognitionResult result = listeRecognitionResults.get(0);
                     final List<SpeechRecognitionAlternative> listeAlternatives = result.getAlternatives();
@@ -122,7 +124,7 @@ public class GoogleSpeechRecognizerService implements SpeechRecognizerService {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            logger.error("Échec de la reconnaissance vocale Google", e);
         }
         //		fichierFlac.delete();
         return "";

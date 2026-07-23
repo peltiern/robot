@@ -93,7 +93,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         if (running && !reconnaissanceVocaleEvent.isProcessedByBrain()) {
             final String texteReconnu = reconnaissanceVocaleEvent.getTexteReconnu();
 
-            logger.debug("Texte reconnu par le cerveau : {}", texteReconnu);
+            logger.info("Texte reconnu par le cerveau : {}", texteReconnu);
 
             // Envoi d'un évènement de conversation au serveur
             final ConversationEvent conversationEvent = new ConversationEvent();
@@ -145,7 +145,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         // Stop current activity
         stopCurrentActivity();
         currentActivity = activity;
-        logger.debug("Nouvelle activité : {}", currentActivity.getClass().getName());
+        logger.info("Nouvelle activité : {}", currentActivity.getClass().getName());
         // Activation : réinitialise l'activité et autorise le traitement des évènements
         currentActivity.activer();
     }

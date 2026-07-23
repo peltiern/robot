@@ -15,6 +15,8 @@ import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 
 import javax.sound.sampled.AudioFormat;
@@ -41,6 +43,8 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * @author Nicolas
  */
 public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractCapteurVocal.class);
 
     /**
      * Fréquence d'échantillonage.
@@ -138,12 +142,11 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
         try {
 
             final Path dossierReconnaissanceVocaleGoogle = Paths.get(Constantes.DOSSIER_RECONNAISSANCE_VOCALE);
-            System.out.println("dossierReconnaissanceVocaleGoogle = " + dossierReconnaissanceVocaleGoogle);
+            logger.debug("Dossier de reconnaissance vocale : {}", dossierReconnaissanceVocaleGoogle);
             if (!Files.exists(dossierReconnaissanceVocaleGoogle)) {
-                System.out.println("Avant Création dossierReconnaissanceVocaleGoogle = " + dossierReconnaissanceVocaleGoogle);
                 // Création du dossier
                 Files.createDirectories(dossierReconnaissanceVocaleGoogle);
-                System.out.println("Création dossierReconnaissanceVocaleGoogle = " + dossierReconnaissanceVocaleGoogle);
+                logger.debug("Dossier de reconnaissance vocale créé : {}", dossierReconnaissanceVocaleGoogle);
             }
             cheminFichierWav = Constantes.DOSSIER_RECONNAISSANCE_VOCALE + File.separator + "reconnaissance.wav";
 
@@ -152,28 +155,25 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
             // Recherche de la ligne correspondant au micro recherché
             final TargetDataLine.Info dataLineInfo = new DataLine.Info(TargetDataLine.class, format);
-            System.out.println("Recherche dataline");
             TargetDataLine line = null;
             Mixer.Info[] infoMixers = AudioSystem.getMixerInfo();
-            System.out.println("Recherche dataline taille = " + infoMixers.length);
+            logger.debug("Recherche du micro « {} » parmi {} mixers", robotConfig.microphoneName(), infoMixers.length);
             for (Mixer.Info infoMixer : infoMixers) {
-                System.out.println("Mixer: " + infoMixer.getName());
+                logger.debug("Mixer disponible : {}", infoMixer.getName());
                 if (infoMixer.getName() != null && infoMixer.getName().contains(robotConfig.microphoneName())) {
                     Mixer mixer = AudioSystem.getMixer(infoMixer);
                     if (mixer.isLineSupported(dataLineInfo)) {
                         line = (TargetDataLine) mixer.getLine(dataLineInfo);
-                        System.out.println("LIGNE TROUVEE");
+                        logger.debug("Ligne micro trouvée pour « {} »", robotConfig.microphoneName());
                         break;
                     }
                 }
             }
-            // Si le micro n'est pas trouvée, on prend une ligne par défaut
+            // Si le micro n'est pas trouvé, on prend une ligne par défaut
             if (line == null) {
-                System.out.println("Pas de dataline");
+                logger.warn("Micro « {} » introuvable : utilisation de la ligne audio par défaut", robotConfig.microphoneName());
                 line = (TargetDataLine) AudioSystem.getLine(dataLineInfo);
             }
-
-            System.out.println("après Recherche dataline");
 
             // Récupération du flux du micro au format souhaité
             final AudioInputStream stream = new AudioInputStream(line);
@@ -258,8 +258,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                             bufferNMoins1 = Bytes.concat(e.getByteBuffer());
                         }
                     } else {
-                        System.out.println("CAPTEUR MIS EN PAUSE");
-                        // Réinitialisation des blocs
+                        // Capteur en pause : réinitialisation des blocs (pas de log, appelé à chaque bloc audio)
                         contenuParle = new byte[0];
                         bufferNMoins1 = new byte[0];
                         bufferNMoins2 = new byte[0];
@@ -309,7 +308,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
         try {
             // On ne traite la detection vocale que s'il y a du contenu
             if (contenuParle.length > 0) {
-                System.out.println("Génération du fichier contenant le flux de parole détecté");
+                logger.debug("Génération du fichier contenant le flux de parole détecté");
 
                 // Concaténation du contenu parlé avec le contenu précédent
                 contenuParle = Bytes.concat(bufferNMoins5, bufferNMoins4, bufferNMoins3, bufferNMoins2, bufferNMoins1, contenuParle);
@@ -340,7 +339,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     @EventListener
     public void handleReconnaissanceVocaleControleEvent(ReconnaissanceVocaleControleEvent reconnaissanceVocaleControleEvent) {
         if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER) {
-            System.out.println("Démarrage de la reconnaissance vocale");
+            logger.debug("Démarrage de la reconnaissance vocale");
             misEnPause = false;
             // Réinitialisation des blocs
             contenuParle = new byte[0];
@@ -350,7 +349,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             bufferNMoins4 = new byte[0];
             bufferNMoins5 = new byte[0];
         } else if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE) {
-            System.out.println("Mise en pause de la reconnaissance vocale");
+            logger.debug("Mise en pause de la reconnaissance vocale");
             misEnPause = true;
             // Réinitialisation des blocs
             contenuParle = new byte[0];

@@ -18,6 +18,8 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +37,8 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
+
+    private static final Logger logger = LoggerFactory.getLogger(CapteurVisionWebSocketGrpc.class);
 
     /**
      * Largeur de la vidéo issue de la webcam.
@@ -128,7 +132,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 //        String webcamRecherchee = "C525";
         List<String> liensSymboliquesWebcam = null;
 
-        System.out.println("Recherche de la webcam : " + webcamRecherchee);
+        logger.debug("Recherche de la webcam : {}", webcamRecherchee);
 
         try {
             // Si la webcam n'est pas la dernière parmi les webcams
@@ -167,10 +171,10 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
             }
 
             if (capture == null) {
-                System.err.println("Pas de caméra trouvée");
+                logger.error("Pas de caméra trouvée");
             }
         } else {
-            System.err.println("Pas de caméra trouvée");
+            logger.error("Pas de caméra trouvée");
         }
     }
 
@@ -216,12 +220,11 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
         applicationEventPublisher.publishEvent(videoEvent);
         long fin = System.currentTimeMillis();
         if (facialRecognitionResponse != null && CollectionUtils.isNotEmpty(facialRecognitionResponse.getFaces())) {
-            System.out.println("(" + (fin - debut) + ") : " + facialRecognitionResponse.getFaces().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+            logger.debug("({} ms) visages : {}", fin - debut, facialRecognitionResponse.getFaces().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
         }
         if (objectDetectionResponse != null && CollectionUtils.isNotEmpty(objectDetectionResponse.getObjects())) {
-            System.out.println("(" + (fin - debut) + ") : " + objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+            logger.debug("({} ms) objets : {}", fin - debut, objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
         }
-//        System.out.println("Temps traitement image : " + (fin - debut));
     }
 
     private FacialRecognitionResponse processFaceNameForDetection(FacialRecognitionResponse response) {

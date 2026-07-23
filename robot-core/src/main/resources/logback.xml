@@ -5,45 +5,37 @@
 
     <appender name="Console"
               class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>
-                %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable
-            </Pattern>
-        </layout>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable</pattern>
+        </encoder>
     </appender>
 
     <appender name="RollingFile"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS}/spring-boot-logger.log</file>
-        <encoder
-                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>%d %p %C{1} [%t] %m%n</Pattern>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%d %p %C{1} [%t] %m%n</pattern>
         </encoder>
 
+        <!-- Rotation quotidienne + au-delà de 10 Mo -->
         <rollingPolicy
-                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- rollover daily and when the file reaches 10 MegaBytes -->
-            <fileNamePattern>${LOGS}/archived/spring-boot-logger-%d{yyyy-MM-dd}.%i.log
-            </fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOGS}/archived/spring-boot-logger-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
         </rollingPolicy>
     </appender>
 
-    <!-- LOG everything at INFO level -->
-<!--    <root level="error">-->
-<!--        <appender-ref ref="RollingFile" />-->
-<!--        <appender-ref ref="Console" />-->
-<!--    </root>-->
-
-    <!-- LOG "fr.roboteek*" at TRACE level -->
-    <logger name="fr.roboteek" level="trace" additivity="false">
+    <!-- Racine à INFO : logs applicatifs et framework lisibles, sans bruit de debug -->
+    <root level="INFO">
         <appender-ref ref="RollingFile" />
         <appender-ref ref="Console" />
-    </logger>
+    </root>
 
+    <!-- Code du robot à INFO. Passer à "debug" pour le détail (mouvements, timings,
+         mixers audio, servos, ...) le temps d'un diagnostic. -->
+    <logger name="fr.roboteek" level="INFO" />
+
+    <!-- Librairies bavardes -->
     <logger name="org.apache" level="ERROR" />
     <logger name="httpclient" level="ERROR" />
 

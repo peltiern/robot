@@ -63,7 +63,6 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
         long nextAnimationEventTimer = System.currentTimeMillis();
         AnimationStep nextAnimationStep = null;
         while (!Thread.interrupted()) {
-            //System.out.println("LOOP : " + System.currentTimeMillis());
             // Récupération de la prochaine étape d'animation s'il n'y en a pas
             if (nextAnimationStep == null) {
                 nextAnimationStep = animationSteps.poll();
@@ -116,7 +115,6 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
     }
 
     private void playAnimationStep(AnimationStep animationStep) {
-        //System.out.println("playAnimationStep = " + animationStep);
         // Transformation de l'étape en évènement
         MouvementYeuxEvent mouvementYeuxEvent = animationStep.buildMouvementYeuxEvent();
         MouvementCouEvent mouvementCouEvent = animationStep.buildMouvementCouEvent();

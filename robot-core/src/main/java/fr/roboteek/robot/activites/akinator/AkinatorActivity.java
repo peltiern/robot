@@ -4,6 +4,8 @@ import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.organes.actionneurs.animation.Animation;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.eu.zajc.akiwrapper.Akiwrapper;
@@ -26,6 +28,8 @@ import java.util.List;
  */
 @Component
 public class AkinatorActivity extends AbstractActivity {
+
+    private static final Logger logger = LoggerFactory.getLogger(AkinatorActivity.class);
 
     public static final double PROBABILITY_THRESHOLD = 0.85;
 
@@ -65,7 +69,7 @@ public class AkinatorActivity extends AbstractActivity {
                     .build();
             initialized = true;
         } catch (ServerNotFoundException e) {
-            System.err.println("Invalid combination of language and guess type. Try a different guess type.");
+            logger.error("Combinaison langue/type de devinette invalide pour Akinator", e);
         }
     }
 
@@ -87,8 +91,7 @@ public class AkinatorActivity extends AbstractActivity {
                 break;
 
             // Say question
-            System.out.println("Question #" + (question.getStep() + 1));
-            System.out.println("\t" + question.getQuestion());
+            logger.debug("Question #{} : {}", question.getStep() + 1, question.getQuestion());
             playAnimation(Animation.NEUTRAL);
             say(question.getQuestion());
 
@@ -154,10 +157,8 @@ public class AkinatorActivity extends AbstractActivity {
                         ApiKey.accquireApiKey(UnirestUtils.getInstance());
 
                     } else if (answer.equals("debug")) {
-                        System.out.println("Debug information:\n\tCurrent API server: "
-                                + akinator.getServer().getUrl()
-                                + "\n\tCurrent guess count: "
-                                + akinator.getGuesses().size());
+                        logger.debug("Serveur API courant : {} — nombre de propositions : {}",
+                                akinator.getServer().getUrl(), akinator.getGuesses().size());
                         continue;
                         // Displays some debug information.
 
@@ -206,13 +207,11 @@ public class AkinatorActivity extends AbstractActivity {
         say("Est-ce que j'ai trouvé ?");
         while (!answered && !stopActivity) {
             // Asks the user if that is his character.
-            System.out.println("reviewGuess : answered = " + answered + ", stopActivity" + stopActivity);
             String answer = StringUtils.isNotBlank(waitingResponse) ? waitingResponse.toLowerCase() : "";
             if (StringUtils.isNotBlank(answer)) {
                 switch (answer) {
                     case "oui":
                         // If the user has responded positively.
-                        System.out.println("REPONSE TROUVEE");
                         answered = true;
                         isCharacter = true;
                         break;
@@ -224,7 +223,6 @@ public class AkinatorActivity extends AbstractActivity {
                         break;
 
                     default:
-                        System.out.println("reviewGuess DEFAULT");
                         break;
                 }
             }
@@ -234,14 +232,14 @@ public class AkinatorActivity extends AbstractActivity {
                 e.printStackTrace();
             }
         }
-        System.out.println("reviewGuess RETURN " + isCharacter);
+        logger.debug("reviewGuess → {}", isCharacter);
         return isCharacter;
     }
 
     private void finish(boolean win) {
         if (win) {
             // If Akinator has won.
-            System.out.println("ANIMATION VICTOIRE");
+            logger.debug("Akinator a gagné");
             playAnimation(Animation.AMAZED);
             say("Cool ! J'ai trouvé !");
         } else {

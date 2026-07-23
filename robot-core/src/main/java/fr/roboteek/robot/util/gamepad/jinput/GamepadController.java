@@ -5,12 +5,16 @@ import fr.roboteek.robot.util.gamepad.shared.GamepadListener;
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public abstract class GamepadController<E extends GamepadEvent, L extends GamepadListener<E>> implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(GamepadController.class);
 
     private Controller controller;
 
@@ -33,7 +37,7 @@ public abstract class GamepadController<E extends GamepadEvent, L extends Gamepa
             if (!controller.poll()) {
                 connected = false;
                 // TODO gérer l'envoi d'un évènement de déconnexion
-                System.out.println("POLL OFF " + controller.getName());
+                logger.info("Perte du gamepad {} (poll KO)", controller.getName());
                 break;
             }
 

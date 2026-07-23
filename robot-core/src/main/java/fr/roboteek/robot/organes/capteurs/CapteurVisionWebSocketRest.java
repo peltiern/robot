@@ -15,6 +15,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -31,6 +33,8 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public class CapteurVisionWebSocketRest extends AbstractOrganeWithThread {
+
+    private static final Logger logger = LoggerFactory.getLogger(CapteurVisionWebSocketRest.class);
 
     /**
      * Capture vidéo.
@@ -162,10 +166,10 @@ public class CapteurVisionWebSocketRest extends AbstractOrganeWithThread {
             }
 
             if (capture == null) {
-                System.err.println("Pas de caméra trouvée");
+                logger.error("Pas de caméra trouvée");
             }
         } else {
-            System.err.println("Pas de caméra trouvée");
+            logger.error("Pas de caméra trouvée");
         }
     }
 

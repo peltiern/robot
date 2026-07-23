@@ -74,7 +74,6 @@ public enum LogitechComponent implements GamepadComponent {
             throw new IllegalArgumentException("Valeur invalide");
         }
         else if (newValue != 0.0f) {
-            System.out.println(crossDirections[(int) newValue - 1]);
             return crossDirections[(int) newValue - 1];
         } else {
             return BUTTON_CROSS_CENTER;

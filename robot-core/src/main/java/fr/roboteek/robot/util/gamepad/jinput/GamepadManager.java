@@ -4,12 +4,16 @@ import fr.roboteek.robot.util.gamepad.shared.AbstractGamepadManager;
 import fr.roboteek.robot.util.gamepad.shared.GamepadListener;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
+
+    private static final Logger logger = LoggerFactory.getLogger(GamepadManager.class);
 
     List<GamepadController> listeAuthorizedGamepadDummies = new ArrayList<>();
     private volatile boolean running = false;
@@ -33,19 +37,18 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
     }
 
     public synchronized void addGamepad(Controller controller) {
-        System.out.println("TENTATIVE AJOUT GAMEPAD : " + controller.getType() + ", " + controller.getName());
         if (controller != null) {
+            logger.debug("Tentative d'ajout d'un gamepad : {}, {}", controller.getType(), controller.getName());
 //            // On n'autorise qu'une seule manette Playstation pour le projet
 //            if (connectedControllers.isEmpty()) {
             if (controller.getType() == Controller.Type.GAMEPAD) {
                 // Le gamepad doit faire partie des gamepads autorisés
-                listeAuthorizedGamepadDummies.forEach(gamepadController -> System.out.println("DUMMY = " + gamepadController.getType()));
                 Optional<GamepadController> authorizedGamepad = listeAuthorizedGamepadDummies.stream().filter(gamepadController -> gamepadController.getType().toUpperCase().equals(controller.getName().toUpperCase())).findFirst();
                 authorizedGamepad.ifPresent(gamepadControllerDummy -> {
                     String identifier = controller.getName();
                     if (!connectedControllers.containsKey(identifier)) {
                         try {
-                            System.out.println("AJOUT GAMEPAD AUTORISE : " + controller.getName());
+                            logger.info("Ajout du gamepad autorisé : {}", controller.getName());
                             // TODO gérer la liste des gamepads autorisés
                             GamepadController gamepadController = gamepadControllerDummy.getClass().getConstructor(Controller.class).newInstance(controller);
 
@@ -79,7 +82,7 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
     public synchronized void removeGamepad(Controller controller) {
         String identifier = controller.getName();
         if (connectedControllers.containsKey(identifier)) {
-            System.out.println("Déconnexion du gamepad " + identifier);
+            logger.info("Déconnexion du gamepad {}", identifier);
             connectedControllers.remove(identifier);
         }
     }
@@ -108,7 +111,6 @@ public class GamepadManager extends AbstractGamepadManager<LogitechListener> {
                 try {
                     GamepadController gamepadController = aClass.getConstructor(Controller.class).newInstance((Controller) null);
                     listeAuthorizedGamepadDummies.add(gamepadController);
-                    System.out.println("TAILLE DUMMIES = " + listeAuthorizedGamepadDummies.size());
                 } catch (InstantiationException e) {
                     e.printStackTrace();
                 } catch (IllegalAccessException e) {

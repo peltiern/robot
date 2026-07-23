@@ -14,6 +14,8 @@ import com.phidget22.RCServoTargetPositionReachedEvent;
 import com.phidget22.RCServoTargetPositionReachedListener;
 import com.phidget22.RCServoVelocityChangeEvent;
 import com.phidget22.RCServoVelocityChangeListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,6 +25,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Java Developer
  */
 public class PhidgetsServoMotor implements AttachListener, DetachListener, RCServoPositionChangeListener, RCServoTargetPositionReachedListener, ErrorListener, RCServoVelocityChangeListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(PhidgetsServoMotor.class);
 
     /**
      * Moteur Phidget associé.
@@ -131,7 +135,6 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
     public synchronized void setPositionCible(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
         try {
-            //System.out.println("POSITION DEMANDEE à " + System.currentTimeMillis() + " = " + position);
             positionAtteinte.set(false);
             setAcceleration(acceleration);
             rcServo.setTargetPosition(position);
@@ -152,9 +155,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         try {
             return rcServo.getPosition();
         } catch (PhidgetException e) {
-            // TODO Auto-generated catch block
-            System.out.println("Plantage position reelle");
-            e.printStackTrace();
+            logger.error("Impossible de lire la position réelle du servo", e);
             return 0;
         }
     }
@@ -294,7 +295,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
                 rcServo.setTargetPosition(positionEngagement != null ? positionEngagement : positionInitiale);
                 rcServo.setVelocityLimit(vitesseParDefaut);
                 rcServo.setEngaged(true);
-                System.out.println("Servo " + rcServo.getChannel() + " attached");
+                logger.debug("Servo {} attaché", rcServo.getChannel());
             }
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block
@@ -308,7 +309,6 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         if (event.getSource().equals(rcServo)) {
             //try {
             positionAtteinte.set(true);
-            //System.out.println("POSITION REACHED = time = " + System.currentTimeMillis() + ", event = " + event.getPosition() + ", servo = " + rcServo.getChannel() + ":" + rcServo.getPosition());
 //			} catch (PhidgetException e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
@@ -333,16 +333,16 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
     @Override
     public void onError(ErrorEvent errorEvent) {
-        System.out.println("Error: " + errorEvent.getDescription());
+        logger.error("Erreur servo : {}", errorEvent.getDescription());
     }
 
     @Override
     public void onDetach(DetachEvent event) {
         if (event.getSource().equals(rcServo)) {
             try {
-                System.out.println("Servo " + rcServo.getChannel() + " detached");
+                logger.debug("Servo {} détaché", rcServo.getChannel());
             } catch (PhidgetException e) {
-                e.printStackTrace();
+                logger.error("Erreur lors du détachement du servo", e);
             }
         }
 
@@ -371,9 +371,6 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
     @Override
     public void onVelocityChange(RCServoVelocityChangeEvent event) {
-        if (event.getSource() == rcServo) {
-            System.out.println("Changement Vitesse = time = " + System.currentTimeMillis() + ", " + event.getVelocity());
-        }
-        ;
+        // Événement à haute fréquence : aucun log (évite d'inonder la sortie)
     }
 }

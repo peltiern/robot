@@ -1,8 +1,12 @@
 package fr.roboteek.robot.util.phidgets;
 
 import com.phidget22.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PhidgetDCMotor implements AttachListener, DetachListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(PhidgetDCMotor.class);
 
     /**
      * Moteur Phidget associé.
@@ -75,7 +79,7 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
                 //moteur.setDataInterval(32);
                 motor.setAcceleration(accelerationParDefaut);
                 motor.setTargetVelocity(0);
-                System.out.println("DC motor " + motor.getHubPort() + " attached");
+                logger.debug("Moteur DC {} attaché", motor.getHubPort());
             }
 
         } catch (PhidgetException e) {
