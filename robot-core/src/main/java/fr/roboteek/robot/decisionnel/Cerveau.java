@@ -1,7 +1,7 @@
 package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.AbstractActivity;
-import fr.roboteek.robot.activites.conversation.openai.ConversationActivity;
+import fr.roboteek.robot.activites.conversation.ConversationActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
