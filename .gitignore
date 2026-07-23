@@ -1,8 +1,40 @@
-/robot-core/target/
-/.idea/sonarlint/
-/robot-core/installation/Robot/Programme/reconnaissance-visage/python-server/face/__pycache__/
-/robot-core/installation/Robot/Programme/reconnaissance-visage/python-server/object/__pycache__/
-/robot-core/installation/Robot/Programme/reconnaissance-visage/python-server/test_log.log
-/robot-core/installation/Robot/Programme/reconnaissance-visage/python-server/utils/__pycache__/
-test_log.log
-/null/
+# ============================================================
+# IDE (IntelliJ IDEA / Eclipse)
+# ============================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# ============================================================
+# Build Java / Maven
+# ============================================================
+target/
+build/
+
+# ============================================================
+# Python
+# ============================================================
+venv/
+__pycache__/
+*.pyc
+dist/
+*.egg-info/
+
+# ============================================================
+# Logs et fichiers temporaires
+# ============================================================
+logs/
+*.log
+null/
+
+# ============================================================
+# Données locales non versionnables
+# ============================================================
+# Visages appris localement (données personnelles, volumineuses)
+known-faces/
+# Secrets d'exécution (créés à la main sur la cible, voir doc d'installation)
+.env
