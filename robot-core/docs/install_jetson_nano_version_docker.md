@@ -136,6 +136,12 @@ docker-compose -f Robot/docker/docker-compose.yml restart
 Pas besoin de toucher à l'image : le conteneur relit le jar depuis le volume au
 redémarrage.
 
+> ⚠️ **Redémarrer aussitôt après le `scp`.** La JVM charge les classes à la demande
+> depuis le jar : remplacer le fichier pendant que le robot tourne rend l'instance en
+> cours instable (`NoClassDefFoundError` sur tout code encore jamais exécuté — vécu sur
+> la séquence d'arrêt « au revoir »). Entre le `scp` et le `restart`, ne plus rien
+> demander au robot.
+
 ### 4.2. Le Dockerfile a changé → nouvelle image
 
 ```bash
