@@ -1,6 +1,5 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
@@ -10,19 +9,33 @@ import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import static fr.roboteek.robot.configuration.Configurations.googleSpeechSynthesisConfig;
 
 /**
  * Organe permettant de synthétiser un texte en passant par la synthèse vocale de Google
  * et en appliquant des effets avec SOX.
+ * <p>
+ * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle},
+ * évènements reçus via {@link EventListener} (relayés depuis le bus Guava par le pont
+ * tant que la migration n'est pas terminée).
  */
-public class OrganeParoleGoogle extends AbstractOrgane {
+@Component
+public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle {
 
     private final GoogleSpeechSynthesisConfig config;
     private SpeechSynthesizerService speechSynthesizerService;
@@ -31,7 +44,12 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     /**
      * Logger.
      */
-    private Logger logger = LoggerFactory.getLogger(OrganeParoleGoogle.class);
+    private final Logger logger = LoggerFactory.getLogger(OrganeParoleGoogle.class);
+
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
 
     /**
      * Constructeur.
@@ -39,14 +57,6 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     public OrganeParoleGoogle() {
         super();
         config = googleSpeechSynthesisConfig();
-    }
-
-    public static void main(String[] args) {
-
-        final OrganeParoleGoogle organeParole = new OrganeParoleGoogle();
-        organeParole.initialiser();
-
-        organeParole.lire("Bonjour. Mon nom est Wall-E et je suis content de te rencontrer. Quel est ton nom ?");
     }
 
     /**
@@ -61,41 +71,32 @@ public class OrganeParoleGoogle extends AbstractOrgane {
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
 //            RobotEventBus.getInstance().publish(eventPause);
 
-            System.out.println(Thread.currentThread().getName() + " say (lecture) : " + texte);
+            logger.debug("Lecture :\t{}", texte);
 
             // Perform the text-to-speech request on the text input with the selected voice parameters and
             // audio file type
-            logger.info("Avant appel : " + System.currentTimeMillis());
             byte[] audioContents = speechSynthesizerService.synthesize(texte);
-            logger.info("Après appel : " + System.currentTimeMillis());
 
             if (audioContents != null) {
                 // Write the response to the output file.
                 String pathOutputFile = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "output-" + System.currentTimeMillis() + ".wav";
                 try (OutputStream out = new FileOutputStream(pathOutputFile)) {
                     out.write(audioContents);
-                    logger.info("Fin d'écriture dans le fichier : " + System.currentTimeMillis());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Erreur lors de l'écriture du fichier de synthèse vocale {}", pathOutputFile, e);
                 }
 
-
-                String[] params = {fichierSyntheseVocale, pathOutputFile};
                 try {
-                    Process p = Runtime.getRuntime().exec(params);
+                    Process p = new ProcessBuilder(fichierSyntheseVocale, pathOutputFile).start();
                     p.waitFor();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    logger.error("Erreur lors de la lecture du fichier de synthèse vocale {}", pathOutputFile, e);
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                    logger.warn("Lecture de la synthèse vocale interrompue");
                 }
 
-                System.out.println("Fin Lecture :\t" + texte);
-                logger.debug("Fin lecture :\t" + texte);
+                logger.debug("Fin lecture :\t{}", texte);
             }
 
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
@@ -110,11 +111,10 @@ public class OrganeParoleGoogle extends AbstractOrgane {
      *
      * @param paroleEvent évènement pour lire du texte
      */
-    @Subscribe
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleParoleEvent(ParoleEvent paroleEvent) {
-        System.out.println("ParoleEvent = " + paroleEvent);
-        if (StringUtils.isNotBlank(paroleEvent.getTexte())) {
-            System.out.println(Thread.currentThread().getName() + " say (avant lecture) : " + paroleEvent.getTexte());
+        if (running && StringUtils.isNotBlank(paroleEvent.getTexte())) {
             lire(paroleEvent.getTexte().trim());
         }
     }
@@ -129,5 +129,29 @@ public class OrganeParoleGoogle extends AbstractOrgane {
     @Override
     public void arreter() {
 
+    }
+
+    @Override
+    public void start() {
+        initialiser();
+        running = true;
+        logger.info("OrganeParoleGoogle démarré");
+    }
+
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("OrganeParoleGoogle arrêté");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.ACTIONNEURS;
     }
 }

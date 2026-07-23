@@ -1,22 +1,31 @@
 package fr.roboteek.robot.decisionnel;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
-import fr.roboteek.robot.activites.akinator.AkinatorActivity;
 import fr.roboteek.robot.activites.conversation.openai.ConversationActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
-import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
-import fr.roboteek.robot.organes.actionneurs.animation.AnimationPlayer;
-import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
-import fr.roboteek.robot.systemenerveux.event.*;
+import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
+import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
+import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
+import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.event.StopEvent;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 /**
  * Cerveau du robot nécessaire à la prise de décisions.
+ * <p>
+ * Migré en bean Spring : cycle de vie (thread des activités) géré par {@link SmartLifecycle}
+ * en phase {@link RobotLifecyclePhases#CERVEAU} — dernier démarré, premier arrêté.
+ * Le cerveau est purement évènementiel : il ne référence aucun organe directement.
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-public class Cerveau extends AbstractOrganeWithThread {
+@Component
+public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle {
 
     /**
      * Contexte du robot.
@@ -29,6 +38,16 @@ public class Cerveau extends AbstractOrganeWithThread {
      */
     private AbstractActivity currentActivity;
 
+    /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(Cerveau.class);
+
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
+
     public Cerveau() {
         super("Brain");
     }
@@ -40,10 +59,10 @@ public class Cerveau extends AbstractOrganeWithThread {
 
     @Override
     public void loop() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             // Start activity if exists
             if (currentActivity != null && currentActivity.isInitialized()) {
-                System.out.println("Lancement de l'activité");
+                logger.debug("Lancement de l'activité");
                 boolean hasBeenStopped = currentActivity.run();
                 if (!hasBeenStopped) {
                     initNewCurrentActivity(new ConversationActivity());
@@ -52,12 +71,11 @@ public class Cerveau extends AbstractOrganeWithThread {
                 try {
                     Thread.sleep(50);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Restitution du flag d'interruption pour que la condition de la boucle le voie
+                    Thread.currentThread().interrupt();
                 }
             }
         }
-        // TODO bien finaliser la fermeture du thread
-        //stopCurrentActivity();
     }
 
     /**
@@ -65,20 +83,18 @@ public class Cerveau extends AbstractOrganeWithThread {
      *
      * @param reconnaissanceVocaleEvent évènement de reconnaissance vocale
      */
-    @Subscribe
+    @EventListener
     public void handleReconnaissanceVocalEvent(ReconnaissanceVocaleEvent reconnaissanceVocaleEvent) {
-        if (!reconnaissanceVocaleEvent.isProcessedByBrain()) {
+        if (running && !reconnaissanceVocaleEvent.isProcessedByBrain()) {
             final String texteReconnu = reconnaissanceVocaleEvent.getTexteReconnu();
 
-            System.out.println(Thread.currentThread().getName() + "==================>CERVEAU : " + texteReconnu);
+            logger.debug("Texte reconnu par le cerveau : {}", texteReconnu);
 
             // Envoi d'un évènement de conversation au serveur
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(reconnaissanceVocaleEvent.getTexteReconnu());
             conversationEvent.setIdLocuteur(0);
             RobotEventBus.getInstance().publishAsync(conversationEvent);
-
-            System.out.println("==================>CERVEAU après : " + texteReconnu);
 
             if (texteReconnu != null && !texteReconnu.equals("")) {
                 // Arrêt du robot
@@ -99,14 +115,14 @@ public class Cerveau extends AbstractOrganeWithThread {
         }
     }
 
-//    /**
-//     * Intercepte les évènements de lecture.
-//     *
-//     * @param paroleEvent évènement de lecture
-//     */
-    @Subscribe
+    /**
+     * Intercepte les évènements de lecture.
+     *
+     * @param paroleEvent évènement de lecture
+     */
+    @EventListener
     public void handleParoleEvent(ParoleEvent paroleEvent) {
-        if (!paroleEvent.isPourTest()) {
+        if (running && !paroleEvent.isPourTest()) {
             // Envoi d'un évènement de conversation au serveur
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(paroleEvent.getTexte());
@@ -114,14 +130,6 @@ public class Cerveau extends AbstractOrganeWithThread {
             RobotEventBus.getInstance().publishAsync(conversationEvent);
         }
     }
-
-    /**
-     * Arrête le cerveau.
-     */
-//    public void arreter() {
-//        // Arrêt de l'activité en cours
-//        arreterActiviteEnCours();
-//    }
 
     /**
      * Commence une nouvelle activité
@@ -132,16 +140,15 @@ public class Cerveau extends AbstractOrganeWithThread {
         // Stop current activity
         stopCurrentActivity();
         currentActivity = activity;
-        System.out.println("initNewCurrentActivity : " + currentActivity.getClass().getName());
+        logger.debug("Nouvelle activité : {}", currentActivity.getClass().getName());
         currentActivity.init();
-        System.out.println("initNewCurrentActivity : 2");
         // Subscribe to event bus
         RobotEventBus.getInstance().subscribe(currentActivity);
     }
 
     private synchronized void stopCurrentActivity() {
         if (currentActivity != null) {
-            System.out.println("stopCurrentActivity : " + currentActivity.getClass().getName());
+            logger.debug("Arrêt de l'activité : {}", currentActivity.getClass().getName());
             // Unsubscribe to event bus
             RobotEventBus.getInstance().unsubscribe(currentActivity);
             // Stop activity
@@ -156,36 +163,36 @@ public class Cerveau extends AbstractOrganeWithThread {
      * @param texte le texte à dire
      */
     private void dire(String texte) {
-        System.out.println("Dire = " + texte);
+        logger.debug("Dire = {}", texte);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
         RobotEventBus.getInstance().publishAsync(paroleEvent);
     }
 
-    public static void main(String[] args) {
-        // Lecteur de sons
-        SoundPlayer soundPlayer = new SoundPlayer();
-        soundPlayer.initialiser();
-        RobotEventBus.getInstance().subscribe(soundPlayer);
+    @Override
+    public void start() {
+        initialiser();
+        super.start();
+        running = true;
+        logger.info("Cerveau démarré");
+    }
 
-        AnimationPlayer animationPlayer = new AnimationPlayer();
-        animationPlayer.initialiser();
-        animationPlayer.start();
-        RobotEventBus.getInstance().subscribe(animationPlayer);
+    @Override
+    public void stop() {
+        running = false;
+        // Arrêt de l'activité en cours puis interruption du thread de la boucle
+        stopCurrentActivity();
+        arreter();
+        logger.info("Cerveau arrêté");
+    }
 
-        Cerveau cerveau = new Cerveau();
-        cerveau.initialiser();
-        RobotEventBus.getInstance().subscribe(cerveau);
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
 
-        CapteurVocalAvecReconnaissance capteurVocalAvecReconnaissance = new CapteurVocalAvecReconnaissance();
-        capteurVocalAvecReconnaissance.initialiser();
-        capteurVocalAvecReconnaissance.start();
-        OrganeParoleGoogle organeParoleGoogle = new OrganeParoleGoogle();
-        organeParoleGoogle.initialiser();
-
-        RobotEventBus.getInstance().subscribe(capteurVocalAvecReconnaissance);
-        RobotEventBus.getInstance().subscribe(organeParoleGoogle);
-
-        cerveau.start();
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.CERVEAU;
     }
 }

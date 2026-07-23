@@ -10,15 +10,13 @@ import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 import be.tarsos.dsp.writer.WaveHeader;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.primitives.Bytes;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.spring.server.ContextProvider;
-import fr.roboteek.robot.spring.server.websocket.WebsocketBroadcaster;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import org.springframework.context.event.EventListener;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -45,8 +43,6 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  */
 public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
-    private WebsocketBroadcaster websocketBroadcaster;
-
     /**
      * Fréquence d'échantillonage.
      */
@@ -63,9 +59,15 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     private static final int overlap = 0;
 
     /**
-     * Flag indiquant que la reconnaissance est mise en pause.
+     * Flag indiquant que la reconnaissance est mise en pause
+     * (modifié par les threads des listeners, lu par le thread audio).
      */
-    private boolean misEnPause = false;
+    private volatile boolean misEnPause = false;
+
+    /**
+     * Dispatcher audio (permet d'arrêter proprement l'acquisition).
+     */
+    private AudioDispatcher dispatcher;
 
     /**
      * Format audio.
@@ -121,8 +123,6 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     public AbstractCapteurVocal(String threadName) {
         super(threadName);
         robotConfig = robotConfig();
-
-        websocketBroadcaster = (WebsocketBroadcaster) ContextProvider.getBean("websocketBroadcaster");
     }
 
     @Override
@@ -171,7 +171,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             // Récupération du flux du micro au format souhaité
             final AudioInputStream stream = new AudioInputStream(line);
             final JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
-            final AudioDispatcher dispatcher = new AudioDispatcher(audioStream, bufferSize, overlap);
+            dispatcher = new AudioDispatcher(audioStream, bufferSize, overlap);
 
             // Ouverture du flux et démarrage de l'acquisition
             line.open(format, bufferSize);
@@ -266,7 +266,6 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                     audioEvent.setAudioContentBase64(Base64.getEncoder().encodeToString(creerFichierWav(e.getByteBuffer())));
                     audioEvent.setContent(creerFichierWav(e.getByteBuffer()));
                     RobotEventBus.getInstance().publishAsync(audioEvent);
-                    //websocketBroadcaster.handleAudioEvent(audioEvent);
                 }
 
             });
@@ -291,8 +290,9 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
     @Override
     public void arreter() {
-        // TODO Auto-generated method stub
-
+        if (dispatcher != null) {
+            dispatcher.stop();
+        }
     }
 
     public abstract void traiterDetectionVocale(String cheminFichierWav);
@@ -330,7 +330,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
      *
      * @param reconnaissanceVocaleControleEvent évènement de contrôle de la reconnaissance vocale
      */
-    @Subscribe
+    @EventListener
     public void handleReconnaissanceVocaleControleEvent(ReconnaissanceVocaleControleEvent reconnaissanceVocaleControleEvent) {
         if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER) {
             System.out.println("Démarrage de la reconnaissance vocale");

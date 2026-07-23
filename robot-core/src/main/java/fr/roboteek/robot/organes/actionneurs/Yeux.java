@@ -1,6 +1,5 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
@@ -8,16 +7,30 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULIS;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent.MOUVEMENTS_OEIL;
+import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 /**
  * Classe représentant les yeux du robot.
+ * <p>
+ * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle} en phase
+ * {@link RobotLifecyclePhases#ACTIONNEURS_AVEC_MOTEUR}. Les moteurs ne sont créés
+ * et engagés qu'au {@code start()} — pas à la construction du bean — pour respecter
+ * l'ordre des phases (moteurs derniers démarrés, premiers arrêtés).
  *
  * @author Java Developer
  */
-public class Yeux extends AbstractOrgane {
+@Component
+public class Yeux extends AbstractOrgane implements SmartLifecycle {
 
     /**
      * Moteur Gauche / Droite.
@@ -58,16 +71,26 @@ public class Yeux extends AbstractOrgane {
     private MOUVEMENTS_OEIL mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
 
     /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(Yeux.class);
+
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
+
+    /**
      * Constructeur.
      */
     public Yeux() {
         super();
-
         phidgetsConfig = phidgetsConfig();
+    }
 
-        System.out.println("YEUX :, Thread = " + Thread.currentThread().getName());
-
-        // Création et initialisation des moteurs
+    @Override
+    public void initialiser() {
+        // Création des moteurs au démarrage de la phase (et non à la construction du bean)
         moteurOeilGauche = new PhidgetsServoMotor(
                 phidgetsConfig.eyeLeftMotorIndex(),
                 phidgetsConfig.eyeLeftMotorPositionZero(),
@@ -89,16 +112,13 @@ public class Yeux extends AbstractOrgane {
 
         moteurOeilDroit.setSpeedRampingState(true);
 
-    }
-
-    @Override
-    public void initialiser() {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
         reset();
+        logger.info("Yeux : fin initialisation");
     }
 
     /**
@@ -240,9 +260,13 @@ public class Yeux extends AbstractOrgane {
      *
      * @param mouvementYeuxEvent évènement de mouvements
      */
-    @Subscribe
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
-        System.out.println("YEUX : Event = " + mouvementYeuxEvent + ", Thread = " + Thread.currentThread().getName());
+        if (!running) {
+            return;
+        }
+        logger.debug("YEUX : Event = {}", mouvementYeuxEvent);
         if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
             // TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
             roulisEnCours = false;
@@ -280,9 +304,12 @@ public class Yeux extends AbstractOrgane {
      *
      * @param mouvementCouEvent évènement de mouvements de cou
      */
-    @Subscribe
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
-        //System.out.println("YEUX : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
+        if (!running) {
+            return;
+        }
         if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
             setPositionRoulis(mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
         } else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
@@ -342,9 +369,17 @@ public class Yeux extends AbstractOrgane {
     @Override
     public void arreter() {
         reset();
-        // Attente du retour à la position initiale
-        while (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero()
-                && moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero()) {
+        // Attente (bornée) du retour à la position initiale
+        long limite = System.currentTimeMillis() + 5000;
+        while (System.currentTimeMillis() < limite
+                && (moteurOeilGauche.getPositionReelle() != phidgetsConfig.eyeLeftMotorPositionZero()
+                || moteurOeilDroit.getPositionReelle() != phidgetsConfig.eyeRightMotorPositionZero())) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
         moteurOeilGauche.stop();
         moteurOeilDroit.stop();
@@ -409,23 +444,37 @@ public class Yeux extends AbstractOrgane {
      *
      * @param displayPositionEvent évènement
      */
-    @Subscribe
+    @EventListener
     public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
+        if (!running) {
+            return;
+        }
         double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
         double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
-        //System.out.println("YEUX\tgauche = " + positionRelativeOeilGauche + "\tdroit = " + positionRelativeOeilDroit);
+        logger.debug("YEUX\tgauche = {}\tdroit = {}", positionRelativeOeilGauche, positionRelativeOeilDroit);
     }
 
-    public static void main(String[] args) {
-        Yeux tete = new Yeux();
-        tete.initialiser();
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        tete.positionnerOeilGauche(-15, null, null, true);
-        tete.positionnerOeilDroit(5, null, null, true);
+    @Override
+    public void start() {
+        initialiser();
+        running = true;
+        logger.info("Yeux démarrés");
+    }
+
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("Yeux arrêtés");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.ACTIONNEURS_AVEC_MOTEUR;
     }
 }

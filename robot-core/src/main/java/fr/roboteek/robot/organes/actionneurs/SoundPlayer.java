@@ -1,30 +1,43 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
 
-public class SoundPlayer extends AbstractOrgane {
+/**
+ * Lecteur de sons du robot.
+ * <p>
+ * Premier organe migré en bean Spring : cycle de vie géré par {@link SmartLifecycle},
+ * évènements reçus via {@link EventListener} (relayés depuis le bus Guava par le pont
+ * tant que la migration n'est pas terminée).
+ *
+ * @author Nicolas Peltier (nico.peltier@gmail.com)
+ */
+@Component
+public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
 
     /**
      * Logger.
      */
-    private Logger logger = LoggerFactory.getLogger(SoundPlayer.class);
+    private final Logger logger = LoggerFactory.getLogger(SoundPlayer.class);
 
     /**
-     * Constructeur.
+     * Flag de démarrage de l'organe (cycle de vie Spring).
      */
-    public SoundPlayer() {
-        super();
-    }
+    private volatile boolean running = false;
 
     /**
      * Joue un son.
@@ -39,21 +52,20 @@ public class SoundPlayer extends AbstractOrgane {
             eventPause.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
             RobotEventBus.getInstance().publishAsync(eventPause);
 
-            System.out.println("Lecture son :\t" + sound);
+            logger.debug("Lecture son :\t{}", sound);
 
-            String[] params = {"play", Constantes.DOSSIER_SONS + File.separator + sound.getFileName()};
             try {
-                Process p = Runtime.getRuntime().exec(params);
+                Process p = new ProcessBuilder("play", Constantes.DOSSIER_SONS + File.separator + sound.getFileName())
+                        .start();
                 p.waitFor();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.error("Erreur lors de la lecture du son {}", sound, e);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                logger.warn("Lecture du son {} interrompue", sound);
             }
 
-            logger.debug("Fin lecture :\t" + sound);
+            logger.debug("Fin lecture :\t{}", sound);
 
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
@@ -67,9 +79,10 @@ public class SoundPlayer extends AbstractOrgane {
      *
      * @param playSoundEvent évènement pour jouer un son
      */
-    @Subscribe
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handlePlaySoundEvent(PlaySoundEvent playSoundEvent) {
-        if (playSoundEvent.getSound() != null) {
+        if (running && playSoundEvent.getSound() != null) {
             play(playSoundEvent.getSound());
         }
     }
@@ -84,11 +97,27 @@ public class SoundPlayer extends AbstractOrgane {
 
     }
 
-    public static void main(String[] args) {
-        final SoundPlayer soundPlayer = new SoundPlayer();
-        soundPlayer.play(RobotSound.WALLE);
-        soundPlayer.play(RobotSound.OH);
-        soundPlayer.play(RobotSound.WOW);
-        soundPlayer.play(RobotSound.SAD);
+    @Override
+    public void start() {
+        initialiser();
+        running = true;
+        logger.info("SoundPlayer démarré");
+    }
+
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("SoundPlayer arrêté");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.ACTIONNEURS;
     }
 }

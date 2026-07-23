@@ -1,16 +1,42 @@
 package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.respeaker.MicArrayV2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.stereotype.Component;
 
-public class CapteurActiviteSon extends AbstractOrganeWithThread {
+/**
+ * Capteur d'activité sonore basé sur le micro-array ReSpeaker (détection de voix
+ * et direction d'arrivée du son).
+ * <p>
+ * Migré en bean Spring mais <b>désactivé par défaut</b> : cet organe n'était pas
+ * instancié par l'ancien démarrage ({@code Robot}). Pour l'activer :
+ * {@code robot.capteurs.activite-son.enabled=true}.
+ */
+@Component
+@ConditionalOnProperty(name = "robot.capteurs.activite-son.enabled", havingValue = "true")
+public class CapteurActiviteSon extends AbstractOrganeWithThread implements SmartLifecycle {
 
     private MicArrayV2 micArrayV2;
 
     /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(CapteurActiviteSon.class);
+
+    /**
      * Flag indiquant de stopper le thread.
      */
-    private boolean stopperThread = false;
+    private volatile boolean stopperThread = false;
+
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
 
     private int doaAngleCourant;
 
@@ -42,8 +68,9 @@ public class CapteurActiviteSon extends AbstractOrganeWithThread {
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e) {
-                // TODO
-                e.printStackTrace();
+                // Restitution du flag d'interruption ; la boucle s'arrête via stopperThread
+                Thread.currentThread().interrupt();
+                stopperThread = true;
             }
         }
     }
@@ -68,7 +95,7 @@ public class CapteurActiviteSon extends AbstractOrganeWithThread {
         if (speechDetectedDifferent) {
             speechDetectedCourant = speechDetected;
         }
-        System.out.println("Angle = " + doaAngleCourant + "\t\tVoix = " + voiceActivityCourant + "\t\tSpeech = " + speechDetectedCourant);
+        logger.debug("Angle = {}\t\tVoix = {}\t\tSpeech = {}", doaAngleCourant, voiceActivityCourant, speechDetectedCourant);
         if (angleDifferent || voiceActivityDifferent || speechDetectedDifferent) {
             boolean angleVoixDifferent = Math.abs(calculerDifferenceAngles(angle, angleVoixCourant)) > 0;
             if (angleVoixDifferent) {
@@ -97,14 +124,31 @@ public class CapteurActiviteSon extends AbstractOrganeWithThread {
 
     private int calculerDifferenceAngles(int angle1, int angle2) {
         int phi = Math.abs(angle1 - angle2) % 360;       // This is either the distance or 360 - distance
-        int difference = phi > 180 ? 360 - phi : phi;
-        //System.out.println("Courant = " + angle2 + ", angle = " + angle1 + ", difference = " + difference);
-        return difference;
+        return phi > 180 ? 360 - phi : phi;
     }
 
-    public static void main(String args[]) {
-        CapteurActiviteSon capteurActiviteSon = new CapteurActiviteSon();
-        capteurActiviteSon.initialiser();
-        capteurActiviteSon.start();
+    @Override
+    public void start() {
+        initialiser();
+        super.start();
+        running = true;
+        logger.info("CapteurActiviteSon démarré");
+    }
+
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("CapteurActiviteSon arrêté");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.CAPTEURS;
     }
 }

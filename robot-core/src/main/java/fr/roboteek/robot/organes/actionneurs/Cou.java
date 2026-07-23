@@ -1,6 +1,5 @@
 package fr.roboteek.robot.organes.actionneurs;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
@@ -8,17 +7,30 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_PANORAMIQUE;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_INCLINAISON;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
 /**
  * Classe représentant le cou du robot.
+ * <p>
+ * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle} en phase
+ * {@link RobotLifecyclePhases#ACTIONNEURS_AVEC_MOTEUR}. Les moteurs ne sont créés
+ * et engagés qu'au {@code start()} — pas à la construction du bean — pour respecter
+ * l'ordre des phases (moteurs derniers démarrés, premiers arrêtés).
  *
  * @author Java Developer
  */
-public class Cou extends AbstractOrgane {
+@Component
+public class Cou extends AbstractOrgane implements SmartLifecycle {
 
     /**
      * Moteur "Panoramique".
@@ -45,16 +57,26 @@ public class Cou extends AbstractOrgane {
     private MOUVEMENTS_MONTER_DESCENDRE mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
 
     /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(Cou.class);
+
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
+
+    /**
      * Constructeur.
      */
     public Cou() {
         super();
-
         phidgetsConfig = phidgetsConfig();
+    }
 
-        System.out.println("COU :, Thread = " + Thread.currentThread().getName());
-
-        // Création et initialisation des moteurs
+    @Override
+    public void initialiser() {
+        // Création des moteurs au démarrage de la phase (et non à la construction du bean)
         moteurPanoramique = new PhidgetsServoMotor(
                 phidgetsConfig.neckLeftRightMotorIndex(),
                 phidgetsConfig.neckLeftRightMotorInitialPosition(),
@@ -63,7 +85,6 @@ public class Cou extends AbstractOrgane {
                 phidgetsConfig.neckLeftRightMotorSpeed(),
                 phidgetsConfig.neckLeftRightMotorAcceleration()
         );
-        System.out.println("Cou : fin constructeur moteurPanoramique");
         moteurInclinaison = new PhidgetsServoMotor(
                 phidgetsConfig.neckTiltMotorIndex(),
                 phidgetsConfig.neckTiltMotorInitialPosition(),
@@ -72,7 +93,6 @@ public class Cou extends AbstractOrgane {
                 phidgetsConfig.neckTiltMotorSpeed(),
                 phidgetsConfig.neckTiltMotorAcceleration()
         );
-        System.out.println("Cou : fin constructeur moteurInclinaison");
         moteurMonterDescendre = new PhidgetsServoMotor(
                 phidgetsConfig.neckUpDownMotorIndex(),
                 phidgetsConfig.neckUpDownMotorInitialPosition(),
@@ -81,7 +101,6 @@ public class Cou extends AbstractOrgane {
                 phidgetsConfig.neckUpDownMotorSpeed(),
                 phidgetsConfig.neckUpDownMotorAcceleration()
         );
-        System.out.println("Cou : fin constructeur moteurMonterDescendre");
 
         moteurPanoramique.setEngaged(true);
         moteurPanoramique.setSpeedRampingState(true);
@@ -92,18 +111,13 @@ public class Cou extends AbstractOrgane {
         moteurMonterDescendre.setEngaged(true);
         moteurMonterDescendre.setSpeedRampingState(true);
 
-        System.out.println("Cou : fin Constructeur");
-    }
-
-    @Override
-    public void initialiser() {
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
         reset();
-        System.out.println("Cou : fin initialisation");
+        logger.info("Cou : fin initialisation");
     }
 
     /**
@@ -147,7 +161,7 @@ public class Cou extends AbstractOrgane {
     public void positionnerTeteGaucheDroite(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
         double positionMoteur = phidgetsConfig.neckLeftRightMotorInitialPosition() - position;
         if (positionMoteur >= moteurPanoramique.getPositionMin() && positionMoteur <= moteurPanoramique.getPositionMax()) {
-            System.out.println("POS_GD = " + positionMoteur);
+            logger.debug("POS_GD = {}", positionMoteur);
             moteurPanoramique.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -165,11 +179,11 @@ public class Cou extends AbstractOrgane {
      */
     public void tournerEnBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.TOURNER_BAS) {
-            System.out.println("BAS");
+            logger.debug("BAS");
             mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.TOURNER_BAS;
             moteurInclinaison.forward(vitesse, acceleration, waitForPosition);
         } else {
-            System.out.println("BAS VITESSE");
+            logger.debug("BAS VITESSE");
             moteurInclinaison.setVitesse(vitesse);
         }
     }
@@ -179,11 +193,11 @@ public class Cou extends AbstractOrgane {
      */
     public void tournerEnHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.TOURNER_HAUT) {
-            System.out.println("HAUT");
+            logger.debug("HAUT");
             mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.TOURNER_HAUT;
             moteurInclinaison.backward(vitesse, acceleration, waitForPosition);
         } else {
-            System.out.println("HAUT VITESSE");
+            logger.debug("HAUT VITESSE");
             moteurInclinaison.setVitesse(vitesse);
         }
     }
@@ -205,7 +219,7 @@ public class Cou extends AbstractOrgane {
     public void positionnerTeteHautBas(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
         double positionMoteur = phidgetsConfig.neckTiltMotorInitialPosition() - position;
         if (positionMoteur >= moteurInclinaison.getPositionMin() && positionMoteur <= moteurInclinaison.getPositionMax()) {
-            System.out.println("POS_HB = " + positionMoteur);
+            logger.debug("POS_HB = {}", positionMoteur);
             moteurInclinaison.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -214,7 +228,7 @@ public class Cou extends AbstractOrgane {
      * Stoppe le mouvement de la tête sur le plan "Haut / Bas".
      */
     public void stopperTeteHautBas() {
-        System.out.println("STOP HAUT BAS");
+        logger.debug("STOP HAUT BAS");
         moteurInclinaison.stop();
         mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
     }
@@ -224,11 +238,11 @@ public class Cou extends AbstractOrgane {
      */
     public void descendre(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE) {
-            System.out.println("DESCENDRE");
+            logger.debug("DESCENDRE");
             mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE;
             moteurMonterDescendre.forward(vitesse, acceleration, waitForPosition);
         } else {
-            System.out.println("DESCENDRE VITESSE");
+            logger.debug("DESCENDRE VITESSE");
             moteurMonterDescendre.setVitesse(vitesse);
         }
     }
@@ -238,11 +252,11 @@ public class Cou extends AbstractOrgane {
      */
     public void monter(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.MONTER) {
-            System.out.println("MONTER");
+            logger.debug("MONTER");
             mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.MONTER;
             moteurMonterDescendre.backward(vitesse, acceleration, waitForPosition);
         } else {
-            System.out.println("MONTER VITESSE");
+            logger.debug("MONTER VITESSE");
             moteurMonterDescendre.setVitesse(vitesse);
         }
     }
@@ -264,7 +278,7 @@ public class Cou extends AbstractOrgane {
     public void positionnerTeteMonterDescendre(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
         double positionMoteur = phidgetsConfig.neckUpDownMotorInitialPosition() - position;
         if (positionMoteur >= moteurMonterDescendre.getPositionMin() && positionMoteur <= moteurMonterDescendre.getPositionMax()) {
-            System.out.println("POS_MD = " + positionMoteur);
+            logger.debug("POS_MD = {}", positionMoteur);
             moteurMonterDescendre.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -273,7 +287,7 @@ public class Cou extends AbstractOrgane {
      * Stoppe le mouvement de la tête sur le plan "Monter - Descendre".
      */
     public void stopperTeteMonterDescendre() {
-        System.out.println("STOP MonterDescendre");
+        logger.debug("STOP MonterDescendre");
         moteurMonterDescendre.stop();
         mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
     }
@@ -283,9 +297,13 @@ public class Cou extends AbstractOrgane {
      *
      * @param mouvementCouEvent évènement de mouvements
      */
-    @Subscribe
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
-        System.out.println("COU : Event = " + mouvementCouEvent + ", Thread = " + Thread.currentThread().getName());
+        if (!running) {
+            return;
+        }
+        logger.debug("COU : Event = {}", mouvementCouEvent);
         if (mouvementCouEvent.getPositionPanoramique() != MouvementCouEvent.POSITION_NEUTRE) {
             // TODO ne pas mettre en synchrone si Haut/Bas en synchrone ==> A corriger
             positionnerTeteGaucheDroite(mouvementCouEvent.getPositionPanoramique(), mouvementCouEvent.getVitessePanoramique(), mouvementCouEvent.getAccelerationPanoramique(), mouvementCouEvent.isSynchrone());
@@ -332,10 +350,18 @@ public class Cou extends AbstractOrgane {
     @Override
     public void arreter() {
         reset();
-        // Attente du retour à la position initiale
-        while (moteurPanoramique.getPositionReelle() != phidgetsConfig.neckLeftRightMotorInitialPosition()
-                && moteurInclinaison.getPositionReelle() != phidgetsConfig.neckTiltMotorInitialPosition()
-                && moteurMonterDescendre.getPositionReelle() != phidgetsConfig.neckUpDownMotorInitialPosition()) {
+        // Attente (bornée) du retour à la position initiale
+        long limite = System.currentTimeMillis() + 5000;
+        while (System.currentTimeMillis() < limite
+                && (moteurPanoramique.getPositionReelle() != phidgetsConfig.neckLeftRightMotorInitialPosition()
+                || moteurInclinaison.getPositionReelle() != phidgetsConfig.neckTiltMotorInitialPosition()
+                || moteurMonterDescendre.getPositionReelle() != phidgetsConfig.neckUpDownMotorInitialPosition())) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
         moteurPanoramique.stop();
         moteurInclinaison.stop();
@@ -365,132 +391,39 @@ public class Cou extends AbstractOrgane {
      *
      * @param displayPositionEvent évènement
      */
-    @Subscribe
+    @EventListener
     public void handleDisplayPositionEvent(DisplayPositionEvent displayPositionEvent) {
+        if (!running) {
+            return;
+        }
         double positionGaucheDroite = phidgetsConfig.neckLeftRightMotorInitialPosition() - moteurPanoramique.getPositionReelle();
         double positionHautBas = phidgetsConfig.neckTiltMotorInitialPosition() - moteurInclinaison.getPositionReelle();
         double positionMonterDescendre = phidgetsConfig.neckUpDownMotorInitialPosition() - moteurMonterDescendre.getPositionReelle();
-        //System.out.println("COU\tGD = " + positionGaucheDroite + "\tHB = " + positionHautBas);
+        logger.debug("COU\tGD = {}\tHB = {}\tMD = {}", positionGaucheDroite, positionHautBas, positionMonterDescendre);
     }
 
-    public void testMouvement() {
-        int pas = 30;
-        System.out.println("====== PAS 30");
-        for (int angle = -60; angle <= 60; angle += pas) {
-            positionnerTeteGaucheDroite(angle, 180D, 150D, true);
-        }
-        pas = 5;
-        System.out.println("====== PAS 5");
-        for (int angle = -60; angle <= 60; angle += pas) {
-            positionnerTeteGaucheDroite(angle, 180D, 150D, true);
-        }
-        pas = 1;
-        System.out.println("====== PAS 1");
-        for (int angle = -60; angle <= 60; angle += pas) {
-            positionnerTeteGaucheDroite(angle, 180D, 150D, true);
-        }
-//		System.out.println("====== PAS 0");
-//		positionnerTeteGaucheDroite(-60, true);
-//		positionnerTeteGaucheDroite(60, true);
-
+    @Override
+    public void start() {
+        initialiser();
+        running = true;
+        logger.info("Cou démarré");
     }
 
-    public static void main(String[] args) {
-//		try {
-        int temps = 500;
-        Cou cou = new Cou();
-        cou.initialiser();
-        RobotEventBus.getInstance().subscribe(cou);
-        //cou.testMouvement();
-        MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(0);
-        mouvementCouEvent.setPositionInclinaison(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(-30);
-        mouvementCouEvent.setVitessePanoramique(300D);
-        mouvementCouEvent.setPositionInclinaison(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(30);
-        mouvementCouEvent.setVitessePanoramique(300D);
-        mouvementCouEvent.setPositionInclinaison(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(-30);
-        mouvementCouEvent.setVitessePanoramique(800D);
-        mouvementCouEvent.setAccelerationPanoramique(400D);
-        mouvementCouEvent.setPositionInclinaison(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(30);
-        mouvementCouEvent.setVitessePanoramique(800D);
-        mouvementCouEvent.setAccelerationPanoramique(400D);
-        mouvementCouEvent.setPositionInclinaison(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(0);
-        mouvementCouEvent.setPositionInclinaison(30);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(30);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionInclinaison(-30);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(-30);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionInclinaison(30);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionPanoramique(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-        mouvementCouEvent = new MouvementCouEvent();
-        mouvementCouEvent.setPositionInclinaison(0);
-        mouvementCouEvent.setSynchrone(true);
-        RobotEventBus.getInstance().publish(mouvementCouEvent);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE);
-//			mouvementCouEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE);
-//			mouvementCouEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.TOURNER_BAS);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.TOURNER_DROITE);
-//			mouvementCouEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.TOURNER_HAUT);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.TOURNER_GAUCHE);
-//			mouvementCouEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.TOURNER_HAUT);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//			mouvementCouEvent = new MouvementCouEvent();
-//			mouvementCouEvent.setMouvementGaucheDroite(MOUVEMENTS_GAUCHE_DROITE.STOPPER);
-//			mouvementCouEvent.setMouvementHauBas(MOUVEMENTS_HAUT_BAS.STOPPER);
-//			RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
-//			Thread.sleep(temps);
-//		} catch (InterruptedException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("Cou arrêté");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.ACTIONNEURS_AVEC_MOTEUR;
     }
 
 }
