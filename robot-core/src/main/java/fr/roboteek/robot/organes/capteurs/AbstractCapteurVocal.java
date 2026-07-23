@@ -58,6 +58,14 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     private static final int overlap = 0;
 
     /**
+     * Durée de silence (en secondes) marquant la fin d'une phrase.
+     * À 0.6 s, une simple hésitation coupait la phrase en deux : seul le premier fragment
+     * était traité (et depuis la pause de la reconnaissance pendant la réflexion de l'IA,
+     * le reste était perdu).
+     */
+    private static final double DUREE_SILENCE_FIN_PHRASE = 1.2;
+
+    /**
      * Flag indiquant que la reconnaissance est mise en pause
      * (modifié par les threads des listeners, lu par le thread audio).
      */
@@ -213,7 +221,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                             isBlocParle = false;
                         }
 
-                        if (isBlocParle || timestampBlocEnCours - timestampDernierBlocParle < 0.6) {
+                        if (isBlocParle || timestampBlocEnCours - timestampDernierBlocParle < DUREE_SILENCE_FIN_PHRASE) {
                             // Si ça parle, ou petit silence
                             // On concatène le bloc audio en cours au contenu général
                             contenuParle = Bytes.concat(contenuParle, e.getByteBuffer());

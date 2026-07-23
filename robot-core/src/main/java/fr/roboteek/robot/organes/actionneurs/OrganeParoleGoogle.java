@@ -68,7 +68,7 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
-//            applicationEventPublisher.publishEvent(eventPause);
+            applicationEventPublisher.publishEvent(eventPause);
 
             logger.debug("Lecture :\t{}", texte);
 
