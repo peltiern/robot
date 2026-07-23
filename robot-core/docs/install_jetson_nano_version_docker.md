@@ -95,7 +95,7 @@ docker-compose --version
 
 Le conteneur lit ses variables d'environnement (clés d'API, configuration) dans
 `~/Robot/Programme/configuration/.env`. Ce fichier **ne fait pas partie du zip et ne doit
-jamais être versionné** : le créer/compléter à la main sur le Jetson (`OPENAI_API_KEY`,
+jamais être versionné** : le créer/compléter à la main sur le Jetson (`ANTHROPIC_API_KEY`,
 `GOOGLE_SPEECH_API_KEY`, ...).
 
 ## 3. Lancer le robot

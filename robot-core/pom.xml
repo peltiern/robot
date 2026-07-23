@@ -21,7 +21,7 @@
         <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <grpc-version>1.82.2</grpc-version>
-        <langchain4j.version>0.36.2</langchain4j.version>
+        <spring-ai.version>2.0.0</spring-ai.version>
         <opencv.version>4.9.0-0</opencv.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
         <commons-geometry-core.version>1.0</commons-geometry-core.version>
@@ -152,6 +152,19 @@
         </repository>
     </repositories>
 
+    <!-- BOM Spring AI : aligne les versions de tous les modules Spring AI -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <dependency>
@@ -267,17 +280,10 @@
             <version>${grpc-version}</version>
         </dependency>
 
-        <!-- Langchain4j pour l'utilisation de LLM (IA) -->
+        <!-- Spring AI pour l'utilisation de LLM (IA) : modèles Claude via l'API Anthropic -->
         <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-open-ai</artifactId>
-            <version>${langchain4j.version}</version>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-anthropic</artifactId>
         </dependency>
 
         <dependency>
