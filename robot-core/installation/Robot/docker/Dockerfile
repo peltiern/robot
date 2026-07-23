@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 # Test avec openJDK 11 en image de base ne fonctionne pas. Les moteurs ne sont pas initialisés (problèmes avec l'USB ?)
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,7 +11,7 @@ RUN apt-get update -y && \
     apt-get install -y sox && \
     apt-get install -y libjpeg8 && \
     apt-get -y install v4l-utils && \
-    apt-get install -y openjdk-21-jre && \
+    apt-get install -y openjdk-25-jre && \
     apt-get install -y curl && \
     curl -fsSL https://www.phidgets.com/downloads/setup_linux | bash -  && \
     apt-get install -y libphidget22-dev \
