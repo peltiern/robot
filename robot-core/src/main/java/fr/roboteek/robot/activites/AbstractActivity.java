@@ -52,8 +52,12 @@ public abstract class AbstractActivity {
     /**
      * Active l'activité : réinitialise les flags, appelle {@link #init()} puis
      * autorise le traitement des évènements.
+     * <p>
+     * Ne pas rendre {@code final} : les activités sont proxiées par CGLIB (@Async) et une
+     * méthode finale s'exécuterait sur le proxy, dont les champs sont distincts de la cible —
+     * le flag {@code active} ne serait alors jamais vu par les listeners.
      */
-    public final void activer() {
+    public void activer() {
         stopActivity = false;
         init();
         active = true;
@@ -61,8 +65,9 @@ public abstract class AbstractActivity {
 
     /**
      * Désactive l'activité : les évènements ne sont plus traités, puis {@link #stop()}.
+     * Ne pas rendre {@code final} (voir {@link #activer()}).
      */
-    public final void desactiver() {
+    public void desactiver() {
         active = false;
         stop();
     }

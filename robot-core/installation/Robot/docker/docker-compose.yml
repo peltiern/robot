@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   robot-core:
     # Image construite et poussée depuis le poste de développement (voir docs/install_jetson_nano_version_docker.md)
@@ -9,7 +7,13 @@ services:
       - ${HOME}/Robot/Programme/configuration/.env
     environment:
       - JAVA_TOOL_OPTIONS=-Dnet.java.games.input.librarypath=/Robot/Programme/jinput
+      # Sortie son (sox/play) : haut-parleur sur la clé USB C-Media, désignée par son nom
+      # de carte ALSA (insensible à l'ordre d'énumération USB, contrairement au numéro)
+      - AUDIODEV=plughw:CARD=Device
     privileged: true  # Permet au conteneur d’accéder aux périphériques matériels
+    # L'arrêt propre (retour des servos en position + désengagement) peut dépasser les 10s
+    # par défaut, après lesquelles docker enverrait SIGKILL sans fermer les canaux Phidget
+    stop_grace_period: 30s
     volumes:
       - ${HOME}/Robot/Programme:/Robot/Programme
       - ${HOME}/Robot/Programme/jinput:/Robot/Programme/jinput
