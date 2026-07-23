@@ -1,18 +1,40 @@
 package fr.roboteek.robot.util.gamepad.jinput;
 
-import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.systemenerveux.event.*;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
-public class RobotLogitechController implements RobotGamepadController, LogitechListener {
+/**
+ * Contrôleur de manette Logitech : transforme les entrées manette en évènements du robot.
+ * <p>
+ * Migré en bean Spring : démarrage géré par {@link SmartLifecycle} en phase CAPTEURS
+ * (c'est une entrée de commandes). Le {@code GamepadManager} sous-jacent ne fournit pas
+ * d'arrêt propre (threads détachés) : le {@code stop()} ne fait que couper le flag.
+ */
+@Component
+public class RobotLogitechController implements RobotGamepadController, LogitechListener, SmartLifecycle {
 
     private final GamepadManager gamepadManager;
+
+    /**
+     * Logger.
+     */
+    private final Logger logger = LoggerFactory.getLogger(RobotLogitechController.class);
+
+    /**
+     * Flag de démarrage (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
 
     public RobotLogitechController() {
 //        // Ajout de la librairie native JInput
@@ -30,6 +52,25 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     @Override
     public void start() {
         gamepadManager.start();
+        running = true;
+        logger.info("Contrôleur de manette démarré");
+    }
+
+    @Override
+    public void stop() {
+        // Pas d'arrêt propre disponible sur le GamepadManager (threads détachés)
+        running = false;
+        logger.info("Contrôleur de manette arrêté");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.CAPTEURS;
     }
 
     @Override
@@ -134,7 +175,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                     mouvementCouEvent.setVitesseMonterDescendre(60D);
                 }
                 mouvementCouEvent.setSynchrone(false);
-                System.out.println("GAMEPAD processJoystickLeftY = " + mouvementCouEvent);
+                logger.debug("GAMEPAD processJoystickLeftY = {}", mouvementCouEvent);
                 RobotEventBus.getInstance().publish(mouvementCouEvent);
             }
     }

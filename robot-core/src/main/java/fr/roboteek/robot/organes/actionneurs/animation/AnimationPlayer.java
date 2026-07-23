@@ -1,30 +1,49 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
-import fr.roboteek.robot.organes.actionneurs.SoundPlayer;
-import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.commons.RandomUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class AnimationPlayer extends AbstractOrganeWithThread {
+/**
+ * Lecteur d'animations : déroule les étapes d'une animation dans son propre thread
+ * en publiant les évènements de mouvements et de sons correspondants.
+ * <p>
+ * Migré en bean Spring : cycle de vie (thread de la boucle) géré par {@link SmartLifecycle},
+ * évènements reçus via {@link EventListener}.
+ */
+@Component
+public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLifecycle {
 
     /**
-     * Flag indiquant de stopper le thread.
+     * Logger.
      */
-    private boolean stopperThread = false;
+    private final Logger logger = LoggerFactory.getLogger(AnimationPlayer.class);
 
-    boolean automaticMode = false;
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
+
+    /**
+     * Mode automatique : génère des animations aléatoires (lu par le thread de la boucle,
+     * modifié par les threads des listeners).
+     */
+    private volatile boolean automaticMode = false;
 
     /**
      * Liste des étapes d'animation à jouer.
@@ -69,7 +88,8 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Restitution du flag d'interruption pour que la condition de la boucle le voie
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -79,9 +99,9 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
      *
      * @param playAnimationEvent évènement pour jouer une animation
      */
-    @Subscribe
+    @EventListener
     public void handlePlayAnimationEvent(PlayAnimationEvent playAnimationEvent) {
-        if (playAnimationEvent != null) {
+        if (running && playAnimationEvent != null) {
             Animation animation = playAnimationEvent.getAnimation() != null ?
                     playAnimationEvent.getAnimation() : Animation.getAnimationByName(playAnimationEvent.getAnimationName());
             if (animation != null) {
@@ -171,61 +191,28 @@ public class AnimationPlayer extends AbstractOrganeWithThread {
         return animationStep;
     }
 
-    public static void main(String[] args) throws InterruptedException {
-        Yeux yeux = new Yeux();
-        Cou cou = new Cou();
+    @Override
+    public void start() {
+        initialiser();
+        super.start();
+        running = true;
+        logger.info("AnimationPlayer démarré");
+    }
 
-        yeux.initialiser();
-        cou.initialiser();
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("AnimationPlayer arrêté");
+    }
 
-        RobotEventBus.getInstance().subscribe(yeux);
-        RobotEventBus.getInstance().subscribe(cou);
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
 
-        // Lecteur de sons
-        SoundPlayer soundPlayer = new SoundPlayer();
-        soundPlayer.initialiser();
-        RobotEventBus.getInstance().subscribe(soundPlayer);
-
-        // Lecteur d'animations
-        AnimationPlayer animationPlayer = new AnimationPlayer();
-        animationPlayer.initialiser();
-        animationPlayer.start();
-        RobotEventBus.getInstance().subscribe(animationPlayer);
-
-        Thread.sleep(2000);
-        PlayAnimationEvent playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.SAD);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.AMAZED);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.SURPRISED);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.TEST);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        Thread.sleep(2000);
-
-        playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(Animation.TEST_2);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
-
-        yeux.arreter();
-        cou.arreter();
-        soundPlayer.arreter();
-        animationPlayer.arreter();
-
-        System.exit(0);
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.ACTIONNEURS;
     }
 }

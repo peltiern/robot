@@ -18,11 +18,18 @@ public final class RobotLifecyclePhases {
     /** Capteurs (micro, vision, ...). */
     public static final int CAPTEURS = 100;
 
-    /** Organes sans moteur (sons, parole, ...). */
-    public static final int ORGANES = 200;
+    /** Actionneurs sans moteur (sons, parole, ...). */
+    public static final int ACTIONNEURS = 200;
 
-    /** Organes à moteurs (cou, yeux, chenilles) : derniers démarrés, premiers arrêtés. */
-    public static final int MOTEURS = 300;
+    /** Actionneurs à moteurs (cou, yeux, chenilles) : démarrés après les autres organes, arrêtés avant eux. */
+    public static final int ACTIONNEURS_AVEC_MOTEUR = 300;
+
+    /**
+     * Cerveau (prise de décision) : dernier démarré — il ne se met à penser que lorsque
+     * tout le corps est prêt — et premier arrêté — plus aucun ordre n'est émis pendant
+     * que le reste s'arrête.
+     */
+    public static final int CERVEAU = 400;
 
     private RobotLifecyclePhases() {
     }
