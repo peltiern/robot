@@ -3,7 +3,6 @@ package fr.roboteek.robot.organes.capteurs;
 import fr.roboteek.robot.services.providers.google.speech.recognizer.GoogleSpeechRecognizerService;
 import fr.roboteek.robot.services.recognizer.SpeechRecognizerService;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal impleme
             // Suppression du fichier
 //					fichierWav.delete();
             // Lancement de l'évènement de reconnaissance vocale
-            RobotEventBus.getInstance().publishAsync(event);
+            applicationEventPublisher.publishEvent(event);
         }
     }
 

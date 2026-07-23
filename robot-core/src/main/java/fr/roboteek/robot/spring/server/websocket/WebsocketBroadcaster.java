@@ -1,13 +1,18 @@
 package fr.roboteek.robot.spring.server.websocket;
 
-import com.google.common.eventbus.Subscribe;
 import com.google.gson.Gson;
 import fr.roboteek.robot.systemenerveux.event.AudioEvent;
 import fr.roboteek.robot.systemenerveux.event.RobotEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+/**
+ * Diffuse les évènements du robot vers les clients Websocket.
+ * <p>
+ * Écoute les évènements Spring (relayés depuis le bus Guava par le pont
+ * tant que la migration n'est pas terminée).
+ */
 public class WebsocketBroadcaster {
 
     /**
@@ -19,10 +24,9 @@ public class WebsocketBroadcaster {
     public WebsocketBroadcaster(SimpMessagingTemplate simpMessagingTemplate) {
         this.simpMessagingTemplate = simpMessagingTemplate;
         this.gson = new Gson();
-        RobotEventBus.getInstance().subscribe(this);
     }
 
-    @Subscribe
+    @EventListener
     public void handleRobotEvent(RobotEvent robotEvent) {
         if (robotEvent instanceof VideoEvent) {
             simpMessagingTemplate.convertAndSend("/video", gson.toJson(robotEvent));

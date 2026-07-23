@@ -3,20 +3,41 @@ package fr.roboteek.robot.activites;
 import fr.roboteek.robot.organes.actionneurs.animation.Animation;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 
 /**
  * Abstract class for an activity.
+ * <p>
+ * Les activités sont des beans Spring singletons : leurs {@code @EventListener} sont
+ * câblés en permanence, mais ne traitent les évènements que lorsque l'activité est
+ * <b>active</b> (activée/désactivée par le Cerveau via {@link #activer()} /
+ * {@link #desactiver()} — remplace l'ancien abonnement dynamique au bus Guava).
  */
 public abstract class AbstractActivity {
 
     /**
      * Flag to indicate that the activity is stopped.
      */
-    protected boolean stopActivity;
+    protected volatile boolean stopActivity;
 
-    protected boolean initialized;
+    protected volatile boolean initialized;
+
+    /**
+     * Flag indiquant que l'activité est l'activité courante du Cerveau.
+     */
+    private volatile boolean active;
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
+     * Publication des évènements du système nerveux (injecté par Spring).
+     */
+    @Autowired
+    protected ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Initializes the activity before event listeners activation.
@@ -26,6 +47,28 @@ public abstract class AbstractActivity {
 
     public boolean isInitialized() {
         return initialized;
+    }
+
+    /**
+     * Active l'activité : réinitialise les flags, appelle {@link #init()} puis
+     * autorise le traitement des évènements.
+     */
+    public final void activer() {
+        stopActivity = false;
+        init();
+        active = true;
+    }
+
+    /**
+     * Désactive l'activité : les évènements ne sont plus traités, puis {@link #stop()}.
+     */
+    public final void desactiver() {
+        active = false;
+        stop();
+    }
+
+    public boolean isActive() {
+        return active;
     }
 
     /**
@@ -49,16 +92,16 @@ public abstract class AbstractActivity {
      * @param text the text to say
      */
     public void say(String text) {
-        System.out.println(Thread.currentThread().getName() + " want to say : " + text);
+        logger.debug("say : {}", text);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(text);
-        RobotEventBus.getInstance().publish(paroleEvent);
+        applicationEventPublisher.publishEvent(paroleEvent);
     }
 
     public void playAnimation(Animation animation) {
         PlayAnimationEvent playAnimationEvent = new PlayAnimationEvent();
         playAnimationEvent.setAnimation(animation);
-        RobotEventBus.getInstance().publishAsync(playAnimationEvent);
+        applicationEventPublisher.publishEvent(playAnimationEvent);
     }
 
 }

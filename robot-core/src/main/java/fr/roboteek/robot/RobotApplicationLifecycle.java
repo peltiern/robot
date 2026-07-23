@@ -1,7 +1,6 @@
 package fr.roboteek.robot;
 
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +38,7 @@ public class RobotApplicationLifecycle {
         logger.info("Robot complètement démarré");
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte("J'ai terminé de m'initialiser");
-        RobotEventBus.getInstance().publishAsync(paroleEvent);
+        applicationContext.publishEvent(paroleEvent);
     }
 
     /**

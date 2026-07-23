@@ -5,7 +5,6 @@ import fr.roboteek.robot.memoire.FacialRecognitionResponse;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
@@ -182,7 +181,7 @@ public class CapteurVisionWebSocketRest extends AbstractOrganeWithThread {
         // Envoi d'un évènement Vidéo
         VideoEvent videoEvent = new VideoEvent();
         videoEvent.setImageBase64(Base64.getEncoder().encodeToString(ba));
-        RobotEventBus.getInstance().publishAsync(videoEvent);
+        applicationEventPublisher.publishEvent(videoEvent);
     }
 
     public static void main(String[] args) {

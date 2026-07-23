@@ -3,8 +3,6 @@ package fr.roboteek.robot.organes.actionneurs.animation;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.systemenerveux.spring.GuavaSpringEventBridge;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +30,6 @@ class AnimationPlayerTest {
     void setUp() {
         context = new AnnotationConfigApplicationContext(
                 RobotEventsConfig.class,
-                GuavaSpringEventBridge.class,
                 AnimationPlayer.class,
                 MouvementsRecus.class);
     }
@@ -49,7 +46,7 @@ class AnimationPlayerTest {
 
         PlayAnimationEvent event = new PlayAnimationEvent();
         event.setAnimation(Animation.NEUTRAL);
-        RobotEventBus.getInstance().publish(event);
+        context.publishEvent(event);
 
         // L'unique étape de NEUTRAL a un délai de 200 ms, la boucle scrute toutes les 100 ms
         MouvementsRecus recus = context.getBean(MouvementsRecus.class);

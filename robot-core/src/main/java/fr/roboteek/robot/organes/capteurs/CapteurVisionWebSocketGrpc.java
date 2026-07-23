@@ -6,7 +6,6 @@ import fr.roboteek.robot.memoire.FacialRecognitionResponse;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
@@ -214,7 +213,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
             videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
             videoEvent.setObjects(objectDetectionResponse.getObjects());
         }
-        RobotEventBus.getInstance().publishAsync(videoEvent);
+        applicationEventPublisher.publishEvent(videoEvent);
         long fin = System.currentTimeMillis();
         if (facialRecognitionResponse != null && CollectionUtils.isNotEmpty(facialRecognitionResponse.getFaces())) {
             System.out.println("(" + (fin - debut) + ") : " + facialRecognitionResponse.getFaces().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
