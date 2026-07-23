@@ -1,7 +1,6 @@
 package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.systemenerveux.event.DetectionVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 
 /**
  * Capteur vocal avec appel d'un web service externe pour effectuer la reconnaisance vocale.
@@ -19,6 +18,6 @@ public class CapteurVocalSimple extends AbstractCapteurVocal {
         // Envoi de l'évènement de détection vocale
         final DetectionVocaleEvent event = new DetectionVocaleEvent();
         event.setCheminFichier(cheminFichierWav);
-        RobotEventBus.getInstance().publishAsync(event);
+        applicationEventPublisher.publishEvent(event);
     }
 }

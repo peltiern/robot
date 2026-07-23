@@ -7,7 +7,6 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.commons.RandomUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -124,10 +123,10 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
         PlaySoundEvent playSoundEvent = animationStep.buildPlaySoundEvent();
 
         // Envoi des évènements dans le bus
-        RobotEventBus.getInstance().publishAsync(mouvementYeuxEvent);
-        RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
+        applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+        applicationEventPublisher.publishEvent(mouvementCouEvent);
         if (playSoundEvent != null) {
-            RobotEventBus.getInstance().publishAsync(playSoundEvent);
+            applicationEventPublisher.publishEvent(playSoundEvent);
         }
     }
 

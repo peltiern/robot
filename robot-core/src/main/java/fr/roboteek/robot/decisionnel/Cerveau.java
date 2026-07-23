@@ -6,7 +6,6 @@ import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.slf4j.Logger;
@@ -39,6 +38,11 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     private AbstractActivity currentActivity;
 
     /**
+     * Activité de conversation (activité par défaut).
+     */
+    private final ConversationActivity conversationActivity;
+
+    /**
      * Logger.
      */
     private final Logger logger = LoggerFactory.getLogger(Cerveau.class);
@@ -48,13 +52,14 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private volatile boolean running = false;
 
-    public Cerveau() {
+    public Cerveau(ConversationActivity conversationActivity) {
         super("Brain");
+        this.conversationActivity = conversationActivity;
     }
 
     @Override
     public void initialiser() {
-        initNewCurrentActivity(new ConversationActivity());
+        initNewCurrentActivity(conversationActivity);
     }
 
     @Override
@@ -65,7 +70,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
                 logger.debug("Lancement de l'activité");
                 boolean hasBeenStopped = currentActivity.run();
                 if (!hasBeenStopped) {
-                    initNewCurrentActivity(new ConversationActivity());
+                    initNewCurrentActivity(conversationActivity);
                 }
             } else {
                 try {
@@ -94,13 +99,13 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(reconnaissanceVocaleEvent.getTexteReconnu());
             conversationEvent.setIdLocuteur(0);
-            RobotEventBus.getInstance().publishAsync(conversationEvent);
+            applicationEventPublisher.publishEvent(conversationEvent);
 
             if (texteReconnu != null && !texteReconnu.equals("")) {
                 // Arrêt du robot
                 if (texteReconnu.trim().equalsIgnoreCase("au revoir")) {
                     final StopEvent stopEvent = new StopEvent();
-                    RobotEventBus.getInstance().publish(stopEvent);
+                    applicationEventPublisher.publishEvent(stopEvent);
                     dire("Au revoir.");
                 } else if (texteReconnu.trim().equalsIgnoreCase("akinator")) {
 //                    initNewCurrentActivity(new AkinatorActivity());
@@ -109,7 +114,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
                     ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
                     event.setProcessedByBrain(true);
                     event.setTexteReconnu(reconnaissanceVocaleEvent.getTexteReconnu());
-                    RobotEventBus.getInstance().publishAsync(event);
+                    applicationEventPublisher.publishEvent(event);
                 }
             }
         }
@@ -127,7 +132,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(paroleEvent.getTexte());
             conversationEvent.setIdLocuteur(-1);
-            RobotEventBus.getInstance().publishAsync(conversationEvent);
+            applicationEventPublisher.publishEvent(conversationEvent);
         }
     }
 
@@ -141,18 +146,15 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         stopCurrentActivity();
         currentActivity = activity;
         logger.debug("Nouvelle activité : {}", currentActivity.getClass().getName());
-        currentActivity.init();
-        // Subscribe to event bus
-        RobotEventBus.getInstance().subscribe(currentActivity);
+        // Activation : réinitialise l'activité et autorise le traitement des évènements
+        currentActivity.activer();
     }
 
     private synchronized void stopCurrentActivity() {
         if (currentActivity != null) {
             logger.debug("Arrêt de l'activité : {}", currentActivity.getClass().getName());
-            // Unsubscribe to event bus
-            RobotEventBus.getInstance().unsubscribe(currentActivity);
-            // Stop activity
-            currentActivity.stop();
+            // Désactivation : les évènements ne sont plus traités par cette activité
+            currentActivity.desactiver();
             currentActivity = null;
         }
     }
@@ -166,7 +168,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         logger.debug("Dire = {}", texte);
         final ParoleEvent paroleEvent = new ParoleEvent();
         paroleEvent.setTexte(texte);
-        RobotEventBus.getInstance().publishAsync(paroleEvent);
+        applicationEventPublisher.publishEvent(paroleEvent);
     }
 
     @Override

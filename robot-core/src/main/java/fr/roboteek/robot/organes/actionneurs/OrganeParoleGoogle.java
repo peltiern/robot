@@ -8,7 +8,6 @@ import fr.roboteek.robot.services.synthesizer.SpeechSynthesizerService;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.apache.commons.lang3.StringUtils;
@@ -69,7 +68,7 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
-//            RobotEventBus.getInstance().publish(eventPause);
+//            applicationEventPublisher.publishEvent(eventPause);
 
             logger.debug("Lecture :\t{}", texte);
 
@@ -102,7 +101,7 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
             eventRedemarrage.setControle(CONTROLE.DEMARRER);
-            RobotEventBus.getInstance().publishAsync(eventRedemarrage);
+            applicationEventPublisher.publishEvent(eventRedemarrage);
         }
     }
 

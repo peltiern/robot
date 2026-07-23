@@ -4,7 +4,6 @@ import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.slf4j.Logger;
@@ -50,7 +49,7 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
-            RobotEventBus.getInstance().publishAsync(eventPause);
+            applicationEventPublisher.publishEvent(eventPause);
 
             logger.debug("Lecture son :\t{}", sound);
 
@@ -70,7 +69,7 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
             eventRedemarrage.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER);
-            RobotEventBus.getInstance().publish(eventRedemarrage);
+            applicationEventPublisher.publishEvent(eventRedemarrage);
         }
     }
 

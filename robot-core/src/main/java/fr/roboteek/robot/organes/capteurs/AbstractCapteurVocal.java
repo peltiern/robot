@@ -15,7 +15,6 @@ import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import org.springframework.context.event.EventListener;
 
 import javax.sound.sampled.AudioFormat;
@@ -265,7 +264,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                     fr.roboteek.robot.systemenerveux.event.AudioEvent audioEvent = new fr.roboteek.robot.systemenerveux.event.AudioEvent();
                     audioEvent.setAudioContentBase64(Base64.getEncoder().encodeToString(creerFichierWav(e.getByteBuffer())));
                     audioEvent.setContent(creerFichierWav(e.getByteBuffer()));
-                    RobotEventBus.getInstance().publishAsync(audioEvent);
+                    applicationEventPublisher.publishEvent(audioEvent);
                 }
 
             });

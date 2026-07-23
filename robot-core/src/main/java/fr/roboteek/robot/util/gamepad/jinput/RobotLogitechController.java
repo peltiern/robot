@@ -1,6 +1,7 @@
 package fr.roboteek.robot.util.gamepad.jinput;
 
 import fr.roboteek.robot.systemenerveux.event.*;
+import org.springframework.context.ApplicationEventPublisher;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
@@ -27,6 +28,11 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private final GamepadManager gamepadManager;
 
     /**
+     * Publication des évènements du système nerveux.
+     */
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    /**
      * Logger.
      */
     private final Logger logger = LoggerFactory.getLogger(RobotLogitechController.class);
@@ -36,7 +42,8 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
      */
     private volatile boolean running = false;
 
-    public RobotLogitechController() {
+    public RobotLogitechController(ApplicationEventPublisher applicationEventPublisher) {
+        this.applicationEventPublisher = applicationEventPublisher;
 //        // Ajout de la librairie native JInput
 //        try {
 //            System.out.println("Tentative de chargement de : " + Constantes.DOSSIER_JINPUT + "/jinput-linux64.so");
@@ -158,7 +165,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 //            // Stop
 //            mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
 //        }
-//        RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+//        applicationEventPublisher.publishEvent(mouvementRoueEvent);
 //    }
 
         private void processJoystickLeftY(LogitechControllerEvent event) {
@@ -176,7 +183,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 }
                 mouvementCouEvent.setSynchrone(false);
                 logger.debug("GAMEPAD processJoystickLeftY = {}", mouvementCouEvent);
-                RobotEventBus.getInstance().publish(mouvementCouEvent);
+                applicationEventPublisher.publishEvent(mouvementCouEvent);
             }
     }
 
@@ -185,7 +192,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         if (topValue.getCurrentPressed()) {
             // Forward
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
-            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+            applicationEventPublisher.publishEvent(mouvementRoueEvent);
         }
     }
 
@@ -194,7 +201,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         if (bottomValue.getCurrentPressed()) {
             // Backward
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
-            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+            applicationEventPublisher.publishEvent(mouvementRoueEvent);
         }
     }
 
@@ -203,7 +210,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         if (leftValue.getCurrentPressed()) {
             // Rotate left
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_GAUCHE, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
-            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+            applicationEventPublisher.publishEvent(mouvementRoueEvent);
         }
     }
 
@@ -212,7 +219,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         if (rightValue.getCurrentPressed()) {
             // Rotate right
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent(MouvementRoueEvent.MOUVEMENTS_ROUE.PIVOTER_DROIT, 1D, phidgetsConfig().differentialDrivingMotorAcceleration());
-            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+            applicationEventPublisher.publishEvent(mouvementRoueEvent);
         }
     }
 
@@ -222,7 +229,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             // Stop
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
             mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
-            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+            applicationEventPublisher.publishEvent(mouvementRoueEvent);
         }
     }
 
@@ -240,7 +247,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setVitessePanoramique(40D);
             }
             mouvementCouEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publish(mouvementCouEvent);
+            applicationEventPublisher.publishEvent(mouvementCouEvent);
         }
     }
 
@@ -258,7 +265,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setVitesseInclinaison(10D);
             }
             mouvementCouEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publish(mouvementCouEvent);
+            applicationEventPublisher.publishEvent(mouvementCouEvent);
         }
     }
 
@@ -271,7 +278,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
             mouvementYeuxEvent.setMouvementOeilGauche(left1Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publish(mouvementYeuxEvent);
+            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
         }
     }
 
@@ -285,7 +292,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
             mouvementYeuxEvent.setMouvementOeilGauche(analogLeft2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publish(mouvementYeuxEvent);
+            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
         }
     }
 
@@ -298,7 +305,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
             mouvementYeuxEvent.setMouvementOeilDroit(right1Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publish(mouvementYeuxEvent);
+            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
         } else {
             if (right1Value.getCurrentPressed()) {
                 MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
@@ -307,7 +314,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setVitesseRoulis(50D);
                 mouvementCouEvent.setPositionRoulis(180);
                 mouvementCouEvent.setSynchrone(false);
-                RobotEventBus.getInstance().publish(mouvementCouEvent);
+                applicationEventPublisher.publishEvent(mouvementCouEvent);
             } else {
                 MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
                 mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
@@ -317,7 +324,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementYeuxEvent.setVitesseOeilDroit(50D);
                 mouvementYeuxEvent.setMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
                 mouvementYeuxEvent.setSynchrone(false);
-                RobotEventBus.getInstance().publish(mouvementYeuxEvent);
+                applicationEventPublisher.publishEvent(mouvementYeuxEvent);
             }
         }
     }
@@ -333,7 +340,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
             mouvementYeuxEvent.setMouvementOeilDroit(analogRight2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             mouvementYeuxEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publish(mouvementYeuxEvent);
+            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
         } else {
             if (analogRight2Pressed) {
                 MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
@@ -342,13 +349,13 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setVitesseRoulis(50D);
                 mouvementCouEvent.setPositionRoulis(-179);
                 mouvementCouEvent.setSynchrone(false);
-                RobotEventBus.getInstance().publish(mouvementCouEvent);
+                applicationEventPublisher.publishEvent(mouvementCouEvent);
             } else {
                 MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
                 mouvementYeuxEvent.setMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
                 mouvementYeuxEvent.setMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
                 mouvementYeuxEvent.setSynchrone(false);
-                RobotEventBus.getInstance().publish(mouvementYeuxEvent);
+                applicationEventPublisher.publishEvent(mouvementYeuxEvent);
             }
         }
     }
@@ -367,7 +374,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementCouEvent.setVitesseMonterDescendre(40D);
             mouvementCouEvent.setPositionMonterDescendre(0);
             mouvementCouEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publishAsync(mouvementCouEvent);
+            applicationEventPublisher.publishEvent(mouvementCouEvent);
             MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
             mouvementYeuxEvent.setAccelerationOeilDroit(80D);
             mouvementYeuxEvent.setVitesseOeilDroit(50D);
@@ -376,10 +383,10 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             mouvementYeuxEvent.setVitesseOeilGauche(50D);
             mouvementYeuxEvent.setPositionOeilGauche(0);
             mouvementYeuxEvent.setSynchrone(false);
-            RobotEventBus.getInstance().publishAsync(mouvementYeuxEvent);
+            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
             mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
-            RobotEventBus.getInstance().publishAsync(mouvementRoueEvent);
+            applicationEventPublisher.publishEvent(mouvementRoueEvent);
         }
     }
 
@@ -388,7 +395,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         if (crossValue.getCurrentPressed()) {
             final ParoleEvent paroleEvent = new ParoleEvent();
             paroleEvent.setTexte("Bonjour");
-            RobotEventBus.getInstance().publishAsync(paroleEvent);
+            applicationEventPublisher.publishEvent(paroleEvent);
         }
     }
 
@@ -396,7 +403,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         GamepadComponentValue<LogitechComponent> selectValue = event.getMapValues().get(LogitechComponent.BUTTON_BACK);
         if (selectValue.getCurrentPressed()) {
             DisplayPositionEvent displayPositionEvent = new DisplayPositionEvent();
-            RobotEventBus.getInstance().publishAsync(displayPositionEvent);
+            applicationEventPublisher.publishEvent(displayPositionEvent);
         }
     }
 

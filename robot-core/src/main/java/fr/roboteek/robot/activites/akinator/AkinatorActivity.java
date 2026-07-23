@@ -1,13 +1,11 @@
 package fr.roboteek.robot.activites.akinator;
 
-import com.google.common.eventbus.Subscribe;
 import fr.roboteek.robot.activites.AbstractActivity;
-import fr.roboteek.robot.organes.actionneurs.OrganeParoleGoogle;
 import fr.roboteek.robot.organes.actionneurs.animation.Animation;
-import fr.roboteek.robot.organes.capteurs.CapteurVocalAvecReconnaissance;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 import org.eu.zajc.akiwrapper.Akiwrapper;
 import org.eu.zajc.akiwrapper.AkiwrapperBuilder;
 import org.eu.zajc.akiwrapper.core.entities.Guess;
@@ -20,6 +18,13 @@ import org.eu.zajc.akiwrapper.core.utils.UnirestUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activité Akinator (jeu des devinettes).
+ * <p>
+ * Bean Spring singleton : le listener n'agit que lorsque l'activité est active
+ * (voir {@link AbstractActivity}).
+ */
+@Component
 public class AkinatorActivity extends AbstractActivity {
 
     public static final double PROBABILITY_THRESHOLD = 0.85;
@@ -35,9 +40,9 @@ public class AkinatorActivity extends AbstractActivity {
     private boolean finish;
 
     /**
-     * Waiting response.
+     * Waiting response (écrite par le thread du listener, lue par la boucle du jeu).
      */
-    private String waitingResponse;
+    private volatile String waitingResponse;
 
     @Override
     public void init() {
@@ -251,28 +256,11 @@ public class AkinatorActivity extends AbstractActivity {
      *
      * @param speechRecognitionEvent the speech recognition event
      */
-    @Subscribe
+    @EventListener
     public void handleReconnaissanceVocalEvent(ReconnaissanceVocaleEvent speechRecognitionEvent) {
-        if (speechRecognitionEvent.isProcessedByBrain() && StringUtils.isNotEmpty(speechRecognitionEvent.getTexteReconnu())) {
+        if (isActive() && speechRecognitionEvent.isProcessedByBrain() && StringUtils.isNotEmpty(speechRecognitionEvent.getTexteReconnu())) {
             // Recognize speech
             waitingResponse = speechRecognitionEvent.getTexteReconnu();
-            System.out.println(Thread.currentThread().getName() + " " + this + " --Réponse reconnue = " + waitingResponse);
         }
-    }
-
-    public static void main(String[] args) {
-        AkinatorActivity activity = new AkinatorActivity();
-        activity.init();
-        RobotEventBus.getInstance().subscribe(activity);
-
-        CapteurVocalAvecReconnaissance capteurVocalAvecReconnaissance = new CapteurVocalAvecReconnaissance();
-        capteurVocalAvecReconnaissance.initialiser();
-        capteurVocalAvecReconnaissance.start();
-        OrganeParoleGoogle organeParoleGoogle = new OrganeParoleGoogle();
-        organeParoleGoogle.initialiser();
-
-        RobotEventBus.getInstance().subscribe(capteurVocalAvecReconnaissance);
-        RobotEventBus.getInstance().subscribe(organeParoleGoogle);
-        activity.run();
     }
 }

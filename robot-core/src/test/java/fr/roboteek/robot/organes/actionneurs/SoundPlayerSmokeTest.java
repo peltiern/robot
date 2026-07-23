@@ -3,8 +3,6 @@ package fr.roboteek.robot.organes.actionneurs;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.systemenerveux.event.PlaySoundEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
-import fr.roboteek.robot.systemenerveux.event.RobotEventBus;
-import fr.roboteek.robot.systemenerveux.spring.GuavaSpringEventBridge;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test de fumée du {@link SoundPlayer} migré : joue réellement un son sur le poste
- * via le circuit complet (bus Guava → pont → listener Spring asynchrone → commande {@code play}).
+ * via le circuit complet (évènement Spring → listener asynchrone → commande {@code play}).
  * <p>
  * Ne s'exécute que si la variable d'environnement {@code ROBOT_HOME} est définie
  * (par exemple {@code /home/npeltier/Robot/Programme}) : il nécessite les fichiers
@@ -37,7 +35,6 @@ class SoundPlayerSmokeTest {
     void setUp() {
         context = new AnnotationConfigApplicationContext(
                 RobotEventsConfig.class,
-                GuavaSpringEventBridge.class,
                 SoundPlayer.class,
                 FinDeLectureDetectee.class);
     }
@@ -55,7 +52,7 @@ class SoundPlayerSmokeTest {
 
         PlaySoundEvent event = new PlaySoundEvent();
         event.setSound(RobotSound.WALLE);
-        RobotEventBus.getInstance().publish(event);
+        context.publishEvent(event);
 
         // Le SoundPlayer publie DEMARRER (reprise de la reconnaissance vocale) en fin de lecture
         FinDeLectureDetectee finDeLecture = context.getBean(FinDeLectureDetectee.class);

@@ -1,11 +1,21 @@
 package fr.roboteek.robot.organes;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+
 /**
  * Classe abstraite représentant un organe.
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 public abstract class AbstractOrgane {
+
+    /**
+     * Publication des évènements du système nerveux (injecté par Spring —
+     * n'est renseigné que si l'organe est un bean Spring).
+     */
+    @Autowired
+    protected ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Constructeur.
