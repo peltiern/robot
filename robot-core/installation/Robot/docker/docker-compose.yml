@@ -2,9 +2,8 @@ version: '3'
 
 services:
   robot-core:
-    image: peltiern/robot-docker-java:java-21
-    build:
-      context: .
+    # Image construite et poussée depuis le poste de développement (voir docs/install_jetson_nano_version_docker.md)
+    image: peltiern/robot-wall-e:java-25
     user: "root"
     env_file:
       - ${HOME}/Robot/Programme/configuration/.env
