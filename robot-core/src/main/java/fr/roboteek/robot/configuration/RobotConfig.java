@@ -27,4 +27,14 @@ public interface RobotConfig extends Config {
      */
     @Key("device.microphone.name")
     String microphoneName();
+
+    /**
+     * Indique si l'organe de vision (webcam + serveur Python) doit être démarré.
+     * Désactivé par défaut : nécessite une webcam et le serveur Python gRPC (localhost:50051).
+     *
+     * @return true si la vision est activée
+     */
+    @Key("robot.capteurs.vision.enabled")
+    @DefaultValue("false")
+    boolean visionEnabled();
 }

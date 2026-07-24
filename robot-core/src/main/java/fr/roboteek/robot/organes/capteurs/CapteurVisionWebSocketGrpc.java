@@ -7,6 +7,7 @@ import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
+import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.geometry.euclidean.twod.Vector2D;
@@ -20,6 +21,8 @@ import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.SmartLifecycle;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,11 +35,24 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
 
 /**
- * Capteur lié à la vision.
+ * Capteur de vision : capture le flux de la webcam, le transmet au serveur Python
+ * de vision artificielle (gRPC, détection d'objets / reconnaissance de visages) et
+ * publie un {@link VideoEvent} par image.
+ * <p>
+ * Migré en bean Spring mais <b>désactivé par défaut</b> (comme l'ancien démarrage
+ * qui ne l'instanciait pas). Pour l'activer : {@code robot.capteurs.vision.enabled=true}
+ * dans {@code robot.properties} (lu via {@link RobotConfig}, modifiable sans rebuild).
+ * Le bean est toujours créé mais reste inerte tant que le flag est faux (garde dans
+ * {@link #start()}).
+ * <p>
+ * Dégradation gracieuse : si aucune webcam n'est trouvée, l'organe reste inerte
+ * sans faire échouer le démarrage ; si le serveur Python est absent, les appels
+ * gRPC renvoient {@code null} et seule l'image est diffusée (sans détection).
  *
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
-public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
+@Component
+public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread implements SmartLifecycle {
 
     private static final Logger logger = LoggerFactory.getLogger(CapteurVisionWebSocketGrpc.class);
 
@@ -67,69 +83,83 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 
     private ObjectDetectionResponse objectDetectionResponse;
 
-
     /**
      * Configuration.
      */
     private RobotConfig robotConfig;
 
+    /**
+     * Flag indiquant de stopper le thread de capture.
+     */
+    private volatile boolean stopperThread = false;
+
+    /**
+     * Flag de démarrage de l'organe (cycle de vie Spring).
+     */
+    private volatile boolean running = false;
 
     public CapteurVisionWebSocketGrpc() {
-        super("VisionActivty");
-    }
-
-    public static void main(String[] args) {
-        CapteurVisionWebSocketGrpc capteurVision = new CapteurVisionWebSocketGrpc();
-        capteurVision.initialiser();
-        capteurVision.start();
+        super("VisionActivity");
     }
 
     @Override
     public void initialiser() {
         robotConfig = robotConfig();
 
-        OpenCV.loadShared();
+        // loadLocally() et non loadShared() : cette dernière n'est plus supportée en
+        // Java >= 12 et retombe de toute façon sur loadLocally() avec un log ERROR trompeur.
+        OpenCV.loadLocally();
 
         visionArtificiellePythonGrpc = new VisionArtificiellePythonGrpc();
+
+        image = new Mat();
 
         // Recherche de la webcam
         rechercherWebcam();
 
-        image = new Mat();
+        if (capture == null || !capture.isOpened()) {
+            // Pas de webcam : l'organe restera inerte (voir start()).
+            return;
+        }
 
-        boolean captured = false;
+        // Quelques lectures pour amorcer le flux (la première image tarde souvent).
         for (int i = 0; i < 10; ++i) {
-            captured = capture.read(image);
-            if (captured) {
+            if (capture.read(image)) {
                 break;
             }
             try {
                 Thread.sleep(50);
             } catch (InterruptedException ignore) {
-                // ignore
+                Thread.currentThread().interrupt();
+                break;
             }
         }
     }
 
     @Override
     public void loop() {
-        while (capture.isOpened()) {
+        if (capture == null) {
+            return;
+        }
+        while (!stopperThread && capture.isOpened()) {
             if (!capture.read(image)) {
                 break;
             }
-
             traiterImageEnCours();
         }
     }
 
+    @Override
     public void arreter() {
-        capture.release();
+        stopperThread = true;
+        if (capture != null) {
+            capture.release();
+        }
     }
 
     private void rechercherWebcam() {
         // Recherche des liens symboliques de la webcam demandée
         String webcamRecherchee = robotConfig.webcamName();
-//        String webcamRecherchee = "C525";
         List<String> liensSymboliquesWebcam = null;
 
         logger.debug("Recherche de la webcam : {}", webcamRecherchee);
@@ -153,28 +183,26 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Erreur lors de la recherche de la webcam", e);
         }
 
-
         if (CollectionUtils.isNotEmpty(liensSymboliquesWebcam)) {
-
-            capture = null;
             for (String lienSymbolique : liensSymboliquesWebcam) {
-                capture = new VideoCapture(lienSymbolique);
-                capture.set(Videoio.CAP_PROP_FRAME_WIDTH, LARGEUR_WEBCAM);
-                capture.set(Videoio.CAP_PROP_FRAME_HEIGHT, HAUTEUR_WEBCAM);
-                if (capture.isOpened()) {
+                VideoCapture candidate = new VideoCapture(lienSymbolique);
+                candidate.set(Videoio.CAP_PROP_FRAME_WIDTH, LARGEUR_WEBCAM);
+                candidate.set(Videoio.CAP_PROP_FRAME_HEIGHT, HAUTEUR_WEBCAM);
+                if (candidate.isOpened()) {
                     // Webcam trouvée
+                    capture = candidate;
+                    logger.info("Webcam trouvée : {}", lienSymbolique);
                     break;
                 }
+                candidate.release();
             }
+        }
 
-            if (capture == null) {
-                logger.error("Pas de caméra trouvée");
-            }
-        } else {
-            logger.error("Pas de caméra trouvée");
+        if (capture == null || !capture.isOpened()) {
+            logger.error("Pas de caméra trouvée pour '{}'", webcamRecherchee);
         }
     }
 
@@ -197,7 +225,16 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
 //        }
 
 ////        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
-        objectDetectionResponse = visionArtificiellePythonGrpc.detectObjects(ba);
+        // Détection optionnelle : elle ne doit jamais interrompre le flux vidéo
+        // (serveur Python absent = null ; erreur = warn limité, puis on continue).
+        try {
+            objectDetectionResponse = visionArtificiellePythonGrpc.detectObjects(ba);
+        } catch (RuntimeException e) {
+            objectDetectionResponse = null;
+            if (indexFrame % 100 == 0) {
+                logger.warn("Détection indisponible (le flux vidéo continue) : {}", e.getMessage());
+            }
+        }
 ////        }
 //        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
 //            objectDetectionResponse = null;
@@ -248,4 +285,37 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread {
         return response;
     }
 
+    @Override
+    public void start() {
+        if (!robotConfig().visionEnabled()) {
+            logger.info("Vision désactivée (robot.capteurs.vision.enabled=false)");
+            return;
+        }
+        initialiser();
+        if (capture == null || !capture.isOpened()) {
+            // Aucune webcam : on ne démarre pas le thread, l'organe reste inerte.
+            logger.warn("CapteurVision non démarré (aucune webcam)");
+            return;
+        }
+        super.start();
+        running = true;
+        logger.info("CapteurVision démarré");
+    }
+
+    @Override
+    public void stop() {
+        running = false;
+        arreter();
+        logger.info("CapteurVision arrêté");
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return RobotLifecyclePhases.CAPTEURS;
+    }
 }

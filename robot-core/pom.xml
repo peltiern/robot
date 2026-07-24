@@ -155,6 +155,16 @@
     <!-- BOM Spring AI : aligne les versions de tous les modules Spring AI -->
     <dependencyManagement>
         <dependencies>
+            <!-- Importé en premier pour aligner TOUS les artefacts io.grpc (y compris
+                 grpc-core/grpc-api transitifs) sur ${grpc-version} : sinon spring-ai-bom
+                 les downgrade et grpc-netty appelle des méthodes absentes (NoSuchMethodError). -->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc-version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
@@ -263,21 +273,19 @@
             <classifier>natives-all</classifier>
         </dependency>
 
-        <!-- Protobuf pour les appels au service de vision artificielle Python -->
+        <!-- Protobuf pour les appels au service de vision artificielle Python.
+             Versions gérées par le grpc-bom (voir dependencyManagement). -->
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty</artifactId>
-            <version>${grpc-version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
-            <version>${grpc-version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-            <version>${grpc-version}</version>
         </dependency>
 
         <!-- Spring AI pour l'utilisation de LLM (IA) : modèles Claude via l'API Anthropic -->
