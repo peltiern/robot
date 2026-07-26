@@ -12,6 +12,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 import java.util.List;
 
@@ -31,6 +32,15 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // Endpoint du Websocket
         registry.addEndpoint("/wsendpoint").setAllowedOrigins("*");
+    }
+
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        // Les trames vidéo (JPEG en base64) dépassent la limite par défaut de 512 Ko et coupaient
+        // la session (« Buffer size ... exceeds the allowed limit 524288 »). On relève les limites.
+        registration.setMessageSizeLimit(2 * 1024 * 1024);      // 2 Mo (messages entrants)
+        registration.setSendBufferSizeLimit(8 * 1024 * 1024);   // 8 Mo (tampon d'envoi par session)
+        registration.setSendTimeLimit(20 * 1000);               // 20 s pour vider le tampon
     }
 
     @Override

@@ -41,7 +41,10 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
+        // allowedOriginPatterns (et non allowedOrigins) : avec allowCredentials=true, Spring
+        // interdit la valeur "*" pour allowedOrigins (impossible de la renvoyer dans
+        // Access-Control-Allow-Origin). Le pattern "*" est autorisé et renvoie l'origine reçue.
+        config.addAllowedOriginPattern("*");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
