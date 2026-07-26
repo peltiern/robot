@@ -32,6 +32,15 @@ public class RobotEventsConfig implements AsyncConfigurer {
     /** Nom du bean executor dédié aux évènements du robot. */
     public static final String ROBOT_EVENT_EXECUTOR = "robotEventExecutor";
 
+    /**
+     * Nom du bean executor MONO-THREAD dédié aux commandes des yeux (mouvements d'oeil + roulis).
+     * Ces commandes visent le même matériel et doivent être traitées dans l'ordre de publication,
+     * sans concurrence : sinon un arrêt et un roulis publiés coup sur coup (ex. après avoir bougé
+     * un oeil puis lancé un roulis) tournent en parallèle et figent un oeil en cours de route, d'où
+     * un roulis asymétrique ou un seul oeil qui bouge.
+     */
+    public static final String YEUX_EVENT_EXECUTOR = "yeuxEventExecutor";
+
     private static final Logger logger = LoggerFactory.getLogger(RobotEventsConfig.class);
 
     /**
@@ -46,6 +55,22 @@ public class RobotEventsConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(8);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("robot-event-");
+        return executor;
+    }
+
+    /**
+     * Executor MONO-THREAD (FIFO) dédié aux commandes des yeux : garantit que mouvements d'oeil et
+     * roulis sont exécutés l'un après l'autre, dans l'ordre où ils ont été publiés, jamais en
+     * parallèle. Sérialiser ces commandes moteur (même matériel) supprime les courses qui rendaient
+     * le roulis asymétrique de façon intermittente.
+     */
+    @Bean(name = YEUX_EVENT_EXECUTOR)
+    public ThreadPoolTaskExecutor yeuxEventExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("yeux-event-");
         return executor;
     }
 

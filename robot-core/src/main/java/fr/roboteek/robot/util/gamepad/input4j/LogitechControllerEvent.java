@@ -1,4 +1,4 @@
-package fr.roboteek.robot.util.gamepad.jinput;
+package fr.roboteek.robot.util.gamepad.input4j;
 
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.GamepadEvent;

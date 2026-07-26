@@ -43,26 +43,6 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     private PhidgetsServoMotor moteurOeilDroit;
 
     /**
-     * Flag indiquant que le roulis est en cours.
-     */
-    private boolean roulisEnCours = false;
-
-    /**
-     * Position relative de l'oeil gauche au début du roulis.
-     */
-    private double positionRelativeOeilGaucheDebutRoulis = 0;
-
-    /**
-     * Position relative de l'oeil droit au début du roulis.
-     */
-    private double positionRelativeOeilDroitDebutRoulis = 0;
-
-    /**
-     * Angle roulis.
-     */
-    private double angleRoulis = 0;
-
-    /**
      * Phidgets Configuration.
      */
     private PhidgetsConfig phidgetsConfig;
@@ -237,37 +217,58 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     }
 
     /**
-     * Positionne le roulis à l'angle demandé (référence : oeil gauche de face).
+     * Fait tourner les yeux d'un cran de roulis (rotation « solidaire » des deux yeux : ils
+     * n'ont pas de moteur de roulis dédié, on le simule en bougeant chaque oeil en sens opposé).
+     * <p>
+     * Modèle, volontairement simple et sans état mémorisé — chaque appel repart de la position
+     * réelle courante des deux yeux :
+     * <ol>
+     *   <li><b>Calibration</b> (mesurée à la manette, sans Y) : pour les DEUX yeux, une position
+     *   relative qui AUGMENTE fait MONTER l'oeil, qui DIMINUE le fait DESCENDRE.</li>
+     *   <li><b>Sens</b> : {@code angleRoulisDemande < 0} (ANTI_HORAIRE) => oeil gauche MONTE et
+     *   oeil droit DESCEND ; {@code > 0} (HORAIRE) => l'inverse. Les deux yeux vont TOUJOURS en
+     *   sens opposés — un roulis ne peut donc jamais baisser les deux yeux à la fois.</li>
+     *   <li><b>Solidaire + butées</b> : les deux yeux bougent de la MÊME amplitude. Celle-ci est
+     *   plafonnée au débattement restant du plus contraint des deux yeux dans SON sens. Si l'un
+     *   est déjà en butée dans le sens voulu, l'amplitude tombe à 0 : le roulis est bloqué de ce
+     *   côté (l'autre oeil ne bouge pas tout seul), mais reste possible dans le sens inverse.</li>
+     * </ol>
      *
-     * @param newAngleRoulis l'angle de roulis
+     * @param angleRoulisDemande amplitude signée du cran (degrés) : &lt;0 ANTI_HORAIRE, &gt;0 HORAIRE
      */
-    public void setPositionRoulis(double newAngleRoulis, Double vitesse, Double acceleration, boolean waitForPosition) {
-        // Récupération des positions de chaque oeil si c'est le début du roulis
-        if (!roulisEnCours) {
-            positionRelativeOeilGaucheDebutRoulis = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
-            positionRelativeOeilDroitDebutRoulis = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
-        }
-        roulisEnCours = true;
+    public void setPositionRoulis(double angleRoulisDemande, Double vitesse, Double acceleration, boolean waitForPosition) {
+        final double min = phidgetsConfig.eyeMotorRelativePositionMin();
+        final double max = phidgetsConfig.eyeMotorRelativePositionMax();
 
-        // Calcul de l'angle max (référence oeil gauche)
-        double angleRoulisAAffecter = newAngleRoulis;
-        if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
-            angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilGaucheDebutRoulis;
-        }
-        if (positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
-            angleRoulisAAffecter = phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilGaucheDebutRoulis;
-        }
-        if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter > phidgetsConfig.eyeMotorRelativePositionMax()) {
-            angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMax() - positionRelativeOeilDroitDebutRoulis);
-        }
-        if (positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter < phidgetsConfig.eyeMotorRelativePositionMin()) {
-            angleRoulisAAffecter = -(phidgetsConfig.eyeMotorRelativePositionMin() - positionRelativeOeilDroitDebutRoulis);
-        }
-        final double nouvellePositionRelativeOeilGauche = positionRelativeOeilGaucheDebutRoulis + angleRoulisAAffecter;
-        final double nouvellePositionRelativeOeilDroit = positionRelativeOeilDroitDebutRoulis - angleRoulisAAffecter;
-        positionnerOeilGauche(nouvellePositionRelativeOeilGauche, vitesse, acceleration, false);
-        positionnerOeilDroit(nouvellePositionRelativeOeilDroit, vitesse, acceleration, waitForPosition);
-        angleRoulis = angleRoulisAAffecter;
+        // Position relative RÉELLE courante des deux yeux (bornée à la plage utile pour absorber
+        // le bruit capteur). Aucun état figé : le roulis s'applique par-dessus la position du moment.
+        double positionGauche = clamp(toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle()), min, max);
+        double positionDroit = clamp(toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle()), min, max);
+
+        // Sens de chaque oeil (opposés) : ANTI_HORAIRE (angle < 0) => gauche monte (+), droit descend (-).
+        double sensGauche = angleRoulisDemande < 0 ? +1 : -1;
+        double sensDroit = -sensGauche;
+
+        // Débattement restant de chaque oeil dans SON sens, puis amplitude solidaire = le minimum.
+        double margeGauche = sensGauche > 0 ? max - positionGauche : positionGauche - min;
+        double margeDroit = sensDroit > 0 ? max - positionDroit : positionDroit - min;
+        double amplitude = Math.max(0, Math.min(Math.abs(angleRoulisDemande), Math.min(margeGauche, margeDroit)));
+
+        // Cibles RE-bornées à [min,max] : quand l'amplitude est limitée par l'oeil le plus contraint,
+        // sa cible tombe pile sur sa butée et un arrondi flottant pourrait la faire dépasser d'un
+        // epsilon. positionnerOeil rejetterait alors ce mouvement (garde min/max) et un SEUL oeil
+        // bougerait. Le clamp garantit que les DEUX cibles restent acceptées => mouvement solidaire.
+        double cibleGauche = clamp(positionGauche + sensGauche * amplitude, min, max);
+        double cibleDroit = clamp(positionDroit + sensDroit * amplitude, min, max);
+        positionnerOeilGauche(cibleGauche, vitesse, acceleration, false);
+        positionnerOeilDroit(cibleDroit, vitesse, acceleration, waitForPosition);
+    }
+
+    /**
+     * Borne une valeur dans l'intervalle [min, max].
+     */
+    private static double clamp(double valeur, double min, double max) {
+        return Math.max(min, Math.min(max, valeur));
     }
 
 
@@ -277,42 +278,34 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
      * @param mouvementYeuxEvent évènement de mouvements
      */
     @EventListener
-    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
+    @Async(RobotEventsConfig.YEUX_EVENT_EXECUTOR)
     public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
         if (!running) {
             return;
         }
-        logger.debug("YEUX : Event = {}", mouvementYeuxEvent);
         if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
             // TODO ne pas mettre en synchrone si oeil droit en synchrone ==> A corriger
-            roulisEnCours = false;
             positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche(), mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), false/*mouvementYeuxEvent.isSynchrone()*/);
         } else if (mouvementYeuxEvent.getMouvementOeilGauche() != null) {
             if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.STOPPER) {
                 stopperOeilGauche();
             } else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-                roulisEnCours = false;
                 tournerOeilGaucheVersBas(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
             } else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-                roulisEnCours = false;
                 tournerOeilGaucheVersHaut(mouvementYeuxEvent.getVitesseOeilGauche(), mouvementYeuxEvent.getAccelerationOeilGauche(), mouvementYeuxEvent.isSynchrone());
             }
         }
         if (mouvementYeuxEvent.getPositionOeilDroit() != MouvementYeuxEvent.POSITION_NEUTRE) {
-            roulisEnCours = false;
             positionnerOeilDroit(mouvementYeuxEvent.getPositionOeilDroit(), mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
         } else if (mouvementYeuxEvent.getMouvementOeilDroit() != null) {
             if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.STOPPER) {
                 stopperOeilDroit();
             } else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-                roulisEnCours = false;
                 tournerOeilDroitVersBas(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
             } else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-                roulisEnCours = false;
                 tournerOeilDroitVersHaut(mouvementYeuxEvent.getVitesseOeilDroit(), mouvementYeuxEvent.getAccelerationOeilDroit(), mouvementYeuxEvent.isSynchrone());
             }
         }
-        roulisEnCours = false;
     }
 
     /**
@@ -321,7 +314,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
      * @param mouvementCouEvent évènement de mouvements de cou
      */
     @EventListener
-    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
+    @Async(RobotEventsConfig.YEUX_EVENT_EXECUTOR)
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
         if (!running) {
             return;
@@ -330,57 +323,8 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
             setPositionRoulis(mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
         } else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
             setPositionRoulis(-mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
-        } else {
-            roulisEnCours = false;
         }
     }
-
-//	/**
-//	 * Intercepte les évènements de mouvements.
-//	 * @param mouvementYeuxEvent évènement de mouvements
-//	 */
-//	@Subscribe
-//	public void handleRobotEvent(RobotEvent robotEvent) {
-//		System.out.println("YEUX : Event = " + robotEvent + ", Thread = " + Thread.currentThread().getName());
-//		if (robotEvent instanceof MouvementYeuxEvent) {
-//			final MouvementYeuxEvent mouvementYeuxEvent = (MouvementYeuxEvent) robotEvent;
-//			if (mouvementYeuxEvent.getPositionOeilGauche() != -1) {
-//				positionnerOeilGauche(mouvementYeuxEvent.getPositionOeilGauche());
-//			} else if (mouvementYeuxEvent.getMouvementOeilGauche() != null) {
-//				if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.STOPPER) {
-//					stopperOeilGauche();
-//				} else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-//					tournerOeilGaucheVersBas();
-//				} else if (mouvementYeuxEvent.getMouvementOeilGauche() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-//					tournerOeilGaucheVersHaut();
-//				}
-//			}
-//			if (mouvementYeuxEvent.getPositionOeilDroit() != -1) {
-//				positionnerOeilDroit(mouvementYeuxEvent.getPositionOeilDroit());
-//			} else if (mouvementYeuxEvent.getMouvementOeilDroit() != null) {
-//				if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.STOPPER) {
-//					stopperOeilDroit();
-//				} else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_BAS) {
-//					tournerOeilDroitVersBas();
-//				} else if (mouvementYeuxEvent.getMouvementOeilDroit() == MOUVEMENTS_OEIL.TOURNER_HAUT) {
-//					tournerOeilDroitVersHaut();
-//				}
-//			}
-//			roulisEnCours = false;
-//			
-//		} else if (robotEvent instanceof MouvementCouEvent) {
-//			final MouvementCouEvent mouvementCouEvent = (MouvementCouEvent) robotEvent;
-//			if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
-//				setPositionRoulis(mouvementCouEvent.getPositionRoulis());
-//			} else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
-//				setPositionRoulis(-mouvementCouEvent.getPositionRoulis());
-//			} else {
-//				roulisEnCours = false;
-//				stopperOeilGauche();
-//				stopperOeilDroit();
-//			}
-//		}
-//	}
 
     @Override
     public void arreter() {
@@ -451,10 +395,6 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     private void reset() {
         moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
         moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
-        roulisEnCours = false;
-        positionRelativeOeilDroitDebutRoulis = 0;
-        positionRelativeOeilGaucheDebutRoulis = 0;
-        angleRoulis = 0;
     }
 
     /**
@@ -486,11 +426,12 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
 
     /**
      * Calcule la position relative de l'oeil droit à partir d'une position absolue.
+     * Inverse de {@link #toPositionAbsolueOeilDroit} (absolue = zéro + relative).
      *
      * @param positionAbsolue la position absolue
      */
     private double toPositionRelativeOeilDroit(double positionAbsolue) {
-        return phidgetsConfig.eyeRightMotorPositionZero() + positionAbsolue;
+        return positionAbsolue - phidgetsConfig.eyeRightMotorPositionZero();
     }
 
     /**

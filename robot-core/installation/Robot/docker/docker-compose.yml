@@ -6,7 +6,9 @@ services:
     env_file:
       - ${HOME}/Robot/Programme/configuration/.env
     environment:
-      - JAVA_TOOL_OPTIONS=-Dnet.java.games.input.librarypath=/Robot/Programme/jinput
+      # Accès natif (FFM) : input4j (manette) et OpenCV (vision) appellent des méthodes
+      # restreintes ; autorisé globalement pour éviter les warnings au démarrage.
+      - JAVA_TOOL_OPTIONS=--enable-native-access=ALL-UNNAMED
       # Sortie son (sox/play) : haut-parleur sur la clé USB C-Media, désignée par son nom
       # de carte ALSA (insensible à l'ordre d'énumération USB, contrairement au numéro)
       - AUDIODEV=plughw:CARD=Device
@@ -16,7 +18,6 @@ services:
     stop_grace_period: 30s
     volumes:
       - ${HOME}/Robot/Programme:/Robot/Programme
-      - ${HOME}/Robot/Programme/jinput:/Robot/Programme/jinput
       - /dev:/dev
     ports:
       - "8080:8080"

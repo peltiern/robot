@@ -1,17 +1,14 @@
-package fr.roboteek.robot.util.gamepad.jinput;
+package fr.roboteek.robot.util.gamepad.input4j;
 
 import fr.roboteek.robot.systemenerveux.event.*;
-import org.springframework.context.ApplicationEventPublisher;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
 import fr.roboteek.robot.util.gamepad.shared.RobotGamepadController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
@@ -19,13 +16,13 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
  * Contrôleur de manette Logitech : transforme les entrées manette en évènements du robot.
  * <p>
  * Migré en bean Spring : démarrage géré par {@link SmartLifecycle} en phase CAPTEURS
- * (c'est une entrée de commandes). Le {@code GamepadManager} sous-jacent ne fournit pas
- * d'arrêt propre (threads détachés) : le {@code stop()} ne fait que couper le flag.
+ * (c'est une entrée de commandes). Backend {@link Input4jGamepadManager} (input4j, mode
+ * XInput) ; l'arrêt stoppe la boucle de polling et ferme input4j.
  */
 @Component
 public class RobotLogitechController implements RobotGamepadController, LogitechListener, SmartLifecycle {
 
-    private final GamepadManager gamepadManager;
+    private final Input4jGamepadManager gamepadManager;
 
     /**
      * Publication des évènements du système nerveux.
@@ -42,17 +39,32 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
      */
     private volatile boolean running = false;
 
+    /**
+     * Seuil de détection d'appui des gâchettes analogiques. Les gâchettes montent à +1 à fond,
+     * mais leurs valeurs de repos diffèrent (mesuré sur la F710/Jetson : gâchette gauche au repos
+     * ≈ 0.0, gâchette droite ≈ -1.0). Un seuil à 0.5 sépare correctement « enfoncée » du repos pour
+     * les DEUX (un seuil bas comme -0.9 rendait la gâchette gauche « toujours enfoncée »).
+     */
+    private static final float SEUIL_GACHETTE = 0.5F;
+
+    /**
+     * Mode ROULIS actif = bouton Y maintenu. Piloté par l'évènement de Y lui-même (et non relu à
+     * chaque évènement de gâchette), ce qui supprime la course entre l'arrivée de Y et celle d'une
+     * gâchette. Tant qu'il est vrai, le côté droit fait un roulis et le côté gauche est neutralisé —
+     * impossible alors de piloter un oeil vers le bas, donc impossible de baisser les deux yeux.
+     */
+    private volatile boolean roulisActif = false;
+
+    /**
+     * États « enfoncé » précédents des deux commandes arrière droites, pour ne déclencher le roulis
+     * qu'au front montant (appui) et non à chaque évènement analogique pendant le maintien.
+     */
+    private boolean gachetteDroiteEnfoncee = false;
+    private boolean boutonDroitEnfonce = false;
+
     public RobotLogitechController(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
-//        // Ajout de la librairie native JInput
-//        try {
-//            System.out.println("Tentative de chargement de : " + Constantes.DOSSIER_JINPUT + "/jinput-linux64.so");
-//            System.load(Constantes.DOSSIER_JINPUT + "/jinput-linux64.so");
-//            //addLibraryPath(Constantes.DOSSIER_JINPUT);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-        gamepadManager = new GamepadManager(LogitechController.class);
+        gamepadManager = new Input4jGamepadManager();
         gamepadManager.addListener(this);
     }
 
@@ -65,7 +77,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     @Override
     public void stop() {
-        // Pas d'arrêt propre disponible sur le GamepadManager (threads détachés)
+        gamepadManager.stop();
         running = false;
         logger.info("Contrôleur de manette arrêté");
     }
@@ -96,22 +108,34 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                     break;
                 case BUTTON_CROSS_TOP:
                     processButtonCrossTop(event);
+                    break;
                 case BUTTON_CROSS_TOP_RIGHT:
                     processButtonCrossCenter(event);
+                    break;
                 case BUTTON_CROSS_RIGHT:
                     processButtonCrossRight(event);
+                    break;
                 case BUTTON_CROSS_BOTTOM_RIGHT:
                     processButtonCrossCenter(event);
+                    break;
                 case BUTTON_CROSS_BOTTOM:
                     processButtonCrossBottom(event);
+                    break;
                 case BUTTON_CROSS_BOTTOM_LEFT:
                     processButtonCrossCenter(event);
+                    break;
                 case BUTTON_CROSS_LEFT:
                     processButtonCrossLeft(event);
+                    break;
                 case BUTTON_CROSS_TOP_LEFT:
                     processButtonCrossCenter(event);
+                    break;
                 case BUTTON_CROSS_CENTER:
                     processButtonCrossCenter(event);
+                    break;
+                case BUTTON_Y:
+                    processButtonY(event);
+                    break;
                 case BUTTON_LEFT_1:
                     processButtonLeft1(event);
                     break;
@@ -137,52 +161,23 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         });
     }
 
-//    private void processJoystickLeft(LogitechControllerEvent event) {
-//        double amplitude = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AMPLITUDE).getCurrentNumericValue();
-//        // Ceil amplitude to 1
-//        amplitude = amplitude > 1 ? 1 : amplitude;
-//        double xValue = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AXIS_X).getCurrentNumericValue();
-//        double yValue = event.getMapValues().get(PS3Component.JOYSTICK_LEFT_AXIS_Y).getCurrentNumericValue();
-//        MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
-//        if (amplitude > 0.2) {
-//            // Differential drive
-//            mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.DIFFERENTIEL);
-//            mouvementRoueEvent.setAccelerationRoueGauche(phidgetsConfig().differentialDrivingMotorAcceleration());
-//            mouvementRoueEvent.setAccelerationRoueDroite(phidgetsConfig().differentialDrivingMotorAcceleration());
-//            int signe = yValue > -0.1 ? 1 : -1;
-//            if (xValue > 0) {
-//                // Turn right
-//                mouvementRoueEvent.setVitesseRoueGauche(amplitude * signe);
-//                mouvementRoueEvent.setVitesseRoueDroite((1 - xValue) * amplitude * signe);
-//            } else {
-//                // Turn left
-//                mouvementRoueEvent.setVitesseRoueGauche((1 + xValue) * amplitude * signe);
-//                mouvementRoueEvent.setVitesseRoueDroite(amplitude * signe);
-//            }
-//        } else {
-//            // Stop
-//            mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
-//        }
-//        applicationEventPublisher.publishEvent(mouvementRoueEvent);
-//    }
-
-        private void processJoystickLeftY(LogitechControllerEvent event) {
-            GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_LEFT_AXIS_Y);
-            if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
-                MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-                mouvementCouEvent.setAccelerationMonterDescendre(2000D);
-                double absolute = Math.abs(leftYValue.getCurrentNumericValue());
-                double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
-                if (value == 0) {
-                    mouvementCouEvent.setMouvementMonterDescendre(MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.STOPPER);
-                } else {
-                    mouvementCouEvent.setMouvementMonterDescendre(value > 0 ? MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE : MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.MONTER);
-                    mouvementCouEvent.setVitesseMonterDescendre(60D);
-                }
-                mouvementCouEvent.setSynchrone(false);
-                logger.debug("GAMEPAD processJoystickLeftY = {}", mouvementCouEvent);
-                applicationEventPublisher.publishEvent(mouvementCouEvent);
+    private void processJoystickLeftY(LogitechControllerEvent event) {
+        GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_LEFT_AXIS_Y);
+        if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
+            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            mouvementCouEvent.setAccelerationMonterDescendre(2000D);
+            double absolute = Math.abs(leftYValue.getCurrentNumericValue());
+            double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
+            if (value == 0) {
+                mouvementCouEvent.setMouvementMonterDescendre(MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.STOPPER);
+            } else {
+                mouvementCouEvent.setMouvementMonterDescendre(value > 0 ? MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE : MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE.MONTER);
+                mouvementCouEvent.setVitesseMonterDescendre(60D);
             }
+            mouvementCouEvent.setSynchrone(false);
+            logger.debug("GAMEPAD processJoystickLeftY = {}", mouvementCouEvent);
+            applicationEventPublisher.publishEvent(mouvementCouEvent);
+        }
     }
 
     private void processButtonCrossTop(LogitechControllerEvent event) {
@@ -267,95 +262,156 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         }
     }
 
-    private void processButtonLeft1(LogitechControllerEvent event) {
-        GamepadComponentValue<LogitechComponent> left1Value = event.getMapValues().get(LogitechComponent.BUTTON_LEFT_1);
-        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
-        if (!buttonYValue.getCurrentPressed()) {
-            MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-            mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
-            mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setMouvementOeilGauche(left1Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-            mouvementYeuxEvent.setSynchrone(false);
-            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+    /**
+     * Bouton Y = interrupteur du mode ROULIS. Piloté par l'évènement de Y lui-même : à l'appui on
+     * entre en mode roulis, au relâchement on en sort. Dans les deux cas on stoppe les yeux : le
+     * roulis est un geste MAINTENU qui doit s'arrêter dès que Y (ou la commande arrière) est
+     * relâché, et l'appui repart d'un état propre (annule un pilotage d'oeil resté actif).
+     */
+    private void processButtonY(LogitechControllerEvent event) {
+        boolean y = Boolean.TRUE.equals(event.getMapValues().get(LogitechComponent.BUTTON_Y).getCurrentPressed());
+        if (y != roulisActif) {
+            roulisActif = y;
+            publierArretYeux();
         }
+    }
+
+    private void processButtonLeft1(LogitechControllerEvent event) {
+        // Bouton arrière gauche = oeil gauche vers le HAUT (hors roulis ; cf. calibration inversée
+        // du moteur gauche : TOURNER_BAS fait physiquement MONTER l'oeil gauche).
+        boolean enfonce = Boolean.TRUE.equals(event.getMapValues().get(LogitechComponent.BUTTON_LEFT_1).getCurrentPressed());
+        piloterOeilGauche(enfonce, MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS);
     }
 
     private void processButtonAnalogLeft2(LogitechControllerEvent event) {
-        GamepadComponentValue<LogitechComponent> analogLeft2Value = event.getMapValues().get(LogitechComponent.BUTTON_ANALOG_LEFT_2);
-        boolean analogLeft2Pressed = analogLeft2Value.getCurrentNumericValue() >= -0.9F;
-        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
-        if (!buttonYValue.getCurrentPressed()) {
-            MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-            mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
-            mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setMouvementOeilGauche(analogLeft2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-            mouvementYeuxEvent.setSynchrone(false);
-            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
-        }
+        // Gâchette arrière gauche = oeil gauche vers le BAS (hors roulis ; TOURNER_HAUT fait
+        // physiquement DESCENDRE l'oeil gauche).
+        Float valeur = event.getMapValues().get(LogitechComponent.BUTTON_ANALOG_LEFT_2).getCurrentNumericValue();
+        boolean enfonce = valeur != null && valeur >= SEUIL_GACHETTE;
+        piloterOeilGauche(enfonce, MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT);
     }
 
     private void processButtonRight1(LogitechControllerEvent event) {
-        GamepadComponentValue<LogitechComponent> right1Value = event.getMapValues().get(LogitechComponent.BUTTON_RIGHT_1);
-        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
-        if (!buttonYValue.getCurrentPressed()) {
-            MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-            mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
-            mouvementYeuxEvent.setVitesseOeilDroit(50D);
-            mouvementYeuxEvent.setMouvementOeilDroit(right1Value.getCurrentPressed() ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-            mouvementYeuxEvent.setSynchrone(false);
-            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
-        } else {
-            if (right1Value.getCurrentPressed()) {
-                MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-                mouvementCouEvent.setMouvementRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE);
-                mouvementCouEvent.setAccelerationRoulis(2000D);
-                mouvementCouEvent.setVitesseRoulis(50D);
-                mouvementCouEvent.setPositionRoulis(180);
-                mouvementCouEvent.setSynchrone(false);
-                applicationEventPublisher.publishEvent(mouvementCouEvent);
-            } else {
-                MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-                mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
-                mouvementYeuxEvent.setVitesseOeilGauche(50D);
-                mouvementYeuxEvent.setMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-                mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
-                mouvementYeuxEvent.setVitesseOeilDroit(50D);
-                mouvementYeuxEvent.setMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-                mouvementYeuxEvent.setSynchrone(false);
-                applicationEventPublisher.publishEvent(mouvementYeuxEvent);
-            }
-        }
+        // Bouton arrière droit : sous Y → roulis HORAIRE (oeil gauche descend / oeil droit monte) ;
+        // sans Y → oeil droit vers le HAUT.
+        boolean enfonce = Boolean.TRUE.equals(event.getMapValues().get(LogitechComponent.BUTTON_RIGHT_1).getCurrentPressed());
+        boutonDroitEnfonce = piloterArriereDroite(boutonDroitEnfonce, enfonce,
+                MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE, MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_HAUT);
     }
 
     private void processButtonAnalogRight2(LogitechControllerEvent event) {
-        GamepadComponentValue<LogitechComponent> analogRight2Value = event.getMapValues().get(LogitechComponent.BUTTON_ANALOG_RIGHT_2);
-        boolean analogRight2Pressed = analogRight2Value.getCurrentNumericValue() >= -0.9F;
-        GamepadComponentValue<LogitechComponent> buttonYValue = event.getMapValues().get(LogitechComponent.BUTTON_Y);
-        if (!buttonYValue.getCurrentPressed()) {
+        // Gâchette arrière droite : sous Y → roulis ANTI_HORAIRE (oeil gauche monte / oeil droit
+        // descend) ; sans Y → oeil droit vers le BAS.
+        Float valeur = event.getMapValues().get(LogitechComponent.BUTTON_ANALOG_RIGHT_2).getCurrentNumericValue();
+        boolean enfonce = valeur != null && valeur >= SEUIL_GACHETTE;
+        gachetteDroiteEnfoncee = piloterArriereDroite(gachetteDroiteEnfoncee, enfonce,
+                MouvementCouEvent.MOUVEMENTS_ROULIS.ANTI_HORAIRE, MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS);
+    }
 
-            MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-            mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
-            mouvementYeuxEvent.setVitesseOeilDroit(50D);
-            mouvementYeuxEvent.setMouvementOeilDroit(analogRight2Pressed ? MouvementYeuxEvent.MOUVEMENTS_OEIL.TOURNER_BAS : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-            mouvementYeuxEvent.setSynchrone(false);
-            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+    /**
+     * Pilotage de l'oeil gauche par les commandes arrière gauches (hors roulis). Sous Y, le côté
+     * gauche est neutralisé : le roulis pilote les deux yeux via le côté droit, et on ne publie
+     * aucun mouvement d'oeil gauche — impossible donc de le pousser vers le bas pendant un roulis.
+     */
+    private void piloterOeilGauche(boolean enfonce, MouvementYeuxEvent.MOUVEMENTS_OEIL mouvementEnfonce) {
+        if (roulisActif) {
+            return;
+        }
+        publierMouvementOeilGauche(enfonce ? mouvementEnfonce : MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+    }
+
+    /**
+     * Pilotage d'une commande arrière droite (gâchette ou bouton), selon le mode courant :
+     * <ul>
+     *   <li>sous Y (roulis) : au FRONT MONTANT (appui) seulement, on incline jusqu'à la butée ;
+     *   rien au relâchement (le roulis est un geste ponctuel, pas maintenu) ;</li>
+     *   <li>sans Y : contrôle direct de l'oeil droit, maintenu tant que la commande est enfoncée
+     *   (mouvement à l'appui, arrêt au relâchement).</li>
+     * </ul>
+     *
+     * @param avant      état enfoncé précédent de cette commande
+     * @param maintenant état enfoncé courant
+     * @param sensRoulis sens du roulis à publier sous Y
+     * @param mouvementOeilDroit mouvement de l'oeil droit à publier hors Y
+     * @return le nouvel état enfoncé (à mémoriser)
+     */
+    private boolean piloterArriereDroite(boolean avant, boolean maintenant,
+                                         MouvementCouEvent.MOUVEMENTS_ROULIS sensRoulis,
+                                         MouvementYeuxEvent.MOUVEMENTS_OEIL mouvementOeilDroit) {
+        boolean frontMontant = !avant && maintenant;
+        boolean frontDescendant = avant && !maintenant;
+        if (roulisActif) {
+            if (frontMontant) {
+                publierRoulis(sensRoulis);
+            } else if (frontDescendant) {
+                // Roulis MAINTENU : relâcher la commande arrière stoppe les deux yeux.
+                publierArretYeux();
+            }
         } else {
-            if (analogRight2Pressed) {
-                MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
-                mouvementCouEvent.setMouvementRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS.HORAIRE);
-                mouvementCouEvent.setAccelerationRoulis(2000D);
-                mouvementCouEvent.setVitesseRoulis(50D);
-                mouvementCouEvent.setPositionRoulis(-179);
-                mouvementCouEvent.setSynchrone(false);
-                applicationEventPublisher.publishEvent(mouvementCouEvent);
-            } else {
-                MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-                mouvementYeuxEvent.setMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-                mouvementYeuxEvent.setMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
-                mouvementYeuxEvent.setSynchrone(false);
-                applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+            if (frontMontant) {
+                publierMouvementOeilDroit(mouvementOeilDroit);
+            } else if (frontDescendant) {
+                publierMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
             }
         }
+        return maintenant;
+    }
+
+    /**
+     * Publie un roulis des yeux (les deux yeux partent en sens opposés, cf.
+     * {@code Yeux.setPositionRoulis}).
+     * <p>
+     * L'amplitude demandée n'est pas une constante : c'est la course totale d'un oeil
+     * ({@code max − min} des butées relatives). Comme cette course est toujours ≥ à la marge
+     * restante de chacun des deux yeux, {@code Yeux.setPositionRoulis} la plafonne à la marge
+     * symétrique réelle du moment — le roulis va donc toujours au maximum possible dans le sens
+     * demandé, les deux yeux bougeant de la même amplitude en sens opposés.
+     */
+    private void publierRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS sens) {
+        double amplitudeMax = phidgetsConfig().eyeMotorRelativePositionMax()
+                - phidgetsConfig().eyeMotorRelativePositionMin();
+        MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+        mouvementCouEvent.setMouvementRoulis(sens);
+        mouvementCouEvent.setAccelerationRoulis(2000D);
+        mouvementCouEvent.setVitesseRoulis(50D);
+        mouvementCouEvent.setPositionRoulis(amplitudeMax);
+        mouvementCouEvent.setSynchrone(false);
+        applicationEventPublisher.publishEvent(mouvementCouEvent);
+    }
+
+    /**
+     * Publie un mouvement continu de l'oeil droit (contrôle direct arrière droit, sans Y).
+     */
+    private void publierMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL mouvement) {
+        MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
+        mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
+        mouvementYeuxEvent.setVitesseOeilDroit(50D);
+        mouvementYeuxEvent.setMouvementOeilDroit(mouvement);
+        mouvementYeuxEvent.setSynchrone(false);
+        applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+    }
+
+    /**
+     * Publie un mouvement continu de l'oeil gauche (contrôle direct arrière gauche, sans Y).
+     */
+    private void publierMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL mouvement) {
+        MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
+        mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
+        mouvementYeuxEvent.setVitesseOeilGauche(50D);
+        mouvementYeuxEvent.setMouvementOeilGauche(mouvement);
+        mouvementYeuxEvent.setSynchrone(false);
+        applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+    }
+
+    /**
+     * Stoppe les deux yeux (fin d'un roulis).
+     */
+    private void publierArretYeux() {
+        MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
+        mouvementYeuxEvent.setMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+        mouvementYeuxEvent.setMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);
+        mouvementYeuxEvent.setSynchrone(false);
+        applicationEventPublisher.publishEvent(mouvementYeuxEvent);
     }
 
     private void processButtonStart(LogitechControllerEvent event) {
@@ -403,31 +459,5 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             DisplayPositionEvent displayPositionEvent = new DisplayPositionEvent();
             applicationEventPublisher.publishEvent(displayPositionEvent);
         }
-    }
-
-    /**
-     * Adds the specified path to the java library path
-     *
-     * @param pathToAdd the path to add
-     * @throws Exception
-     */
-    private static void addLibraryPath(String pathToAdd) throws Exception{
-        final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
-        usrPathsField.setAccessible(true);
-
-        //get array of paths
-        final String[] paths = (String[])usrPathsField.get(null);
-
-        //check if the path to add is already present
-        for(String path : paths) {
-            if(path.equals(pathToAdd)) {
-                return;
-            }
-        }
-
-        //add the new path
-        final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
-        newPaths[newPaths.length-1] = pathToAdd;
-        usrPathsField.set(null, newPaths);
     }
 }

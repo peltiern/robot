@@ -136,9 +136,16 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     public synchronized void setPositionCible(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
         try {
             positionAtteinte.set(false);
+            // Fixer accélération ET vitesse AVANT la consigne de position. Un stop() précédent a pu
+            // laisser la limite de vitesse à 0 (stop() fait setVelocityLimit(0) sans jamais la
+            // restaurer). Si on envoie la consigne de position tant que la vitesse vaut 0, le servo
+            // peut ne pas démarrer — le rattrapage de vitesse après coup est dépendant du firmware —
+            // d'où un oeil qui, de façon intermittente, « ne repart pas » après avoir été stoppé
+            // (ex. bouger l'oeil gauche seul puis lancer un roulis). En réglant la vitesse d'abord,
+            // la consigne de position part toujours avec une limite de vitesse non nulle.
             setAcceleration(acceleration);
-            rcServo.setTargetPosition(position);
             setVitesse(vitesse);
+            rcServo.setTargetPosition(position);
             while (waitForPosition && !positionAtteinte.get()) ;
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block
