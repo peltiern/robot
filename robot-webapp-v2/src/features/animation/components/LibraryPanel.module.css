@@ -1,0 +1,209 @@
+.panel {
+  width: 168px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────── */
+
+.header {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 10px;
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  color: var(--dim);
+}
+
+.newBtn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 0.1s, background 0.1s;
+}
+.newBtn:hover { border-color: var(--accent); background: #1c2433; }
+
+/* ── Liste ──────────────────────────────────── */
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.list::-webkit-scrollbar { width: 4px; }
+.list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.hint {
+  padding: 12px 10px;
+  font-size: 11px;
+  color: var(--dim);
+  font-style: italic;
+}
+
+.errorMsg {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--danger);
+}
+
+/* ── Item ───────────────────────────────────── */
+
+.item {
+  display: flex;
+  align-items: center;
+  padding: 0 6px 0 10px;
+  height: 34px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  gap: 4px;
+  transition: background 0.1s;
+}
+.item:hover:not(.itemBusy) { background: #1a2030; }
+
+.active {
+  background: #1c2e45;
+  border-left: 2px solid var(--accent);
+  padding-left: 8px;
+}
+.active:hover { background: #1e3050; }
+
+.itemBusy { cursor: wait; }
+
+.itemName {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Boutons d'action ───────────────────────── */
+
+.actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.item:hover .actions { opacity: 1; }
+.active .actions { opacity: 1; }
+
+.actionBtn {
+  background: none;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.1s, color 0.1s;
+}
+.actionBtn:hover:not(:disabled) { background: #2d333b; color: var(--text); }
+.actionBtn:disabled { opacity: 0.4; cursor: wait; }
+
+.deleteBtn:hover:not(:disabled) { color: var(--danger); }
+
+/* ── Confirmation (nouvelle anim / suppression) ─ */
+
+.confirmPanel {
+  padding: 10px;
+  background: #1e1a14;
+  border-bottom: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+
+
+.confirming {
+  flex-direction: column;
+  height: auto;
+  padding: 8px 10px;
+  cursor: default;
+  background: #1e1a14;
+  border-left: 2px solid var(--danger);
+}
+.confirming:hover { background: #1e1a14; }
+
+.confirmContent {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.confirmMsg {
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.confirmBtns {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.confirmBtn {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.confirmSave {
+  background: #1c3a5e;
+  border-color: var(--accent);
+  color: var(--text);
+}
+.confirmSave:hover { background: #1e4a7a; }
+
+.confirmSkip {
+  background: #3a1c1c;
+  border-color: #6e3030;
+  color: #e07070;
+}
+.confirmSkip:hover { background: #4a2020; border-color: var(--danger); }
+
+.confirmCancel {
+  background: none;
+  border-color: var(--border);
+  color: var(--dim);
+}
+.confirmCancel:hover { background: #2d333b; color: var(--text); }

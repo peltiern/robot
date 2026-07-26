@@ -1,0 +1,37 @@
+// Événements WebSocket — miroir des RobotEvent Java (fr.roboteek.robot.systemenerveux.event).
+// Les noms de champs reflètent la sérialisation Gson côté backend.
+
+/** Rectangle détecté (visage ou objet) : coordonnées en pixels de l'image source. */
+export interface DetectedBox {
+  x: number
+  y: number
+  width: number
+  height: number
+  /** Nom du visage reconnu / label de l'objet (peut être absent). */
+  name?: string
+}
+
+/** VideoEvent (topic `/video`) — image JPEG base64 + détections éventuelles. */
+export interface VideoEvent {
+  imageBase64: string
+  faceFound?: boolean
+  faces?: DetectedBox[]
+  objectFound?: boolean
+  objects?: DetectedBox[]
+}
+
+/**
+ * ConversationEvent (topic `/events/conversation`) — un tour de dialogue.
+ * idLocuteur : -1 = robot, 0 = inconnu, > 0 = identifiant d'une personne.
+ */
+export interface ConversationEvent {
+  eventType: 'conversation'
+  texte: string
+  idLocuteur: number
+}
+
+/** ParoleEvent envoyé au robot (destination `/app/robotevents`) pour le faire parler. */
+export interface ParoleEventOut {
+  eventType: 'parole'
+  texte: string
+}
