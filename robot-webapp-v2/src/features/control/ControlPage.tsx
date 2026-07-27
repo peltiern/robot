@@ -132,9 +132,12 @@ export function ControlPage() {
       .catch(() => setLoadState('error'))
   }, [])
 
+  // Recharge automatiquement dès que le robot est connecté (montage si déjà connecté, ou dès la
+  // (re)connexion sinon) : inutile de laisser l'utilisateur cliquer « Réessayer » alors que
+  // l'appli sait déjà que le robot vient de (re)devenir joignable.
   useEffect(() => {
-    charger()
-  }, [charger])
+    if (connected) charger()
+  }, [connected, charger])
 
   // Télémétrie live : Cou et Yeux publient chacun leur position réelle sur /events/telemetrie-organe
   // (topic partagé par tous les organes — Cou, Yeux, mais aussi les capteurs comme la page
@@ -211,7 +214,7 @@ export function ControlPage() {
 
       {!connected && <p className={styles.warning}>Robot déconnecté — les commandes ne seront pas envoyées.</p>}
 
-      {loadState === 'loading' && <p className={styles.info}>Récupération de la configuration du robot…</p>}
+      {connected && loadState === 'loading' && <p className={styles.info}>Récupération de la configuration du robot…</p>}
       {loadState === 'error' && (
         <p className={styles.warning}>
           Impossible de récupérer la configuration du robot (organes, butées, positions). Le robot est-il démarré ?{' '}
