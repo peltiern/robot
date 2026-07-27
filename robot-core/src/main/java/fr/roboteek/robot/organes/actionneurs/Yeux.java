@@ -435,6 +435,29 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     }
 
     /**
+     * Position relative courante de l'œil gauche (0 = horizontal, cf. {@link #positionnerOeilGauche}),
+     * ou {@code null} si l'organe n'est pas démarré (les moteurs ne sont créés qu'au {@code start()}).
+     */
+    public Double getPositionOeilGaucheCourante() {
+        if (!running || moteurOeilGauche == null) {
+            return null;
+        }
+        Double reelle = moteurOeilGauche.getPositionReelleOuNull();
+        return reelle == null ? null : toPositionRelativeOeilGauche(reelle);
+    }
+
+    /**
+     * Position relative courante de l'œil droit, ou {@code null} si l'organe n'est pas démarré.
+     */
+    public Double getPositionOeilDroitCourante() {
+        if (!running || moteurOeilDroit == null) {
+            return null;
+        }
+        Double reelle = moteurOeilDroit.getPositionReelleOuNull();
+        return reelle == null ? null : toPositionRelativeOeilDroit(reelle);
+    }
+
+    /**
      * Intercepte les évènements d'affichage de position.
      *
      * @param displayPositionEvent évènement

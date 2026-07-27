@@ -460,6 +460,43 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
     }
 
     /**
+     * Position panoramique courante dans le repère « logique » exposé aux clients
+     * (position = init − position moteur, cf. {@link #positionnerTeteGaucheDroite}), ou
+     * {@code null} si l'organe n'est pas démarré (les moteurs ne sont créés qu'au {@code start()}).
+     */
+    public Double getPositionPanoramiqueCourante() {
+        if (!running || moteurPanoramique == null) {
+            return null;
+        }
+        Double reelle = moteurPanoramique.getPositionReelleOuNull();
+        return reelle == null ? null : phidgetsConfig.neckLeftRightMotorInitialPosition() - reelle;
+    }
+
+    /**
+     * Position d'inclinaison (haut / bas) courante dans le repère logique, ou {@code null}
+     * si l'organe n'est pas démarré.
+     */
+    public Double getPositionInclinaisonCourante() {
+        if (!running || moteurInclinaison == null) {
+            return null;
+        }
+        Double reelle = moteurInclinaison.getPositionReelleOuNull();
+        return reelle == null ? null : phidgetsConfig.neckTiltMotorInitialPosition() - reelle;
+    }
+
+    /**
+     * Position monter / descendre courante dans le repère logique, ou {@code null}
+     * si l'organe n'est pas démarré.
+     */
+    public Double getPositionMonterDescendreCourante() {
+        if (!running || moteurMonterDescendre == null) {
+            return null;
+        }
+        Double reelle = moteurMonterDescendre.getPositionReelleOuNull();
+        return reelle == null ? null : phidgetsConfig.neckUpDownMotorInitialPosition() - reelle;
+    }
+
+    /**
      * Intercepte les évènements d'affichage de position.
      *
      * @param displayPositionEvent évènement

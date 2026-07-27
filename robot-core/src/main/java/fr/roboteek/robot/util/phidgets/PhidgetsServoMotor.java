@@ -167,6 +167,20 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         }
     }
 
+    /**
+     * Position réelle, ou {@code null} si le servo ne l'a pas encore publiée (erreur Phidget 0x33,
+     * fréquente juste après l'attache, tant que la première valeur n'a pas été reçue). Contrairement
+     * à {@link #getPositionReelle()}, ne journalise pas et ne renvoie pas un 0 trompeur : destiné à
+     * la télémétrie, qui doit simplement ignorer une position pas encore disponible.
+     */
+    public Double getPositionReelleOuNull() {
+        try {
+            return rcServo.getPosition();
+        } catch (PhidgetException e) {
+            return null;
+        }
+    }
+
     public void rotate(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
         setPositionCible(getPositionReelle() + angle, vitesse, acceleration, waitForPosition);
     }
@@ -294,7 +308,6 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         // Une fois que le moteur est attaché, on l'active
         try {
             if (attachEvent.getSource().equals(rcServo)) {
-                //rcServo.setDataInterval(32);
                 rcServo.setAcceleration(accelerationParDefaut);
                 // Engagement à la position physique probable pour éviter un saut à pleine
                 // vitesse matérielle (la rampe ne s'applique qu'entre deux consignes,
