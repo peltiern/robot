@@ -5,6 +5,7 @@ import styles from './Layout.module.css'
 
 const NAV_ITEMS = [
   { to: '/live',       label: 'Live',          icon: '📷' },
+  { to: '/controle',   label: 'Contrôle',      icon: '🎛️' },
   { to: '/animation',  label: 'Animation',     icon: '🎬' },
   { to: '/dialogue',   label: 'Dialogue',      icon: '💬' },
   { to: '/config',     label: 'Configuration', icon: '⚙️' },
