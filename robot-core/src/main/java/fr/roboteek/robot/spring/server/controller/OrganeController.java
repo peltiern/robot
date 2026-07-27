@@ -2,9 +2,11 @@ package fr.roboteek.robot.spring.server.controller;
 
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
+import fr.roboteek.robot.organes.capteurs.CapteurMateriel;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.spring.server.controller.dto.Articulation;
+import fr.roboteek.robot.spring.server.controller.dto.Mesure;
 import fr.roboteek.robot.spring.server.controller.dto.Organe;
 import fr.roboteek.robot.spring.server.controller.dto.Orientation;
 import fr.roboteek.robot.spring.server.controller.dto.TypeOrgane;
@@ -44,19 +46,22 @@ public class OrganeController {
 
     private final Cou cou;
     private final Yeux yeux;
+    private final CapteurMateriel capteurMateriel;
     private final PhidgetsConfig phidgetsConfig = Configurations.phidgetsConfig();
 
-    public OrganeController(Cou cou, Yeux yeux) {
+    public OrganeController(Cou cou, Yeux yeux, CapteurMateriel capteurMateriel) {
         this.cou = cou;
         this.yeux = yeux;
+        this.capteurMateriel = capteurMateriel;
     }
 
     /**
-     * Liste tous les organes du robot avec, pour les actionneurs, leurs articulations.
+     * Liste tous les organes du robot : actionneurs (avec leurs articulations) et capteurs
+     * (avec leurs mesures).
      */
     @GetMapping
     public List<Organe> lister() {
-        return List.of(organeYeux(), organeCou());
+        return List.of(organeYeux(), organeCou(), organeMateriel());
     }
 
     /**
@@ -79,7 +84,7 @@ public class OrganeController {
                         Orientation.VERTICAL, yeux.getPositionOeilGaucheCourante()),
                 new Articulation("oeilDroit", "Œil droit", UNITE_DEGRE, min, max,
                         Orientation.VERTICAL, yeux.getPositionOeilDroitCourante())
-        ));
+        ), List.of());
     }
 
     private Organe organeCou() {
@@ -96,6 +101,21 @@ public class OrganeController {
                         phidgetsConfig.neckUpDownMotorInitialPosition() - phidgetsConfig.neckUpDownMotorMaxPosition(),
                         phidgetsConfig.neckUpDownMotorInitialPosition() - phidgetsConfig.neckUpDownMotorMinPosition(),
                         Orientation.VERTICAL, cou.getPositionMonterDescendreCourante())
+        ), List.of());
+    }
+
+    /**
+     * Organe capteur « matériel » (CPU, mémoire, température, disque de la machine hôte, via
+     * OSHI). Mesures en pourcentage bornées 0-100 (y compris la température, échelle indicative
+     * pour le rendu — un CPU peut légitimement dépasser 100 °C en cas de dérive, l'échelle du
+     * graphique n'a pas à s'y adapter dynamiquement).
+     */
+    private Organe organeMateriel() {
+        return new Organe("materiel", "Matériel", TypeOrgane.CAPTEUR, List.of(), List.of(
+                new Mesure("cpuCharge", "Charge CPU", "%", 0, 100, capteurMateriel.getChargeCpuPourcent()),
+                new Mesure("memoire", "Mémoire", "%", 0, 100, capteurMateriel.getMemoireUtiliseePourcent()),
+                new Mesure("temperatureCpu", "Température CPU", "°C", 0, 100, capteurMateriel.getTemperatureCpu()),
+                new Mesure("disque", "Disque", "%", 0, 100, capteurMateriel.getDisqueUtilisePourcent())
         ));
     }
 }
