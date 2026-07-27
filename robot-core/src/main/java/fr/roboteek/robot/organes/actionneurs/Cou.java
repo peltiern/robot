@@ -7,6 +7,7 @@ import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_PANORAMIQUE;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_INCLINAISON;
+import fr.roboteek.robot.systemenerveux.event.TelemetrieOrganeEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.phidgets.PhidgetsServoMotor;
@@ -15,7 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 
@@ -72,6 +77,15 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
      * en fonctionnement. Garde-fou contre une valeur aberrante dans robot.properties.
      */
     private static final double MARGE_REPOS = 5.0;
+
+    /**
+     * Variation minimale (degrés) pour rediffuser la télémétrie de position : filtre
+     * l'immobilité sans hacher le mouvement (voir {@link #diffuserTelemetrie()}).
+     */
+    private static final double SEUIL_VARIATION_TELEMETRIE = 0.2;
+
+    /** Dernières positions diffusées en télémétrie, pour n'émettre que sur variation réelle. */
+    private Map<String, Double> dernieresPositionsDiffusees = Map.of();
 
     /**
      * Flag de démarrage de l'organe (cycle de vie Spring).
@@ -494,6 +508,46 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
         }
         Double reelle = moteurMonterDescendre.getPositionReelleOuNull();
         return reelle == null ? null : phidgetsConfig.neckUpDownMotorInitialPosition() - reelle;
+    }
+
+    /**
+     * Publie la position courante des articulations du cou en télémétrie, pour que les curseurs
+     * de contrôle suivent en direct les mouvements <b>physiques</b> du robot (manette, animations,
+     * comportements) et pas seulement les commandes qu'ils envoient eux-mêmes. Uniquement quand
+     * une position varie sensiblement — rien n'est émis à l'arrêt, ni tant que l'organe n'est pas
+     * démarré (positions indisponibles). Mêmes identifiants que {@code /api/organes}.
+     */
+    @Scheduled(fixedRate = 50)
+    public void diffuserTelemetrie() {
+        Map<String, Double> positions = new LinkedHashMap<>();
+        ajouterSiPresent(positions, "pan", getPositionPanoramiqueCourante());
+        ajouterSiPresent(positions, "tilt", getPositionInclinaisonCourante());
+        ajouterSiPresent(positions, "upDown", getPositionMonterDescendreCourante());
+        if (positions.isEmpty() || !aVarie(positions, dernieresPositionsDiffusees)) {
+            return;
+        }
+        dernieresPositionsDiffusees = positions;
+        applicationEventPublisher.publishEvent(new TelemetrieOrganeEvent("cou", positions));
+    }
+
+    private static void ajouterSiPresent(Map<String, Double> valeurs, String id, Double valeur) {
+        if (valeur != null) {
+            valeurs.put(id, valeur);
+        }
+    }
+
+    /** Vrai si l'ensemble des identifiants a changé, ou si une valeur a bougé de plus de {@link #SEUIL_VARIATION_TELEMETRIE}. */
+    private static boolean aVarie(Map<String, Double> valeurs, Map<String, Double> precedentes) {
+        if (!valeurs.keySet().equals(precedentes.keySet())) {
+            return true;
+        }
+        for (Map.Entry<String, Double> entree : valeurs.entrySet()) {
+            Double precedente = precedentes.get(entree.getKey());
+            if (precedente == null || Math.abs(entree.getValue() - precedente) > SEUIL_VARIATION_TELEMETRIE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
