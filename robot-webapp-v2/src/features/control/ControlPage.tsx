@@ -136,19 +136,23 @@ export function ControlPage() {
     charger()
   }, [charger])
 
-  // Télémétrie live : le back diffuse les positions réelles sur /events/positions. On met à jour les
-  // curseurs des axes mus « ailleurs » (manette, animations…), en laissant tranquilles ceux que
+  // Télémétrie live : Cou et Yeux publient chacun leur position réelle sur /events/telemetrie-organe
+  // (topic partagé par tous les organes — Cou, Yeux, mais aussi les capteurs comme la page
+  // Monitoring ; on ignore ici tout identifiant qu'on ne pilote pas). On met à jour les curseurs
+  // des axes mus « ailleurs » (manette, animations…), en laissant tranquilles ceux que
   // l'utilisateur vient de piloter (fenêtre) et en bornant aux butées.
   useTopic(
-    '/events/positions',
+    '/events/telemetrie-organe',
     useCallback(
       (msg) => {
-        let positions: Record<string, number>
+        let evenement: { valeurs?: Record<string, number> }
         try {
-          positions = JSON.parse(msg.body)
+          evenement = JSON.parse(msg.body)
         } catch {
           return
         }
+        const positions = evenement.valeurs
+        if (!positions) return
         const maintenant = Date.now()
         setValues((v) => {
           let change = false
