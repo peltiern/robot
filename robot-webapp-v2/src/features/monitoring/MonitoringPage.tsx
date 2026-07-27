@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTelemetryStore } from '../../shared/telemetry/telemetryStore'
+import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import styles from './MonitoringPage.module.css'
 
 /**
@@ -40,6 +41,7 @@ export function MonitoringPage() {
   const [organes, setOrganes] = useState<OrganeCapteur[]>([])
   const [loadState, setLoadState] = useState<LoadState>('loading')
 
+  const connected = useWebSocketStore((s) => s.connected)
   const valeurs = useTelemetryStore((s) => s.valeurs)
   const historique = useTelemetryStore((s) => s.historique)
 
@@ -72,9 +74,12 @@ export function MonitoringPage() {
       .catch(() => setLoadState('error'))
   }, [])
 
+  // Recharge automatiquement dès que le robot est connecté (montage si déjà connecté, ou dès la
+  // (re)connexion sinon) : inutile de laisser l'utilisateur cliquer « Réessayer » alors que
+  // l'appli sait déjà que le robot vient de (re)devenir joignable.
   useEffect(() => {
-    charger()
-  }, [charger])
+    if (connected) charger()
+  }, [connected, charger])
 
   return (
     <div className={styles.page}>
@@ -82,7 +87,9 @@ export function MonitoringPage() {
         <h2 className={styles.title}>Monitoring</h2>
       </div>
 
-      {loadState === 'loading' && <p className={styles.info}>Récupération des capteurs du robot…</p>}
+      {!connected && <p className={styles.warning}>Robot déconnecté — en attente de connexion pour charger les capteurs.</p>}
+
+      {connected && loadState === 'loading' && <p className={styles.info}>Récupération des capteurs du robot…</p>}
       {loadState === 'error' && (
         <p className={styles.warning}>
           Impossible de récupérer les capteurs du robot. Le robot est-il démarré ?{' '}
