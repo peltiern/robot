@@ -19,6 +19,9 @@ interface WebSocketState {
   // Dialogue : fait dire un texte au robot (ParoleEvent → /app/robotevents)
   speak: (texte: string) => void
 
+  // Contrôle : publie un évènement robot brut (doit contenir `eventType`) sur /app/robotevents
+  sendRobotEvent: (event: Record<string, unknown>) => void
+
   // Souscription aux topics
   subscribe: (topic: string, callback: (msg: IMessage) => void) => (() => void)
 }
@@ -78,6 +81,13 @@ export const useWebSocketStore = create<WebSocketState>((set, get) => ({
     get().client?.publish({
       destination: '/app/robotevents',
       body: JSON.stringify({ eventType: 'parole', texte: message }),
+    })
+  },
+
+  sendRobotEvent(event) {
+    get().client?.publish({
+      destination: '/app/robotevents',
+      body: JSON.stringify(event),
     })
   },
 
