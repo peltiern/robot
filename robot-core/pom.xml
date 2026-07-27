@@ -33,6 +33,7 @@
         <owner.version>1.0.12</owner.version>
         <mapdb.version>3.1.0</mapdb.version>
         <input4j.version>1.3.0</input4j.version>
+        <oshi.version>7.4.0</oshi.version>
         <akiwrapper.version>1.6.1</akiwrapper.version>
         <feign.version>13.13</feign.version>
     </properties>
@@ -266,6 +267,15 @@
             <groupId>de.gurkenlabs</groupId>
             <artifactId>input4j</artifactId>
             <version>${input4j.version}</version>
+        </dependency>
+
+        <!-- Infos matérielles (CPU, mémoire, température, disque) : OSHI FFM, sans natifs à
+             embarquer, comme input4j. Requiert l'accès natif désactivé par défaut (JEP 472),
+             déjà activé en JAVA_TOOL_OPTIONS dans docker-compose.yml pour input4j. -->
+        <dependency>
+            <groupId>com.github.oshi</groupId>
+            <artifactId>oshi-core-ffm</artifactId>
+            <version>${oshi.version}</version>
         </dependency>
 
         <!-- Protobuf pour les appels au service de vision artificielle Python.
