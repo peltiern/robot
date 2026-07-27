@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useWebSocketStore } from '../websocket/websocketStore'
+import { TelemetryProvider } from '../telemetry/TelemetryProvider'
 import { useEffect } from 'react'
 import styles from './Layout.module.css'
 
@@ -22,6 +23,7 @@ export function Layout() {
 
   return (
     <div className={styles.shell}>
+      <TelemetryProvider />
       <nav className={styles.nav}>
         <span className={styles.logo}>🤖 Wall-E</span>
         <div className={styles.navLinks}>
