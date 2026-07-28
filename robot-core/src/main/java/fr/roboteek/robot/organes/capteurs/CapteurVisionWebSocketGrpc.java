@@ -1,17 +1,21 @@
 package fr.roboteek.robot.organes.capteurs;
 
+import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.memoire.DetectedObject;
-import fr.roboteek.robot.memoire.FacialRecognitionResponse;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
+import fr.roboteek.robot.memoire.RecognizedFace;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
+import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVisage;
+import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
+import fr.roboteek.robot.services.vision.face.ServiceDetectionVisage;
+import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
+import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.geometry.euclidean.twod.Vector2D;
-import org.apache.commons.geometry.euclidean.twod.shape.Parallelogram;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.opencv.core.Mat;
@@ -26,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -66,6 +71,24 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private static final int HAUTEUR_WEBCAM = 480;
 
     /**
+     * Fréquence (en nombre de frames) à laquelle la détection + reconnaissance de
+     * visages est lancée : à chaque frame le coût serait trop élevé pour la boucle
+     * vidéo (~130 ms/visage mesuré sur Jetson Nano 4 Go, voir fr.roboteek.robot.poc.FaceRecognitionPoc).
+     */
+    private static final int FREQUENCE_RECONNAISSANCE_VISAGE = 3;
+
+    /**
+     * Fréquence (en nombre de frames) à laquelle une image est effectivement publiée
+     * sur le WebSocket. Publier à chaque frame capturée sature le tampon d'envoi de
+     * la session dès que le client (navigateur/réseau) ne suit pas le débit — Spring
+     * ferme alors la session (« Buffer size ... exceeds the allowed limit », voir
+     * {@code WebSocketBrokerConfig}), ce qui a déjà causé une première fois un
+     * relèvement de la limite (512 Ko → 8 Mo) sans traiter la cause : aucune limite
+     * de tampon ne suffit si le débit de production n'est pas maîtrisé.
+     */
+    private static final int FREQUENCE_PUBLICATION_VIDEO = 3;
+
+    /**
      * Capture vidéo.
      */
     private VideoCapture capture;
@@ -77,9 +100,17 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
     private VisionArtificiellePythonGrpc visionArtificiellePythonGrpc;
 
+    /**
+     * Détection/reconnaissance de visages (OpenCV local, CPU) : {@code null} si
+     * l'initialisation a échoué (modèles absents), auquel cas la fonctionnalité
+     * reste désactivée sans bloquer le reste de l'organe.
+     */
+    private ServiceDetectionVisage serviceDetectionVisage;
+    private ServiceReconnaissanceVisage serviceReconnaissanceVisage;
+
     private int indexFrame = 0;
 
-    private FacialRecognitionResponse facialRecognitionResponse;
+    private List<RecognizedFace> derniersVisagesReconnus;
 
     private ObjectDetectionResponse objectDetectionResponse;
 
@@ -111,6 +142,13 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         OpenCV.loadLocally();
 
         visionArtificiellePythonGrpc = new VisionArtificiellePythonGrpc();
+
+        try {
+            serviceDetectionVisage = OpenCvServiceDetectionVisage.getInstance();
+            serviceReconnaissanceVisage = OpenCvServiceReconnaissanceVisage.getInstance();
+        } catch (RuntimeException e) {
+            logger.warn("Détection/reconnaissance de visages indisponible (modèles absents dans {} ?) : {}", Constantes.DOSSIER_VISAGE, e.getMessage());
+        }
 
         image = new Mat();
 
@@ -214,15 +252,26 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         Imgcodecs.imencode(".jpg", image, mob);
         byte[] ba = mob.toArray();
 
-        // Recherche de visages
-        //if (indexFrame % 1 == 0 || facialRecognitionResponse == null) {
-        //facialRecognitionResponse = visionArtificiellePythonGrpc.recognizeFaces(ba);
-//        } else {
-//            facialRecognitionResponse = processFaceNameForDetection(visionArtificiellePythonGrpc.detectFaces(ba));
-//        }
-//        if (facialRecognitionResponse != null && !facialRecognitionResponse.isFaceFound()) {
-//            facialRecognitionResponse = null;
-//        }
+        // Détection + reconnaissance de visages (local, CPU) : throttlée (voir
+        // FREQUENCE_RECONNAISSANCE_VISAGE), et désactivée si les modèles n'ont pas
+        // pu être chargés au démarrage (dégradation gracieuse, comme pour la vidéo/objets).
+        if (serviceDetectionVisage != null && indexFrame % FREQUENCE_RECONNAISSANCE_VISAGE == 0) {
+            try {
+                List<VisageDetecte> visagesDetectes = serviceDetectionVisage.detecter(image);
+                List<RecognizedFace> visagesReconnus = new ArrayList<>();
+                for (VisageDetecte visageDetecte : visagesDetectes) {
+                    RecognizedFace visageReconnu = new RecognizedFace(visageDetecte.x(), visageDetecte.y(), visageDetecte.width(), visageDetecte.height());
+                    visageReconnu.setName(serviceReconnaissanceVisage.identifier(image, visageDetecte));
+                    visagesReconnus.add(visageReconnu);
+                }
+                derniersVisagesReconnus = visagesReconnus;
+            } catch (RuntimeException e) {
+                derniersVisagesReconnus = null;
+                if (indexFrame % 100 == 0) {
+                    logger.warn("Reconnaissance de visages indisponible (le flux vidéo continue) : {}", e.getMessage());
+                }
+            }
+        }
 
 ////        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
         // Détection optionnelle : elle ne doit jamais interrompre le flux vidéo
@@ -242,47 +291,28 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
         indexFrame++;
 
-        // Envoi d'un évènement Vidéo
-        VideoEvent videoEvent = new VideoEvent();
+        if (indexFrame % FREQUENCE_PUBLICATION_VIDEO == 0) {
+            // Envoi d'un évènement Vidéo
+            VideoEvent videoEvent = new VideoEvent();
 
-        videoEvent.setImageBase64(Base64.getEncoder().encodeToString(ba));
-        if (facialRecognitionResponse != null) {
-            videoEvent.setFaceFound(facialRecognitionResponse.isFaceFound());
-            videoEvent.setFaces(facialRecognitionResponse.getFaces());
+            videoEvent.setImageBase64(Base64.getEncoder().encodeToString(ba));
+            if (derniersVisagesReconnus != null) {
+                videoEvent.setFaceFound(!derniersVisagesReconnus.isEmpty());
+                videoEvent.setFaces(derniersVisagesReconnus);
+            }
+            if (objectDetectionResponse != null) {
+                videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
+                videoEvent.setObjects(objectDetectionResponse.getObjects());
+            }
+            applicationEventPublisher.publishEvent(videoEvent);
+            long fin = System.currentTimeMillis();
+            if (CollectionUtils.isNotEmpty(derniersVisagesReconnus)) {
+                logger.debug("({} ms) visages : {}", fin - debut, derniersVisagesReconnus.stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+            }
+            if (objectDetectionResponse != null && CollectionUtils.isNotEmpty(objectDetectionResponse.getObjects())) {
+                logger.debug("({} ms) objets : {}", fin - debut, objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+            }
         }
-        if (objectDetectionResponse != null) {
-            videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
-            videoEvent.setObjects(objectDetectionResponse.getObjects());
-        }
-        applicationEventPublisher.publishEvent(videoEvent);
-        long fin = System.currentTimeMillis();
-        if (facialRecognitionResponse != null && CollectionUtils.isNotEmpty(facialRecognitionResponse.getFaces())) {
-            logger.debug("({} ms) visages : {}", fin - debut, facialRecognitionResponse.getFaces().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
-        }
-        if (objectDetectionResponse != null && CollectionUtils.isNotEmpty(objectDetectionResponse.getObjects())) {
-            logger.debug("({} ms) objets : {}", fin - debut, objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
-        }
-    }
-
-    private FacialRecognitionResponse processFaceNameForDetection(FacialRecognitionResponse response) {
-        if (response == null || facialRecognitionResponse == null) {
-            return null;
-        }
-        if (!response.isFaceFound()) {
-            return response;
-        }
-
-        // Calcul des distances de chacun des visages détectés avec les visages de la reconnaissance précédente
-        response.getFaces().forEach(recognizedFace -> {
-            Parallelogram faceBounds = recognizedFace.getBounds();
-            Vector2D faceCentroid = faceBounds.getCentroid();
-            facialRecognitionResponse.getFaces().stream()
-                    .filter(oldRecognizedFace -> faceCentroid.distance(oldRecognizedFace.getBounds().getCentroid()) < 40)
-                    .findFirst()
-                    .ifPresent(nearestOldRecognizedFace -> recognizedFace.setName(nearestOldRecognizedFace.getName()));
-        });
-
-        return response;
     }
 
     @Override
