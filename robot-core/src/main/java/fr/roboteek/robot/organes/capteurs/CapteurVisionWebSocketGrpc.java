@@ -14,6 +14,7 @@ import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
+import fr.roboteek.robot.util.webcam.SuiviVisageUtils;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -87,6 +88,17 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      * de tampon ne suffit si le débit de production n'est pas maîtrisé.
      */
     private static final int FREQUENCE_PUBLICATION_VIDEO = 3;
+
+    /**
+     * Distance de centroïde (en pixels) sous laquelle un visage détecté est considéré
+     * comme le même qu'un visage déjà identifié à la frame précédente : on réutilise
+     * alors son nom sans relancer SFace (alignCrop + feature + comparaison à toute la
+     * base coûtent ~68 ms par visage, voir fr.roboteek.robot.poc.FaceRecognitionPoc).
+     * Seuls les visages déjà identifiés (nom non nul) sont ainsi suivis : un visage
+     * encore inconnu est retenté à chaque frame throttlée, pour lui laisser une chance
+     * d'être reconnu si les conditions (angle, éclairage) s'améliorent entre-temps.
+     */
+    private static final double DISTANCE_MAX_SUIVI_VISAGE = 40;
 
     /**
      * Capture vidéo.
@@ -258,10 +270,16 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         if (serviceDetectionVisage != null && indexFrame % FREQUENCE_RECONNAISSANCE_VISAGE == 0) {
             try {
                 List<VisageDetecte> visagesDetectes = serviceDetectionVisage.detecter(image);
+                List<RecognizedFace> visagesPrecedents = derniersVisagesReconnus;
                 List<RecognizedFace> visagesReconnus = new ArrayList<>();
                 for (VisageDetecte visageDetecte : visagesDetectes) {
                     RecognizedFace visageReconnu = new RecognizedFace(visageDetecte.x(), visageDetecte.y(), visageDetecte.width(), visageDetecte.height());
-                    visageReconnu.setName(serviceReconnaissanceVisage.identifier(image, visageDetecte));
+                    RecognizedFace visagePrecedentProche = SuiviVisageUtils.trouverVisagePrecedentProche(visagesPrecedents, visageReconnu, DISTANCE_MAX_SUIVI_VISAGE);
+                    if (visagePrecedentProche != null && visagePrecedentProche.getName() != null) {
+                        visageReconnu.setName(visagePrecedentProche.getName());
+                    } else {
+                        visageReconnu.setName(serviceReconnaissanceVisage.identifier(image, visageDetecte));
+                    }
                     visagesReconnus.add(visageReconnu);
                 }
                 derniersVisagesReconnus = visagesReconnus;
