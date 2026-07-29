@@ -61,7 +61,7 @@ public class ConversationActivity extends AbstractActivity {
             if (StringUtils.isNotBlank(texteReconnu)) {
                 // Pause de la reconnaissance dès le début de la réflexion : sinon, ce qui est dit
                 // pendant que l'IA réfléchit s'accumule et le robot répond à chaque demande.
-                // La reconnaissance est relancée par OrganeParoleGoogle à la fin de la réponse vocale.
+                // La reconnaissance est relancée par OrganeParole à la fin de la réponse vocale.
                 publierControleReconnaissance(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
                 try {
                     // Conversation

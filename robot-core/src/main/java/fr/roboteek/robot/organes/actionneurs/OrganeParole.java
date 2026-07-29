@@ -1,9 +1,13 @@
 package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.Constantes;
+import fr.roboteek.robot.configuration.Configurations;
+import fr.roboteek.robot.configuration.speech.SpeechProviderConfig;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
+import fr.roboteek.robot.configuration.speech.synthesis.piper.PiperSpeechSynthesisConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.services.providers.google.speech.synthesizer.GoogleSpeechSynthesizerService;
+import fr.roboteek.robot.services.providers.piper.speech.synthesizer.PiperSpeechSynthesizerService;
 import fr.roboteek.robot.services.synthesizer.SpeechSynthesizerService;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
@@ -24,26 +28,28 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import static fr.roboteek.robot.configuration.Configurations.googleSpeechSynthesisConfig;
+import static fr.roboteek.robot.configuration.Configurations.piperSpeechSynthesisConfig;
 
 /**
- * Organe permettant de synthétiser un texte en passant par la synthèse vocale de Google
- * et en appliquant des effets avec SOX.
+ * Organe permettant de synthétiser un texte (fournisseur cloud ou local, cf.
+ * {@link SpeechProviderConfig}) et en appliquant des effets avec SOX.
  * <p>
  * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle},
  * évènements reçus via {@link EventListener} (relayés depuis le bus Guava par le pont
  * tant que la migration n'est pas terminée).
  */
 @Component
-public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle {
+public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
 
-    private final GoogleSpeechSynthesisConfig config;
+    private final GoogleSpeechSynthesisConfig googleConfig;
+    private final PiperSpeechSynthesisConfig piperConfig;
     private SpeechSynthesizerService speechSynthesizerService;
     private String fichierSyntheseVocale;
 
     /**
      * Logger.
      */
-    private final Logger logger = LoggerFactory.getLogger(OrganeParoleGoogle.class);
+    private final Logger logger = LoggerFactory.getLogger(OrganeParole.class);
 
     /**
      * Flag de démarrage de l'organe (cycle de vie Spring).
@@ -53,9 +59,10 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
     /**
      * Constructeur.
      */
-    public OrganeParoleGoogle() {
+    public OrganeParole() {
         super();
-        config = googleSpeechSynthesisConfig();
+        googleConfig = googleSpeechSynthesisConfig();
+        piperConfig = piperSpeechSynthesisConfig();
     }
 
     /**
@@ -120,9 +127,23 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
 
     @Override
     public void initialiser() {
-        fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + config.voiceFilter();
-        // TODO Gestion dynamique de la synthèse vocale (par fichier de config à un niveau supérieur)
-        speechSynthesizerService = GoogleSpeechSynthesizerService.getInstance();
+        SpeechProviderConfig providerConfig = Configurations.speechProviderConfig();
+        switch (providerConfig.synthesizerProvider()) {
+            case PIPER -> {
+                try {
+                    speechSynthesizerService = PiperSpeechSynthesizerService.getInstance();
+                    fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + piperConfig.voiceFilter();
+                } catch (Exception e) {
+                    logger.error("Impossible d'initialiser Piper, repli sur Google", e);
+                    speechSynthesizerService = GoogleSpeechSynthesizerService.getInstance();
+                    fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + googleConfig.voiceFilter();
+                }
+            }
+            case GOOGLE -> {
+                speechSynthesizerService = GoogleSpeechSynthesizerService.getInstance();
+                fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + googleConfig.voiceFilter();
+            }
+        }
     }
 
     @Override
@@ -134,14 +155,14 @@ public class OrganeParoleGoogle extends AbstractOrgane implements SmartLifecycle
     public void start() {
         initialiser();
         running = true;
-        logger.info("OrganeParoleGoogle démarré");
+        logger.info("OrganeParole démarré");
     }
 
     @Override
     public void stop() {
         running = false;
         arreter();
-        logger.info("OrganeParoleGoogle arrêté");
+        logger.info("OrganeParole arrêté");
     }
 
     @Override

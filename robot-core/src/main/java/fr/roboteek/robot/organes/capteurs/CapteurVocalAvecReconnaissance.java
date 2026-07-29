@@ -1,6 +1,9 @@
 package fr.roboteek.robot.organes.capteurs;
 
+import fr.roboteek.robot.configuration.Configurations;
+import fr.roboteek.robot.configuration.speech.SpeechProviderConfig;
 import fr.roboteek.robot.services.providers.google.speech.recognizer.GoogleSpeechRecognizerService;
+import fr.roboteek.robot.services.providers.vosk.speech.recognizer.VoskSpeechRecognizerService;
 import fr.roboteek.robot.services.recognizer.SpeechRecognizerService;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
@@ -43,8 +46,18 @@ public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal impleme
     public void initialiser() {
         super.initialiser();
 
-        // TODO Gestion dynamique de la reconnaisance vocale (par fichier de config à un niveau supérieur)
-        speechRecognizerService = GoogleSpeechRecognizerService.getInstance();
+        SpeechProviderConfig providerConfig = Configurations.speechProviderConfig();
+        switch (providerConfig.recognizerProvider()) {
+            case VOSK -> {
+                try {
+                    speechRecognizerService = VoskSpeechRecognizerService.getInstance();
+                } catch (Exception e) {
+                    logger.error("Impossible d'initialiser Vosk, repli sur Google", e);
+                    speechRecognizerService = GoogleSpeechRecognizerService.getInstance();
+                }
+            }
+            case GOOGLE -> speechRecognizerService = GoogleSpeechRecognizerService.getInstance();
+        }
     }
 
     @Override

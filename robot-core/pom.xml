@@ -36,6 +36,8 @@
         <oshi.version>7.4.0</oshi.version>
         <akiwrapper.version>1.6.1</akiwrapper.version>
         <feign.version>13.13</feign.version>
+        <vosk.version>0.3.45</vosk.version>
+        <jna.version>5.7.0</jna.version>
     </properties>
 
     <build>
@@ -327,6 +329,17 @@
             <version>${feign.version}</version>
         </dependency>
 
+        <!-- Reconnaissance vocale locale (PoC, chantier dé-cloudification STT/TTS) -->
+        <dependency>
+            <groupId>com.alphacephei</groupId>
+            <artifactId>vosk</artifactId>
+            <version>${vosk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>${jna.version}</version>
+        </dependency>
 
     </dependencies>
 
