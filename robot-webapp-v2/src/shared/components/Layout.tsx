@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from 'react-router'
 import { useWebSocketStore } from '../websocket/websocketStore'
 import { TelemetryProvider } from '../telemetry/TelemetryProvider'
 import { useEffect } from 'react'

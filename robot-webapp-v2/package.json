@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router-dom": "^7.16.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

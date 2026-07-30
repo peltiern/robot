@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { Layout } from '../shared/components/Layout'
 import { LivePage }       from '../features/live/LivePage'
 import { ControlPage }    from '../features/control/ControlPage'
