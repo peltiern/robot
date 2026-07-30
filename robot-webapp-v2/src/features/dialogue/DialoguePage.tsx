@@ -1,51 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { IMessage } from '@stomp/stompjs'
-import { useTopic } from '../../shared/websocket/useTopic'
+import { useEffect, useRef, useState } from 'react'
 import { useWebSocketStore } from '../../shared/websocket/websocketStore'
-import type { ConversationEvent } from '../../shared/types/events'
+import { useConversationStore } from '../../shared/conversation/conversationStore'
 import styles from './DialoguePage.module.css'
-
-interface ChatMessage {
-  id: number
-  texte: string
-  fromRobot: boolean
-  time: number
-}
-
-const MAX_MESSAGES = 200
 
 export function DialoguePage() {
   const connected = useWebSocketStore((s) => s.connected)
   const speak = useWebSocketStore((s) => s.speak)
 
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  // Le fil vient du store partagé (alimenté par `ConversationProvider`, monté au niveau du
+  // Layout) et non d'un état local : sinon changer de page perdrait l'historique accumulé, et
+  // surtout les messages échangés hors de cette page ne seraient jamais captés.
+  const messages = useConversationStore((s) => s.messages)
   const [draft, setDraft] = useState('')
-  const nextId = useRef(1)
   const scrollRef = useRef<HTMLDivElement>(null)
-
-  const onConversation = useCallback((msg: IMessage) => {
-    let event: ConversationEvent
-    try {
-      event = JSON.parse(msg.body)
-    } catch {
-      return
-    }
-    if (!event?.texte) return
-    setMessages((prev) => {
-      const next = [
-        ...prev,
-        {
-          id: nextId.current++,
-          texte: event.texte,
-          fromRobot: event.idLocuteur === -1,
-          time: Date.now(),
-        },
-      ]
-      return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
-    })
-  }, [])
-
-  useTopic('/events/conversation', onConversation)
 
   // Auto-scroll vers le bas à chaque nouveau message.
   useEffect(() => {

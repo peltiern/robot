@@ -28,6 +28,11 @@ export interface ConversationEvent {
   eventType: 'conversation'
   texte: string
   idLocuteur: number
+  /**
+   * Instant d'émission par le robot (`RobotEvent.dateTime`), en ISO-8601 local sans fuseau et
+   * avec une précision nanoseconde. À convertir via `horodatageRobotEnMs`.
+   */
+  dateTime?: string
 }
 
 /** ParoleEvent envoyé au robot (destination `/app/robotevents`) pour le faire parler. */
