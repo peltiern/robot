@@ -68,7 +68,11 @@ public class GoogleSpeechRecognizerService implements SpeechRecognizerService {
                 .decoder(new GsonDecoder())
                 .target(GoogleSpeechToTextClient.class, "https://speech.googleapis.com");
 
-        recognitionConfig = new RecognitionConfig(AudioEncoding.FLAC, 44100, 1, config.languageCode());
+        // La fréquence déclarée doit être exactement celle du FLAC envoyé, lui-même encodé depuis le
+        // WAV de capture : un écart ferait interpréter l'audio à la mauvaise vitesse par Google.
+        // D'où la constante partagée avec la capture plutôt qu'une valeur en dur.
+        recognitionConfig = new RecognitionConfig(AudioEncoding.FLAC,
+                Constantes.FREQUENCE_ECHANTILLONNAGE_CAPTURE_HZ, 1, config.languageCode());
     }
 
     /**

@@ -13,6 +13,22 @@ public class Constantes {
     public static final String ENV_VAR_ROBOT_HOME = "ROBOT_HOME";
 
     /**
+     * Fréquence d'échantillonnage de la capture audio, en Hz.
+     * <p>
+     * Source unique de vérité, volontairement partagée par la capture
+     * ({@link fr.roboteek.robot.organes.capteurs.AbstractCapteurVocal}) et par les deux moteurs de
+     * reconnaissance : toute divergence entre ces trois endroits corrompt silencieusement la
+     * reconnaissance, sans erreur ni log.
+     * <p>
+     * 16 kHz n'est pas un choix mais une contrainte matérielle : le micro (ReSpeaker 4 Mic Array)
+     * n'expose que cette fréquence ({@code /proc/asound/cardN/stream0} : {@code Rates: 16000}), et
+     * c'est aussi la fréquence native des modèles Vosk. Capturer à 44,1 kHz comme précédemment
+     * faisait suréchantillonner ALSA puis sous-échantillonner Java Sound, sans apporter la moindre
+     * information (mesuré : -47 dB d'énergie au-dessus de 8 kHz dans une capture à 44,1 kHz).
+     */
+    public static final int FREQUENCE_ECHANTILLONNAGE_CAPTURE_HZ = 16000;
+
+    /**
      * Chemin vers le dossier de reconnaissance vocale.
      */
     public static final String DOSSIER_RECONNAISSANCE_VOCALE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "reconnaissanceVocale";

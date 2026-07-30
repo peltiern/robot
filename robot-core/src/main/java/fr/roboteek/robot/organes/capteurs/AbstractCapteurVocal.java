@@ -47,14 +47,30 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     private static final Logger logger = LoggerFactory.getLogger(AbstractCapteurVocal.class);
 
     /**
-     * Fréquence d'échantillonage.
+     * Fréquence d'échantillonage : celle du micro, qui n'en expose pas d'autre
+     * (voir {@link Constantes#FREQUENCE_ECHANTILLONNAGE_CAPTURE_HZ}).
      */
-    private static final float sampleRate = 44100;
+    private static final float sampleRate = Constantes.FREQUENCE_ECHANTILLONNAGE_CAPTURE_HZ;
 
     /**
-     * Taille du buffer.
+     * Taille du buffer, en frames : durée d'un bloc audio, donc granularité de la détection de
+     * parole et unité des blocs de pré-amorce.
+     * <p>
+     * 1536 frames à 16 kHz = 96 ms, soit la même durée de bloc qu'avant le passage de 44,1 kHz à
+     * 16 kHz (4096 frames = 93 ms). Volontairement conservée à l'identique : la baisser (par ex. à
+     * 1024, soit 64 ms) modifierait à la fois la statistique de la détection de silence et la
+     * durée de pré-amorce (5 blocs, ici 480 ms contre 464 ms avant), ce qui mêlerait un changement
+     * de comportement au simple retrait du ré-échantillonnage. YIN travaille dans le domaine
+     * temporel, la taille n'a pas besoin d'être une puissance de deux.
      */
-    private static final int bufferSize = 1024 * 4;
+    private static final int bufferSize = 1536;
+
+    /**
+     * Nombre de blocs audio que le buffer de la ligne peut contenir. La ligne est vidée en continu
+     * par le dispatcher : cette marge ne sert qu'à absorber un aléa d'ordonnancement sans perdre
+     * d'échantillons, elle n'ajoute pas de latence.
+     */
+    private static final int NB_BLOCS_BUFFER_LIGNE = 8;
 
     /**
      * ?.
@@ -62,12 +78,16 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     private static final int overlap = 0;
 
     /**
-     * Durée de silence (en secondes) marquant la fin d'une phrase.
-     * À 0.6 s, une simple hésitation coupait la phrase en deux : seul le premier fragment
-     * était traité (et depuis la pause de la reconnaissance pendant la réflexion de l'IA,
-     * le reste était perdu).
+     * Durée de silence (en secondes) marquant la fin d'une phrase, lue à chaque bloc audio et non
+     * mise en cache : c'est ce qui rend le rechargement à chaud effectif (voir
+     * {@link RobotConfig#dureeSilenceFinPhraseSecondes()}), et permet donc d'ajuster la réactivité
+     * du robot sans le redéployer.
+     *
+     * @return la durée de silence marquant la fin d'une phrase, en secondes
      */
-    private static final double DUREE_SILENCE_FIN_PHRASE = 1.2;
+    private static double dureeSilenceFinPhrase() {
+        return robotConfig().dureeSilenceFinPhraseSecondes();
+    }
 
     /**
      * Flag indiquant que la reconnaissance est mise en pause
@@ -180,8 +200,11 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             final JVMAudioInputStream audioStream = new JVMAudioInputStream(stream);
             dispatcher = new AudioDispatcher(audioStream, bufferSize, overlap);
 
-            // Ouverture du flux et démarrage de l'acquisition
-            line.open(format, bufferSize);
+            // Ouverture du flux et démarrage de l'acquisition.
+            // Attention à l'unité : open() attend une taille en OCTETS, alors que bufferSize est
+            // en frames (c'est ainsi que AudioDispatcher l'interprète). Le code précédent passait
+            // bufferSize brut, donnant un buffer de ligne deux fois plus court qu'un bloc audio.
+            line.open(format, bufferSize * format.getFrameSize() * NB_BLOCS_BUFFER_LIGNE);
             line.start();
 
             // Initialisation des tableaux d'octets contenant les différents blocs audio
@@ -221,8 +244,12 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                             isBlocParle = false;
                         }
 
-                        if (isBlocParle || timestampBlocEnCours - timestampDernierBlocParle < DUREE_SILENCE_FIN_PHRASE) {
+                        if (isBlocParle || timestampBlocEnCours - timestampDernierBlocParle < dureeSilenceFinPhrase()) {
                             // Si ça parle, ou petit silence
+                            if (contenuParle.length == 0) {
+                                surDebutPhrase(Bytes.concat(bufferNMoins5, bufferNMoins4, bufferNMoins3, bufferNMoins2, bufferNMoins1));
+                            }
+                            surBlocAudio(e.getByteBuffer());
                             // On concatène le bloc audio en cours au contenu général
                             contenuParle = Bytes.concat(contenuParle, e.getByteBuffer());
                         } else {
@@ -230,6 +257,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
                             // On ne lance le traitement que s'il y a du contenu
                             if (contenuParle.length > 0) {
+                                surFinPhrase();
                                 genererFichierEtTraiterDetectionVocale();
 
                                 // Réinitialisation des blocs
@@ -303,6 +331,40 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
     public abstract void traiterDetectionVocale(String cheminFichierWav);
 
+    /**
+     * Appelé au premier bloc "parlé" d'une nouvelle phrase, avec l'audio de pré-amorce
+     * (mêmes blocs que {@code bufferNMoins1..5}, dans le même ordre que dans
+     * {@link #genererFichierEtTraiterDetectionVocale()}). No-op par défaut : ne change rien pour
+     * un capteur qui ne surcharge pas ce hook (ex. reconnaissance vocale Google, batch).
+     *
+     * @param audioPreOnset audio précédant le premier bloc "parlé", au format de capture d'origine
+     */
+    protected void surDebutPhrase(byte[] audioPreOnset) {
+    }
+
+    /**
+     * Appelé pour chaque bloc audio faisant partie de la phrase en cours (y compris le tout
+     * premier, juste après {@link #surDebutPhrase(byte[])}). No-op par défaut.
+     *
+     * @param blocAudio le bloc audio, au format de capture d'origine
+     */
+    protected void surBlocAudio(byte[] blocAudio) {
+    }
+
+    /**
+     * Appelé juste avant {@link #genererFichierEtTraiterDetectionVocale()}, à la fin d'une
+     * phrase (silence prolongé détecté). No-op par défaut.
+     */
+    protected void surFinPhrase() {
+    }
+
+    /**
+     * Appelé quand une phrase en cours est abandonnée (démarrage ou mise en pause de la
+     * reconnaissance vocale). No-op par défaut.
+     */
+    protected void surInterruptionPhrase() {
+    }
+
     private synchronized void genererFichierEtTraiterDetectionVocale() {
 
         try {
@@ -341,6 +403,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
         if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER) {
             logger.debug("Démarrage de la reconnaissance vocale");
             misEnPause = false;
+            surInterruptionPhrase();
             // Réinitialisation des blocs
             contenuParle = new byte[0];
             bufferNMoins1 = new byte[0];
@@ -351,6 +414,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
         } else if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE) {
             logger.debug("Mise en pause de la reconnaissance vocale");
             misEnPause = true;
+            surInterruptionPhrase();
             // Réinitialisation des blocs
             contenuParle = new byte[0];
             bufferNMoins1 = new byte[0];
