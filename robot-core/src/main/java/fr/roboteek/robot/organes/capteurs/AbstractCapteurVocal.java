@@ -14,9 +14,11 @@ import com.google.common.primitives.Bytes;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
+import fr.roboteek.robot.spring.server.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 
 import javax.sound.sampled.AudioFormat;
@@ -94,6 +96,25 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
      * (modifié par les threads des listeners, lu par le thread audio).
      */
     private volatile boolean misEnPause = false;
+
+    /**
+     * Destination STOMP du flux audio (voir {@code WebSocketBrokerConfig}).
+     */
+    private static final String DESTINATION_AUDIO = "/audio";
+
+    /**
+     * Registre des abonnements WebSocket : sert à n'encoder le WAV que si un client l'écoute.
+     */
+    @Autowired(required = false)
+    private RegistreAbonnesWebsocket registreAbonnesWebsocket;
+
+    /**
+     * Indique si un client est abonné au flux audio.
+     */
+    private boolean diffusionAudioEcoutee() {
+        return registreAbonnesWebsocket != null
+                && registreAbonnesWebsocket.aAuMoinsUnAbonne(DESTINATION_AUDIO);
+    }
 
     /**
      * Dispatcher audio (permet d'arrêter proprement l'acquisition).
@@ -295,11 +316,15 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                         bufferNMoins5 = new byte[0];
                     }
 
-                    // Envoi de l'évènement audio : fichier WAV (entête + contenu)
-                    fr.roboteek.robot.systemenerveux.event.AudioEvent audioEvent = new fr.roboteek.robot.systemenerveux.event.AudioEvent();
-                    audioEvent.setAudioContentBase64(Base64.getEncoder().encodeToString(creerFichierWav(e.getByteBuffer())));
-                    audioEvent.setContent(creerFichierWav(e.getByteBuffer()));
-                    applicationEventPublisher.publishEvent(audioEvent);
+                    // Envoi de l'évènement audio : fichier WAV (entête + contenu).
+                    // Uniquement si un client l'écoute, et hors pause : pendant une pause le
+                    // micro ne capte que le robot en train de parler, et l'écho ainsi renvoyé
+                    // à la webapp ne sert à rien tout en consommant du débit sur la session.
+                    if (!misEnPause && diffusionAudioEcoutee()) {
+                        fr.roboteek.robot.systemenerveux.event.AudioEvent audioEvent = new fr.roboteek.robot.systemenerveux.event.AudioEvent();
+                        audioEvent.setAudioContentBase64(Base64.getEncoder().encodeToString(creerFichierWav(e.getByteBuffer())));
+                        applicationEventPublisher.publishEvent(audioEvent);
+                    }
                 }
 
             });

@@ -42,6 +42,16 @@ export const useWebSocketStore = create<WebSocketState>((set, get) => ({
       onDisconnect: () => {
         set({ connected: false })
       },
+      // Indispensable en plus de `onDisconnect` : ce dernier n'est appelé que sur réception du
+      // reçu DISCONNECT, donc uniquement lors d'une fermeture propre. Quand le serveur coupe la
+      // session (tampon d'envoi saturé) ou que le WiFi tombe, seul `onWebSocketClose` est appelé.
+      // Sans ça, `connected` restait à true : stompjs se reconnectait bien tout seul, mais l'état
+      // ne changeait jamais, donc les effets de `useTopic` ne se relançaient pas et PLUS AUCUN
+      // topic n'était réabonné (stompjs ne réabonne pas de lui-même). L'appli restait alors
+      // muette — vidéo et télémétrie figées — jusqu'à un rechargement manuel de la page.
+      onWebSocketClose: () => {
+        set({ connected: false })
+      },
       onStompError: (frame) => {
         console.error('STOMP error', frame)
         set({ connected: false })

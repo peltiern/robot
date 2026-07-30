@@ -12,6 +12,7 @@ import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissa
 import fr.roboteek.robot.services.vision.face.ServiceDetectionVisage;
 import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
+import fr.roboteek.robot.spring.server.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.webcam.SuiviVisageUtils;
@@ -21,11 +22,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfInt;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
@@ -79,15 +82,10 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private static final int FREQUENCE_RECONNAISSANCE_VISAGE = 3;
 
     /**
-     * Fréquence (en nombre de frames) à laquelle une image est effectivement publiée
-     * sur le WebSocket. Publier à chaque frame capturée sature le tampon d'envoi de
-     * la session dès que le client (navigateur/réseau) ne suit pas le débit — Spring
-     * ferme alors la session (« Buffer size ... exceeds the allowed limit », voir
-     * {@code WebSocketBrokerConfig}), ce qui a déjà causé une première fois un
-     * relèvement de la limite (512 Ko → 8 Mo) sans traiter la cause : aucune limite
-     * de tampon ne suffit si le débit de production n'est pas maîtrisé.
+     * Destination STOMP du flux vidéo (voir {@code WebSocketBrokerConfig}). Rien n'est
+     * encodé ni publié tant que personne n'y est abonné.
      */
-    private static final int FREQUENCE_PUBLICATION_VIDEO = 3;
+    private static final String DESTINATION_VIDEO = "/video";
 
     /**
      * Distance de centroïde (en pixels) sous laquelle un visage détecté est considéré
@@ -130,6 +128,36 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      * Configuration.
      */
     private RobotConfig robotConfig;
+
+    /**
+     * Registre des abonnements WebSocket : sert à ne rien produire quand personne ne regarde.
+     */
+    @Autowired
+    private RegistreAbonnesWebsocket registreAbonnesWebsocket;
+
+    /**
+     * Horodatage de la dernière image publiée, pour cadencer le flux en temps réel plutôt
+     * qu'en nombre de frames : la cadence de la webcam varie (luminosité, charge CPU), une
+     * frame sur N ne borne donc pas le débit réellement envoyé.
+     */
+    private long dernierePublicationVideoMs = 0;
+
+    /**
+     * Indique si le flux vidéo est en cours de diffusion, pour ne tracer que les transitions.
+     */
+    private boolean fluxVideoDiffuse = false;
+
+    /**
+     * Paramètres d'encodage JPEG, reconstruits uniquement quand la qualité configurée change
+     * (objet natif OpenCV : ni instanciable avant {@code OpenCV.loadLocally()}, ni à recréer
+     * à chaque image).
+     */
+    private MatOfInt parametresJpeg;
+
+    /**
+     * Qualité JPEG ayant servi à construire {@link #parametresJpeg}.
+     */
+    private int qualiteJpegCourante = -1;
 
     /**
      * Flag indiquant de stopper le thread de capture.
@@ -261,7 +289,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
         // Convertir l'image en un tableau de bytes
         MatOfByte mob = new MatOfByte();
-        Imgcodecs.imencode(".jpg", image, mob);
+        Imgcodecs.imencode(".jpg", image, mob, parametresJpeg());
         byte[] ba = mob.toArray();
 
         // Détection + reconnaissance de visages (local, CPU) : throttlée (voir
@@ -309,7 +337,9 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
         indexFrame++;
 
-        if (indexFrame % FREQUENCE_PUBLICATION_VIDEO == 0) {
+        if (publicationVideoAutorisee()) {
+            dernierePublicationVideoMs = System.currentTimeMillis();
+
             // Envoi d'un évènement Vidéo
             VideoEvent videoEvent = new VideoEvent();
 
@@ -331,6 +361,48 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                 logger.debug("({} ms) objets : {}", fin - debut, objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
             }
         }
+    }
+
+    /**
+     * Indique si l'image courante doit être publiée sur le WebSocket.
+     * <p>
+     * Deux conditions, toutes deux nécessaires pour que le tampon d'envoi de la session ne
+     * déborde plus : quelqu'un doit regarder (sinon l'encodage base64 est du pur gaspillage),
+     * et l'intervalle minimal entre deux images doit être écoulé. Sans cette cadence, la
+     * boucle de capture produit plus vite que le lien n'écoule, et rien en aval ne freine le
+     * producteur : le tampon se remplit jusqu'à la limite et Spring ferme la session.
+     * <p>
+     * La détection et la reconnaissance de visages, elles, continuent de tourner à leur
+     * rythme même sans abonné : elles pilotent le comportement du robot, pas l'affichage.
+     */
+    private boolean publicationVideoAutorisee() {
+        boolean abonne = registreAbonnesWebsocket != null
+                && registreAbonnesWebsocket.aAuMoinsUnAbonne(DESTINATION_VIDEO);
+        if (abonne != fluxVideoDiffuse) {
+            fluxVideoDiffuse = abonne;
+            logger.info(abonne
+                    ? "Flux vidéo démarré (au moins un client abonné à {})"
+                    : "Flux vidéo en veille (plus aucun client abonné à {})", DESTINATION_VIDEO);
+        }
+        if (!abonne) {
+            return false;
+        }
+        long intervalleMinimalMs = 1000L / Math.max(1, robotConfig.fpsFluxVideo());
+        return System.currentTimeMillis() - dernierePublicationVideoMs >= intervalleMinimalMs;
+    }
+
+    /**
+     * Paramètres d'encodage JPEG correspondant à la qualité configurée, reconstruits à la
+     * volée si elle a changé (la configuration est rechargée à chaud).
+     */
+    private MatOfInt parametresJpeg() {
+        int qualite = robotConfig.qualiteJpegFluxVideo();
+        if (qualite != qualiteJpegCourante) {
+            parametresJpeg = new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, qualite);
+            qualiteJpegCourante = qualite;
+            logger.info("Qualité JPEG du flux vidéo : {}", qualite);
+        }
+        return parametresJpeg;
     }
 
     @Override

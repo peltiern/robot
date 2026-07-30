@@ -67,7 +67,7 @@ export function MonitoringPage() {
             }
           }
         }
-        if (Object.keys(aAmorcer).length > 0) ingerer(aAmorcer)
+        if (Object.keys(aAmorcer).length > 0) ingerer([aAmorcer])
         setOrganes(capteurs)
         setLoadState('ready')
       })
