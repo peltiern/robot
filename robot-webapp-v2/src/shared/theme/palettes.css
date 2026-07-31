@@ -1,0 +1,103 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PALETTES — le seul fichier à toucher pour changer les couleurs.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Aucune couleur en dur ailleurs dans l'application : tout le reste du CSS ne
+   parle qu'en rôles (`var(--accent)`, `var(--carter)`, …). Deux façons de
+   travailler ici :
+
+   1. Ajuster une palette existante : changer l'hexadécimal en face du rôle,
+      tout se met à jour (y compris les anciennes pages, cf. `theme.css`).
+   2. Ajouter une palette : copier un bloc entier, changer le nom dans le
+      sélecteur `[data-palette="…"]`, puis déclarer la palette dans
+      `themeStore.ts` (constante `PALETTES`) pour qu'elle apparaisse dans le
+      tiroir Réglages.
+
+   La palette active est posée sur `<html data-palette="…">` par `themeStore`,
+   et retenue d'une session à l'autre. `:root` porte la palette par défaut :
+   elle sert aussi de filet si `data-palette` désigne une palette inexistante.
+
+   Les 19 rôles, dans l'ordre des blocs ci-dessous :
+
+     fond, fond-haut ......... arrière-plan général (le dégradé de la coque)
+     carter, carter-clair .... surfaces : barre, rail, colonne / blocs posés
+     bordure ................. liserés, 2 px, partout
+     creux ................... fond des champs, pistes et anneaux (plus sombre)
+     inactif ................. gris « hors service » (moteurs coupés, son muet)
+     accent, accent-ombre .... couleur d'action ; l'ombre porte les boutons 3D
+     sur-accent .............. texte/traits posés SUR l'accent (doit contraster)
+     texte, texte-faible ..... texte principal / secondaire
+     donnee, sur-donnee ...... teinte des données live (détections, tendances)
+     ok, veille, alarme ...... sémantique des seuils (vert / ambre / rouge)
+     alarme-clair, -sombre ... dégradé et liseré du bouton STOP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── WALL·E — terre et jaune d'engin de chantier (défaut) ─────────────────── */
+:root,
+[data-palette='walle'] {
+  --fond:          #221d18;
+  --fond-haut:     #2b241d;
+  --carter:        #2e2620;
+  --carter-clair:  #3a3028;
+  --bordure:       #4a3d31;
+  --creux:         #1a1512;
+  --inactif:       #6b6259;
+  --accent:        #f4a72c;
+  --accent-ombre:  #b87c15;
+  --sur-accent:    #2a1c05;
+  --texte:         #f3f0e9;
+  --texte-faible:  #a2988a;
+  --donnee:        #5bd6e2;
+  --sur-donnee:    #10201f;
+  --ok:            #86c06a;
+  --veille:        #e8b23a;
+  --alarme:        #e8503a;
+  --alarme-clair:  #ff8a6a;
+  --alarme-sombre: #c4331d;
+}
+
+/* ── EVE — ardoise bleutée et cyan, plus froid, plus « vaisseau » ─────────── */
+[data-palette='eve'] {
+  --fond:          #131a1f;
+  --fond-haut:     #1b242b;
+  --carter:        #1d272e;
+  --carter-clair:  #26333c;
+  --bordure:       #35454f;
+  --creux:         #0d1317;
+  --inactif:       #5a6b76;
+  --accent:        #5bd6e2;
+  --accent-ombre:  #2a99a4;
+  --sur-accent:    #062226;
+  --texte:         #f3f0e9;
+  --texte-faible:  #93a6b1;
+  --donnee:        #f4a72c;
+  --sur-donnee:    #241a08;
+  --ok:            #6ec08a;
+  --veille:        #e8b23a;
+  --alarme:        #e8503a;
+  --alarme-clair:  #ff8a6a;
+  --alarme-sombre: #c4331d;
+}
+
+/* ── NUIT — tout éteint sauf l'essentiel : pilotage dans le noir ──────────── */
+[data-palette='nuit'] {
+  --fond:          #0c0a09;
+  --fond-haut:     #141110;
+  --carter:        #14100e;
+  --carter-clair:  #1c1715;
+  --bordure:       #2e2622;
+  --creux:         #080606;
+  --inactif:       #4a423c;
+  --accent:        #d98324;
+  --accent-ombre:  #8a5211;
+  --sur-accent:    #1a1004;
+  --texte:         #d8d0c4;
+  --texte-faible:  #7d7368;
+  --donnee:        #4aa8b0;
+  --sur-donnee:    #071316;
+  --ok:            #6d9c58;
+  --veille:        #c99a32;
+  --alarme:        #cf4530;
+  --alarme-clair:  #e07357;
+  --alarme-sombre: #8f2b1b;
+}

@@ -1,98 +1,26 @@
-:root {
-  --bg:       #0d1117;
-  --surface:  #161b22;
-  --surface2: #21262d;
-  --border:   #30363d;
-  --accent:   #58a6ff;
-  --text:     #c9d1d9;
-  --dim:      #8b949e;
-  --success:  #3fb950;
-  --danger:   #f85149;
-  --nav-h:    48px;
-}
+/* Coque du HUD : barre d'état en haut, puis rail / scène / colonne. */
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  font-size: 13px;
-}
-
-.shell {
+.app {
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 0%, var(--fond-haut) 0%, var(--fond) 70%);
 }
 
-/* ── Nav bar ─────────────────────────────────── */
-
-.nav {
-  height: var(--nav-h);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.logo {
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--accent);
-  white-space: nowrap;
-  margin-right: 8px;
-}
-
-.navLinks {
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.corps {
   flex: 1;
-}
-
-.navLink {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--dim);
-  text-decoration: none;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  transition: background 0.1s, color 0.1s;
-  white-space: nowrap;
+  min-height: 0;
 }
 
-.navLink:hover { background: var(--surface2); color: var(--text); }
-.active        { background: var(--surface2) !important; color: var(--accent) !important; }
-
-.navIcon  { font-size: 14px; line-height: 1; }
-.navLabel { font-size: 12px; }
-
-/* ── Status ───────────────────────────────────── */
-
-.status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--dim);
-  white-space: nowrap;
-}
-
-.dotOn  { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
-.dotOff { width: 7px; height: 7px; border-radius: 50%; background: var(--danger);  flex-shrink: 0; }
-
-/* ── Main content area ────────────────────────── */
-
-.main {
+/* Réceptacle de la vue courante (pilotage ou atelier) : c'est lui qui porte la
+   largeur restante, entre le rail et la colonne. */
+.vue {
+  position: relative;
   flex: 1;
-  overflow: hidden;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  /* Le tiroir Réglages, refermé, attend hors cadre à gauche. */
+  overflow: hidden;
 }

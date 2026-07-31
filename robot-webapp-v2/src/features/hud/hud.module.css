@@ -1,0 +1,621 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Mobilier du HUD : barre d'état, rail d'outils, colonne de droite et ses
+   blocs (dialogue, vitaux). Un seul module partagé par ces composants — ils
+   forment un même meuble, séparer leurs styles n'apporterait que des allers-
+   retours entre fichiers.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Barre d'état ───────────────────────────────────────────────────────── */
+
+.bar {
+  height: var(--bar-h);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 12px 0 16px;
+  background: linear-gradient(180deg, var(--carter-clair), var(--carter));
+  border-bottom: 2px solid var(--bordure);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+.marque {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mot {
+  font-size: 19px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.mot small {
+  display: block;
+  margin-top: -3px;
+  font-family: 'Nunito', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--texte-faible);
+}
+
+/* Les yeux : ce sont eux l'indicateur de connexion. */
+.yeux {
+  width: 54px;
+  height: 34px;
+  flex: none;
+}
+
+.globe {
+  fill: var(--creux);
+  stroke: var(--bordure);
+  stroke-width: 2;
+}
+
+.iris {
+  fill: var(--donnee);
+  transition: fill 0.3s, cx 0.4s ease-out;
+}
+
+.horsLigne .iris {
+  fill: var(--inactif);
+}
+
+.cligne {
+  animation: cligner 6.5s infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes cligner {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.06);
+  }
+}
+
+/* Pastilles de mesure (température, débit vidéo…). */
+.pastilles {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 6px;
+}
+
+.pastille {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 6px 12px;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  border-radius: var(--r-puce);
+  /* Sur `.pastille` et non sur le modificateur : le retour au repos s'estompe
+     aussi doucement que l'entrée en alerte. */
+  transition: background 0.4s, border-color 0.4s;
+}
+
+/* Mesure sortie du repos : toute la boîte prend la couleur du seuil, pas
+   seulement le nombre. À bout de bras sur la manette, c'est la tache de couleur
+   qu'on voit — le chiffre, on ne le lit qu'ensuite. */
+.pastilleMesuree {
+  background: color-mix(in srgb, var(--teinte) 14%, var(--fond));
+  border-color: color-mix(in srgb, var(--teinte) 60%, var(--bordure));
+}
+
+.pastille svg {
+  color: var(--texte-faible);
+}
+
+/* `--teinte` : couleur de seuil posée par la barre d'état (cf. `seuils.ts`) dès
+   que la mesure quitte le repos. L'icône, elle, reste neutre : elle dit quelle
+   grandeur on lit, pas dans quel état elle est. Au repos, pas de `--teinte` —
+   d'où la valeur de repli. */
+.pastilleVal {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--teinte, var(--texte));
+  transition: color 0.4s;
+}
+
+.pastilleUnite {
+  font-size: 11px;
+  color: var(--texte-faible);
+}
+
+.pousse {
+  flex: 1;
+}
+
+/* Voyant de liaison. */
+.etat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 6px 14px;
+  border-radius: var(--r-puce);
+  font-size: 13px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--ok) 12%, transparent);
+  border: 2px solid color-mix(in srgb, var(--ok) 40%, transparent);
+  color: var(--ok);
+}
+
+.etatCoupe {
+  background: color-mix(in srgb, var(--alarme) 14%, transparent);
+  border-color: color-mix(in srgb, var(--alarme) 50%, transparent);
+  color: var(--alarme);
+}
+
+.led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.etatCoupe .led {
+  animation: pulser 1s infinite;
+}
+
+@keyframes pulser {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Bouton d'arrêt : toujours au même endroit, toujours de la même couleur. */
+.stop {
+  height: var(--tactile);
+  min-width: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 20px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--alarme), var(--alarme-sombre));
+  border: 2px solid var(--alarme-clair);
+  border-bottom-width: 5px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+}
+
+.stop:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.stop:disabled {
+  background: var(--carter-clair);
+  border-color: var(--bordure);
+  color: var(--inactif);
+  box-shadow: none;
+}
+
+/* ── Rail d'outils ──────────────────────────────────────────────────────── */
+
+.rail {
+  width: var(--rail-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  background: var(--carter);
+  border-right: 2px solid var(--bordure);
+}
+
+.outil {
+  width: 56px;
+  height: var(--tactile);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  color: var(--texte-faible);
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.outil span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.outil:active {
+  transform: translateY(1px);
+}
+
+.outilActif {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.separateur {
+  width: 34px;
+  height: 2px;
+  background: var(--bordure);
+  border: none;
+  margin: 4px 0;
+}
+
+/* ── Colonne de droite ──────────────────────────────────────────────────── */
+
+.col {
+  width: var(--col-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  background: var(--carter);
+  border-left: 2px solid var(--bordure);
+}
+
+.bloc {
+  background: var(--carter-clair);
+  border: 2px solid var(--bordure);
+  border-radius: var(--r-bloc);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.blocEntete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 8px;
+  flex: none;
+}
+
+.blocEntete svg {
+  color: var(--accent);
+}
+
+/* ── Bloc dialogue ──────────────────────────────────────────────────────── */
+
+.blocDialogue {
+  flex: 1;
+}
+
+.fil {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.filVide {
+  margin: auto;
+  padding: 0 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--texte-faible);
+}
+
+.msg {
+  display: flex;
+  max-width: 96%;
+}
+
+.bulle {
+  padding: 9px 13px;
+  border-radius: 15px;
+  font-size: 14px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.heure {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  opacity: 0.55;
+}
+
+.msgRobot .bulle {
+  background: var(--accent);
+  color: var(--sur-accent);
+  border-bottom-left-radius: 5px;
+}
+
+.msgMoi {
+  align-self: flex-end;
+}
+
+.msgMoi .bulle {
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  border-bottom-right-radius: 5px;
+}
+
+.composeur {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  flex: none;
+}
+
+.saisie {
+  flex: 1;
+  min-width: 0;
+  height: var(--tactile);
+  padding: 0 14px;
+  border-radius: 13px;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  color: var(--texte);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.saisie::placeholder {
+  color: var(--inactif);
+}
+
+.saisie:disabled {
+  opacity: 0.5;
+}
+
+.dire {
+  height: var(--tactile);
+  padding: 0 18px;
+  border-radius: 13px;
+  background: var(--accent);
+  color: var(--sur-accent);
+  border-bottom: 4px solid var(--accent-ombre);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.dire:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.dire:disabled {
+  background: var(--carter);
+  color: var(--inactif);
+  border-bottom-color: var(--bordure);
+}
+
+/* ── Bloc vitaux ────────────────────────────────────────────────────────── */
+
+.grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding: 0 10px 10px;
+}
+
+.mesure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 5px 5px;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  border-radius: 14px;
+}
+
+.mesureNom {
+  font-size: 11px;
+  color: var(--texte-faible);
+  text-align: center;
+}
+
+/* L'anneau garde exactement la géométrie de la page Monitoring. */
+.anneau {
+  position: relative;
+  width: var(--anneau);
+  height: var(--anneau);
+}
+
+.anneau svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.anneauFond {
+  fill: none;
+  stroke: var(--creux);
+  stroke-width: 8;
+}
+
+.anneauArc {
+  transition: stroke-dashoffset 0.4s ease, stroke 0.4s;
+}
+
+.anneauCentre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.anneauNombre {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.anneauUnite {
+  font-size: 9px;
+  color: var(--texte-faible);
+  margin-top: 1px;
+}
+
+.anneauIndispo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--inactif);
+}
+
+.tendance {
+  width: 100%;
+  height: 17px;
+  display: block;
+}
+
+.tendanceLigne {
+  fill: none;
+  stroke: var(--donnee);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+
+.tendanceAire {
+  fill: color-mix(in srgb, var(--donnee) 14%, transparent);
+}
+
+.messageBloc {
+  padding: 0 14px 14px;
+  font-size: 13px;
+  color: var(--texte-faible);
+}
+
+.relancer {
+  margin-top: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--carter);
+  border: 2px solid var(--bordure);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--texte);
+}
+
+/* ── Tiroir Réglages ────────────────────────────────────────────────────── */
+
+.tiroir {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 340px;
+  z-index: 5;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: 0 var(--r-bloc) var(--r-bloc) 0;
+  transform: translateX(-102%);
+  transition: transform 0.25s ease;
+}
+
+.tiroirOuvert {
+  transform: none;
+}
+
+.tiroirTitre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fermer {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 2px solid var(--bordure);
+  color: var(--texte-faible);
+}
+
+.reglage {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.reglageLibelle {
+  font-size: 13px;
+}
+
+.segments {
+  display: flex;
+  gap: 6px;
+}
+
+.segments button {
+  flex: 1;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texte-faible);
+}
+
+.segmentActif {
+  background: color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+.champ {
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  color: var(--texte);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--texte-faible);
+}
+
+/* Écrans bas (1024 × 600 typique) : tout se resserre autour de l'anneau, qui a
+   déjà rétréci via `--anneau` (cf. `theme.css`). */
+@media (max-height: 700px) {
+  .anneauNombre {
+    font-size: 16px;
+  }
+  .tendance {
+    height: 13px;
+  }
+  .mesure {
+    padding: 5px 4px 4px;
+  }
+  .blocEntete {
+    padding: 8px 12px 6px;
+  }
+}

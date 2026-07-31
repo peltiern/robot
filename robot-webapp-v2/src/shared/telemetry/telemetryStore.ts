@@ -18,6 +18,8 @@ interface TelemetryState {
    * simplement publié en un seul rendu, la jauge affichant directement la valeur la plus récente.
    */
   ingerer: (echantillons: Record<string, number>[]) => void
+  /** Efface tout : plus aucune valeur connue, comme au lancement de l'application. */
+  oublier: () => void
 }
 
 /**
@@ -59,5 +61,9 @@ export const useTelemetryStore = create<TelemetryState>((set, get) => ({
     }
 
     set({ valeurs: prochainesValeurs, historique: prochainHistorique })
+  },
+
+  oublier() {
+    set({ valeurs: {}, historique: {} })
   },
 }))

@@ -1,0 +1,412 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Scène de pilotage : l'image du robot en plein cadre, et par-dessus les
+   surcouches en verre (détections, posture, écoute) plus le tiroir Réglages.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.scene {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--creux);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Le cadre épouse exactement l'image affichée : les boîtes de détection s'y
+   posent en pourcentages et restent alignées quelle que soit la taille. Ses
+   dimensions sont calculées par la page (cf. `dimensionsContenues`) : en CSS
+   pur, `aspect-ratio` + `max-height` ne suffit pas à obtenir un vrai
+   « contain » à l'intérieur d'un conteneur flex. */
+.cadre {
+  position: relative;
+  flex: none;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Attente de flux ────────────────────────────────────────────────────── */
+
+.attente {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 460px;
+  padding: 0 24px;
+  text-align: center;
+  color: var(--texte-faible);
+}
+
+.attente svg {
+  color: var(--inactif);
+}
+
+.attenteTitre {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--texte);
+}
+
+.attenteAide {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Surcouches ─────────────────────────────────────────────────────────── */
+
+.calques {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.calques > * {
+  pointer-events: auto;
+}
+
+.hudHaut {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.puce {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border-radius: var(--r-puce);
+  background: color-mix(in srgb, var(--fond) 80%, transparent);
+  border: 2px solid var(--bordure);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texte-faible);
+}
+
+.puce b {
+  color: var(--texte);
+  font-size: 15px;
+}
+
+.puceAccent {
+  border-color: var(--accent);
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
+
+/* Les compteurs reprennent la couleur des boîtes qu'ils dénombrent sur l'image :
+   cyan pour les visages, ambre pour les objets. */
+.puceVisages svg {
+  color: var(--donnee);
+}
+
+.puceObjets svg {
+  color: var(--accent);
+}
+
+.pousse {
+  flex: 1;
+}
+
+/* Boîtes de détection : coordonnées en pourcentages de l'image source. */
+.boite {
+  position: absolute;
+  border: 3px solid var(--donnee);
+  border-radius: 10px;
+  transition: opacity 0.3s;
+}
+
+.boiteNom {
+  position: absolute;
+  left: -3px;
+  top: -30px;
+  padding: 3px 10px;
+  border-radius: 8px 8px 8px 0;
+  background: var(--donnee);
+  color: var(--sur-donnee);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.boiteObjet {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+
+.boiteObjet .boiteNom {
+  background: var(--accent);
+  color: var(--sur-accent);
+}
+
+/* ── Bande du bas ───────────────────────────────────────────────────────────
+   Posture et barre d'écoute sont sur la même ligne : sur une tablette, la scène
+   est étroite (largeur totale moins le rail et la colonne) et deux surcouches
+   posées chacune de leur côté finissaient par se chevaucher. */
+
+/* Sélecteur descendant : `.calques > *` rend ses enfants cliquables, or la bande
+   elle-même ne doit pas intercepter les doigts entre ses deux volets. */
+.calques > .bas {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.bas > * {
+  pointer-events: auto;
+}
+
+/* ── Volet Posture ──────────────────────────────────────────────────────── */
+
+.posture {
+  flex: none;
+  width: 268px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.postureTitre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.axe {
+  display: grid;
+  grid-template-columns: 74px 1fr 46px;
+  align-items: center;
+  gap: 9px;
+}
+
+.axeNom {
+  font-size: 12px;
+  color: var(--texte-faible);
+}
+
+.axeMesure {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Piste décorée + curseur natif transparent posé dessus : on garde un vrai
+   `input[type=range]` (accessible, pilotable au clavier) tout en dessinant le
+   repère du zéro et le remplissage, que l'élément natif ne sait pas afficher.
+
+   Les butées des articulations sont dissymétriques (l'œil va de -5° à +20°, le
+   cou de -60° à +60°…) : le zéro n'est donc pas au milieu, et il ne tombe pas au
+   même endroit d'un axe à l'autre. Le repère et le remplissage le rendent
+   lisible.
+
+   `--pouce` doit valoir la taille du bouton : le curseur natif ne se promène pas
+   de 0 à 100 % de la piste, mais d'un demi-bouton à l'autre. Sans en tenir
+   compte, les décors seraient décalés de ±12 px par rapport au bouton. */
+.piste {
+  --pouce: 24px;
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--creux);
+  border: 1px solid var(--bordure);
+}
+
+/* `--a` et `--b` : bornes du segment parcouru, en fraction de l'échelle. */
+.remplissage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--a) * (100% - var(--pouce)) + var(--pouce) / 2);
+  width: calc((var(--b) - var(--a)) * (100% - var(--pouce)));
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.zero {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: calc(var(--z) * (100% - var(--pouce)) + var(--pouce) / 2);
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--texte-faible);
+}
+
+.curseur {
+  position: absolute;
+  inset: -17px 0;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.curseur::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 44px;
+}
+
+.curseur::-moz-range-track {
+  background: transparent;
+  height: 44px;
+}
+
+/* `margin-top` : avec `appearance: none`, WebKit colle le haut du bouton en haut
+   de la piste au lieu de le centrer dessus (Firefox, lui, centre tout seul). Sans
+   ces 10 px — (44 - 24) / 2 — le bouton flotte au-dessus de sa glissière. */
+.curseur::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  margin-top: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--sur-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.curseur::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--sur-accent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.recentrer {
+  height: 40px;
+  border-radius: 12px;
+  background: var(--carter-clair);
+  border: 2px solid var(--bordure);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--texte-faible);
+  letter-spacing: 0.04em;
+}
+
+.recentrer:active {
+  background: var(--bordure);
+  color: var(--texte);
+}
+
+.postureMessage {
+  font-size: 12px;
+  color: var(--texte-faible);
+}
+
+/* ── Barre d'écoute ─────────────────────────────────────────────────────── */
+
+.ecoute {
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
+  /* Centrée dans la place qui reste, posture ouverte ou non. */
+  margin-inline: auto;
+  padding: 11px 16px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.vu {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 24px;
+  width: 34px;
+  flex: none;
+}
+
+.vu i {
+  flex: 1;
+  height: 22%;
+  border-radius: 2px;
+  background: var(--inactif);
+  transform-origin: bottom;
+}
+
+/* Le robot parle : les barres s'animent. Sinon elles respirent doucement pour
+   dire que le micro est ouvert. Aucune de ces hauteurs n'est une mesure — le
+   robot ne publie pas le niveau du micro. */
+.vuParle i {
+  background: var(--donnee);
+  animation: vumetre 0.55s ease-in-out infinite alternate;
+}
+
+.vuParle i:nth-child(2) {
+  animation-duration: 0.4s;
+}
+.vuParle i:nth-child(3) {
+  animation-duration: 0.68s;
+}
+.vuParle i:nth-child(4) {
+  animation-duration: 0.47s;
+}
+.vuParle i:nth-child(5) {
+  animation-duration: 0.61s;
+}
+
+@keyframes vumetre {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(4);
+  }
+}
+
+.vuEcoute i {
+  background: var(--texte-faible);
+  animation: respirer 2.6s ease-in-out infinite;
+}
+
+.vuEcoute i:nth-child(even) {
+  animation-delay: 0.5s;
+}
+
+@keyframes respirer {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ecouteTexte {
+  font-size: 15px;
+  min-height: 20px;
+}
+
+.ecouteAttente {
+  color: var(--texte-faible);
+  font-style: italic;
+}
+
+/* Sous 980 px de large, la posture prend trop de place sur l'image : le rail
+   permet toujours de la rouvrir, elle se replie juste par défaut. */
+@media (max-width: 980px) {
+  .posture {
+    display: none;
+  }
+}

@@ -35,6 +35,17 @@ export interface ConversationEvent {
   dateTime?: string
 }
 
+/**
+ * ReconnaissanceVocaleEvent (topic `/events/reconnaissance-vocale`) — phrase
+ * comprise par le robot. Publié une fois la phrase terminée : le décodage au fil
+ * de la parole reste interne au capteur vocal, les partiels ne sortent pas.
+ */
+export interface ReconnaissanceVocaleEvent {
+  eventType: 'reconnaissance-vocale'
+  texteReconnu: string
+  nomRegle?: string
+}
+
 /** ParoleEvent envoyé au robot (destination `/app/robotevents`) pour le faire parler. */
 export interface ParoleEventOut {
   eventType: 'parole'

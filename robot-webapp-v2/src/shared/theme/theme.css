@@ -1,0 +1,155 @@
+@import './palettes.css';
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOCLE VISUEL — géométrie, typographie, styles de base.
+   Les couleurs, elles, sont toutes dans `palettes.css`.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Un seul monde visuel, assumé : cockpit d'engin, lisible en plein soleil sur
+   la tablette de la manette. Pas de thème clair — un HUD blanc en extérieur n'a
+   aucun sens — mais plusieurs palettes sombres, cf. `palettes.css`.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Rayons */
+  --r-bloc: 18px;
+  --r-puce: 10px;
+
+  /* Cible tactile minimale : le pouce, une seule main libre, robot en marche. */
+  --tactile: 52px;
+
+  /* Gabarit de la coque */
+  --bar-h: 56px;
+  --rail-w: 72px;
+  --col-w: 330px;
+
+  /* Jauge des vitaux (la géométrie interne de l'anneau, elle, ne bouge pas).
+     Volontairement modeste : les quatre anneaux ne doivent pas manger la place
+     du dialogue, qui est le bloc qu'on lit vraiment. */
+  --anneau: 66px;
+
+  color-scheme: dark;
+}
+
+/* Tablettes plus étroites : la colonne maigrit avant de disparaître. */
+@media (max-width: 1180px) {
+  :root {
+    --col-w: 290px;
+    --rail-w: 66px;
+  }
+}
+
+/* Écrans bas (1024 × 600 typique) : les anneaux se resserrent encore. */
+@media (max-height: 700px) {
+  :root {
+    --anneau: 56px;
+  }
+}
+
+/* ── Compatibilité : anciens jetons ──────────────────────────────────────────
+   Les pages écrites avant le HUD (éditeur d'animation) parlent encore en
+   `--bg` / `--surface` / `--text`… On les fait pointer sur les rôles du thème :
+   elles suivent donc la palette active sans être réécrites. À supprimer quand
+   l'éditeur d'animation aura été repris. */
+:root {
+  --bg: var(--fond);
+  --surface: var(--carter);
+  --surface2: var(--carter-clair);
+  --border: var(--bordure);
+  --text: var(--texte);
+  --dim: var(--texte-faible);
+  --success: var(--ok);
+  --danger: var(--alarme);
+  --nav-h: var(--bar-h);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: 'Nunito', 'Ubuntu', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.35;
+  /* Tablette : pas de rebond élastique, pas de flash gris au toucher, pas de
+     zoom involontaire à deux doigts sur un HUD. */
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Pas d'état `:hover` dans le HUD (doigt, pas souris) : le focus visible reste
+   le seul repère, utile si un clavier ou une manette navigue l'interface. */
+:focus-visible {
+  outline: 3px solid var(--donnee);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ── Utilitaires globaux ─────────────────────────────────────────────────────
+   Volontairement hors modules CSS : ce sont trois manières d'écrire partagées
+   par tout le HUD, pas des composants. */
+
+/* Sur-titre : petites capitales espacées, au-dessus d'un bloc. */
+.eyebrow {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+}
+
+/* Chiffre mesuré : chasse fixe, pour que la valeur ne danse pas en changeant. */
+.data {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* Titre « marque » : la police ronde et grasse, réservée aux gros caractères. */
+.titraille {
+  font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+  font-weight: 700;
+}
+
+/* Surface posée par-dessus la vidéo. */
+.verre {
+  background: color-mix(in srgb, var(--fond) 82%, transparent);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--bordure);
+  border-radius: var(--r-bloc);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

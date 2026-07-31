@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useTopic } from '../websocket/useTopic'
+import { useWebSocketStore } from '../websocket/websocketStore'
 import { NB_ECHANTILLONS_HISTORIQUE, useTelemetryStore } from './telemetryStore'
 
 /**
@@ -13,6 +14,8 @@ import { NB_ECHANTILLONS_HISTORIQUE, useTelemetryStore } from './telemetryStore'
  */
 export function TelemetryProvider() {
   const ingerer = useTelemetryStore((s) => s.ingerer)
+  const oublier = useTelemetryStore((s) => s.oublier)
+  const connecte = useWebSocketStore((s) => s.connected)
 
   const enAttente = useRef<Record<string, number>[]>([])
   const rafEnCours = useRef<number | null>(null)
@@ -50,6 +53,19 @@ export function TelemetryProvider() {
       [vider],
     ),
   )
+
+  // Liaison coupée : on oublie tout. Une valeur figée depuis la dernière trame
+  // reçue passerait pour une mesure du moment — mieux vaut ne rien afficher que
+  // de laisser croire que le robot va bien.
+  useEffect(() => {
+    if (connecte) return
+    if (rafEnCours.current !== null) {
+      cancelAnimationFrame(rafEnCours.current)
+      rafEnCours.current = null
+    }
+    enAttente.current = []
+    oublier()
+  }, [connecte, oublier])
 
   useEffect(() => {
     return () => {
