@@ -27,6 +27,8 @@ export type NomIcone =
   | 'croix'
   | 'visage'
   | 'objet'
+  | 'reprise'
+  | 'alerte'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -110,6 +112,14 @@ const TRACES: Record<NomIcone, ReactNode> = {
     <>
       <path d="M12 2.9 20.3 7.4v9.2L12 21.1 3.7 16.6V7.4z" />
       <path d="m3.9 7.5 8.1 4.4 8.1-4.4M12 11.9v9.2" />
+    </>
+  ),
+  reprise: <path d="M7.5 5.4 19 12 7.5 18.6z" />,
+  alerte: (
+    <>
+      <path d="M12 3.6 22 20H2z" />
+      <path d="M12 9.6v4.6" />
+      <circle cx="12" cy="17" r="1.2" fill="currentColor" stroke="none" />
     </>
   ),
 }

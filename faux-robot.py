@@ -54,6 +54,27 @@ async def envoyer(destination, corps):
             pass
 
 
+# Arrêt d'urgence : le vrai robot en est le seul maître, on reproduit ce comportement
+# (le front demande, le robot confirme sur /events/arret-urgence).
+arret_urgence = {"actif": False, "origine": None}
+
+
+async def traiter_ordre(corps):
+    """Rejoue le peu de logique robot dont le HUD a besoin en retour."""
+    try:
+        ordre = json.loads(corps)
+    except (ValueError, TypeError):
+        return
+    if ordre.get("eventType") == "arret-urgence":
+        arret_urgence["actif"] = bool(ordre.get("actif"))
+        arret_urgence["origine"] = ordre.get("origine")
+        await envoyer("/events/arret-urgence", json.dumps({
+            "eventType": "arret-urgence",
+            "actif": arret_urgence["actif"],
+            "origine": arret_urgence["origine"],
+        }))
+
+
 async def ws_handler(requete):
     ws = web.WebSocketResponse(protocols=("v12.stomp", "v11.stomp", "v10.stomp"))
     await ws.prepare(requete)
@@ -78,7 +99,9 @@ async def ws_handler(requete):
                 abonnes.append((ws, entetes.get("destination"), entetes.get("id")))
                 print("abonnement", entetes.get("destination"))
             elif commande == "SEND":
-                print("reçu du front →", entetes.get("destination"), brute.split("\n\n", 1)[-1][:120])
+                corps = brute.split("\n\n", 1)[-1]
+                print("reçu du front →", entetes.get("destination"), corps[:120])
+                await traiter_ordre(corps)
             elif commande == "DISCONNECT":
                 await ws.close()
     abonnes[:] = [a for a in abonnes if a[0] is not ws]
@@ -142,6 +165,7 @@ async def demarrer(app):
 
 app = web.Application()
 app.router.add_get("/api/organes", lambda r: web.json_response(ORGANES))
+app.router.add_get("/api/arret-urgence", lambda r: web.json_response({"actif": arret_urgence["actif"]}))
 app.router.add_get("/wsendpoint", ws_handler)
 app.on_startup.append(demarrer)
 web.run_app(app, host=["127.0.0.1", "::1"], port=8080)

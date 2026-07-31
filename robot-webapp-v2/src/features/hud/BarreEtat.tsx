@@ -4,7 +4,7 @@ import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import { useTelemetryStore } from '../../shared/telemetry/telemetryStore'
 import { useVideoStore } from '../../shared/video/videoStore'
 import { capteurs, useOrganesStore, type Mesure } from '../../shared/organes/organesStore'
-import { evenementsRecentrage } from '../../shared/organes/commandes'
+import { useArretUrgenceStore } from '../../shared/securite/arretUrgenceStore'
 import { couleurAlerte, fractionMesure } from '../../shared/hud/seuils'
 import styles from './hud.module.css'
 
@@ -22,16 +22,16 @@ const EPINGLEES: { id: string; icone: NomIcone; unite: string }[] = [
   { id: 'cpuCharge', icone: 'jauge', unite: '%' },
 ]
 
-/** Durée d'affichage de l'accusé de réception de l'arrêt. */
-const ACCUSE_ARRET_MS = 1600
+/** Délai pendant lequel un second appui confirme le réarmement. */
+const DELAI_CONFIRMATION_MS = 4000
 
 export function BarreEtat() {
   const connecte = useWebSocketStore((s) => s.connected)
-  const envoyer = useWebSocketStore((s) => s.sendRobotEvent)
-  const stopAnimation = useWebSocketStore((s) => s.stopAnimation)
   const valeurs = useTelemetryStore((s) => s.valeurs)
   const fps = useVideoStore((s) => s.fps)
   const organes = useOrganesStore((s) => s.organes)
+  const arretUrgence = useArretUrgenceStore((s) => s.actif)
+  const demander = useArretUrgenceStore((s) => s.demander)
 
   // Échelles déclarées par le robot, pour colorer les pastilles selon les mêmes
   // seuils que les anneaux du volet Vitaux.
@@ -45,28 +45,47 @@ export function BarreEtat() {
     [organes],
   )
 
-  const [arretEnvoye, setArretEnvoye] = useState(false)
+  // Réarmement en deux temps : le premier appui arme la confirmation, le second réarme
+  // réellement. Pas de fenêtre de confirmation du navigateur — sur une tablette montée sur la
+  // manette, un modal bloquant est le dernier endroit où on veut se retrouver.
+  const [confirmationRearmement, setConfirmationRearmement] = useState(false)
 
   useEffect(() => {
-    if (!arretEnvoye) return
-    const minuterie = window.setTimeout(() => setArretEnvoye(false), ACCUSE_ARRET_MS)
+    if (!confirmationRearmement) return
+    const minuterie = window.setTimeout(() => setConfirmationRearmement(false), DELAI_CONFIRMATION_MS)
     return () => clearTimeout(minuterie)
-  }, [arretEnvoye])
+  }, [confirmationRearmement])
+
+  // Tout changement d'état venu du robot (manette, autre tablette) annule une confirmation en
+  // attente : sans ça, un arrêt d'urgence re-déclenché pendant qu'on hésitait se laisserait
+  // réarmer d'un seul appui. Ajusté pendant le rendu et non dans un effet, pour ne pas afficher
+  // un bouton « CONFIRMER » périmé le temps d'un rendu.
+  const [dernierEtatConnu, setDernierEtatConnu] = useState(arretUrgence)
+  if (dernierEtatConnu !== arretUrgence) {
+    setDernierEtatConnu(arretUrgence)
+    setConfirmationRearmement(false)
+  }
 
   /**
-   * Arrêt : coupe l'animation en cours et ramène toutes les articulations à 0°.
+   * Arrêt d'urgence des moteurs : le robot coupe cou, yeux et chenilles sur-le-champ, abandonne
+   * l'animation en cours, et refuse tout ordre de mouvement jusqu'au réarmement.
    *
-   * Ce n'est pas (encore) un arrêt d'urgence matériel : le robot n'expose rien
-   * pour désengager les servos — son seul `StopEvent` éteint carrément
-   * l'application, ce qui n'a rien à faire derrière un bouton de HUD. C'est donc
-   * le maximum atteignable depuis le front : plus rien ne bouge, tout revient au
-   * neutre.
+   * Le bouton ne fait qu'envoyer la demande : l'état affiché est toujours celui que le robot
+   * renvoie, jamais celui qu'on vient de demander. La nuance compte quand le geste consiste
+   * justement à tout figer.
    */
-  const arreter = useCallback(() => {
-    stopAnimation()
-    for (const evenement of evenementsRecentrage(organes)) envoyer(evenement)
-    setArretEnvoye(true)
-  }, [stopAnimation, envoyer, organes])
+  const basculer = useCallback(() => {
+    if (!arretUrgence) {
+      demander(true)
+      return
+    }
+    if (confirmationRearmement) {
+      setConfirmationRearmement(false)
+      demander(false)
+    } else {
+      setConfirmationRearmement(true)
+    }
+  }, [arretUrgence, confirmationRearmement, demander])
 
   return (
     <header className={styles.bar}>
@@ -116,13 +135,17 @@ export function BarreEtat() {
       </div>
 
       <button
-        className={styles.stop}
-        onClick={arreter}
+        className={`${styles.stop} ${arretUrgence ? styles.stopArme : ''}`}
+        onClick={basculer}
         disabled={!connecte}
-        title="Coupe l'animation en cours et recentre toutes les articulations à 0°"
+        title={
+          arretUrgence
+            ? 'Réarme les moteurs : le robot acceptera de nouveau les ordres de mouvement'
+            : "Arrêt d'urgence : coupe tous les moteurs et refuse les ordres jusqu'au réarmement"
+        }
       >
-        <Icone nom="stop" taille={22} />
-        <span>{arretEnvoye ? 'ARRÊTÉ' : 'STOP'}</span>
+        <Icone nom={arretUrgence ? 'reprise' : 'stop'} taille={22} />
+        <span>{arretUrgence ? (confirmationRearmement ? 'CONFIRMER' : 'RÉARMER') : 'STOP'}</span>
       </button>
     </header>
   )

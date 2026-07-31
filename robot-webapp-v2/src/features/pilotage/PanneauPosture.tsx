@@ -7,6 +7,7 @@ import {
   type Articulation,
 } from '../../shared/organes/organesStore'
 import { COMMANDE, estPilotable, evenementsRecentrage } from '../../shared/organes/commandes'
+import { useArretUrgenceStore } from '../../shared/securite/arretUrgenceStore'
 import styles from './pilotage.module.css'
 
 /**
@@ -62,6 +63,11 @@ export function PanneauPosture() {
   const organesBruts = useOrganesStore((s) => s.organes)
   const etat = useOrganesStore((s) => s.etat)
   const envoiThrottle = useEnvoiThrottle()
+
+  const arretUrgence = useArretUrgenceStore((s) => s.actif)
+
+  /** Le robot accepte-t-il des ordres de mouvement ? */
+  const pilotable = connecte && !arretUrgence
 
   const organes = useMemo(() => actionneurs(organesBruts, estPilotable), [organesBruts])
   const articulations = useMemo(() => organes.flatMap((o) => o.articulations), [organes])
@@ -154,8 +160,17 @@ export function PanneauPosture() {
     <div className={`${styles.posture} verre`}>
       <div className={styles.postureTitre}>
         <span className="eyebrow">Posture</span>
-        <span className="eyebrow" style={connecte ? { color: 'var(--accent)' } : undefined}>
-          {connecte ? 'live' : 'hors ligne'}
+        <span
+          className="eyebrow"
+          style={
+            arretUrgence
+              ? { color: 'var(--alarme-clair)' }
+              : connecte
+                ? { color: 'var(--accent)' }
+                : undefined
+          }
+        >
+          {arretUrgence ? 'coupé' : connecte ? 'live' : 'hors ligne'}
         </span>
       </div>
 
@@ -164,17 +179,23 @@ export function PanneauPosture() {
           n'a rien à montrer. */}
       {!connecte && <p className={styles.postureMessage}>En attente du robot.</p>}
 
-      {connecte && etat !== 'pret' && (
+      {/* Arrêt d'urgence : les curseurs disparaissent au lieu d'être seulement grisés. Un curseur
+          qu'on peut saisir sans que rien ne bouge se lit comme une panne. */}
+      {connecte && arretUrgence && (
+        <p className={styles.postureMessage}>Moteurs coupés (arrêt d'urgence).</p>
+      )}
+
+      {pilotable && etat !== 'pret' && (
         <p className={styles.postureMessage}>
           {etat === 'erreur' ? 'Articulations illisibles.' : 'Lecture des articulations…'}
         </p>
       )}
 
-      {connecte && etat === 'pret' && articulations.length === 0 && (
+      {pilotable && etat === 'pret' && articulations.length === 0 && (
         <p className={styles.postureMessage}>Aucune articulation pilotable.</p>
       )}
 
-      {connecte &&
+      {pilotable &&
         articulations.map((articulation) => (
           <Axe
             key={articulation.id}
@@ -184,7 +205,7 @@ export function PanneauPosture() {
           />
         ))}
 
-      {connecte && articulations.length > 0 && (
+      {pilotable && articulations.length > 0 && (
         <button className={styles.recentrer} onClick={recentrer}>
           RECENTRER À 0°
         </button>

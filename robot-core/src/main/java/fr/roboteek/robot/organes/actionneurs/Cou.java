@@ -2,6 +2,7 @@ package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE;
@@ -91,6 +92,13 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
      * Flag de démarrage de l'organe (cycle de vie Spring).
      */
     private volatile boolean running = false;
+
+    /**
+     * Arrêt d'urgence en cours : tout ordre de mouvement est refusé jusqu'au réarmement
+     * (cf. {@link fr.roboteek.robot.securite.ArretUrgence}). Mémorisé ici plutôt que lu dans un
+     * service partagé : l'organe ne connaît que l'évènement, comme pour tout le reste.
+     */
+    private volatile boolean arretUrgence = false;
 
     /**
      * Constructeur.
@@ -332,7 +340,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
     @EventListener
     @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
-        if (!running) {
+        if (!running || arretUrgence) {
             return;
         }
         logger.debug("COU : Event = {}", mouvementCouEvent);
@@ -377,6 +385,29 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
                 descendre(mouvementCouEvent.getVitesseMonterDescendre(), mouvementCouEvent.getAccelerationMonterDescendre(), mouvementCouEvent.isSynchrone());
             }
         }
+    }
+
+    /**
+     * Arrêt d'urgence : coupe les trois moteurs du cou sur-le-champ.
+     * <p>
+     * Volontairement <b>sans</b> {@code @Async}, contrairement aux mouvements : le traitement a
+     * lieu sur le thread qui publie, sans passer par une file d'exécution qui peut être occupée à
+     * dérouler des mouvements. Le drapeau est levé <b>avant</b> de couper, pour qu'un ordre déjà
+     * en attente dans l'exécuteur soit refusé au lieu de relancer un moteur qu'on vient d'arrêter.
+     * <p>
+     * Les servos ne sont pas désengagés : sans couple, la tête tomberait
+     * (cf. {@link fr.roboteek.robot.securite.ArretUrgence}).
+     */
+    @EventListener
+    public void handleArretUrgenceEvent(ArretUrgenceEvent evenement) {
+        arretUrgence = evenement.isActif();
+        if (!running || !evenement.isActif()) {
+            return;
+        }
+        logger.warn("Cou : arrêt d'urgence, coupure des moteurs");
+        stopperTeteGaucheDroite();
+        stopperTeteHautBas();
+        stopperTeteMonterDescendre();
     }
 
     @Override

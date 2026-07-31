@@ -207,6 +207,13 @@
   box-shadow: none;
 }
 
+/* Arrêt d'urgence en cours : le bouton ne coupe plus, il relance. Il change donc de couleur —
+   garder du rouge pour l'action « repartir » serait un contresens. */
+.stopArme {
+  background: linear-gradient(180deg, var(--ok), color-mix(in srgb, var(--ok) 55%, #000));
+  border-color: color-mix(in srgb, var(--ok) 70%, #fff);
+}
+
 /* ── Rail d'outils ──────────────────────────────────────────────────────── */
 
 .rail {

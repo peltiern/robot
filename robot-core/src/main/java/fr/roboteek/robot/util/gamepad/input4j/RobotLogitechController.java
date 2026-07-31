@@ -1,5 +1,6 @@
 package fr.roboteek.robot.util.gamepad.input4j;
 
+import fr.roboteek.robot.securite.ArretUrgence;
 import fr.roboteek.robot.systemenerveux.event.*;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
@@ -28,6 +29,12 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
      * Publication des évènements du système nerveux.
      */
     private final ApplicationEventPublisher applicationEventPublisher;
+
+    /**
+     * Arrêt d'urgence (bouton B). Seule dépendance directe à un service : la bascule a besoin de
+     * connaître l'état courant, qu'un évènement à sens unique ne donne pas.
+     */
+    private final ArretUrgence arretUrgence;
 
     /**
      * Logger.
@@ -62,8 +69,9 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private boolean gachetteDroiteEnfoncee = false;
     private boolean boutonDroitEnfonce = false;
 
-    public RobotLogitechController(ApplicationEventPublisher applicationEventPublisher) {
+    public RobotLogitechController(ApplicationEventPublisher applicationEventPublisher, ArretUrgence arretUrgence) {
         this.applicationEventPublisher = applicationEventPublisher;
+        this.arretUrgence = arretUrgence;
         gamepadManager = new Input4jGamepadManager();
         gamepadManager.addListener(this);
     }
@@ -150,6 +158,9 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                     break;
                 case BUTTON_A:
                     processButtonA(event);
+                    break;
+                case BUTTON_B:
+                    processButtonB(event);
                     break;
                 case BUTTON_START:
                     processButtonStart(event);
@@ -450,6 +461,21 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             final ParoleEvent paroleEvent = new ParoleEvent();
             paroleEvent.setTexte("Bonjour");
             applicationEventPublisher.publishEvent(paroleEvent);
+        }
+    }
+
+    /**
+     * Bouton B = arrêt d'urgence des moteurs.
+     * <p>
+     * Bascule et non simple déclenchement : la manette n'a pas de quoi dédier un second bouton au
+     * réarmement, et rester bloqué en arrêt d'urgence parce que la tablette n'est pas à portée
+     * serait pire que le risque d'un réarmement involontaire — réarmer ne fait bouger personne,
+     * ça se contente de rouvrir la porte aux ordres.
+     */
+    private void processButtonB(LogitechControllerEvent event) {
+        GamepadComponentValue<LogitechComponent> bValue = event.getMapValues().get(LogitechComponent.BUTTON_B);
+        if (Boolean.TRUE.equals(bValue.getCurrentPressed())) {
+            arretUrgence.basculer("manette");
         }
     }
 

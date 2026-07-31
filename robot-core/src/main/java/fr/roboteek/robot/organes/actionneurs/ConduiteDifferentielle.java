@@ -2,6 +2,7 @@ package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
@@ -50,6 +51,12 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
      * Flag de démarrage de l'organe (cycle de vie Spring).
      */
     private volatile boolean running = false;
+
+    /**
+     * Arrêt d'urgence en cours : tout ordre de mouvement est refusé jusqu'au réarmement
+     * (cf. {@link fr.roboteek.robot.securite.ArretUrgence}).
+     */
+    private volatile boolean arretUrgence = false;
 
     /**
      * Constructeur.
@@ -114,7 +121,7 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
     @EventListener
     @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleMouvementRoueEvent(MouvementRoueEvent mouvementRoueEvent) {
-        if (!running) {
+        if (!running || arretUrgence) {
             return;
         }
         logger.debug("{}", mouvementRoueEvent);
@@ -132,6 +139,23 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
         } else if (mouvementRoueEvent.getMouvementRoue() == MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER) {
             stopperRoues();
         }
+    }
+
+    /**
+     * Arrêt d'urgence : coupe les deux moteurs de chenilles sur-le-champ. Voir
+     * {@code Cou.handleArretUrgenceEvent} pour le pourquoi du traitement synchrone.
+     * <p>
+     * C'est l'organe le plus concerné : un robot qui roule est la seule chose ici qui puisse
+     * partir loin toute seule.
+     */
+    @EventListener
+    public void handleArretUrgenceEvent(ArretUrgenceEvent evenement) {
+        arretUrgence = evenement.isActif();
+        if (!running || !evenement.isActif()) {
+            return;
+        }
+        logger.warn("ConduiteDifferentielle : arrêt d'urgence, coupure des moteurs");
+        stopperRoues();
     }
 
     @Override

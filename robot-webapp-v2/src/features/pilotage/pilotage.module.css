@@ -70,6 +70,49 @@
   pointer-events: auto;
 }
 
+/* Bandeau d'arrêt d'urgence : centré en haut de la scène, devant les compteurs. Volontairement
+   large et bavard — quand le robot ne répond plus aux commandes, il faut que la raison saute aux
+   yeux avant qu'on cherche la panne. */
+.bandeauArret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  background: color-mix(in srgb, var(--alarme) 88%, transparent);
+  color: #fff;
+  border-bottom: 3px solid var(--alarme-clair);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  animation: pulserBandeau 1.8s ease-in-out infinite;
+}
+
+.bandeauArret div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bandeauArret b {
+  font-size: 15px;
+  letter-spacing: 0.1em;
+}
+
+.bandeauArret span {
+  font-size: 12.5px;
+  line-height: 1.35;
+  opacity: 0.92;
+}
+
+@keyframes pulserBandeau {
+  50% {
+    background: color-mix(in srgb, var(--alarme) 68%, transparent);
+  }
+}
+
 .hudHaut {
   position: absolute;
   top: 12px;
@@ -78,6 +121,11 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
+}
+
+/* Les compteurs descendent sous le bandeau d'arrêt d'urgence plutôt que de se chevaucher. */
+.hudHautDecale {
+  top: 78px;
 }
 
 .puce {

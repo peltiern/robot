@@ -6,6 +6,8 @@ import { ConversationProvider } from '../conversation/ConversationProvider'
 import { AudioProvider } from '../audio/AudioProvider'
 import { VideoProvider } from '../video/VideoProvider'
 import { useOrganesStore } from '../organes/organesStore'
+import { useArretUrgenceStore } from '../securite/arretUrgenceStore'
+import { ArretUrgenceProvider } from '../securite/ArretUrgenceProvider'
 import { BarreEtat } from '../../features/hud/BarreEtat'
 import { Rail } from '../../features/hud/Rail'
 import { ColonneDroite } from '../../features/hud/ColonneDroite'
@@ -23,6 +25,7 @@ export function Layout() {
   const disconnect = useWebSocketStore((s) => s.disconnect)
   const connecte = useWebSocketStore((s) => s.connected)
   const chargerOrganes = useOrganesStore((s) => s.charger)
+  const chargerArretUrgence = useArretUrgenceStore((s) => s.charger)
 
   useEffect(() => {
     connect()
@@ -31,9 +34,13 @@ export function Layout() {
 
   // Découverte de capacités relancée à chaque (re)connexion : inutile de faire
   // cliquer l'utilisateur alors que l'appli sait que le robot vient de répondre.
+  // L'arrêt d'urgence est relu au même moment : il a pu être déclenché depuis la
+  // manette avant qu'on ouvre l'application, ou pendant une coupure de liaison.
   useEffect(() => {
-    if (connecte) chargerOrganes()
-  }, [connecte, chargerOrganes])
+    if (!connecte) return
+    chargerOrganes()
+    chargerArretUrgence()
+  }, [connecte, chargerOrganes, chargerArretUrgence])
 
   // L'atelier prend l'écran en entier : la colonne et les volets s'effacent.
   const pilotage = useLocation().pathname !== '/atelier'
@@ -44,6 +51,7 @@ export function Layout() {
       <ConversationProvider />
       <AudioProvider />
       <VideoProvider />
+      <ArretUrgenceProvider />
 
       <BarreEtat />
 

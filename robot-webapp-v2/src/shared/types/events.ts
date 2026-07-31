@@ -51,3 +51,15 @@ export interface ParoleEventOut {
   eventType: 'parole'
   texte: string
 }
+
+/**
+ * ArretUrgenceEvent (topic `/events/arret-urgence`) — état de l'arrêt d'urgence des moteurs.
+ * Le même évènement sert à le demander (destination `/app/robotevents`) : `actif` à vrai pour
+ * déclencher, à faux pour réarmer.
+ */
+export interface ArretUrgenceEvent {
+  eventType: 'arret-urgence'
+  actif: boolean
+  /** Qui a déclenché : « manette », « interface »… */
+  origine?: string
+}

@@ -3,6 +3,7 @@ package fr.roboteek.robot.organes.actionneurs.animation;
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
+import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
@@ -48,6 +49,12 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
      * Liste des étapes d'animation à jouer.
      */
     private ConcurrentLinkedQueue<AnimationStep> animationSteps = new ConcurrentLinkedQueue<>();
+
+    /**
+     * Arrêt d'urgence en cours : plus aucune animation n'est lancée ni jouée
+     * (cf. {@link fr.roboteek.robot.securite.ArretUrgence}).
+     */
+    private volatile boolean arretUrgence = false;
 
     public AnimationPlayer() {
         super("AnimationPlayer");
@@ -99,7 +106,7 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
      */
     @EventListener
     public void handlePlayAnimationEvent(PlayAnimationEvent playAnimationEvent) {
-        if (running && playAnimationEvent != null) {
+        if (running && !arretUrgence && playAnimationEvent != null) {
             Animation animation = playAnimationEvent.getAnimation() != null ?
                     playAnimationEvent.getAnimation() : Animation.getAnimationByName(playAnimationEvent.getAnimationName());
             if (animation != null) {
@@ -112,6 +119,25 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
                 }
             }
         }
+    }
+
+    /**
+     * Arrêt d'urgence : vide la file d'animation et sort du mode automatique.
+     * <p>
+     * Sans ça, les organes refuseraient bien les mouvements, mais le lecteur continuerait à
+     * dérouler l'animation dans le vide — et au réarmement, la fin de l'animation repartirait
+     * d'un coup, plusieurs secondes après le geste de l'utilisateur. Une animation arrêtée en
+     * urgence est perdue, c'est voulu.
+     */
+    @EventListener
+    public void handleArretUrgenceEvent(ArretUrgenceEvent evenement) {
+        arretUrgence = evenement.isActif();
+        if (!evenement.isActif()) {
+            return;
+        }
+        automaticMode = false;
+        animationSteps.clear();
+        logger.warn("AnimationPlayer : arrêt d'urgence, animation en cours abandonnée");
     }
 
     private void playAnimationStep(AnimationStep animationStep) {

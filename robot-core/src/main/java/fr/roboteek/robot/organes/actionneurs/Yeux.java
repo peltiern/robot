@@ -2,6 +2,7 @@ package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULIS;
@@ -85,6 +86,12 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
      * Flag de démarrage de l'organe (cycle de vie Spring).
      */
     private volatile boolean running = false;
+
+    /**
+     * Arrêt d'urgence en cours : tout ordre de mouvement est refusé jusqu'au réarmement
+     * (cf. {@link fr.roboteek.robot.securite.ArretUrgence}).
+     */
+    private volatile boolean arretUrgence = false;
 
     /**
      * Constructeur.
@@ -294,7 +301,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     @EventListener
     @Async(RobotEventsConfig.YEUX_EVENT_EXECUTOR)
     public void handleMouvementYeuxEvent(MouvementYeuxEvent mouvementYeuxEvent) {
-        if (!running) {
+        if (!running || arretUrgence) {
             return;
         }
         if (mouvementYeuxEvent.getPositionOeilGauche() != MouvementYeuxEvent.POSITION_NEUTRE) {
@@ -330,7 +337,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
     @EventListener
     @Async(RobotEventsConfig.YEUX_EVENT_EXECUTOR)
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
-        if (!running) {
+        if (!running || arretUrgence) {
             return;
         }
         if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.HORAIRE) {
@@ -338,6 +345,21 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle {
         } else if (mouvementCouEvent.getMouvementRoulis() == MOUVEMENTS_ROULIS.ANTI_HORAIRE) {
             setPositionRoulis(-mouvementCouEvent.getPositionRoulis(), mouvementCouEvent.getVitesseRoulis(), mouvementCouEvent.getAccelerationRoulis(), mouvementCouEvent.isSynchrone());
         }
+    }
+
+    /**
+     * Arrêt d'urgence : coupe les deux moteurs d'yeux sur-le-champ. Voir
+     * {@code Cou.handleArretUrgenceEvent} pour le pourquoi du traitement synchrone.
+     */
+    @EventListener
+    public void handleArretUrgenceEvent(ArretUrgenceEvent evenement) {
+        arretUrgence = evenement.isActif();
+        if (!running || !evenement.isActif()) {
+            return;
+        }
+        logger.warn("Yeux : arrêt d'urgence, coupure des moteurs");
+        stopperOeilGauche();
+        stopperOeilDroit();
     }
 
     @Override

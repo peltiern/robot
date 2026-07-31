@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icone } from '../../shared/components/Icone'
 import { useHudStore } from '../../shared/hud/hudStore'
 import { useVideoStore } from '../../shared/video/videoStore'
+import { useArretUrgenceStore } from '../../shared/securite/arretUrgenceStore'
 import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import type { DetectedBox } from '../../shared/types/events'
 import { PanneauPosture } from './PanneauPosture'
@@ -21,6 +22,8 @@ export function PilotagePage() {
   const poserNaturel = useVideoStore((s) => s.poserNaturel)
   const calques = useHudStore((s) => s.calques)
   const posture = useHudStore((s) => s.posture)
+  const arretUrgence = useArretUrgenceStore((s) => s.actif)
+  const origineArret = useArretUrgenceStore((s) => s.origine)
 
   const visages = trame?.faces ?? []
   const objets = trame?.objects ?? []
@@ -73,10 +76,23 @@ export function PilotagePage() {
       )}
 
       <div className={styles.calques}>
+        {arretUrgence && (
+          <div className={styles.bandeauArret}>
+            <Icone nom="alerte" taille={26} />
+            <div>
+              <b>ARRÊT D'URGENCE</b>
+              <span>
+                Moteurs coupés{origineArret ? ` — déclenché depuis : ${origineArret}` : ''}. Aucun
+                mouvement n'est accepté avant réarmement.
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Pas d'image, pas de compteurs : sans trame, « visages 0 » ne dit rien
             de ce que le robot voit — il dit seulement qu'on ne voit rien. */}
         {calques && trame && (
-          <div className={styles.hudHaut}>
+          <div className={`${styles.hudHaut} ${arretUrgence ? styles.hudHautDecale : ''}`}>
             <div className={`${styles.puce} ${styles.puceAccent}`}>
               <Icone nom="oeil" taille={18} />
               <span>VISION</span>
