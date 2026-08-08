@@ -48,7 +48,7 @@ import java.util.stream.Stream;
  * Sans ça (constaté sur le robot le 2026-08-07) : {@code poll()} continue de rendre la main sans
  * erreur sur un périphérique arraché — le plugin Linux se contente de renvoyer les <b>dernières
  * valeurs lues</b> — et la manette passe pour vivante, joystick figé sur sa dernière position
- * comprise. Exactement ce que le chien de garde doit attraper.
+ * comprise. Exactement ce que le watchdog doit attraper.
  *
  * <h2>Pourquoi la découverte n'est pas répétée à intervalle fixe</h2>
  * Un cycle de découverte est <b>tout sauf gratuit</b> : {@code LinuxEventDevicePlugin} ouvre
@@ -92,7 +92,7 @@ public class Input4jGamepadManager extends AbstractGamepadManager<LogitechListen
 
     /**
      * Période de vérification de la présence du nœud evdev. La scrutation tourne à 60 Hz, mais le
-     * chien de garde raisonne à l'échelle de la seconde : inutile d'interroger le système de
+     * watchdog raisonne à l'échelle de la seconde : inutile d'interroger le système de
      * fichiers à chaque tour.
      */
     private static final long PERIODE_VERIFICATION_PRESENCE_MS = 250;
@@ -101,8 +101,8 @@ public class Input4jGamepadManager extends AbstractGamepadManager<LogitechListen
      * Passé ce délai, une manette absente n'est plus une anomalie mais un fait acquis : elle n'est
      * plus « en panne », elle n'est plus là.
      * <p>
-     * Sans cette bascule, une manette débranchée resterait éternellement muette et le chien de
-     * garde couperait les moteurs à chaque mouvement demandé depuis la tablette — rendant le
+     * Sans cette bascule, une manette débranchée resterait éternellement muette et le watchdog
+     * couperait les moteurs à chaque mouvement demandé depuis la tablette — rendant le
      * pilotage à la tablette seule impossible, ce qui est pourtant un usage légitime. La fenêtre
      * doit rester nettement plus large que le délai de silence toléré, pour que la perte survenue
      * <b>pendant</b> un mouvement, elle, déclenche bien.
@@ -126,7 +126,7 @@ public class Input4jGamepadManager extends AbstractGamepadManager<LogitechListen
 
     /**
      * Horodatage du dernier tour de scrutation où la manette était réellement là. C'est le
-     * battement lu par le chien de garde via {@code RobotLogitechController}.
+     * battement lu par le watchdog via {@code RobotLogitechController}.
      */
     private volatile long dernierPollReussi = 0L;
 
@@ -356,7 +356,7 @@ public class Input4jGamepadManager extends AbstractGamepadManager<LogitechListen
      * La manette est-elle censée répondre ? Vrai si elle est ouverte, ou si elle vient tout juste
      * d'être perdue.
      * <p>
-     * Cette fenêtre après la perte est ce qui permet au chien de garde de couper les moteurs quand
+     * Cette fenêtre après la perte est ce qui permet au watchdog de couper les moteurs quand
      * la manette disparaît <b>pendant</b> un mouvement. Passée cette fenêtre, l'absence devient un
      * fait acquis : l'organe est éteint et non en panne, et cesse de peser sur quoi que ce soit.
      */

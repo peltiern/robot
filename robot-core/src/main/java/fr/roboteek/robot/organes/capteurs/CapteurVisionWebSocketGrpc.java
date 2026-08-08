@@ -7,6 +7,8 @@ import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.RecognizedFace;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
+import fr.roboteek.robot.securite.NatureOrgane;
+import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVisage;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.ServiceDetectionVisage;
@@ -61,7 +63,7 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * @author Nicolas Peltier (nico.peltier@gmail.com)
  */
 @Component
-public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread implements SmartLifecycle {
+public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread implements SmartLifecycle, OrganeSurveille {
 
     private static final Logger logger = LoggerFactory.getLogger(CapteurVisionWebSocketGrpc.class);
 
@@ -224,6 +226,9 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                 break;
             }
             traiterImageEnCours();
+            // Signe de vie : une image a été lue et traitée. Une webcam qui se tait fige la boucle
+            // sur read(), sans que rien d'autre ne le signale.
+            battement();
         }
     }
 
@@ -437,5 +442,30 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     @Override
     public int getPhase() {
         return RobotLifecyclePhases.CAPTEURS;
+    }
+
+    // --- Surveillance : affichage seulement ---
+    // La vision ne commande aucun moteur : son silence ne coupe rien. C'est en revanche l'organe
+    // qui justifie le troisième état « éteint » — désactivé par configuration ou privé de webcam,
+    // il ne démarre pas, et doit se lire comme volontairement au repos, pas comme en panne.
+
+    @Override
+    public String idOrgane() {
+        return "vision";
+    }
+
+    @Override
+    public String libelleOrgane() {
+        return "Vision";
+    }
+
+    @Override
+    public NatureOrgane nature() {
+        return NatureOrgane.CAPTEUR;
+    }
+
+    @Override
+    public boolean enService() {
+        return running;
     }
 }

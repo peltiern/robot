@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useTelemetryStore } from '../telemetry/telemetryStore'
+import { useSanteStore, type EtatSante } from '../sante/santeStore'
 
 export type Orientation = 'VERTICAL' | 'HORIZONTAL' | 'ROTATION'
 
@@ -24,12 +25,21 @@ export interface Mesure {
   valeur: number | null
 }
 
+/** État vital d'un organe, tel que le renvoie la découverte de capacités. */
+export interface SanteOrganeRest {
+  etat: EtatSante
+  ageMillis: number | null
+  surveille: boolean
+}
+
 export interface Organe {
   id: string
   libelle: string
   type: 'ACTIONNEUR' | 'CAPTEUR'
   articulations: Articulation[]
   mesures: Mesure[]
+  /** Absent pour un organe que le robot ne surveille pas. */
+  sante?: SanteOrganeRest | null
 }
 
 export type EtatChargement = 'chargement' | 'pret' | 'erreur'
@@ -77,6 +87,20 @@ export const useOrganesStore = create<OrganesState>((set) => ({
           }
         }
         if (Object.keys(aAmorcer).length > 0) ingerer([aAmorcer])
+
+        // Amorce des pastilles d'état, pour ne pas les laisser vides jusqu'à la première
+        // diffusion de `/events/sante-organes` (une seconde plus tard).
+        // `nature` vient du type de l'organe : la ressource REST le porte déjà, inutile de le
+        // répéter dans sa santé. Les deux sources s'accordent, le robot les tire du même endroit.
+        const sante = organes
+          .filter((organe) => organe.sante != null)
+          .map((organe) => ({
+            id: organe.id,
+            libelle: organe.libelle,
+            nature: organe.type,
+            ...organe.sante!,
+          }))
+        if (sante.length > 0) useSanteStore.getState().appliquer(sante)
 
         set({ organes, etat: 'pret' })
       })

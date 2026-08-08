@@ -60,6 +60,25 @@ export interface ParoleEventOut {
 export interface ArretUrgenceEvent {
   eventType: 'arret-urgence'
   actif: boolean
-  /** Qui a déclenché : « manette », « interface »… */
+  /** Qui a déclenché : « manette », « interface », « watchdog — … »… */
   origine?: string
+}
+
+/**
+ * SanteOrganesEvent (topic `/events/sante-organes`) — état vital de tous les organes surveillés,
+ * diffusé une fois par seconde par le watchdog. C'est le relevé sur lequel il décide de
+ * couper les moteurs : les pastilles montrent exactement ce qu'il voit.
+ *
+ * La forme de `organes` est décrite par `SanteOrgane` (`shared/sante/santeStore`).
+ */
+export interface SanteOrganesEvent {
+  eventType: 'sante-organes'
+  organes: {
+    id: string
+    libelle: string
+    nature: 'ACTIONNEUR' | 'CAPTEUR'
+    etat: 'VIVANT' | 'MUET' | 'ETEINT'
+    ageMillis: number | null
+    surveille: boolean
+  }[]
 }

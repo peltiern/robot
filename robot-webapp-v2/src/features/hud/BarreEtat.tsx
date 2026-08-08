@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Icone, type NomIcone } from '../../shared/components/Icone'
+import { IconesSante } from './PastillesSante'
 import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import { useTelemetryStore } from '../../shared/telemetry/telemetryStore'
 import { useVideoStore } from '../../shared/video/videoStore'
@@ -125,6 +126,7 @@ export function BarreEtat() {
           <span className={`${styles.pastilleVal} data`}>{fps}</span>
           <span className={styles.pastilleUnite}>fps</span>
         </div>
+        <IconesSante />
       </div>
 
       <div className={styles.pousse} />

@@ -63,6 +63,25 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
         }
     }
 
+    /**
+     * Vitesse effectivement appliquée par le contrôleur (-1 à 1), ou {@code null} si le canal ne
+     * répond pas (moteur détaché, hub débranché).
+     * <p>
+     * C'est la vitesse <b>courante</b> et non la consigne : pendant une rampe d'accélération elle
+     * n'a pas encore atteint la cible. Sert au watchdog, à deux titres : la lecture elle-même
+     * prouve que le canal Phidget répond, et sa valeur dit si la roue tourne réellement — plus
+     * fiable que de déduire le mouvement du dernier ordre reçu.
+     *
+     * @return la vitesse courante, ou {@code null} si elle est illisible
+     */
+    public Double getVitesse() {
+        try {
+            return motor.getVelocity();
+        } catch (PhidgetException e) {
+            return null;
+        }
+    }
+
     public void close() {
         try {
             motor.close();

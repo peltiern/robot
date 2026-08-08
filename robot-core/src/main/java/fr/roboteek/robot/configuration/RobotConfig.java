@@ -75,6 +75,36 @@ public interface RobotConfig extends Config {
     int fpsFluxVideo();
 
     /**
+     * Le watchdog peut-il couper les moteurs ? Désactivé, les battements restent relevés et
+     * les pastilles d'état de l'interface continuent de fonctionner : seul le déclenchement de
+     * l'arrêt d'urgence est supprimé. Utile pour mettre au point un organe sans se faire couper
+     * les moteurs, ou pour écarter le watchdog en cas de doute sur un faux positif.
+     *
+     * @return true si le watchdog est autorisé à déclencher l'arrêt d'urgence
+     */
+    @Key("robot.watchdog.enabled")
+    @DefaultValue("true")
+    boolean watchDogActive();
+
+    /**
+     * Durée de silence, en secondes, au-delà de laquelle un organe est considéré comme mort.
+     * <p>
+     * Volontairement large devant les cadences réelles de battement (16 ms pour la manette, 50 ms
+     * pour le cou et les yeux, 200 ms pour les chenilles) : une pause du ramasse-miettes ou une
+     * pointe de charge sur le Nano ne doit jamais passer pour une panne. Un watchdog qui se
+     * déclenche à tort finit débranché — mieux vaut réagir en trois secondes à coup sûr qu'en une
+     * seconde de temps en temps à tort.
+     * <p>
+     * Rechargé à chaud (voir {@code @HotReload} sur cette interface) : réglable sur le robot sans
+     * reconstruire ni redémarrer.
+     *
+     * @return la durée de silence tolérée, en secondes
+     */
+    @Key("robot.watchdog.silence.seconds")
+    @DefaultValue("3.0")
+    double watchDogSilenceSecondes();
+
+    /**
      * Qualité de compression JPEG (0-100) des images du flux vidéo.
      * <p>
      * OpenCV compresse à 95 par défaut, ce qui donne des images de 60 à 90 Ko en 640x480 :

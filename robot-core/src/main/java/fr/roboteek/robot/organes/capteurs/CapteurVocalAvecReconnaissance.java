@@ -2,6 +2,8 @@ package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.configuration.speech.SpeechProviderConfig;
+import fr.roboteek.robot.securite.NatureOrgane;
+import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.services.providers.google.speech.recognizer.GoogleSpeechRecognizerService;
 import fr.roboteek.robot.services.providers.vosk.speech.recognizer.VoskSpeechRecognizerService;
 import fr.roboteek.robot.services.recognizer.SpeechRecognizerService;
@@ -30,7 +32,7 @@ import org.springframework.stereotype.Component;
  * @author Nicolas
  */
 @Component
-public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal implements SmartLifecycle {
+public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal implements SmartLifecycle, OrganeSurveille {
 
     /**
      * Speech recognizer.
@@ -173,5 +175,31 @@ public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal impleme
     @Override
     public int getPhase() {
         return RobotLifecyclePhases.CAPTEURS;
+    }
+
+    // --- Surveillance : affichage seulement ---
+    // Le micro ne commande aucun moteur. La pastille répond en revanche à une question qu'on se
+    // pose souvent devant un robot qui ne réagit plus : est-ce qu'il n'entend pas, ou est-ce qu'il
+    // n'a rien à dire ? Le battement vient de l'arrivée des blocs audio, pause comprise — être en
+    // pause n'est pas être sourd.
+
+    @Override
+    public String idOrgane() {
+        return "micro";
+    }
+
+    @Override
+    public String libelleOrgane() {
+        return "Micro";
+    }
+
+    @Override
+    public NatureOrgane nature() {
+        return NatureOrgane.CAPTEUR;
+    }
+
+    @Override
+    public boolean enService() {
+        return running;
     }
 }

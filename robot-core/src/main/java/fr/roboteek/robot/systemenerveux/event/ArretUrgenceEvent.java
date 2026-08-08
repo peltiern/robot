@@ -25,7 +25,7 @@ public class ArretUrgenceEvent extends RobotEvent {
     private boolean actif;
 
     /**
-     * Qui a déclenché (« manette », « interface », nom d'un futur chien de garde…). Sert aux
+     * Qui a déclenché (« manette », « interface », nom d'un futur watchdog…). Sert aux
      * journaux et à l'affichage : quand le robot se fige, la première question est « qui l'a
      * arrêté ? ».
      */

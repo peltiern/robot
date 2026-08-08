@@ -3,14 +3,19 @@ import { useTelemetryStore } from '../../shared/telemetry/telemetryStore'
 import { useOrganesStore, capteurs, type Mesure } from '../../shared/organes/organesStore'
 import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import { couleurSeuil, fractionMesure } from '../../shared/hud/seuils'
+import { PastillesSante } from './PastillesSante'
 import styles from './hud.module.css'
 
 /**
- * Jauges des capteurs du robot.
+ * Jauges des capteurs du robot, précédées des pastilles d'état des organes.
  *
  * Rien n'est codé en dur : la liste vient de la découverte de capacités
  * (`GET /api/organes`), la valeur et l'historique du store de télémétrie. Un
  * capteur ajouté côté robot apparaît ici sans une ligne de front à écrire.
+ *
+ * Les pastilles d'abord, les jauges ensuite : « est-ce que ça vit ? » précède
+ * « combien ça consomme ? », et c'est la question qu'on se pose devant un robot
+ * qui ne répond plus.
  */
 export function PanneauVitaux() {
   const connecte = useWebSocketStore((s) => s.connected)
@@ -28,6 +33,8 @@ export function PanneauVitaux() {
         <Icone nom="jauge" taille={18} />
         <span className="eyebrow">Vitaux</span>
       </header>
+
+      {connecte && <PastillesSante />}
 
       {!connecte && <p className={styles.messageBloc}>En attente du robot.</p>}
 

@@ -3,6 +3,8 @@ package fr.roboteek.robot.organes.actionneurs.animation;
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.RobotSound;
+import fr.roboteek.robot.securite.NatureOrgane;
+import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
@@ -27,7 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * évènements reçus via {@link EventListener}.
  */
 @Component
-public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLifecycle {
+public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLifecycle, OrganeSurveille {
 
     /**
      * Logger.
@@ -89,6 +91,10 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
                 playAnimationStep(nextAnimationStep);
                 nextAnimationStep = null;
             }
+
+            // Signe de vie en fin de tour : c'est un tour ABOUTI qui est attesté, pas le simple
+            // fait que le thread existe.
+            battement();
 
             try {
                 Thread.sleep(100);
@@ -237,5 +243,43 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
     @Override
     public int getPhase() {
         return RobotLifecyclePhases.ACTIONNEURS;
+    }
+
+    // --- Surveillance (watchdog + pastilles d'état de l'interface) ---
+
+    @Override
+    public String idOrgane() {
+        return "animation";
+    }
+
+    @Override
+    public String libelleOrgane() {
+        return "Animation";
+    }
+
+    @Override
+    public NatureOrgane nature() {
+        return NatureOrgane.ACTIONNEUR;
+    }
+
+    @Override
+    public boolean enService() {
+        return running;
+    }
+
+    /**
+     * Le lecteur d'animations ne bouge rien lui-même, mais il commande le cou et les yeux : sa
+     * boucle morte en plein déroulé laisserait une animation à moitié jouée, avec des mouvements
+     * continus déjà publiés et jamais suivis de leur arrêt.
+     */
+    @Override
+    public boolean provoqueUnMouvement() {
+        return true;
+    }
+
+    /** Une animation est en train d'être déroulée (file non vide, ou mode automatique). */
+    @Override
+    public boolean enMouvement() {
+        return automaticMode || !animationSteps.isEmpty();
     }
 }

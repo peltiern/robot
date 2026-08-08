@@ -2,6 +2,8 @@ package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.securite.NatureOrgane;
+import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
@@ -36,7 +38,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
  * @author Java Developer
  */
 @Component
-public class Cou extends AbstractOrgane implements SmartLifecycle {
+public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveille {
 
     /**
      * Moteur "Panoramique".
@@ -58,9 +60,10 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
      */
     private PhidgetsConfig phidgetsConfig;
 
-    private MOUVEMENTS_PANORAMIQUE mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
-    private MOUVEMENTS_INCLINAISON mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
-    private MOUVEMENTS_MONTER_DESCENDRE mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
+    // Volatiles : écrits par les threads d'évènements, lus par le watchdog (enMouvement()).
+    private volatile MOUVEMENTS_PANORAMIQUE mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
+    private volatile MOUVEMENTS_INCLINAISON mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
+    private volatile MOUVEMENTS_MONTER_DESCENDRE mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
 
     /**
      * Logger.
@@ -87,6 +90,16 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
 
     /** Dernières positions diffusées en télémétrie, pour n'émettre que sur variation réelle. */
     private Map<String, Double> dernieresPositionsDiffusees = Map.of();
+
+    /**
+     * Rémanence du constat de mouvement (voir {@link #enMouvement()}) : une consigne de position
+     * atteinte lentement peut ne pas franchir {@link #SEUIL_VARIATION_TELEMETRIE} à chaque relevé
+     * de 50 ms, et le cou paraîtrait immobile par intermittence en plein mouvement.
+     */
+    private static final long REMANENCE_MOUVEMENT_MS = 500;
+
+    /** Instant de la dernière variation de position constatée. */
+    private volatile long instantDerniereVariation = 0L;
 
     /**
      * Flag de démarrage de l'organe (cycle de vie Spring).
@@ -554,11 +567,18 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
         ajouterSiPresent(positions, "pan", getPositionPanoramiqueCourante());
         ajouterSiPresent(positions, "tilt", getPositionInclinaisonCourante());
         ajouterSiPresent(positions, "upDown", getPositionMonterDescendreCourante());
-        if (positions.isEmpty() || !aVarie(positions, dernieresPositionsDiffusees)) {
+        if (positions.isEmpty()) {
             return;
         }
+        // Signe de vie : les trois canaux Phidget ont répondu. C'est ce relevé, et non le
+        // drapeau de cycle de vie, qui atteste que le cou est encore joignable.
+        battement();
+        if (!aVarie(positions, dernieresPositionsDiffusees)) {
+            return;
+        }
+        instantDerniereVariation = System.currentTimeMillis();
         dernieresPositionsDiffusees = positions;
-        applicationEventPublisher.publishEvent(new TelemetrieOrganeEvent("cou", positions));
+        applicationEventPublisher.publishEvent(new TelemetrieOrganeEvent(idOrgane(), positions));
     }
 
     private static void ajouterSiPresent(Map<String, Double> valeurs, String id, Double valeur) {
@@ -619,6 +639,47 @@ public class Cou extends AbstractOrgane implements SmartLifecycle {
     @Override
     public int getPhase() {
         return RobotLifecyclePhases.ACTIONNEURS_AVEC_MOTEUR;
+    }
+
+    // --- Surveillance (watchdog + pastilles d'état de l'interface) ---
+
+    @Override
+    public String idOrgane() {
+        return "cou";
+    }
+
+    @Override
+    public String libelleOrgane() {
+        return "Cou";
+    }
+
+    @Override
+    public NatureOrgane nature() {
+        return NatureOrgane.ACTIONNEUR;
+    }
+
+    @Override
+    public boolean enService() {
+        return running;
+    }
+
+    /** Le cou exécute des mouvements : son silence est un motif d'arrêt d'urgence. */
+    @Override
+    public boolean provoqueUnMouvement() {
+        return true;
+    }
+
+    /**
+     * Vrai si un mouvement continu est en cours, ou si la position a varié récemment — ce second
+     * critère couvre les consignes de position (animations, curseurs du HUD), qui ne laissent aucun
+     * mouvement « en cours » derrière elles.
+     */
+    @Override
+    public boolean enMouvement() {
+        return mouvementsPanoramiqueEnCours != MOUVEMENTS_PANORAMIQUE.STOPPER
+                || mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.STOPPER
+                || mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.STOPPER
+                || System.currentTimeMillis() - instantDerniereVariation < REMANENCE_MOUVEMENT_MS;
     }
 
 }

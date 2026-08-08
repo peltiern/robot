@@ -79,9 +79,18 @@ public class RobotEventsConfig implements AsyncConfigurer {
         return robotEventExecutor();
     }
 
+    /**
+     * Les exceptions des listeners asynchrones sont journalisées, sans plus : couper les moteurs
+     * ici serait à la fois trop et pas assez. Trop, parce qu'un listener qui échoue une fois n'a pas
+     * tué son organe — l'exécuteur lui donnera l'évènement suivant. Pas assez, parce que la vraie
+     * panne à craindre, une boucle d'organe morte, ne passe justement pas par ce point : le thread
+     * s'arrête sans que personne ne le remarque.
+     * <p>
+     * C'est le rôle du {@code WatchDog}, qui juge sur les battements des organes et non sur les
+     * exceptions qu'ils lèvent.
+     */
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-        // TODO Phase 1 (watchdog) : déclencher l'arrêt des moteurs si l'exception vient d'un organe critique
         return (throwable, method, params) ->
                 logger.error("Exception non rattrapée dans le listener {} : ", method, throwable);
     }

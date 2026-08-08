@@ -1,6 +1,8 @@
 package fr.roboteek.robot.organes.capteurs;
 
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
+import fr.roboteek.robot.securite.NatureOrgane;
+import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.TelemetrieOrganeEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import oshi.hardware.CentralProcessor;
@@ -36,7 +38,7 @@ import java.util.Map;
  * télémétrie continue (évènement).
  */
 @Component
-public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLifecycle {
+public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLifecycle, OrganeSurveille {
 
     private static final Logger logger = LoggerFactory.getLogger(CapteurMateriel.class);
 
@@ -80,7 +82,8 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
     public void loop() {
         while (running) {
             rafraichir();
-            applicationEventPublisher.publishEvent(new TelemetrieOrganeEvent("materiel", mesuresCourantes()));
+            battement();
+            applicationEventPublisher.publishEvent(new TelemetrieOrganeEvent(idOrgane(), mesuresCourantes()));
             try {
                 Thread.sleep(PERIODE_MS);
             } catch (InterruptedException e) {
@@ -191,5 +194,29 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
     @Override
     public int getPhase() {
         return RobotLifecyclePhases.CAPTEURS;
+    }
+
+    // --- Surveillance : affichage seulement ---
+    // Ce capteur ne touche à aucun moteur : provoqueUnMouvement() reste à false, son silence ne
+    // peut donc pas couper les moteurs. Il ne fait qu'alimenter les pastilles d'état de l'interface.
+
+    @Override
+    public String idOrgane() {
+        return "materiel";
+    }
+
+    @Override
+    public String libelleOrgane() {
+        return "Matériel";
+    }
+
+    @Override
+    public NatureOrgane nature() {
+        return NatureOrgane.CAPTEUR;
+    }
+
+    @Override
+    public boolean enService() {
+        return running;
     }
 }
