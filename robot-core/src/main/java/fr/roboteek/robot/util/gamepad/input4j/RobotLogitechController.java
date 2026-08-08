@@ -1,6 +1,8 @@
 package fr.roboteek.robot.util.gamepad.input4j;
 
 import fr.roboteek.robot.securite.ArretUrgence;
+import fr.roboteek.robot.securite.NatureOrgane;
+import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.*;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.gamepad.shared.GamepadComponentValue;
@@ -21,7 +23,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
  * XInput) ; l'arrêt stoppe la boucle de polling et ferme input4j.
  */
 @Component
-public class RobotLogitechController implements RobotGamepadController, LogitechListener, SmartLifecycle {
+public class RobotLogitechController implements RobotGamepadController, LogitechListener, SmartLifecycle, OrganeSurveille {
 
     private final Input4jGamepadManager gamepadManager;
 
@@ -485,5 +487,62 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
             DisplayPositionEvent displayPositionEvent = new DisplayPositionEvent();
             applicationEventPublisher.publishEvent(displayPositionEvent);
         }
+    }
+
+    // --- Surveillance (watchdog + pastilles d'état de l'interface) ---
+    //
+    // C'est l'organe qui donne tout son sens au watchdog. Les ordres de mouvement qu'il
+    // publie sont CONTINUS : une croix directionnelle enfoncée fait avancer le robot jusqu'à ce
+    // que la manette envoie un STOPPER. Si sa boucle de scrutation meurt pendant une marche avant,
+    // ce STOPPER ne viendra jamais — et le bouton B, qui est l'arrêt d'urgence, est mort avec elle.
+
+    @Override
+    public String idOrgane() {
+        return "manette";
+    }
+
+    @Override
+    public String libelleOrgane() {
+        return "Manette";
+    }
+
+    @Override
+    public NatureOrgane nature() {
+        return NatureOrgane.CAPTEUR;
+    }
+
+    /**
+     * En service seulement si une manette a été trouvée, que sa scrutation tourne, et qu'elle est
+     * encore censée répondre : sans manette, l'organe est éteint et non en panne — le robot se
+     * pilote alors très bien depuis la tablette.
+     * <p>
+     * Une manette débranchée reste « en service » quelques secondes avant de basculer en éteint
+     * (cf. {@code Input4jGamepadManager.devraitRepondre()}) : c'est cette fenêtre qui permet au
+     * watchdog de couper si elle a disparu <b>pendant</b> un mouvement. Passé ce délai, son
+     * absence est un fait acquis et ne doit plus peser sur rien.
+     */
+    @Override
+    public boolean enService() {
+        return running && gamepadManager.devraitRepondre();
+    }
+
+    @Override
+    public long dernierBattement() {
+        return gamepadManager.dernierPollReussi();
+    }
+
+    @Override
+    public boolean provoqueUnMouvement() {
+        return true;
+    }
+
+    /**
+     * Toujours faux : la manette ne bouge rien elle-même, et ce qu'elle a commandé est déjà
+     * constaté par les organes qui l'exécutent (chenilles, cou, yeux). Répondre vrai ici reviendrait
+     * à ce que la manette se déclare elle-même en mouvement, ce qui n'apprend rien au watchdog.
+     */
+    @Override
+    public boolean enMouvement() {
+        return false;
     }
 }

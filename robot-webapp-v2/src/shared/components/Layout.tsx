@@ -8,6 +8,7 @@ import { VideoProvider } from '../video/VideoProvider'
 import { useOrganesStore } from '../organes/organesStore'
 import { useArretUrgenceStore } from '../securite/arretUrgenceStore'
 import { ArretUrgenceProvider } from '../securite/ArretUrgenceProvider'
+import { SanteProvider } from '../sante/SanteProvider'
 import { BarreEtat } from '../../features/hud/BarreEtat'
 import { Rail } from '../../features/hud/Rail'
 import { ColonneDroite } from '../../features/hud/ColonneDroite'
@@ -52,6 +53,7 @@ export function Layout() {
       <AudioProvider />
       <VideoProvider />
       <ArretUrgenceProvider />
+      <SanteProvider />
 
       <BarreEtat />
 

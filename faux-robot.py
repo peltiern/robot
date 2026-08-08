@@ -34,7 +34,26 @@ ORGANES = [
         {"id": "memoire", "libelle": "Mémoire", "unite": "%", "min": 0, "max": 100, "valeur": 71},
         {"id": "temperatureCpu", "libelle": "Température CPU", "unite": "°C", "min": 0, "max": 100, "valeur": 42},
         {"id": "disque", "libelle": "Disque", "unite": "%", "min": 0, "max": 100, "valeur": 58}]},
+    # Organes sans capacité, présents pour leur seule santé (cf. OrganeController).
+    {"id": "chenille-gauche", "libelle": "Chenille gauche", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
+    {"id": "chenille-droite", "libelle": "Chenille droite", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
+    # La manette est un CAPTEUR — elle observe l'opérateur — bien qu'elle soit surveillée.
+    {"id": "manette", "libelle": "Manette", "type": "CAPTEUR", "articulations": [], "mesures": []},
+    {"id": "animation", "libelle": "Animation", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
+    {"id": "vision", "libelle": "Vision", "type": "CAPTEUR", "articulations": [], "mesures": []},
+    {"id": "micro", "libelle": "Micro", "type": "CAPTEUR", "articulations": [], "mesures": []},
 ]
+
+# Santé des organes. « surveille » = le watchdog peut couper les moteurs à cause de lui.
+# La vision reste ETEINT en permanence, comme sur le vrai robot où elle est désactivée par
+# défaut : c'est le cas qui doit se lire « au repos » et surtout pas « en panne ».
+SURVEILLES = {"cou", "yeux", "chenille-gauche", "chenille-droite", "manette", "animation"}
+ETEINTS = {"vision"}
+
+# Pour voir la pastille rouge sans débrancher quoi que ce soit : la manette se tait pendant
+# une fenêtre de chaque cycle. Les trois états sont ainsi visibles à l'écran tour à tour.
+CYCLE_SANTE_S = 40
+FENETRE_MUETTE = (15, 25)
 
 abonnes = []  # (ws, destination, id)
 compteur = 0
@@ -158,13 +177,50 @@ async def boucle_conversation(_app):
         await asyncio.sleep(3.5)
 
 
+def sante_organe(organe, ecoule):
+    """État vital simulé d'un organe, à `ecoule` secondes du démarrage."""
+    surveille = organe["id"] in SURVEILLES
+    commun = {"id": organe["id"], "libelle": organe["libelle"], "nature": organe["type"],
+              "surveille": surveille}
+    if organe["id"] in ETEINTS:
+        return {**commun, "etat": "ETEINT", "ageMillis": None}
+    debut, fin = FENETRE_MUETTE
+    muet = organe["id"] == "manette" and debut <= ecoule % CYCLE_SANTE_S < fin
+    age = int((ecoule % CYCLE_SANTE_S - debut) * 1000) if muet else random.randint(20, 180)
+    return {**commun, "etat": "MUET" if muet else "VIVANT", "ageMillis": age}
+
+
+def releve_sante():
+    ecoule = time.monotonic() - DEPART
+    return [sante_organe(organe, ecoule) for organe in ORGANES]
+
+
+async def boucle_sante(_app):
+    while True:
+        await envoyer("/events/sante-organes", json.dumps({
+            "eventType": "sante-organes", "organes": releve_sante()}))
+        await asyncio.sleep(1)
+
+
+def organes_avec_sante():
+    """`GET /api/organes` : capacités + santé, comme le fait OrganeController."""
+    sante = {etat["id"]: etat for etat in releve_sante()}
+    return [{**organe,
+             "sante": {k: v for k, v in sante[organe["id"]].items()
+                       if k not in ("id", "libelle", "nature")}}
+            for organe in ORGANES]
+
+
+DEPART = time.monotonic()
+
+
 async def demarrer(app):
-    for boucle in (boucle_video, boucle_telemetrie, boucle_conversation):
+    for boucle in (boucle_video, boucle_telemetrie, boucle_conversation, boucle_sante):
         app[boucle.__name__] = asyncio.create_task(boucle(app))
 
 
 app = web.Application()
-app.router.add_get("/api/organes", lambda r: web.json_response(ORGANES))
+app.router.add_get("/api/organes", lambda r: web.json_response(organes_avec_sante()))
 app.router.add_get("/api/arret-urgence", lambda r: web.json_response({"actif": arret_urgence["actif"]}))
 app.router.add_get("/wsendpoint", ws_handler)
 app.on_startup.append(demarrer)

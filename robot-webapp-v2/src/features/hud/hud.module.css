@@ -411,6 +411,159 @@
   border-bottom-color: var(--bordure);
 }
 
+/* ── Bloc vitaux : pastilles d'état des organes ─────────────────────────── */
+
+/* Une ligne compacte au-dessus des jauges : ce n'est pas une mesure, c'est un
+   inventaire — tout doit tenir sous les yeux d'un coup, sans défilement. */
+.sante {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 8px;
+}
+
+/* Actionneurs et capteurs sur deux lignes distinctes : ce ne sont pas les mêmes
+   organes, et un actionneur muet ne se lit pas comme un capteur muet. */
+.santeFamille {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.santeFamilleTitre {
+  font-size: 9px;
+  color: var(--texte-faible);
+}
+
+.santeFamilleListe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.santeOrgane {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px 3px 6px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--texte-faible);
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.santePoint {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--inactif);
+  flex: none;
+}
+
+/* Organe du mouvement : son silence coupe les moteurs. Le liseré le distingue
+   d'un capteur, dont la pastille rouge ne prête pas à conséquence. */
+.santeSurveille {
+  border-color: var(--carter-clair);
+  color: var(--texte);
+}
+
+.santeVIVANT .santePoint {
+  background: var(--ok);
+}
+
+.santeETEINT {
+  opacity: 0.55;
+}
+
+/* Le rouge se voit sur toute la pastille, pas seulement sur le point : c'est le
+   seul état qui demande une réaction — d'où `--alarme-vive`, plus saturée que le
+   corail du bouton STOP, qui lui n'a jamais à se disputer l'attention. */
+.santeMUET {
+  color: var(--alarme-vive);
+  border-color: var(--alarme);
+  background: color-mix(in srgb, var(--alarme-vive) 20%, var(--fond));
+}
+
+.santeMUET .santePoint {
+  background: var(--alarme-vive);
+  animation: santeBattement 1s steps(2, end) infinite;
+}
+
+@keyframes santeBattement {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .santeMUET .santePoint {
+    animation: none;
+  }
+}
+
+/* Même inventaire, réduit aux icônes, dans la barre du haut : l'état des organes
+   sans avoir à ouvrir un volet. Séparé des mesures épinglées par un filet — ce
+   sont deux natures d'information, des grandeurs d'un côté, des présences de
+   l'autre. */
+.santeBarre {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 2px solid var(--bordure);
+}
+
+.santeIcone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-puce);
+  color: var(--inactif);
+  transition: color 0.4s, background 0.4s;
+}
+
+/* Organe du mouvement : son silence coupe les moteurs. Même distinction que dans
+   le volet, réduite à un fond discret puisqu'il n'y a plus de libellé à cercler. */
+.santeIconeSurveille {
+  background: var(--carter);
+}
+
+/* Chenille gauche : le même tracé, retourné — deux flancs du même robot. C'est
+   l'asymétrie du profil qui rend les deux pastilles attribuables. */
+.santeIconeMiroir {
+  transform: scaleX(-1);
+}
+
+/* Vert atténué : neuf icônes vives en permanence, et on n'en regarde plus
+   aucune. L'état normal doit se lire sans attirer l'œil — c'est le rouge qui
+   doit sauter dessus. */
+.santeIcone.santeVIVANT {
+  color: color-mix(in srgb, var(--ok) 70%, var(--texte-faible));
+}
+
+.santeIcone.santeETEINT {
+  color: var(--inactif);
+  opacity: 0.45;
+}
+
+.santeIcone.santeMUET {
+  color: var(--alarme-vive);
+  background: color-mix(in srgb, var(--alarme-vive) 28%, transparent);
+  animation: santeBattement 1s steps(2, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .santeIcone.santeMUET {
+    animation: none;
+  }
+}
+
 /* ── Bloc vitaux ────────────────────────────────────────────────────────── */
 
 .grille {

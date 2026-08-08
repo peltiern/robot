@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * conversation — le robot reste joignable et peut expliquer ce qui se passe.
  * <p>
  * <b>Déclencheurs.</b> Bouton B de la manette, bouton du HUD, et cette API pour tout code Java
- * (le futur chien de garde « organe critique mort → arrêt moteurs » n'aura qu'à appeler
+ * (le futur watchdog « organe critique mort → arrêt moteurs » n'aura qu'à appeler
  * {@link #declencher(String)}).
  * <p>
  * L'état est propagé par un {@link ArretUrgenceEvent}, que chaque organe mémorise de son côté :

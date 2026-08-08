@@ -244,6 +244,11 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
                 public synchronized void handlePitch(PitchDetectionResult result, AudioEvent e) {
 
+                    // Signe de vie : un bloc audio nous parvient. C'est la seule preuve que la
+                    // capture micro vit encore — le thread du dispatcher peut mourir sans que le
+                    // drapeau de cycle de vie de l'organe ne bouge d'un iota.
+                    battement();
+
                     // Flag permettant de savoir si le flux en cours de traitement est un flux "parlé"
                     boolean isBlocParle;
 

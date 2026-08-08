@@ -29,6 +29,8 @@ export type NomIcone =
   | 'objet'
   | 'reprise'
   | 'alerte'
+  | 'chenille'
+  | 'manette'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -120,6 +122,29 @@ const TRACES: Record<NomIcone, ReactNode> = {
       <path d="M12 3.6 22 20H2z" />
       <path d="M12 9.6v4.6" />
       <circle cx="12" cy="17" r="1.2" fill="currentColor" stroke="none" />
+    </>
+  ),
+  /*
+   * Chenille de profil, au galbe de celles de WALL·E : un triangle, petit galet de
+   * tension en haut à l'avant, deux gros galets au sol. La silhouette asymétrique est
+   * ce qui permet de distinguer les deux côtés — l'icône de la chenille gauche est la
+   * même, retournée (cf. `santeIconeMiroir`). Une bande symétrique donnait deux
+   * pastilles identiques qu'on ne pouvait plus attribuer.
+   */
+  chenille: (
+    <>
+      <path d="M7.28 6.19A2.8 2.8 0 0 1 11.71 5.36L19.53 12.68A4 4 0 0 1 16.8 19.6H7.2A4 4 0 0 1 3.59 13.87Z" />
+      <circle cx="9.8" cy="7.4" r="1.3" />
+      <circle cx="7.2" cy="15.6" r="2.3" />
+      <circle cx="16.8" cy="15.6" r="2.3" />
+    </>
+  ),
+  // Manette : coque à poignées, croix directionnelle à gauche, bouton à droite.
+  manette: (
+    <>
+      <path d="M8.8 7.8h6.4a5.2 5.2 0 0 1 5.1 4.2l.7 3.8a2.5 2.5 0 0 1-4.5 1.9L15 15.6H9l-1.5 2.1a2.5 2.5 0 0 1-4.5-1.9l.7-3.8a5.2 5.2 0 0 1 5.1-4.2Z" />
+      <path d="M8 10.8v2.4M6.8 12h2.4" />
+      <circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none" />
     </>
   ),
 }

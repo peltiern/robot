@@ -29,7 +29,8 @@
      texte, texte-faible ..... texte principal / secondaire
      donnee, sur-donnee ...... teinte des données live (détections, tendances)
      ok, veille, alarme ...... sémantique des seuils (vert / ambre / rouge)
-     alarme-clair, -sombre ... dégradé et liseré du bouton STOP
+       alarme-clair, -sombre ... dégradé et liseré du bouton STOP
+     alarme-vive ............ organe muet : le seul rouge qui doit sauter aux yeux
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── WALL·E — terre et jaune d'engin de chantier (défaut) ─────────────────── */
@@ -54,6 +55,7 @@
   --alarme:        #e8503a;
   --alarme-clair:  #ff8a6a;
   --alarme-sombre: #c4331d;
+  --alarme-vive:   #ff3b1f;
 }
 
 /* ── EVE — ardoise bleutée et cyan, plus froid, plus « vaisseau » ─────────── */
@@ -77,6 +79,7 @@
   --alarme:        #e8503a;
   --alarme-clair:  #ff8a6a;
   --alarme-sombre: #c4331d;
+  --alarme-vive:   #ff4436;
 }
 
 /* ── NUIT — tout éteint sauf l'essentiel : pilotage dans le noir ──────────── */
@@ -100,4 +103,5 @@
   --alarme:        #cf4530;
   --alarme-clair:  #e07357;
   --alarme-sombre: #8f2b1b;
+  --alarme-vive:   #f04a30;
 }
