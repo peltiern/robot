@@ -1,6 +1,6 @@
 package fr.roboteek.robot.systemenerveux.event;
 
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 
 /**
  * Quelqu'un est là, et ça vaut la peine d'y réagir.

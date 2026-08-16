@@ -1,6 +1,6 @@
 package fr.roboteek.robot.systemenerveux.event;
 
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 
 /**
  * La rencontre annoncée n'a mené à rien : son tour est rendu à celui qu'elle visait.

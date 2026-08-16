@@ -1,9 +1,10 @@
 package fr.roboteek.robot.poc;
 
 import fr.roboteek.robot.Constantes;
-import fr.roboteek.robot.memoire.personne.Personne;
-import fr.roboteek.robot.memoire.personne.PersonneRepository;
-import fr.roboteek.robot.memoire.visage.VisageConnuRepository;
+import fr.roboteek.robot.memoire.longterme.BaseMemoire;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.visage.VisageConnuRepository;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVisage;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
@@ -11,12 +12,14 @@ import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import javax.sql.DataSource;
+
 import java.io.File;
 import java.util.List;
 
 /**
- * Utilitaire jetable : enregistre un ou plusieurs visages de référence dans la base
- * MapDB des visages connus, en attendant un vrai mécanisme d'enrôlement (Phase 3).
+ * Utilitaire jetable : enregistre un ou plusieurs visages de référence dans la mémoire longue,
+ * en attendant l'import de photos par l'interface, qui le rendra inutile.
  * <p>
  * Usage : {@code java -jar robot-core-seed.jar <nom1> <image1.jpg> [<nom2> <image2.jpg> ...]}
  * (nécessite de pointer temporairement {@code mainClass} vers cette classe dans le pom,
@@ -36,10 +39,13 @@ public class SeedVisagesConnus {
 
         OpenCV.loadLocally();
 
-        // Dépôt partagé avec le service : MapDB verrouille le fichier, deux ouvertures
-        // simultanées de la même base échouent (donc pas de getInstance() ici).
-        VisageConnuRepository repository = new VisageConnuRepository();
-        PersonneRepository personneRepository = new PersonneRepository();
+        // La même base que celle du robot, ouverte à part : SQLite l'accepte, contrairement à
+        // MapDB qui en verrouillait le fichier. Le robot n'a donc plus besoin d'être arrêté.
+        DataSource memoire = BaseMemoire.sourceVers(
+                new File(Constantes.DOSSIER_MEMOIRE, "memoire.db").getAbsolutePath());
+        BaseMemoire.appliquerLeSchema(memoire);
+        VisageConnuRepository repository = new VisageConnuRepository(memoire);
+        PersonneRepository personneRepository = new PersonneRepository(memoire);
         String cheminModeleSFace = Constantes.DOSSIER_VISAGE + File.separator + "face_recognition_sface_2021dec.onnx";
         OpenCvServiceReconnaissanceVisage reconnaissance = new OpenCvServiceReconnaissanceVisage(cheminModeleSFace, repository);
 
@@ -64,8 +70,6 @@ public class SeedVisagesConnus {
             System.out.println("Visage enregistré : " + prenom + " (" + imagePath + ")");
         }
 
-        personneRepository.close();
-        repository.close();
     }
 
     /**

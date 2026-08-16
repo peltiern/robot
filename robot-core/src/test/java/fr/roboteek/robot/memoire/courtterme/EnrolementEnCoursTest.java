@@ -98,6 +98,49 @@ class EnrolementEnCoursTest {
         assertTrue(ecrituresEnMemoireLongue.isEmpty(), "rien ne doit être écrit");
     }
 
+    /**
+     * L'écriture échoue : le résultat part quand même, et annonce l'échec.
+     * <p>
+     * Vécu le 2026-08-16 : la base a refusé les empreintes, l'exception a été avalée par la boucle
+     * vidéo, et l'activité de présentation a attendu dix secondes avant de conclure à un visage mal
+     * cadré. Une panne d'écriture doit se dire, pas se déguiser.
+     */
+    @Test
+    void uneEcritureQuiEchoueRepondQuandMeme() {
+        enrolement.demarrer(ID_MARIE, empreintes -> {
+            throw new IllegalStateException("la base refuse");
+        });
+
+        for (int i = 0; i < 5; i++) {
+            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+        }
+
+        assertEquals(1, resultats.size(), "celui qui attend ne doit jamais rester suspendu");
+        assertFalse(resultats.getFirst().isReussi());
+        assertEquals(ID_MARIE, resultats.getFirst().getIdPersonne());
+        assertEquals(0, resultats.getFirst().getNombreEmpreintes(), "rien n'a été retenu");
+    }
+
+    /** Et l'échec n'immobilise pas l'enrôlement suivant. */
+    @Test
+    void unEnrolementSuivantUnEchecDEcritureAboutit() {
+        enrolement.demarrer(ID_MARIE, empreintes -> {
+            throw new IllegalStateException("la base refuse");
+        });
+        for (int i = 0; i < 5; i++) {
+            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+        }
+
+        enrolement.demarrer("id-paul", ecrituresEnMemoireLongue::add);
+        for (int i = 0; i < 5; i++) {
+            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+        }
+
+        assertEquals(1, ecrituresEnMemoireLongue.size());
+        assertTrue(resultats.getLast().isReussi());
+        assertEquals("id-paul", resultats.getLast().getIdPersonne());
+    }
+
     @Test
     void unNouvelEnrolementRepartDeZero() {
         enrolement.demarrer(ID_MARIE, ecrituresEnMemoireLongue::add);

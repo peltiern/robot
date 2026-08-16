@@ -2,8 +2,8 @@ package fr.roboteek.robot.activites.presentation;
 
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
-import fr.roboteek.robot.memoire.personne.Personne;
-import fr.roboteek.robot.memoire.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
@@ -47,9 +47,10 @@ import java.util.concurrent.TimeUnit;
  *       limite bloque le cerveau, et le robot devient sourd à tout le reste.</li>
  * </ul>
  * <p>
- * La personne n'est enregistrée <b>qu'une fois son visage appris</b> : l'inverse laisserait en
- * mémoire quelqu'un que le robot ne saurait jamais reconnaître, et qu'il aborderait à nouveau
- * comme un inconnu à la rencontre suivante.
+ * La personne est créée avant l'apprentissage de son visage — les empreintes la référencent en
+ * base et ne peuvent pas la précéder — mais <b>effacée si le visage n'est pas appris</b>. Le
+ * résultat est le même qu'avant : rien ne subsiste de quelqu'un que le robot ne saurait pas
+ * reconnaître, et qu'il aborderait à nouveau comme un inconnu à la rencontre suivante.
  */
 @Component
 public class PresentationActivity extends AbstractActivity {
@@ -177,10 +178,14 @@ public class PresentationActivity extends AbstractActivity {
             return stopActivity;
         }
 
-        // Identifiant créé avant l'enrôlement — les empreintes s'y rattachent — mais la personne
-        // n'est écrite en mémoire qu'après : un visage non appris ne doit laisser aucune trace.
+        // La personne est écrite AVANT l'enrôlement, et effacée s'il échoue : un visage non appris
+        // ne doit laisser aucune trace, mais les empreintes référencent la personne en base et ne
+        // peuvent pas la précéder. Écrire après coûtait dix secondes de silence — l'insertion des
+        // empreintes échouait sur la clé étrangère, et personne ne recevait jamais de verdict.
         Personne personne = Personne.nouvelle(prenom);
+        personneRepository.enregistrer(personne);
         if (!apprendreLeVisage(personne.id())) {
+            personneRepository.supprimer(personne.id());
             direEtAttendreLaFin("Je n'ai pas réussi à bien te regarder, " + prenom + ". Ce sera pour une prochaine fois !");
             return stopActivity;
         }

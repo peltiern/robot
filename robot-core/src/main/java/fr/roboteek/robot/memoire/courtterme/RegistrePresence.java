@@ -1,7 +1,7 @@
 package fr.roboteek.robot.memoire.courtterme;
 
-import fr.roboteek.robot.memoire.personne.Personne;
-import fr.roboteek.robot.memoire.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;

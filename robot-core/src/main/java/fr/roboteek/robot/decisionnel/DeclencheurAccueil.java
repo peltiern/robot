@@ -2,7 +2,7 @@ package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.presentation.PresentationActivity;
 import fr.roboteek.robot.activites.retrouvailles.RetrouvaillesActivity;
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteRefuseeEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;

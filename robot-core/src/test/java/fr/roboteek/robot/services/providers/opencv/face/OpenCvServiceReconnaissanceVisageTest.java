@@ -1,7 +1,10 @@
 package fr.roboteek.robot.services.providers.opencv.face;
 
 import fr.roboteek.robot.Constantes;
-import fr.roboteek.robot.memoire.visage.VisageConnuRepository;
+import fr.roboteek.robot.memoire.longterme.BaseMemoireDeTest;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.visage.VisageConnuRepository;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import nu.pattern.OpenCV;
 import org.junit.jupiter.api.AfterEach;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.util.List;
 
@@ -38,6 +42,7 @@ class OpenCvServiceReconnaissanceVisageTest {
     File dossierTemp;
 
     private VisageConnuRepository repository;
+    private PersonneRepository personneRepository;
     private OpenCvServiceReconnaissanceVisage reconnaissance;
 
     @BeforeAll
@@ -51,16 +56,13 @@ class OpenCvServiceReconnaissanceVisageTest {
 
     @BeforeEach
     void setUp() {
-        repository = new VisageConnuRepository(new File(dossierTemp, "visages.db").getAbsolutePath());
+        DataSource memoire = BaseMemoireDeTest.dans(dossierTemp);
+        repository = new VisageConnuRepository(memoire);
+        personneRepository = new PersonneRepository(memoire);
         reconnaissance = new OpenCvServiceReconnaissanceVisage(cheminModeleSFace, repository);
 
         enregistrer("Amy", IMAGE_AMY);
         enregistrer("Einstein", IMAGE_EINSTEIN);
-    }
-
-    @AfterEach
-    void tearDown() {
-        repository.close();
     }
 
     @Test
@@ -89,6 +91,10 @@ class OpenCvServiceReconnaissanceVisageTest {
         assertFalse(image.empty(), "Image de test introuvable : " + cheminImage);
         VisageDetecte visage = OpenCvServiceDetectionVisage.getInstance().detecter(image).get(0);
 
+        // La personne d'abord : une empreinte ne peut pas désigner quelqu'un qui n'existe pas.
+        // Ici l'identifiant est le prénom, ce qui rend les assertions lisibles ; ailleurs c'est
+        // un UUID, le prénom n'identifiant personne.
+        personneRepository.enregistrer(new Personne(idPersonne, idPersonne, null));
         repository.ajouter(idPersonne, reconnaissance.extraireEmbedding(image, visage));
     }
 

@@ -6,8 +6,9 @@ import fr.roboteek.robot.memoire.DetectedObject;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.RecognizedFace;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
-import fr.roboteek.robot.memoire.personne.Personne;
-import fr.roboteek.robot.memoire.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.visage.VisageConnuRepository;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
@@ -152,6 +153,14 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private PersonneRepository personneRepository;
 
     /**
+     * Empreintes des visages connus, remises à la reconnaissance au chargement. Injectées plutôt
+     * qu'ouvertes par le service lui-même : depuis SQLite, toute l'application partage un seul
+     * accès à la mémoire longue.
+     */
+    @Autowired
+    private VisageConnuRepository visageConnuRepository;
+
+    /**
      * Ce que le robot a en tête : visages suivis, apprentissage en cours. Appelée en direct depuis
      * la boucle, et non par évènement — elle rend un résultat tout de suite, et l'image ne peut pas
      * voyager (voir {@link MemoireCourtTerme}).
@@ -209,7 +218,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
         try {
             serviceDetectionVisage = OpenCvServiceDetectionVisage.getInstance();
-            serviceReconnaissanceVisage = OpenCvServiceReconnaissanceVisage.getInstance();
+            serviceReconnaissanceVisage = OpenCvServiceReconnaissanceVisage.getInstance(visageConnuRepository);
         } catch (RuntimeException e) {
             logger.warn("Détection/reconnaissance de visages indisponible (modèles absents dans {} ?) : {}", Constantes.DOSSIER_VISAGE, e.getMessage());
         }

@@ -1,8 +1,8 @@
 package fr.roboteek.robot.services.providers.opencv.face;
 
 import fr.roboteek.robot.Constantes;
-import fr.roboteek.robot.memoire.visage.VisageConnu;
-import fr.roboteek.robot.memoire.visage.VisageConnuRepository;
+import fr.roboteek.robot.memoire.longterme.visage.VisageConnu;
+import fr.roboteek.robot.memoire.longterme.visage.VisageConnuRepository;
 import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import org.opencv.core.CvType;
@@ -14,9 +14,14 @@ import java.util.List;
 
 /**
  * Reconnaissance de visages via SFace (OpenCV), CPU pur — compare l'embedding du
- * visage détecté à ceux des visages connus (MapDB, {@link VisageConnuRepository}).
+ * visage détecté à ceux des visages connus ({@link VisageConnuRepository}).
  * <p>
  * Seuil de similarité cosine : 0.363 (recommandation OpenCV Zoo pour SFace).
+ * <p>
+ * Ce n'est délibérément pas un composant Spring : le modèle ONNX peut manquer sur une
+ * installation neuve, et l'échec ferait alors tomber le contexte entier au lieu de priver le
+ * robot de la seule reconnaissance. L'organe de vision le charge lui-même, et se contente d'un
+ * avertissement s'il n'y arrive pas.
  */
 public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceVisage {
 
@@ -28,19 +33,26 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
     private final FaceRecognizerSF reconnaisseur;
     private final VisageConnuRepository visageConnuRepository;
 
-    private OpenCvServiceReconnaissanceVisage() {
-        this(Constantes.DOSSIER_VISAGE + File.separator + NOM_MODELE, new VisageConnuRepository());
-    }
-
     /** Permet d'injecter un modèle et une base isolés (utilisé par les tests). */
     public OpenCvServiceReconnaissanceVisage(String cheminModele, VisageConnuRepository visageConnuRepository) {
         reconnaisseur = FaceRecognizerSF.create(cheminModele, "");
         this.visageConnuRepository = visageConnuRepository;
     }
 
-    public static synchronized OpenCvServiceReconnaissanceVisage getInstance() {
+    /**
+     * Charge le service au premier appel, puis le rend tel quel.
+     * <p>
+     * Le dépôt est passé plutôt que construit ici : depuis le passage à SQLite, il n'y a qu'un
+     * dépôt de visages dans toute l'application, et c'est un bean Spring. Du temps de MapDB, ce
+     * service ouvrait sa propre base et en détenait le verrou — tout le reste du programme devait
+     * alors passer par lui pour écrire une empreinte.
+     *
+     * @param visageConnuRepository le dépôt, ignoré si le service est déjà chargé
+     */
+    public static synchronized OpenCvServiceReconnaissanceVisage getInstance(VisageConnuRepository visageConnuRepository) {
         if (instance == null) {
-            instance = new OpenCvServiceReconnaissanceVisage();
+            instance = new OpenCvServiceReconnaissanceVisage(
+                    Constantes.DOSSIER_VISAGE + File.separator + NOM_MODELE, visageConnuRepository);
         }
         return instance;
     }
