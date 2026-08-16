@@ -1,6 +1,6 @@
 package fr.roboteek.robot.activites.presentation;
 
-import fr.roboteek.robot.activites.conversation.ConversationActivity;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.memoire.personne.Personne;
 import fr.roboteek.robot.memoire.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
@@ -52,7 +52,7 @@ class PresentationActivityTest {
     File dossierTemp;
 
     private PersonneRepository personneRepository;
-    private ConversationActivity conversationActivity;
+    private MemoireCourtTerme memoireCourtTerme;
     private ExtractionPrenomIA extractionPrenomIA;
     private PresentationActivity activite;
 
@@ -70,10 +70,10 @@ class PresentationActivityTest {
     @BeforeEach
     void setUp() {
         personneRepository = new PersonneRepository(new File(dossierTemp, "personnes.db").getAbsolutePath());
-        conversationActivity = mock(ConversationActivity.class);
+        memoireCourtTerme = mock(MemoireCourtTerme.class);
         extractionPrenomIA = mock(ExtractionPrenomIA.class);
         // 200 ms au lieu de 8 s : les cas sans réponse attendraient sinon une demi-minute.
-        activite = new PresentationActivity(conversationActivity, extractionPrenomIA, personneRepository, 200);
+        activite = new PresentationActivity(memoireCourtTerme, extractionPrenomIA, personneRepository, 200);
 
         ApplicationEventPublisher publieur = evenement -> {
             if (evenement instanceof ParoleEvent parole) {
@@ -111,7 +111,7 @@ class PresentationActivityTest {
         assertEquals("Marie", enregistree.prenom());
         assertNotNull(enregistree.derniereRencontre(), "la rencontre doit être datée");
         assertEquals(List.of(enregistree.id()), enrolementsDemandes, "le visage appris est bien le sien");
-        verify(conversationActivity).setInterlocuteur(enregistree);
+        verify(memoireCourtTerme).poserInterlocuteur(enregistree);
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("Enchanté Marie")));
     }
 
@@ -129,7 +129,7 @@ class PresentationActivityTest {
         activite.run();
 
         assertNull(personneEnregistree(), "rien ne doit être enregistré");
-        verify(conversationActivity, org.mockito.Mockito.never()).setInterlocuteur(any());
+        verify(memoireCourtTerme, org.mockito.Mockito.never()).poserInterlocuteur(any());
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("pas réussi à bien te regarder")));
     }
 
@@ -204,8 +204,9 @@ class PresentationActivityTest {
         assertEquals(List.of(NICOLAS), List.copyOf(personneRepository.toutes()),
                 "aucune personne ne doit être créée : celle-là était déjà connue");
         assertTrue(enrolementsDemandes.isEmpty(), "aucun visage à apprendre");
-        // La personne relue en base : c'est elle, et non le visage perçu, qui désigne le fil.
-        verify(conversationActivity).setInterlocuteur(NICOLAS);
+        // Rien à poser : la mémoire court terme a reconnu cette personne d'elle-même — c'est même
+        // ce qui a déclenché ces excuses.
+        verify(memoireCourtTerme, org.mockito.Mockito.never()).poserInterlocuteur(any());
     }
 
     /** Un visage connu qui n'est pas celui qu'on aborde — plus petit — ne doit rien déclencher. */

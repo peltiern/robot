@@ -1,7 +1,9 @@
-package fr.roboteek.robot.memoire.personne;
+package fr.roboteek.robot.memoire.courtterme;
 
+import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
-import fr.roboteek.robot.systemenerveux.event.RencontreInconnuInaboutieEvent;
+import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
@@ -20,6 +22,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -143,20 +146,42 @@ public class RegistrePresence {
     }
 
     /**
-     * Rend son tour à l'inconnu quand la rencontre annoncée n'a mené à rien.
+     * Rend sa venue à celui qu'une rencontre annoncée n'a mené à rien.
      * <p>
      * La venue est tenue pour tranchée et la temporisation court dès l'annonce, ce qui est juste
-     * quand quelqu'un a effectivement été abordé. Quand l'annonce a été perdue — méprise sur une
-     * personne connue, ou accueil refusé par le cerveau —, la garder ferait ignorer le prochain
-     * inconnu, celui-là bien réel. Oublier la présence suffit à ce qu'elle se reconfirme d'elle-même
-     * quelques perceptions plus tard.
+     * quand quelqu'un a effectivement été abordé. Quand l'annonce s'est perdue — méprise sur une
+     * personne connue, accueil ou retrouvailles refusés par le cerveau —, la garder condamnerait
+     * cette personne au silence tant qu'elle reste devant la caméra. Oublier sa présence suffit à
+     * ce qu'elle se reconfirme d'elle-même quelques perceptions plus tard.
      */
     @EventListener
-    public synchronized void handleRencontreInconnuInaboutieEvent(RencontreInconnuInaboutieEvent evenement) {
-        if (presences.remove(CLE_INCONNU) != null) {
-            logger.info("Rencontre d'inconnu sans suite ({}) : elle est oubliée, la prochaine sera annoncée",
-                    evenement.getMotif());
+    public synchronized void handleRencontreSansSuiteEvent(RencontreSansSuiteEvent evenement) {
+        Personne personne = evenement.getPersonne();
+        String cle = personne == null ? CLE_INCONNU : personne.id();
+        if (presences.remove(cle) != null) {
+            logger.info("Rencontre sans suite pour {} ({}) : elle est oubliée, la prochaine sera annoncée",
+                    personne == null ? "un inconnu" : personne.prenom(), evenement.getMotif());
         }
+    }
+
+    /**
+     * Les personnes que le robot a devant lui à cet instant — vues assez récemment pour qu'on les
+     * croie encore là, l'inconnu mis à part.
+     * <p>
+     * Le même seuil que pour le départ : ce qui définit « encore présent » est exactement ce qui
+     * définit « pas encore parti ».
+     *
+     * @return les identifiants des personnes présentes, jamais {@code null}
+     */
+    public synchronized List<String> idsPersonnesPresentes() {
+        Instant maintenant = horloge.instant();
+        double absenceToleree = robotConfig().dureeAbsenceAvantDepartSecondes();
+        return presences.entrySet().stream()
+                .filter(entree -> !CLE_INCONNU.equals(entree.getKey()))
+                .filter(entree -> entree.getValue().derniereVue != null
+                        && secondesEcoulees(entree.getValue().derniereVue, maintenant) <= absenceToleree)
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     private void mettreAJourPresence(String cle, Instant maintenant) {

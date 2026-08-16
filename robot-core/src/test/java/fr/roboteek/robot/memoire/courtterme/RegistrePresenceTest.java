@@ -1,7 +1,9 @@
-package fr.roboteek.robot.memoire.personne;
+package fr.roboteek.robot.memoire.courtterme;
 
+import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
-import fr.roboteek.robot.systemenerveux.event.RencontreInconnuInaboutieEvent;
+import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
 import fr.roboteek.robot.util.HorlogeReglable;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
@@ -176,13 +178,49 @@ class RegistrePresenceTest {
         percevoirUnInconnuPendant(2.0);
         assertEquals(1, rencontres.size());
 
-        registre.handleRencontreInconnuInaboutieEvent(new RencontreInconnuInaboutieEvent("Nicolas"));
+        registre.handleRencontreSansSuiteEvent(new RencontreSansSuiteEvent(null, "méprise sur Nicolas"));
 
         // Bien avant les 120 s de temporisation, qui ne s'appliquent plus.
         avancerDe(10.0);
         percevoirUnInconnuPendant(2.0);
 
         assertEquals(2, rencontres.size(), "le vrai inconnu doit être annoncé");
+    }
+
+    /**
+     * Le pendant pour quelqu'un de connu : des retrouvailles refusées par le cerveau ne doivent pas
+     * le condamner au silence tant qu'il reste devant la caméra.
+     */
+    @Test
+    void unePersonneConnueEstAnnonceeANouveauApresUneRencontreSansSuite() {
+        Personne marie = new Personne(ID_MARIE, "Marie", null);
+        personneRepository.enregistrer(marie);
+
+        percevoirMariePendant(2.0);
+        assertEquals(1, rencontres.size());
+
+        registre.handleRencontreSansSuiteEvent(new RencontreSansSuiteEvent(marie, "retrouvailles refusées"));
+
+        // Bien avant les 30 s de temporisation, et sans qu'elle ait eu à sortir du champ.
+        avancerDe(1.0);
+        percevoirMariePendant(2.0);
+
+        assertEquals(2, rencontres.size(), "sa venue lui a été rendue");
+    }
+
+    /** Rendre la venue de quelqu'un ne touche pas à celle des autres. */
+    @Test
+    void rendreUneVenueNeTouchePasAuxAutresPresences() {
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
+        percevoirUnInconnuPendant(2.0);
+        assertEquals(1, rencontres.size());
+
+        registre.handleRencontreSansSuiteEvent(
+                new RencontreSansSuiteEvent(new Personne(ID_MARIE, "Marie", null), "sans rapport"));
+
+        avancerDe(1.0);
+        percevoirUnInconnuPendant(2.0);
+        assertEquals(1, rencontres.size(), "l'inconnu garde sa temporisation");
     }
 
     @Test
@@ -304,6 +342,27 @@ class RegistrePresenceTest {
         assertEquals(1, rencontres.size());
         assertEquals(RencontreEvent.TYPE.INCONNU, rencontres.get(0).getType());
         assertNull(rencontres.get(0).getPersonne());
+    }
+
+    /** Ce que « qui est devant moi » veut dire : vu assez récemment pour qu'on le croie encore là. */
+    @Test
+    void lesPersonnesPresentesSontCellesVuesRecemment() {
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
+
+        percevoirMariePendant(2.0);
+        assertEquals(List.of(ID_MARIE), registre.idsPersonnesPresentes());
+
+        // Passé le seuil d'absence (4 s par défaut), elle n'est plus là.
+        avancerDe(10.0);
+        assertTrue(registre.idsPersonnesPresentes().isEmpty());
+    }
+
+    /** L'inconnu n'a pas d'identité à rendre : il ne figure jamais parmi les présents. */
+    @Test
+    void lInconnuNeFigurePasParmiLesPresents() {
+        percevoirUnInconnuPendant(2.0);
+
+        assertTrue(registre.idsPersonnesPresentes().isEmpty());
     }
 
     @Test

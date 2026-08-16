@@ -1,8 +1,8 @@
 package fr.roboteek.robot.activites.retrouvailles;
 
 import fr.roboteek.robot.activites.AbstractActivity;
-import fr.roboteek.robot.activites.conversation.ConversationActivity;
 import fr.roboteek.robot.activites.conversation.ConversationIA;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.memoire.personne.Personne;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class RetrouvaillesActivity extends AbstractActivity {
     /** Et son équivalent quand la personne n'a fait que s'absenter un instant. */
     private static final String REPRISE_DE_SECOURS = "Te revoilà %s ! On en était où ?";
 
-    private final ConversationActivity conversationActivity;
+    private final MemoireCourtTerme memoireCourtTerme;
 
     private final ConversationIA conversationIA;
 
@@ -60,8 +60,8 @@ public class RetrouvaillesActivity extends AbstractActivity {
     private volatile long secondesDAbsence = -1;
 
     @Autowired
-    public RetrouvaillesActivity(ConversationActivity conversationActivity, ConversationIA conversationIA) {
-        this.conversationActivity = conversationActivity;
+    public RetrouvaillesActivity(MemoireCourtTerme memoireCourtTerme, ConversationIA conversationIA) {
+        this.memoireCourtTerme = memoireCourtTerme;
         this.conversationIA = conversationIA;
     }
 
@@ -84,9 +84,9 @@ public class RetrouvaillesActivity extends AbstractActivity {
         }
 
         String prenom = personneRetrouvee.prenom();
-        // L'interlocuteur est posé avant de parler : la salutation est demandée sur le fil de
-        // mémoire de cette personne, et la conversation qui reprend derrière y reste.
-        conversationActivity.setInterlocuteur(personneRetrouvee);
+        // Posé sans attendre : la salutation part sur le fil de cette personne, et la
+        // conversation qui reprend derrière y reste même si un cycle la manque.
+        memoireCourtTerme.poserInterlocuteur(personneRetrouvee);
 
         // Une absence de quelques secondes n'en est pas une : la personne s'est tournée, ou est
         // sortie du champ un instant. La conversation n'a jamais été interrompue, et la reprendre

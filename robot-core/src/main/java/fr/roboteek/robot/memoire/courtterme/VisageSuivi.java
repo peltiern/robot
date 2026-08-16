@@ -1,4 +1,4 @@
-package fr.roboteek.robot.util.webcam;
+package fr.roboteek.robot.memoire.courtterme;
 
 import fr.roboteek.robot.memoire.RecognizedFace;
 

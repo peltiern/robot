@@ -1,12 +1,12 @@
 package fr.roboteek.robot.activites.presentation;
 
 import fr.roboteek.robot.activites.AbstractActivity;
-import fr.roboteek.robot.activites.conversation.ConversationActivity;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.memoire.personne.Personne;
 import fr.roboteek.robot.memoire.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
-import fr.roboteek.robot.systemenerveux.event.RencontreInconnuInaboutieEvent;
+import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleTermineeEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
@@ -98,7 +98,7 @@ public class PresentationActivity extends AbstractActivity {
             "oui", "ouais", "ouaip", "voila", "voilà", "exact", "exactement",
             "c'est ca", "c'est ça", "tout a fait", "tout à fait", "affirmatif");
 
-    private final ConversationActivity conversationActivity;
+    private final MemoireCourtTerme memoireCourtTerme;
 
     private final ExtractionPrenomIA extractionPrenomIA;
 
@@ -132,18 +132,18 @@ public class PresentationActivity extends AbstractActivity {
      * le contexte entier échoue au démarrage (voir {@code CablageDesBeansTest}).
      */
     @Autowired
-    public PresentationActivity(ConversationActivity conversationActivity,
+    public PresentationActivity(MemoireCourtTerme memoireCourtTerme,
                                 ExtractionPrenomIA extractionPrenomIA,
                                 PersonneRepository personneRepository) {
-        this(conversationActivity, extractionPrenomIA, personneRepository, DELAI_REPONSE_MS);
+        this(memoireCourtTerme, extractionPrenomIA, personneRepository, DELAI_REPONSE_MS);
     }
 
     /** Permet aux tests de ne pas attendre huit secondes à chaque question sans réponse. */
-    PresentationActivity(ConversationActivity conversationActivity,
+    PresentationActivity(MemoireCourtTerme memoireCourtTerme,
                          ExtractionPrenomIA extractionPrenomIA,
                          PersonneRepository personneRepository,
                          long delaiReponseMs) {
-        this.conversationActivity = conversationActivity;
+        this.memoireCourtTerme = memoireCourtTerme;
         this.extractionPrenomIA = extractionPrenomIA;
         this.personneRepository = personneRepository;
         this.delaiReponseMs = delaiReponseMs;
@@ -187,9 +187,9 @@ public class PresentationActivity extends AbstractActivity {
 
         Personne personneEnregistree = personne.rencontreeLe(LocalDateTime.now());
         personneRepository.enregistrer(personneEnregistree);
-        // Pose l'interlocuteur avant de rendre la main : la conversation qui reprend derrière
-        // saura à qui elle parle, et ouvrira le fil de mémoire de cette personne.
-        conversationActivity.setInterlocuteur(personneEnregistree);
+        // Le robot connaît cette personne avant de savoir la reconnaître : c'est le seul cas où
+        // l'interlocuteur se pose au lieu de se déduire de ce qu'on voit.
+        memoireCourtTerme.poserInterlocuteur(personneEnregistree);
         logger.info("Nouvelle connaissance : {} ({})", prenom, personne.id());
         direEtAttendreLaFin("Enchanté " + prenom + " ! Je me souviendrai de toi.");
         return stopActivity;
@@ -234,13 +234,11 @@ public class PresentationActivity extends AbstractActivity {
         VisagePercu visage = visageReconnuEnCoursDeRoute;
         String prenom = visage.prenom();
         logger.info("{} reconnu pendant la présentation : la question n'avait pas lieu d'être", prenom);
-        // Relu depuis la base plutôt que reconstruit à partir du visage perçu : c'est la personne
-        // entière qui désigne son fil de conversation, et son identifiant seul ne suffit pas à
-        // l'écrire. Absente de la base, la conversation reprend simplement sans interlocuteur.
-        conversationActivity.setInterlocuteur(personneRepository.parId(visage.idPersonne()));
+        // Rien à poser : la mémoire court terme a reconnu cette personne d'elle-même, c'est
+        // même ce qui a déclenché ces excuses.
         // Dit au registre de présence que sa rencontre d'inconnu était une méprise : sans cela, sa
         // temporisation ferait ignorer le prochain inconnu, le vrai, pendant deux minutes.
-        applicationEventPublisher.publishEvent(new RencontreInconnuInaboutieEvent("méprise sur " + prenom));
+        applicationEventPublisher.publishEvent(new RencontreSansSuiteEvent(null, "méprise sur " + prenom));
         direEtAttendreLaFin("Excuse-moi " + prenom + ", je ne t'avais pas reconnu !");
         return stopActivity;
     }

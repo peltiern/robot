@@ -1,6 +1,6 @@
 package fr.roboteek.robot.activites.retrouvailles;
 
-import fr.roboteek.robot.activites.conversation.ConversationActivity;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.activites.conversation.ConversationIA;
 import fr.roboteek.robot.memoire.personne.Personne;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
@@ -30,7 +30,7 @@ class RetrouvaillesActivityTest {
 
     private static final Personne MARIE = new Personne("id-marie", "Marie", null);
 
-    private ConversationActivity conversationActivity;
+    private MemoireCourtTerme memoireCourtTerme;
     private ConversationIA conversationIA;
     private RetrouvaillesActivity activite;
 
@@ -38,9 +38,9 @@ class RetrouvaillesActivityTest {
 
     @BeforeEach
     void setUp() {
-        conversationActivity = mock(ConversationActivity.class);
+        memoireCourtTerme = mock(MemoireCourtTerme.class);
         conversationIA = mock(ConversationIA.class);
-        activite = new RetrouvaillesActivity(conversationActivity, conversationIA);
+        activite = new RetrouvaillesActivity(memoireCourtTerme, conversationIA);
 
         ApplicationEventPublisher publieur = evenement -> {
             if (evenement instanceof ParoleEvent parole) {
@@ -99,7 +99,7 @@ class RetrouvaillesActivityTest {
         assertTrue(phrasesDites.isEmpty(), "phrases dites : " + phrasesDites);
         verifyNoInteractions(conversationIA);
         // L'interlocuteur est tout de même posé : la conversation qui continue doit savoir à qui.
-        verify(conversationActivity).setInterlocuteur(MARIE);
+        verify(memoireCourtTerme).poserInterlocuteur(MARIE);
     }
 
     /** Quelqu'un jamais rencontré (-1) est salué, pas repris : il n'y a rien à reprendre. */
@@ -120,7 +120,7 @@ class RetrouvaillesActivityTest {
 
         activite.run();
 
-        verify(conversationActivity).setInterlocuteur(MARIE);
+        verify(memoireCourtTerme).poserInterlocuteur(MARIE);
     }
 
     @Test
@@ -142,6 +142,6 @@ class RetrouvaillesActivityTest {
 
         assertTrue(phrasesDites.isEmpty());
         verifyNoInteractions(conversationIA);
-        verifyNoInteractions(conversationActivity);
+        verifyNoInteractions(memoireCourtTerme);
     }
 }

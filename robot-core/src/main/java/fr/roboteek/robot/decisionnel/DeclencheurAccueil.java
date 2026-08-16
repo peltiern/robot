@@ -2,10 +2,11 @@ package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.presentation.PresentationActivity;
 import fr.roboteek.robot.activites.retrouvailles.RetrouvaillesActivity;
+import fr.roboteek.robot.memoire.personne.Personne;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteRefuseeEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
-import fr.roboteek.robot.systemenerveux.event.RencontreInconnuInaboutieEvent;
+import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,6 +33,13 @@ public class DeclencheurAccueil {
 
     private final RetrouvaillesActivity retrouvaillesActivity;
 
+    /**
+     * La personne dont on vient de réclamer les retrouvailles, le temps de savoir si le cerveau
+     * les accepte. Le refus revient dans la même pile d'appels que la demande, la valeur est donc
+     * toujours la bonne au moment où on la lit.
+     */
+    private Personne personneDesRetrouvaillesReclamees;
+
     public DeclencheurAccueil(ApplicationEventPublisher applicationEventPublisher,
                               RetrouvaillesActivity retrouvaillesActivity) {
         this.applicationEventPublisher = applicationEventPublisher;
@@ -56,6 +64,7 @@ public class DeclencheurAccueil {
             return;
         }
         logger.info("{} est de retour : demande de retrouvailles", rencontreEvent.getPersonne().prenom());
+        personneDesRetrouvaillesReclamees = rencontreEvent.getPersonne();
         // Posée avant la demande : une demande d'activité ne transporte qu'un identifiant, et la
         // boucle du cerveau peut lancer l'activité dès l'instant d'après.
         retrouvaillesActivity.setPersonneRetrouvee(
@@ -65,24 +74,34 @@ public class DeclencheurAccueil {
     }
 
     /**
-     * Rend son tour à l'inconnu quand le cerveau a refusé de l'aborder.
+     * Rend sa venue à celui que le cerveau a refusé d'aborder.
      * <p>
      * La rencontre a été consommée en pure perte : le registre de présence tient la venue pour
-     * tranchée alors que personne n'a été abordé. Sans cet aveu, la temporisation du refus finissait
-     * par expirer sans que rien ne relance quoi que ce soit — la personne restant devant la caméra,
-     * aucune nouvelle venue ne commençait. Constaté sur le robot le 2026-08-15.
+     * tranchée alors que personne n'a été abordé. Sans cet aveu, la personne restant devant la
+     * caméra, aucune nouvelle venue ne commence et le robot ne lui dira jamais rien. Constaté sur
+     * le robot le 2026-08-15 pour un accueil, le 2026-08-16 pour des retrouvailles.
      * <p>
      * Rendu ici et non dans le registre : c'est le déclencheur qui a fait la demande, et lui seul
-     * sait que ce refus concerne un accueil.
+     * sait qui elle visait.
      */
     @EventListener
     public void handleDemandeActiviteRefuseeEvent(DemandeActiviteRefuseeEvent demandeActiviteRefuseeEvent) {
-        if (!PresentationActivity.class.getSimpleName().equals(demandeActiviteRefuseeEvent.getIdActivite())) {
-            return;
+        String idActivite = demandeActiviteRefuseeEvent.getIdActivite();
+        String motif = demandeActiviteRefuseeEvent.getMotif();
+
+        if (PresentationActivity.class.getSimpleName().equals(idActivite)) {
+            logger.info("Accueil refusé ({}) : la rencontre d'inconnu est rendue, elle sera rejouée", motif);
+            applicationEventPublisher.publishEvent(
+                    new RencontreSansSuiteEvent(null, "accueil refusé : " + motif));
+        } else if (RetrouvaillesActivity.class.getSimpleName().equals(idActivite)) {
+            // La personne visée est celle de la demande qu'on vient de faire : la chaîne est
+            // synchrone — publier la demande appelle le cerveau, qui publie le refus, qui nous
+            // revient — donc c'est bien la bonne, sans risque d'en croiser une autre.
+            Personne personne = personneDesRetrouvaillesReclamees;
+            logger.info("Retrouvailles avec {} refusées ({}) : la rencontre est rendue",
+                    personne == null ? "?" : personne.prenom(), motif);
+            applicationEventPublisher.publishEvent(
+                    new RencontreSansSuiteEvent(personne, "retrouvailles refusées : " + motif));
         }
-        logger.info("Accueil refusé ({}) : la rencontre d'inconnu est rendue, elle sera rejouée",
-                demandeActiviteRefuseeEvent.getMotif());
-        applicationEventPublisher.publishEvent(
-                new RencontreInconnuInaboutieEvent("accueil refusé : " + demandeActiviteRefuseeEvent.getMotif()));
     }
 }

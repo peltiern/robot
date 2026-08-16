@@ -6,7 +6,7 @@ import java.util.UUID;
 
 /**
  * Quelqu'un que le robot connaît : mémoire longue, par opposition à la présence du moment
- * que tient {@link RegistrePresence}.
+ * que tient {@code RegistrePresence}.
  * <p>
  * L'identité est portée par {@link #id}, pas par le prénom : deux personnes peuvent
  * s'appeler Marie, et une même personne peut voir son prénom corrigé après une
