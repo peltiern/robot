@@ -10,6 +10,7 @@ import org.opencv.core.Mat;
 import org.opencv.objdetect.FaceRecognizerSF;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Reconnaissance de visages via SFace (OpenCV), CPU pur — compare l'embedding du
@@ -66,6 +67,11 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
         float[] valeurs = new float[embedding.cols()];
         embedding.get(0, 0, valeurs);
         return valeurs;
+    }
+
+    @Override
+    public void enrolerPersonne(String idPersonne, List<float[]> empreintes) {
+        empreintes.forEach(empreinte -> visageConnuRepository.ajouter(idPersonne, empreinte));
     }
 
     /**

@@ -6,6 +6,7 @@ import fr.roboteek.robot.activites.conversation.ConversationActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
+import fr.roboteek.robot.systemenerveux.event.DemandeActiviteRefuseeEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
@@ -213,7 +214,13 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             return;
         }
         AbstractActivity activiteCourante = currentActivity;
-        if (!arbitrageActivites.arbitrer(activite, activiteCourante).estAcceptee()) {
+        ArbitrageActivites.Decision decision = arbitrageActivites.arbitrer(activite, activiteCourante);
+        if (!decision.estAcceptee()) {
+            // Le refus est annoncé, et pas seulement journalisé : celui qui a fait la demande doit
+            // pouvoir en tenir compte. Sans quoi elle disparaît, et rien ne la rejoue une fois la
+            // cause du refus levée.
+            applicationEventPublisher.publishEvent(
+                    new DemandeActiviteRefuseeEvent(activite.identifiant(), decision.name()));
             return;
         }
         logger.info("Activité demandée : {}", activite.identifiant());

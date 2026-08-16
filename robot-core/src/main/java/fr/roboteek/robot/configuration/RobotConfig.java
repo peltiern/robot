@@ -149,6 +149,43 @@ public interface RobotConfig extends Config {
     double dureeAbsenceAvantDepartSecondes();
 
     /**
+     * Trou maximal toléré, en secondes, <b>tant que la venue n'est pas encore confirmée</b> : au
+     * delà, le décompte de présence repart de zéro.
+     * <p>
+     * Sans lui, la tolérance de {@link #dureeAbsenceAvantDepartSecondes()} — 4 s, faite pour ne pas
+     * croire quelqu'un parti — s'appliquait aussi à la confirmation : des perceptions éparses,
+     * espacées de trois secondes, finissaient par cumuler la durée exigée comme si elles avaient été
+     * continues. Le robot pouvait donc aborder quelqu'un qu'il n'avait fait qu'entrevoir.
+     * <p>
+     * Ce que ce seuil garantit : plusieurs visages vus <b>à la suite</b> avant de décider quoi que
+     * ce soit, inconnu comme connu. Une seconde laisse passer le clignotement de la détection
+     * (trous de 100 à 250 ms) sans laisser passer une apparition intermittente.
+     *
+     * @return le trou maximal toléré pendant la phase de confirmation, en secondes
+     */
+    @Key("robot.presence.continuite.seconds")
+    @DefaultValue("1.0")
+    double dureeContinuitePresenceSecondes();
+
+    /**
+     * Fenêtre glissante, en secondes, sur laquelle un inconnu et les personnes connues sont
+     * départagés au nombre de fois qu'ils ont été vus.
+     * <p>
+     * Un même visage sort tantôt reconnu, tantôt inconnu — la reconnaissance oscille autour de son
+     * seuil. Les deux lectures accumulaient jusqu'ici leur présence chacune de leur côté, si bien
+     * que l'inconnu pouvait se confirmer alors que la personne était reconnue trois fois sur cinq.
+     * Sur cette fenêtre, c'est la lecture majoritaire qui l'emporte.
+     * <p>
+     * Trop courte, elle ne départage rien ; trop longue, elle fait traîner l'abord d'un vrai
+     * inconnu, dont le compte doit d'abord dépasser celui des connus.
+     *
+     * @return la fenêtre d'arbitrage entre identités, en secondes
+     */
+    @Key("robot.presence.fenetre.seconds")
+    @DefaultValue("3.0")
+    double fenetreArbitragePresenceSecondes();
+
+    /**
      * Délai minimal, en secondes, entre deux rencontres déclenchées pour la même personne.
      * <p>
      * Second garde-fou, indépendant du précédent : même si quelqu'un sort réellement du champ et

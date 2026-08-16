@@ -60,6 +60,24 @@ public class VoskSpeechRecognizerService implements SpeechRecognizerService, Str
     // réutilisé entre phrases via reset() ; toujours appelé depuis le seul thread "Audio
     // Dispatcher" (voir AbstractCapteurVocal), donc pas de synchronisation nécessaire.
     private final Recognizer streamingRecognizer;
+    /**
+     * Verrou de tout ce qui touche {@link #streamingRecognizer}.
+     * <p>
+     * <b>Deux threads s'y présentent</b>, et rien ne les séparait : le thread audio, qui pousse
+     * les blocs au fil de la parole, et le thread des évènements, qui remet le reconnaisseur à
+     * zéro quand le robot prend la parole ({@code cancelPhrase} depuis la mise en pause). Or un
+     * {@link Recognizer} Vosk est un objet natif non réentrant : le réinitialiser pendant qu'il
+     * décode corrompt le tas.
+     * <p>
+     * Ce n'est pas une précaution théorique — c'est arrivé le 2026-08-12 sur le robot, quand
+     * quelqu'un a répondu à l'instant précis où le robot commençait à parler : SIGSEGV dans
+     * {@code vosk_recognizer_reset}, JVM à terre, « malloc(): corrupted top size ».
+     * <p>
+     * Le verrou peut faire attendre le thread des évènements le temps d'un bloc audio (quelques
+     * centaines de millisecondes au pire). C'est le prix, et il est modeste.
+     */
+    private final Object verrouStreaming = new Object();
+
     private final ByteArrayOutputStream chunkEnCours = new ByteArrayOutputStream();
     private final StringBuilder texteStreamingAccumule = new StringBuilder();
 
@@ -139,45 +157,53 @@ public class VoskSpeechRecognizerService implements SpeechRecognizerService, Str
 
     @Override
     public void startPhrase(byte[] preRollAudio) {
-        streamingRecognizer.reset();
-        chunkEnCours.reset();
-        texteStreamingAccumule.setLength(0);
-        if (preRollAudio.length > 0) {
-            nourrirChunk(preRollAudio);
+        synchronized (verrouStreaming) {
+            streamingRecognizer.reset();
+            chunkEnCours.reset();
+            texteStreamingAccumule.setLength(0);
+            if (preRollAudio.length > 0) {
+                nourrirChunk(preRollAudio);
+            }
         }
     }
 
     @Override
     public void acceptAudioBlock(byte[] audioBlock) {
-        chunkEnCours.writeBytes(audioBlock);
-        if (chunkEnCours.size() >= TAILLE_CHUNK_CIBLE_OCTETS) {
-            nourrirChunk(chunkEnCours.toByteArray());
-            chunkEnCours.reset();
+        synchronized (verrouStreaming) {
+            chunkEnCours.writeBytes(audioBlock);
+            if (chunkEnCours.size() >= TAILLE_CHUNK_CIBLE_OCTETS) {
+                nourrirChunk(chunkEnCours.toByteArray());
+                chunkEnCours.reset();
+            }
         }
     }
 
     @Override
     public String finishPhrase() {
-        if (chunkEnCours.size() > 0) {
-            nourrirChunk(chunkEnCours.toByteArray());
-            chunkEnCours.reset();
-        }
-        try {
-            ajouterTexteResultat(texteStreamingAccumule, streamingRecognizer.getFinalResult());
-            return texteStreamingAccumule.toString();
-        } catch (Exception e) {
-            logger.error("Échec de la reconnaissance vocale Vosk (streaming)", e);
-            return "";
-        } finally {
-            texteStreamingAccumule.setLength(0);
+        synchronized (verrouStreaming) {
+            if (chunkEnCours.size() > 0) {
+                nourrirChunk(chunkEnCours.toByteArray());
+                chunkEnCours.reset();
+            }
+            try {
+                ajouterTexteResultat(texteStreamingAccumule, streamingRecognizer.getFinalResult());
+                return texteStreamingAccumule.toString();
+            } catch (Exception e) {
+                logger.error("Échec de la reconnaissance vocale Vosk (streaming)", e);
+                return "";
+            } finally {
+                texteStreamingAccumule.setLength(0);
+            }
         }
     }
 
     @Override
     public void cancelPhrase() {
-        streamingRecognizer.reset();
-        chunkEnCours.reset();
-        texteStreamingAccumule.setLength(0);
+        synchronized (verrouStreaming) {
+            streamingRecognizer.reset();
+            chunkEnCours.reset();
+            texteStreamingAccumule.setLength(0);
+        }
     }
 
     /**
@@ -187,6 +213,7 @@ public class VoskSpeechRecognizerService implements SpeechRecognizerService, Str
      * signal transmis — il ne détermine que la granularité du décodage.
      */
     private void nourrirChunk(byte[] blocAudio) {
+        assert Thread.holdsLock(verrouStreaming) : "le reconnaisseur natif ne se touche que sous verrou";
         // Voir le commentaire de recognize() : true = Vosk finalise + réinitialise en interne
         // ce segment, il faut donc récupérer ce résultat intermédiaire avant de continuer.
         if (streamingRecognizer.acceptWaveForm(blocAudio, blocAudio.length)) {

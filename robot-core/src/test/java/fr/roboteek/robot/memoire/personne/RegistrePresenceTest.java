@@ -1,5 +1,7 @@
 package fr.roboteek.robot.memoire.personne;
 
+import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
+import fr.roboteek.robot.systemenerveux.event.RencontreInconnuInaboutieEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
 import fr.roboteek.robot.util.HorlogeReglable;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
@@ -33,6 +35,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RegistrePresenceTest {
 
     private static final String ID_MARIE = "id-marie";
+
+    /** Cadence de la reconnaissance de visages sur le robot : une image sur trois, ~10 images/s. */
+    private static final double CYCLES_PAR_SECONDE = 3;
 
     @TempDir
     File dossierTemp;
@@ -71,9 +76,7 @@ class RegistrePresenceTest {
 
     @Test
     void unInconnuPresentAssezLongtempsEstAnnonceUneSeuleFois() {
-        percevoirUnInconnu();
-        avancerDe(2.0);
-        percevoirUnInconnu();
+        percevoirUnInconnuPendant(2.0);
 
         assertEquals(1, rencontres.size());
         assertEquals(RencontreEvent.TYPE.INCONNU, rencontres.get(0).getType());
@@ -102,11 +105,89 @@ class RegistrePresenceTest {
         assertEquals(1, rencontres.size(), "1,6 s de présence cumulée malgré les trous");
     }
 
+    /**
+     * Le cœur de la règle : des perceptions éparses ne valent pas une présence, même si elles
+     * s'étalent bien au-delà de la durée exigée. Sans quoi le robot aborde quelqu'un qu'il n'a
+     * fait qu'entrevoir — ou pire, quelqu'un qu'il connaît mais reconnaît mal.
+     */
+    @Test
+    void desPerceptionsEparsesNeSuffisentPasAConfirmerUnePresence() {
+        for (int i = 0; i < 10; i++) {
+            percevoirUnInconnu();
+            avancerDe(2.0);
+        }
+
+        assertTrue(rencontres.isEmpty(), "vingt secondes écoulées, mais jamais deux vues qui se suivent");
+    }
+
+    /**
+     * L'arbitrage demandé : un même visage sort tantôt reconnu, tantôt inconnu. La lecture
+     * majoritaire l'emporte, et le robot ne demande pas son prénom à quelqu'un qu'il reconnaît
+     * trois fois sur cinq.
+     */
+    @Test
+    void unVisageMajoritairementReconnuNeDeclenchePasDInconnu() {
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
+
+        // Trois perceptions sur cinq la reconnaissent, deux la manquent.
+        for (int i = 0; i < 4; i++) {
+            percevoirMarie();
+            avancerDe(1 / 3.0);
+            percevoirMarie();
+            avancerDe(1 / 3.0);
+            percevoirUnInconnu();
+            avancerDe(1 / 3.0);
+            percevoirMarie();
+            avancerDe(1 / 3.0);
+            percevoirUnInconnu();
+            avancerDe(1 / 3.0);
+        }
+
+        assertTrue(rencontres.stream().noneMatch(rencontre -> rencontre.getType() == RencontreEvent.TYPE.INCONNU),
+                "aucun inconnu ne doit être annoncé, rencontres : " + rencontres.size());
+    }
+
+    /** Et l'inverse : un vrai inconnu, majoritaire, doit bien être annoncé. */
+    @Test
+    void unInconnuMajoritaireEstAnnonceMalgreUneReconnaissanceIsolee() {
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
+
+        for (int i = 0; i < 4; i++) {
+            percevoirUnInconnu();
+            avancerDe(1 / 3.0);
+            percevoirUnInconnu();
+            avancerDe(1 / 3.0);
+            percevoirMarie();
+            avancerDe(1 / 3.0);
+            percevoirUnInconnu();
+            avancerDe(1 / 3.0);
+        }
+
+        assertTrue(rencontres.stream().anyMatch(rencontre -> rencontre.getType() == RencontreEvent.TYPE.INCONNU),
+                "l'inconnu est majoritaire, il doit être annoncé");
+    }
+
+    /**
+     * Une rencontre d'inconnu qui s'est révélée être une méprise ne doit pas consommer le tour du
+     * prochain inconnu, celui-là bien réel.
+     */
+    @Test
+    void unInconnuEstAnnonceANouveauApresUneMeprise() {
+        percevoirUnInconnuPendant(2.0);
+        assertEquals(1, rencontres.size());
+
+        registre.handleRencontreInconnuInaboutieEvent(new RencontreInconnuInaboutieEvent("Nicolas"));
+
+        // Bien avant les 120 s de temporisation, qui ne s'appliquent plus.
+        avancerDe(10.0);
+        percevoirUnInconnuPendant(2.0);
+
+        assertEquals(2, rencontres.size(), "le vrai inconnu doit être annoncé");
+    }
+
     @Test
     void quelquUnQuiResteNestPasResalueQuandLaTemporisationExpire() {
-        percevoirUnInconnu();
-        avancerDe(2.0);
-        percevoirUnInconnu();
+        percevoirUnInconnuPendant(2.0);
         assertEquals(1, rencontres.size());
 
         // Il ne bouge pas pendant cinq minutes, en restant vu en continu : la venue a déjà été
@@ -121,40 +202,30 @@ class RegistrePresenceTest {
 
     @Test
     void unRetourApresUneVraieAbsenceMaisAvantLaTemporisationNeRedeclenchePas() {
-        percevoirUnInconnu();
-        avancerDe(2.0);
-        percevoirUnInconnu();
+        percevoirUnInconnuPendant(2.0);
         assertEquals(1, rencontres.size());
 
         // Parti (plus de 4 s sans être vu), puis revenu assez longtemps : nouvelle venue,
         // mais la temporisation de 120 s n'est pas écoulée.
         avancerDe(10.0);
-        percevoirUnInconnu();
-        avancerDe(2.0);
-        percevoirUnInconnu();
+        percevoirUnInconnuPendant(2.0);
 
         assertEquals(1, rencontres.size());
     }
 
     @Test
     void unRetourApresLaTemporisationEstAnnonceANouveau() {
-        percevoirUnInconnu();
-        avancerDe(2.0);
-        percevoirUnInconnu();
+        percevoirUnInconnuPendant(2.0);
 
         avancerDe(200.0);
-        percevoirUnInconnu();
-        avancerDe(2.0);
-        percevoirUnInconnu();
+        percevoirUnInconnuPendant(2.0);
 
         assertEquals(2, rencontres.size());
     }
 
     @Test
     void deuxInconnusSimultanesNeComptentQuePourUnePresence() {
-        percevoir(inconnu(), inconnu());
-        avancerDe(2.0);
-        percevoir(inconnu(), inconnu());
+        percevoirPendant(2.0, inconnu(), inconnu());
 
         assertEquals(1, rencontres.size());
     }
@@ -163,9 +234,7 @@ class RegistrePresenceTest {
     void unePersonneConnueDeclencheDesRetrouvailles() {
         personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
 
-        percevoirMarie();
-        avancerDe(2.0);
-        percevoirMarie();
+        percevoirMariePendant(2.0);
 
         assertEquals(1, rencontres.size());
         RencontreEvent rencontre = rencontres.get(0);
@@ -179,12 +248,15 @@ class RegistrePresenceTest {
         LocalDateTime ilYATroisJours = LocalDateTime.now(horloge).minusDays(3);
         personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", ilYATroisJours, "son chat"));
 
-        percevoirMarie();
-        avancerDe(2.0);
-        percevoirMarie();
+        percevoirMariePendant(2.0);
 
         assertEquals(1, rencontres.size());
-        assertEquals(Duration.ofDays(3).toSeconds() + 2, rencontres.get(0).getSecondesDepuisDerniereRencontre());
+        // Trois jours, à la poignée de secondes qu'a duré la confirmation près : ce qui est
+        // rapporté, c'est l'absence, pas l'instant exact où la présence a été tranchée.
+        long secondes = rencontres.get(0).getSecondesDepuisDerniereRencontre();
+        assertTrue(secondes >= Duration.ofDays(3).toSeconds()
+                        && secondes <= Duration.ofDays(3).toSeconds() + 2,
+                "trois jours attendus, obtenu " + secondes + " s");
         assertEquals("son chat", rencontres.get(0).getPersonne().resumeDerniereConversation());
     }
 
@@ -192,22 +264,22 @@ class RegistrePresenceTest {
     void laRencontreEstDateeDansLaBase() {
         personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
 
-        percevoirMarie();
-        avancerDe(2.0);
-        percevoirMarie();
+        percevoirMariePendant(2.0);
 
         Personne marie = personneRepository.parId(ID_MARIE);
         assertNotNull(marie.derniereRencontre());
-        assertEquals(LocalDateTime.now(horloge), marie.derniereRencontre());
+        // Datée à l'instant où la présence a été confirmée, donc pendant la venue simulée.
+        assertTrue(!marie.derniereRencontre().isAfter(LocalDateTime.now(horloge)),
+                "la rencontre ne peut pas être datée du futur : " + marie.derniereRencontre());
+        assertTrue(marie.derniereRencontre().isAfter(LocalDateTime.now(horloge).minusSeconds(2)),
+                "la rencontre doit dater de la venue en cours : " + marie.derniereRencontre());
     }
 
     @Test
     void unVisageRattacheAUnePersonneEffaceeEstTraiteCommeUnInconnu() {
         // La base des personnes a été vidée sans celle des visages : plutôt que d'entretenir
         // une identité fantôme, le robot refait connaissance.
-        percevoirMarie();
-        avancerDe(2.0);
-        percevoirMarie();
+        percevoirMariePendant(2.0);
 
         assertEquals(1, rencontres.size());
         assertEquals(RencontreEvent.TYPE.INCONNU, rencontres.get(0).getType());
@@ -216,9 +288,7 @@ class RegistrePresenceTest {
 
     @Test
     void unePresenceSansVisageNeDeclencheRien() {
-        percevoir();
-        avancerDe(10.0);
-        percevoir();
+        percevoirPendant(10.0);
 
         assertTrue(rencontres.isEmpty());
     }
@@ -232,7 +302,35 @@ class RegistrePresenceTest {
     }
 
     private void percevoirMarie() {
-        percevoir(new VisagePercu(ID_MARIE, "Marie", 100, 100, 50, 50));
+        percevoir(marie());
+    }
+
+    private void percevoirUnInconnuPendant(double secondes) {
+        percevoirPendant(secondes, inconnu());
+    }
+
+    private void percevoirMariePendant(double secondes) {
+        percevoirPendant(secondes, marie());
+    }
+
+    /**
+     * Perçoit sans discontinuer pendant la durée demandée, à la cadence réelle de la
+     * reconnaissance (environ trois cycles par seconde).
+     * <p>
+     * Deux perceptions espacées de deux secondes ne valent pas une présence de deux secondes, et
+     * le registre a désormais raison de les refuser : c'est exactement ce qui lui faisait aborder
+     * quelqu'un qu'il n'avait fait qu'entrevoir.
+     */
+    private void percevoirPendant(double secondes, VisagePercu... visages) {
+        int cycles = (int) Math.round(secondes * CYCLES_PAR_SECONDE);
+        for (int i = 0; i < cycles; i++) {
+            percevoir(visages);
+            avancerDe(1.0 / CYCLES_PAR_SECONDE);
+        }
+    }
+
+    private static VisagePercu marie() {
+        return new VisagePercu(ID_MARIE, "Marie", 100, 100, 50, 50);
     }
 
     private static VisagePercu inconnu() {
@@ -241,5 +339,36 @@ class RegistrePresenceTest {
 
     private void percevoir(VisagePercu... visages) {
         registre.handleVisagePercuEvent(new VisagePercuEvent(List.of(visages), 640, 480));
+    }
+
+    @Test
+    void unVisageAppisLibereLaPlaceDesInconnus() {
+        // Un premier inconnu est salué, puis enrôlé : le suivant est forcément quelqu'un d'autre
+        // et doit être annoncé, alors que la temporisation des inconnus court encore.
+        percevoirUnInconnuPendant(2.0);
+        assertEquals(1, rencontres.size());
+
+        registre.handleEnrolementTermineEvent(new EnrolementTermineEvent("id-nouveau", 5, true));
+
+        avancerDe(1.0);
+        percevoirUnInconnuPendant(2.0);
+
+        assertEquals(2, rencontres.size(), "le second inconnu est bien annoncé");
+    }
+
+    @Test
+    void unVisageAppisNeDeclenchePasDeRetrouvaillesImmediates() {
+        // Sans précaution, la personne dont on vient d'apprendre le visage est reconnue dans la
+        // seconde et le robot lui annonce des retrouvailles.
+        personneRepository.enregistrer(Personne.nouvelle("Marie"));
+        Personne marie = personneRepository.toutes().iterator().next();
+
+        registre.handleEnrolementTermineEvent(new EnrolementTermineEvent(marie.id(), 5, true));
+
+        percevoir(new VisagePercu(marie.id(), "Marie", 100, 100, 50, 50));
+        avancerDe(3.0);
+        percevoir(new VisagePercu(marie.id(), "Marie", 100, 100, 50, 50));
+
+        assertTrue(rencontres.isEmpty(), "on vient de faire connaissance, pas de retrouvailles");
     }
 }
