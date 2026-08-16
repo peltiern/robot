@@ -1,6 +1,7 @@
 package fr.roboteek.robot.memoire.personne;
 
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
+import fr.roboteek.robot.util.HorlogeReglable;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import org.junit.jupiter.api.AfterEach;

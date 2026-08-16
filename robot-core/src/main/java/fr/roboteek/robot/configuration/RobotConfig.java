@@ -160,4 +160,134 @@ public interface RobotConfig extends Config {
     @Key("robot.presence.rencontre.temporisation.seconds")
     @DefaultValue("120.0")
     double temporisationEntreRencontresSecondes();
+
+    /**
+     * Délai minimal, en secondes, avant qu'une activité qui vient de se terminer puisse être
+     * réclamée à nouveau.
+     * <p>
+     * Garde-fou du cerveau, distinct de {@link #temporisationEntreRencontresSecondes()} qui
+     * raisonne, lui, par personne : celui-ci protège de toute demande insistante, d'où qu'elle
+     * vienne. Le cas qu'il traite est celui d'une activité qui tourne court — quelqu'un qu'on
+     * aborde et qui ne répond pas — et dont la cause est toujours là quand elle se termine :
+     * sans délai, elle repartirait aussitôt, en boucle.
+     *
+     * @return la temporisation avant relance d'une même activité, en secondes
+     */
+    @Key("robot.activite.temporisation.seconds")
+    @DefaultValue("30.0")
+    double delaiAvantRelanceActiviteSecondes();
+
+    /**
+     * Indique si le robot tourne la tête vers les visages qu'il perçoit.
+     *
+     * @return true si le regard est activé
+     */
+    @Key("robot.regard.enabled")
+    @DefaultValue("true")
+    boolean regardEnabled();
+
+    /**
+     * Champ de vision horizontal de la webcam, en degrés.
+     * <p>
+     * C'est lui qui convertit un écart en pixels en un angle de rotation du cou : une valeur
+     * fausse ne fait pas regarder à côté, elle fait sous-corriger ou dépasser. À mesurer une fois
+     * (repère à distance connue) plutôt qu'à croire sur parole du fabricant.
+     *
+     * @return le champ horizontal de la caméra, en degrés
+     */
+    @Key("robot.regard.camera.champ.horizontal.degres")
+    @DefaultValue("60.0")
+    double champHorizontalCameraDegres();
+
+    /**
+     * Écart angulaire en deçà duquel le robot considère qu'il regarde déjà la personne.
+     * <p>
+     * Sans cette zone morte, la moindre imprécision de la boîte englobante — qui respire d'une
+     * image à l'autre — suffirait à faire bouger la tête en permanence.
+     *
+     * @return la zone morte du regard, en degrés
+     */
+    @Key("robot.regard.zone.morte.degres")
+    @DefaultValue("5.0")
+    double zoneMorteRegardDegres();
+
+    /**
+     * Combien d'unités de commande du cou valent un degré d'écart vu par la caméra.
+     * <p>
+     * <b>Seul et unique réglage entre l'écart perçu et la consigne envoyée</b>, et c'est
+     * délibéré : le cou se commande en position absolue (il lit où il est et ajoute l'angle), la
+     * cible est donc calculée directement, pas approchée. Corriger volontairement moins que
+     * l'écart n'apporte rien qu'une suite de petits mouvements — c'est exactement ce qu'un
+     * amortissement, essayé le 2026-08-12, a produit.
+     * <p>
+     * Mesuré sur le robot le 2026-08-12, sur des relevés où la personne ne bougeait pas : une
+     * unité de commande déplace le regard d'<b>un degré apparent</b>. Deux causes s'y multiplient
+     * sans qu'un essai les sépare — un champ de vision réel différent du déclaré, et une unité de
+     * servo qui ne vaut pas forcément un degré de tête. Le produit, lui, se mesure : commander un
+     * angle connu et regarder de combien l'écart perçu a changé, <b>une fois la tête
+     * stabilisée</b>. Mesurer pendant qu'elle traverse surestime largement le déplacement, et
+     * c'est ce qui avait d'abord fait croire à un facteur 2.
+     *
+     * @return le nombre d'unités de commande panoramique par degré d'écart perçu
+     */
+    @Key("robot.regard.panoramique.commande.par.degre.vu")
+    @DefaultValue("1.0")
+    double commandePanoramiqueParDegreVu();
+
+    /**
+     * Idem pour l'inclinaison — <b>et la valeur n'est pas la même</b>.
+     * <p>
+     * Mesuré le 2026-08-12 : une unité de commande déplace le regard d'environ <b>trois degrés</b>
+     * en inclinaison (quatre relevés concordants : 6,3 commandés pour 22,6° vus), contre un seul
+     * en panoramique. Les deux servos n'entraînent pas la tête avec le même bras de levier, et
+     * une échelle commune faisait donc dépasser lourdement sur cet axe.
+     * <p>
+     * 0,3 plutôt que le tiers exact, et c'est délibéré : sous-corriger ne coûte qu'un mouvement de
+     * plus, sur-corriger fait osciller la tête sans fin.
+     *
+     * @return le nombre d'unités de commande d'inclinaison par degré d'écart perçu
+     */
+    @Key("robot.regard.inclinaison.commande.par.degre.vu")
+    @DefaultValue("0.3")
+    double commandeInclinaisonParDegreVu();
+
+    /**
+     * Délai minimal entre deux corrections du regard, en secondes.
+     * <p>
+     * Le temps que le servo arrive et que la caméra — portée par la tête — voie le résultat.
+     * Trop court, les corrections s'empilent sur une image d'avant le mouvement et la tête part
+     * trop loin.
+     *
+     * @return la temporisation entre deux corrections du regard, en secondes
+     */
+    @Key("robot.regard.temporisation.seconds")
+    @DefaultValue("1.0")
+    double temporisationRegardSecondes();
+
+    /**
+     * Inverse le sens de rotation panoramique pour le regard.
+     * <p>
+     * Étalonnage à faire <b>une fois</b> : le sens dépend du montage du servo, que rien dans le
+     * code ne permet de deviner (les deux conventions de {@code MouvementCouEvent} se
+     * contredisent d'ailleurs). Vérifié sur le robot le 2026-08-12 : {@code false} est le bon
+     * sens. Rechargé à chaud, sans reconstruire l'image.
+     *
+     * @return true si le sens de rotation panoramique doit être inversé
+     */
+    @Key("robot.regard.panoramique.sens.inverse")
+    @DefaultValue("false")
+    boolean regardPanoramiqueSensInverse();
+
+    /**
+     * Inverse le sens de rotation en inclinaison pour le regard.
+     * <p>
+     * Réglage indépendant du panoramique : les deux servos sont montés séparément, et rien ne
+     * garantit qu'ils partagent la même convention. Si le robot lève la tête quand il devrait la
+     * baisser, passer à {@code true}.
+     *
+     * @return true si le sens de rotation en inclinaison doit être inversé
+     */
+    @Key("robot.regard.inclinaison.sens.inverse")
+    @DefaultValue("false")
+    boolean regardInclinaisonSensInverse();
 }

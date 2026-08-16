@@ -72,6 +72,12 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
      */
     private AtomicBoolean positionAtteinte = new AtomicBoolean(true);
 
+    /** Index du moteur sur le contrôleur, conservé pour désigner le servo dans les journaux. */
+    private int index;
+
+    /** Vrai tant que les consignes de rotation sont rabotées par une butée (voir {@link #rotate}). */
+    private volatile boolean consigneBornee = false;
+
     /**
      * Constructeur d'un moteur Phidget.
      *
@@ -90,6 +96,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
      */
     public PhidgetsServoMotor(int index, double positionInitiale, double positionMin, double positionMax, double vitesseParDefaut, double accelerationParDefaut, Double positionEngagement) {
         try {
+            this.index = index;
             this.positionEngagement = positionEngagement;
             this.positionInitiale = positionInitiale;
             this.positionMin = positionMin;
@@ -181,8 +188,35 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         }
     }
 
+    /**
+     * Tourne d'un angle relatif à la position courante, <b>bornée aux butées logicielles</b>.
+     * <p>
+     * Le bornage n'est pas décoratif : contrairement au positionnement absolu, qui vérifie ses
+     * limites chez l'appelant, une rotation relative part d'une position qu'on ne choisit pas.
+     * Une consigne hors bornes ferait lever le Phidget et le mouvement serait perdu ; borner
+     * fait tourner aussi loin que possible, ce qu'on veut d'un geste qui vise quelque chose.
+     */
     public void rotate(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
-        setPositionCible(getPositionReelle() + angle, vitesse, acceleration, waitForPosition);
+        double demande = getPositionReelle() + angle;
+        double cible = Math.clamp(demande, positionMin, positionMax);
+        // Sans ces lignes, un servo collé à sa butée est indiscernable d'un servo qui obéit mal :
+        // l'appelant redemande, rien ne bouge, et rien ne le dit. Vu le 2026-08-12 sur le cou,
+        // vingt consignes de suite dans le vide, prises pour un défaut de réglage.
+        // Journalisé aux CHANGEMENTS d'état seulement : un axe qui reste en butée écrirait sinon
+        // une ligne par consigne, soit une par seconde pour le regard.
+        if (cible != demande && !consigneBornee) {
+            consigneBornee = true;
+            logger.info("Servo {} : consigne {} bornée à {} (butée {} - {}) — en butée",
+                    index, arrondi(demande), arrondi(cible), positionMin, positionMax);
+        } else if (cible == demande && consigneBornee) {
+            consigneBornee = false;
+            logger.info("Servo {} : sorti de butée", index);
+        }
+        setPositionCible(cible, vitesse, acceleration, waitForPosition);
+    }
+
+    private static double arrondi(double valeur) {
+        return Math.round(valeur * 10) / 10d;
     }
 
     public void forward(Double vitesse, Double acceleration, boolean waitForPosition) {

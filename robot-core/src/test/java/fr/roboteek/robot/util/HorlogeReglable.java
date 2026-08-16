@@ -1,4 +1,4 @@
-package fr.roboteek.robot.memoire.personne;
+package fr.roboteek.robot.util;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -8,20 +8,23 @@ import java.time.ZoneId;
 /**
  * Horloge que le test fait avancer à la main.
  * <p>
- * {@code Clock.fixed} ne suffit pas : tout ce qu'on veut vérifier ici, ce sont des durées —
- * présence confirmée, absence, temporisation. Dormir réellement rendrait la suite de tests
+ * {@code Clock.fixed} ne suffit pas : ce qu'on veut vérifier, ce sont des durées — présence
+ * confirmée, absence, temporisation de relance. Dormir réellement rendrait la suite de tests
  * interminable et instable.
+ * <p>
+ * Partagée par tout ce dont le comportement est affaire de temps : le registre de présence
+ * comme l'arbitrage des activités.
  */
-class HorlogeReglable extends Clock {
+public class HorlogeReglable extends Clock {
 
     private Instant instant;
 
-    HorlogeReglable(Instant debut) {
+    public HorlogeReglable(Instant debut) {
         this.instant = debut;
     }
 
     /** Fait avancer le temps. */
-    void avancerDe(Duration duree) {
+    public void avancerDe(Duration duree) {
         instant = instant.plus(duree);
     }
 
