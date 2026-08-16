@@ -21,6 +21,17 @@ import org.springframework.util.ClassUtils;
 public abstract class AbstractActivity {
 
     /**
+     * Priorité d'une activité ordinaire, celle qu'on interrompt sans façon.
+     */
+    public static final int PRIORITE_NORMALE = 0;
+
+    /**
+     * Priorité d'une activité qui ne doit pas être interrompue par le tout-venant : aborder
+     * quelqu'un, par exemple, où être coupé en plein milieu laisserait la personne en plan.
+     */
+    public static final int PRIORITE_HAUTE = 10;
+
+    /**
      * Flag to indicate that the activity is stopped.
      */
     protected volatile boolean stopActivity;
@@ -49,6 +60,19 @@ public abstract class AbstractActivity {
      */
     public String identifiant() {
         return ClassUtils.getUserClass(this).getSimpleName();
+    }
+
+    /**
+     * Poids de l'activité dans l'arbitrage : une demande n'interrompt jamais une activité
+     * strictement plus prioritaire qu'elle (voir {@code ArbitrageActivites}).
+     * <p>
+     * {@link #PRIORITE_NORMALE} par défaut, ce qui convient à l'activité de repli comme aux
+     * occupations ordinaires : elles se cèdent la place les unes aux autres.
+     *
+     * @return la priorité de l'activité, d'autant plus forte qu'elle est grande
+     */
+    public int priorite() {
+        return PRIORITE_NORMALE;
     }
 
     /**

@@ -1,6 +1,7 @@
 package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.AbstractActivity;
+import fr.roboteek.robot.activites.akinator.AkinatorActivity;
 import fr.roboteek.robot.activites.conversation.ConversationActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
@@ -16,6 +17,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -32,6 +34,25 @@ import java.util.stream.Collectors;
  */
 @Component
 public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle {
+
+    /**
+     * Activité à réclamer quand la phrase entendue se résume à l'un de ces mots.
+     * <p>
+     * Plusieurs mots pour une même activité, et des mots <b>français courants</b> : le petit
+     * modèle Vosk ne restitue que ce que contient son lexique, et « akinator » n'y est pas — dit
+     * au robot, il en ressort « inhalateur » ou « akhenaton ». Le nom propre reste dans la table
+     * pour le jour où un modèle plus fourni le connaîtra, mais ce n'est pas lui qui déclenche.
+     * <p>
+     * La conversation y figure aussi, et c'est la porte de sortie : sans elle, une activité
+     * lancée à la voix ne se quitterait qu'en éteignant le robot, « au revoir » l'arrêtant pour
+     * de bon.
+     */
+    private static final Map<String, String> ACTIVITES_PAR_MOT_CLE = Map.of(
+            "devinette", AkinatorActivity.class.getSimpleName(),
+            "devinettes", AkinatorActivity.class.getSimpleName(),
+            "akinator", AkinatorActivity.class.getSimpleName(),
+            "conversation", ConversationActivity.class.getSimpleName(),
+            "discussion", ConversationActivity.class.getSimpleName());
 
     /**
      * Contexte du robot.
@@ -64,6 +85,11 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     private final AtomicReference<AbstractActivity> activiteDemandee = new AtomicReference<>();
 
     /**
+     * Décide des demandes de changement d'activité (priorité, temporisation, arrêt d'urgence).
+     */
+    private final ArbitrageActivites arbitrageActivites;
+
+    /**
      * Logger.
      */
     private final Logger logger = LoggerFactory.getLogger(Cerveau.class);
@@ -73,11 +99,12 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private volatile boolean running = false;
 
-    public Cerveau(ConversationActivity conversationActivity, List<AbstractActivity> activites) {
+    public Cerveau(ConversationActivity conversationActivity, List<AbstractActivity> activites, ArbitrageActivites arbitrageActivites) {
         super("Brain");
         this.conversationActivity = conversationActivity;
         this.activitesParIdentifiant = activites.stream()
                 .collect(Collectors.toMap(AbstractActivity::identifiant, Function.identity()));
+        this.arbitrageActivites = arbitrageActivites;
     }
 
     @Override
@@ -88,10 +115,17 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     @Override
     public void loop() {
         while (!Thread.currentThread().isInterrupted()) {
+            // Copie locale : l'arrêt du robot peut remettre currentActivity à null en cours de route.
+            AbstractActivity activiteEnCours = currentActivity;
             // Start activity if exists
-            if (currentActivity != null && currentActivity.isInitialized()) {
+            if (activiteEnCours != null && activiteEnCours.isInitialized()) {
                 logger.debug("Lancement de l'activité");
-                boolean hasBeenStopped = currentActivity.run();
+                boolean hasBeenStopped = activiteEnCours.run();
+                if (activiteEnCours != conversationActivity) {
+                    // L'activité par défaut est rejointe par repli et jamais réclamée : la
+                    // temporiser reviendrait à risquer de la rendre inaccessible.
+                    arbitrageActivites.noterFinExecution(activiteEnCours);
+                }
                 // La boucle est seule à changer d'activité : une demande déposée pendant que
                 // l'activité tournait n'est honorée qu'ici, une fois son run() rendu.
                 AbstractActivity activiteSuivante = activiteDemandee.getAndSet(null);
@@ -139,9 +173,11 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
                     final StopEvent stopEvent = new StopEvent();
                     applicationEventPublisher.publishEvent(stopEvent);
                     dire("Au revoir.");
-                } else if (texteReconnu.trim().equalsIgnoreCase("akinator")) {
-//                    initNewCurrentActivity(new AkinatorActivity());
-                    dire("Cette activité n'est pour l'instant pas disponible");
+                } else if (ACTIVITES_PAR_MOT_CLE.containsKey(motCle(texteReconnu))) {
+                    // Passe par le circuit commun plutôt que de basculer en dur : c'est aussi le
+                    // seul déclencheur de demande d'activité à portée de voix, donc de test.
+                    applicationEventPublisher.publishEvent(
+                            new DemandeActiviteEvent(ACTIVITES_PAR_MOT_CLE.get(motCle(texteReconnu))));
                 } else {
                     ReconnaissanceVocaleEvent event = new ReconnaissanceVocaleEvent();
                     event.setProcessedByBrain(true);
@@ -161,8 +197,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      * changement, qui bascule. Le listener reste donc court : il s'exécute sur le thread de
      * l'émetteur (la boucle de capture vidéo, par exemple), qu'il ne doit pas retenir.
      * <p>
-     * Aucun arbitrage pour l'instant — ni priorité, ni temporisation par personne, ni refus
-     * pendant un arrêt d'urgence : c'est l'étape suivante du chantier d'accueil.
+     * La demande n'est pas honorée d'office : {@link ArbitrageActivites} tranche d'abord.
      *
      * @param demandeActiviteEvent demande de changement d'activité
      */
@@ -178,8 +213,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             return;
         }
         AbstractActivity activiteCourante = currentActivity;
-        if (activite == activiteCourante) {
-            logger.debug("Activité {} déjà en cours, demande ignorée", activite.identifiant());
+        if (!arbitrageActivites.arbitrer(activite, activiteCourante).estAcceptee()) {
             return;
         }
         logger.info("Activité demandée : {}", activite.identifiant());
@@ -206,7 +240,11 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     }
 
     /**
-     * Commence une nouvelle activité
+     * Commence une nouvelle activité.
+     * <p>
+     * Une activité qui ne parvient pas à s'initialiser rend la main à la conversation. Sans ce
+     * repli, la boucle tournerait indéfiniment à vide sur une activité jamais prête (Akinator
+     * sans réseau, par exemple) : le robot resterait allumé, muet, et sans rien pour l'en sortir.
      *
      * @param activity la nouvelle activité
      */
@@ -216,7 +254,18 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         currentActivity = activity;
         logger.info("Nouvelle activité : {}", currentActivity.identifiant());
         // Activation : réinitialise l'activité et autorise le traitement des évènements
-        currentActivity.activer();
+        try {
+            currentActivity.activer();
+        } catch (RuntimeException e) {
+            logger.error("Échec de l'initialisation de l'activité {}", activity.identifiant(), e);
+        }
+        if (!activity.isInitialized() && activity != conversationActivity) {
+            logger.error("L'activité {} ne s'est pas initialisée : retour à la conversation", activity.identifiant());
+            // Comptée comme terminée : la cause de l'échec dure en général plus longtemps que
+            // l'échec lui-même, et la temporisation évite d'y revenir en boucle.
+            arbitrageActivites.noterFinExecution(activity);
+            initNewCurrentActivity(conversationActivity);
+        }
     }
 
     private synchronized void stopCurrentActivity() {
@@ -226,6 +275,13 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             currentActivity.desactiver();
             currentActivity = null;
         }
+    }
+
+    /**
+     * Réduit une phrase entendue à sa forme comparable aux mots-clés d'activité.
+     */
+    private static String motCle(String texteReconnu) {
+        return texteReconnu.trim().toLowerCase(Locale.FRENCH);
     }
 
     /**

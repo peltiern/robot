@@ -25,6 +25,8 @@ public class RobotEventAdapter implements JsonDeserializer<RobotEvent>, JsonSeri
             return (RobotEvent) context.deserialize(json, PlayAnimationEvent.class);
         } else if (eventType.equals(ArretUrgenceEvent.EVENT_TYPE)) {
             return (RobotEvent) context.deserialize(json, ArretUrgenceEvent.class);
+        } else if (eventType.equals(DemandeActiviteEvent.EVENT_TYPE)) {
+            return (RobotEvent) context.deserialize(json, DemandeActiviteEvent.class);
         }
         return null;
     }
