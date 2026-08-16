@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.objdetect.FaceRecognizerSF;
 
 import java.io.File;
 import java.util.List;
@@ -40,7 +39,6 @@ class OpenCvServiceReconnaissanceVisageTest {
 
     private VisageConnuRepository repository;
     private OpenCvServiceReconnaissanceVisage reconnaissance;
-    private FaceRecognizerSF reconnaisseurPourEnrolement;
 
     @BeforeAll
     static void verifierModelesDisponibles() {
@@ -55,7 +53,6 @@ class OpenCvServiceReconnaissanceVisageTest {
     void setUp() {
         repository = new VisageConnuRepository(new File(dossierTemp, "visages.db").getAbsolutePath());
         reconnaissance = new OpenCvServiceReconnaissanceVisage(cheminModeleSFace, repository);
-        reconnaisseurPourEnrolement = FaceRecognizerSF.create(cheminModeleSFace, "");
 
         enregistrer("Amy", IMAGE_AMY);
         enregistrer("Einstein", IMAGE_EINSTEIN);
@@ -77,19 +74,22 @@ class OpenCvServiceReconnaissanceVisageTest {
         assertNull(identifierPremierVisage(IMAGE_SHELDON));
     }
 
+    @Test
+    void lEmbeddingExtraitPermetDEnrolerUnVisage() {
+        // Sheldon est inconnu au départ (voir le test précédent) ; on l'enrôle avec la seule
+        // empreinte extraite du service, et il doit alors se reconnaître lui-même.
+        enregistrer("Sheldon", IMAGE_SHELDON);
+
+        assertEquals("Sheldon", identifierPremierVisage(IMAGE_SHELDON));
+        assertEquals("Amy", identifierPremierVisage(IMAGE_AMY));
+    }
+
     private void enregistrer(String nom, String cheminImage) {
         Mat image = Imgcodecs.imread(cheminImage);
         assertFalse(image.empty(), "Image de test introuvable : " + cheminImage);
         VisageDetecte visage = OpenCvServiceDetectionVisage.getInstance().detecter(image).get(0);
 
-        Mat aligne = new Mat();
-        reconnaisseurPourEnrolement.alignCrop(image, visage.ligneBrute(), aligne);
-        Mat embeddingMat = new Mat();
-        reconnaisseurPourEnrolement.feature(aligne, embeddingMat);
-        float[] embedding = new float[embeddingMat.cols()];
-        embeddingMat.get(0, 0, embedding);
-
-        repository.ajouter(nom, embedding);
+        repository.ajouter(nom, reconnaissance.extraireEmbedding(image, visage));
     }
 
     private String identifierPremierVisage(String cheminImage) {

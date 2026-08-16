@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.util.ClassUtils;
 
 
 /**
@@ -38,6 +39,17 @@ public abstract class AbstractActivity {
      */
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
+
+    /**
+     * Identifiant de l'activité : le nom simple de sa classe. Sert à la désigner dans un
+     * {@code DemandeActiviteEvent} et dans les logs.
+     * <p>
+     * {@link ClassUtils#getUserClass} et non {@code getClass()} : les activités sont proxiées
+     * par CGLIB (@Async) et la classe du proxy s'appelle « ConversationActivity$$SpringCGLIB$$0 ».
+     */
+    public String identifiant() {
+        return ClassUtils.getUserClass(this).getSimpleName();
+    }
 
     /**
      * Initializes the activity before event listeners activation.
