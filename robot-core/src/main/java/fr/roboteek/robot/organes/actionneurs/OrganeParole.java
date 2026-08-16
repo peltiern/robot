@@ -10,6 +10,7 @@ import fr.roboteek.robot.services.providers.google.speech.synthesizer.GoogleSpee
 import fr.roboteek.robot.services.providers.piper.speech.synthesizer.PiperSpeechSynthesizerService;
 import fr.roboteek.robot.services.synthesizer.SpeechSynthesizerService;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
+import fr.roboteek.robot.systemenerveux.event.ParoleTermineeEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent.CONTROLE;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
@@ -76,39 +77,49 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
             applicationEventPublisher.publishEvent(eventPause);
+            try {
+                lireEtAttendre(texte);
+            } finally {
+                // Les deux reprises sont dans un finally, et ce n'est pas de la précaution de
+                // principe : la reconnaissance vocale est mise en pause AVANT la synthèse. Si
+                // celle-ci échoue — Piper mort, fichier illisible, exception quelconque —, sans
+                // ces lignes le robot resterait sourd définitivement, et qui attend la fin de la
+                // phrase pour écouter la réponse attendrait pour rien.
+                final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
+                eventRedemarrage.setControle(CONTROLE.DEMARRER);
+                applicationEventPublisher.publishEvent(eventRedemarrage);
+                applicationEventPublisher.publishEvent(new ParoleTermineeEvent(texte));
+            }
+        }
+    }
 
-            logger.info("Lecture :\t{}", texte);
+    private void lireEtAttendre(String texte) {
+        logger.info("Lecture :\t{}", texte);
 
-            // Perform the text-to-speech request on the text input with the selected voice parameters and
-            // audio file type
-            byte[] audioContents = speechSynthesizerService.synthesize(texte);
+        // Perform the text-to-speech request on the text input with the selected voice parameters and
+        // audio file type
+        byte[] audioContents = speechSynthesizerService.synthesize(texte);
 
-            if (audioContents != null) {
-                // Write the response to the output file.
-                String pathOutputFile = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "output-" + System.currentTimeMillis() + ".wav";
-                try (OutputStream out = new FileOutputStream(pathOutputFile)) {
-                    out.write(audioContents);
-                } catch (IOException e) {
-                    logger.error("Erreur lors de l'écriture du fichier de synthèse vocale {}", pathOutputFile, e);
-                }
-
-                try {
-                    Process p = new ProcessBuilder(fichierSyntheseVocale, pathOutputFile).start();
-                    p.waitFor();
-                } catch (IOException e) {
-                    logger.error("Erreur lors de la lecture du fichier de synthèse vocale {}", pathOutputFile, e);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    logger.warn("Lecture de la synthèse vocale interrompue");
-                }
-
-                logger.debug("Fin lecture :\t{}", texte);
+        if (audioContents != null) {
+            // Write the response to the output file.
+            String pathOutputFile = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + "output-" + System.currentTimeMillis() + ".wav";
+            try (OutputStream out = new FileOutputStream(pathOutputFile)) {
+                out.write(audioContents);
+            } catch (IOException e) {
+                logger.error("Erreur lors de l'écriture du fichier de synthèse vocale {}", pathOutputFile, e);
             }
 
-            // Envoi d'un évènement pour redémarrer la reconnaissance vocale
-            final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
-            eventRedemarrage.setControle(CONTROLE.DEMARRER);
-            applicationEventPublisher.publishEvent(eventRedemarrage);
+            try {
+                Process p = new ProcessBuilder(fichierSyntheseVocale, pathOutputFile).start();
+                p.waitFor();
+            } catch (IOException e) {
+                logger.error("Erreur lors de la lecture du fichier de synthèse vocale {}", pathOutputFile, e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Lecture de la synthèse vocale interrompue");
+            }
+
+            logger.debug("Fin lecture :\t{}", texte);
         }
     }
 

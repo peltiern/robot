@@ -2,6 +2,8 @@ package fr.roboteek.robot.services.vision.face;
 
 import org.opencv.core.Mat;
 
+import java.util.List;
+
 /**
  * Interface de reconnaissance de visages : identifie un visage déjà détecté parmi
  * les visages connus enregistrés en base.
@@ -31,4 +33,17 @@ public interface ServiceReconnaissanceVisage {
      * @return l'empreinte du visage
      */
     float[] extraireEmbedding(Mat image, VisageDetecte visage);
+
+    /**
+     * Rattache des empreintes à une personne : à partir de cet instant, elle est reconnue.
+     * <p>
+     * L'enregistrement passe par le service et non par la base directement, et ce n'est pas un
+     * détail : <b>MapDB verrouille son fichier</b>, et c'est le service qui le détient. Ouvrir un
+     * second accès pour écrire échouerait.
+     *
+     * @param idPersonne identifiant de la personne
+     * @param empreintes empreintes relevées, plusieurs valant mieux qu'une — une seule prise à
+     *                   contre-jour et la personne n'est plus jamais reconnue
+     */
+    void enrolerPersonne(String idPersonne, List<float[]> empreintes);
 }
