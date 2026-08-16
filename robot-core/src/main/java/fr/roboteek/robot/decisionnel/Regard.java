@@ -1,6 +1,7 @@
 package fr.roboteek.robot.decisionnel;
 
 import jakarta.annotation.PostConstruct;
+import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
@@ -101,11 +102,12 @@ public class Regard {
      */
     @PostConstruct
     void annoncerReglages() {
+        RobotConfig reglages = robotConfig();
         logger.info("Regard : {}, {} / {} unité(s) de cou par degré vu (panoramique / inclinaison), "
                         + "zone morte {} degrés, une correction toutes les {} s",
-                robotConfig().regardEnabled() ? "actif" : "inactif",
-                robotConfig().commandePanoramiqueParDegreVu(), robotConfig().commandeInclinaisonParDegreVu(),
-                robotConfig().zoneMorteRegardDegres(), robotConfig().temporisationRegardSecondes());
+                reglages.regardEnabled() ? "actif" : "inactif",
+                reglages.commandePanoramiqueParDegreVu(), reglages.commandeInclinaisonParDegreVu(),
+                reglages.zoneMorteRegardDegres(), reglages.temporisationRegardSecondes());
     }
 
     /**
@@ -114,7 +116,11 @@ public class Regard {
      */
     @EventListener
     public synchronized void handleVisagePercuEvent(VisagePercuEvent visagePercuEvent) {
-        if (!robotConfig().regardEnabled()
+        // Les réglages sont lus UNE fois par évènement, et non à chaque besoin : ils sont
+        // rechargeables à chaud, chaque lecture est donc une recherche, et surtout ils pourraient
+        // changer au milieu d'un calcul — une zone morte d'avant et une échelle d'après.
+        RobotConfig reglages = robotConfig();
+        if (!reglages.regardEnabled()
                 || visagePercuEvent.getLargeurImage() <= 0 || visagePercuEvent.getHauteurImage() <= 0) {
             return;
         }
@@ -126,11 +132,11 @@ public class Regard {
         // Une seule focale pour les deux axes : les pixels sont carrés, l'échelle
         // pixels-par-degré est donc la même horizontalement et verticalement. C'est ce qui évite
         // d'avoir à déclarer — et à mesurer — un second champ de vision pour la hauteur.
-        double focalePixels = focalePixels(visagePercuEvent.getLargeurImage());
+        double focalePixels = focalePixels(visagePercuEvent.getLargeurImage(), reglages.champHorizontalCameraDegres());
         double ecartPanoramique = ecartAngulaire(centreX(cible) - visagePercuEvent.getLargeurImage() / 2.0, focalePixels);
         double ecartInclinaison = ecartAngulaire(centreY(cible) - visagePercuEvent.getHauteurImage() / 2.0, focalePixels);
 
-        double zoneMorte = robotConfig().zoneMorteRegardDegres();
+        double zoneMorte = reglages.zoneMorteRegardDegres();
         boolean corrigerPanoramique = Math.abs(ecartPanoramique) >= zoneMorte;
         boolean corrigerInclinaison = Math.abs(ecartInclinaison) >= zoneMorte;
         if (!corrigerPanoramique && !corrigerInclinaison) {
@@ -138,7 +144,7 @@ public class Regard {
         }
         Instant maintenant = horloge.instant();
         if (derniereCorrection != null
-                && secondesEcoulees(derniereCorrection, maintenant) < robotConfig().temporisationRegardSecondes()) {
+                && secondesEcoulees(derniereCorrection, maintenant) < reglages.temporisationRegardSecondes()) {
             return;
         }
 
@@ -146,9 +152,9 @@ public class Regard {
         // la suive — n'est pas commandé du tout : une rotation nulle ferait repartir une consigne
         // pour rien, et une rotation trop petite ne ferait rien du tout.
         double commandePanoramique = corrigerPanoramique
-                ? commande(ecartPanoramique, robotConfig().commandePanoramiqueParDegreVu()) : 0;
+                ? commande(ecartPanoramique, reglages.commandePanoramiqueParDegreVu()) : 0;
         double commandeInclinaison = corrigerInclinaison
-                ? commande(ecartInclinaison, robotConfig().commandeInclinaisonParDegreVu()) : 0;
+                ? commande(ecartInclinaison, reglages.commandeInclinaisonParDegreVu()) : 0;
         if (Math.abs(commandePanoramique) < COMMANDE_MINIMALE) {
             commandePanoramique = 0;
         }
@@ -172,7 +178,7 @@ public class Regard {
                 arrondi(ecartPanoramique), arrondi(ecartInclinaison),
                 arrondi(commandePanoramique), arrondi(commandeInclinaison),
                 visagePercuEvent.getVisages().size());
-        tournerLaTete(commandePanoramique, commandeInclinaison);
+        tournerLaTete(commandePanoramique, commandeInclinaison, reglages);
     }
 
     /**
@@ -214,8 +220,8 @@ public class Regard {
     /**
      * Distance focale de la caméra exprimée en pixels, déduite du champ de vision déclaré.
      */
-    private static double focalePixels(int largeurImage) {
-        return (largeurImage / 2.0) / Math.tan(Math.toRadians(robotConfig().champHorizontalCameraDegres() / 2.0));
+    private static double focalePixels(int largeurImage, double champHorizontalDegres) {
+        return (largeurImage / 2.0) / Math.tan(Math.toRadians(champHorizontalDegres / 2.0));
     }
 
     /**
@@ -234,17 +240,17 @@ public class Regard {
      * @param anglePanoramique rotation horizontale, positive vers la droite de l'image
      * @param angleInclinaison rotation verticale, positive vers le bas de l'image
      */
-    private void tournerLaTete(double anglePanoramique, double angleInclinaison) {
+    private void tournerLaTete(double anglePanoramique, double angleInclinaison, RobotConfig reglages) {
         MouvementCouEvent mouvement = new MouvementCouEvent();
         // Rotation relative et non position absolue : le cou n'a pas à savoir d'où il part, et
         // nous n'avons aucun moyen fiable de le lui dire (servos RC sans retour de position).
         if (anglePanoramique != 0) {
             mouvement.setAnglePanoramique(
-                    robotConfig().regardPanoramiqueSensInverse() ? -anglePanoramique : anglePanoramique);
+                    reglages.regardPanoramiqueSensInverse() ? -anglePanoramique : anglePanoramique);
         }
         if (angleInclinaison != 0) {
             mouvement.setAngleInclinaison(
-                    robotConfig().regardInclinaisonSensInverse() ? -angleInclinaison : angleInclinaison);
+                    reglages.regardInclinaisonSensInverse() ? -angleInclinaison : angleInclinaison);
         }
         applicationEventPublisher.publishEvent(mouvement);
     }

@@ -195,8 +195,36 @@ public interface RobotConfig extends Config {
      * @return la temporisation entre deux rencontres d'une même personne, en secondes
      */
     @Key("robot.presence.rencontre.temporisation.seconds")
-    @DefaultValue("120.0")
+    @DefaultValue("30.0")
     double temporisationEntreRencontresSecondes();
+
+    /**
+     * Durée d'absence en deçà de laquelle le robot <b>reprend</b> la conversation au lieu de
+     * saluer.
+     * <p>
+     * Quelqu'un qui s'absente une minute n'a pas besoin d'un nouveau bonjour : ce qu'il attend,
+     * c'est qu'on reprenne où on en était. Au-delà, l'absence se remarque, et une salutation
+     * redevient la bonne réaction.
+     *
+     * @return la durée d'absence sous laquelle on reprend sans saluer, en secondes
+     */
+    @Key("robot.retrouvailles.reprise.seconds")
+    @DefaultValue("300.0")
+    double dureeRepriseSansSalutationSecondes();
+
+    /**
+     * Durée d'absence en deçà de laquelle le robot ne dit <b>rien du tout</b> au retour.
+     * <p>
+     * Une absence de quelques secondes n'en est pas une : la personne s'est tournée, s'est levée,
+     * est sortie du champ un instant. La conversation n'a jamais été interrompue, et la reprendre
+     * à voix haute revient à la couper. Constaté le 2026-08-15 : « on parlait de la population
+     * française » douze secondes après en avoir parlé.
+     *
+     * @return la durée d'absence sous laquelle le retour passe sous silence, en secondes
+     */
+    @Key("robot.retrouvailles.silence.seconds")
+    @DefaultValue("60.0")
+    double dureeSilenceAuRetourSecondes();
 
     /**
      * Délai minimal, en secondes, avant qu'une activité qui vient de se terminer puisse être

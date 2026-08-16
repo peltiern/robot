@@ -174,6 +174,14 @@ public class RegistrePresence {
         if (presence.derniereVue == null || secondesEcoulees(presence.derniereVue, maintenant) > trouTolere) {
             // Première apparition, ou retour après une absence assez longue pour compter : la
             // personne recommence une venue, et redevient donc saluable.
+            // La durée du trou est retenue ici, et nulle part ailleurs : c'est la seule vraie
+            // absence, et le seul instant où on la connaisse. La date de la dernière rencontre
+            // annoncée, elle, ne dit rien de ce qui s'est passé entre-temps — quelqu'un peut
+            // avoir parlé sans discontinuer depuis. Confondre les deux a fait dire au robot
+            // « on parlait de la population française » douze secondes après l'avoir dit.
+            presence.secondesDAbsence = presence.derniereVue == null
+                    ? -1
+                    : (long) secondesEcoulees(presence.derniereVue, maintenant);
             presence.debutVenue = maintenant;
             presence.venueTraitee = false;
         }
@@ -203,7 +211,7 @@ public class RegistrePresence {
         }
 
         presence.derniereRencontre = maintenant;
-        annoncerRencontre(cle);
+        annoncerRencontre(cle, presence.secondesDAbsence);
     }
 
     /**
@@ -239,7 +247,7 @@ public class RegistrePresence {
         return presence.vuesRecentes.size();
     }
 
-    private void annoncerRencontre(String cle) {
+    private void annoncerRencontre(String cle, long secondesDAbsence) {
         Personne personne = CLE_INCONNU.equals(cle) ? null : personneRepository.parId(cle);
 
         if (CLE_INCONNU.equals(cle) || personne == null) {
@@ -254,16 +262,13 @@ public class RegistrePresence {
         }
 
         LocalDateTime maintenant = LocalDateTime.now(horloge);
-        long secondesDepuisDerniereRencontre = personne.derniereRencontre() == null
-                ? -1
-                : Duration.between(personne.derniereRencontre(), maintenant).toSeconds();
-
         Personne personneAJour = personne.rencontreeLe(maintenant);
         personneRepository.enregistrer(personneAJour);
 
-        logger.info("Rencontre : {}, vu pour la dernière fois il y a {} s", personne.prenom(), secondesDepuisDerniereRencontre);
+        logger.info("Rencontre : {}, absent pendant {} s (vu pour la dernière fois le {})",
+                personne.prenom(), secondesDAbsence, personne.derniereRencontre());
         applicationEventPublisher.publishEvent(
-                new RencontreEvent(RencontreEvent.TYPE.CONNU_REVU, personneAJour, secondesDepuisDerniereRencontre));
+                new RencontreEvent(RencontreEvent.TYPE.CONNU_REVU, personneAJour, secondesDAbsence));
     }
 
     private static double secondesEcoulees(Instant debut, Instant fin) {
@@ -284,6 +289,13 @@ public class RegistrePresence {
 
         /** La venue en cours a déjà été tranchée (annoncée ou volontairement tue). */
         private boolean venueTraitee;
+
+        /**
+         * Durée, en secondes, du trou qui a précédé la venue en cours ; {@code -1} à la première
+         * apparition. C'est l'absence réelle de la personne, celle qui décide si le robot doit la
+         * saluer, reprendre la conversation, ou se taire.
+         */
+        private long secondesDAbsence = -1;
 
         /**
          * Instants des dernières perceptions, purgés au-delà de la fenêtre d'arbitrage. C'est de

@@ -81,7 +81,7 @@ class RegistrePresenceTest {
         assertEquals(1, rencontres.size());
         assertEquals(RencontreEvent.TYPE.INCONNU, rencontres.get(0).getType());
         assertNull(rencontres.get(0).getPersonne());
-        assertEquals(-1, rencontres.get(0).getSecondesDepuisDerniereRencontre());
+        assertEquals(-1, rencontres.get(0).getSecondesDAbsence());
 
         // Il reste là : rien de plus ne doit partir.
         avancerDe(1.0);
@@ -127,7 +127,7 @@ class RegistrePresenceTest {
      */
     @Test
     void unVisageMajoritairementReconnuNeDeclenchePasDInconnu() {
-        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
 
         // Trois perceptions sur cinq la reconnaissent, deux la manquent.
         for (int i = 0; i < 4; i++) {
@@ -150,7 +150,7 @@ class RegistrePresenceTest {
     /** Et l'inverse : un vrai inconnu, majoritaire, doit bien être annoncé. */
     @Test
     void unInconnuMajoritaireEstAnnonceMalgreUneReconnaissanceIsolee() {
-        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
 
         for (int i = 0; i < 4; i++) {
             percevoirUnInconnu();
@@ -232,7 +232,7 @@ class RegistrePresenceTest {
 
     @Test
     void unePersonneConnueDeclencheDesRetrouvailles() {
-        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
 
         percevoirMariePendant(2.0);
 
@@ -240,29 +240,49 @@ class RegistrePresenceTest {
         RencontreEvent rencontre = rencontres.get(0);
         assertEquals(RencontreEvent.TYPE.CONNU_REVU, rencontre.getType());
         assertEquals("Marie", rencontre.getPersonne().prenom());
-        assertEquals(-1, rencontre.getSecondesDepuisDerniereRencontre(), "jamais rencontrée jusqu'ici");
+        assertEquals(-1, rencontre.getSecondesDAbsence(), "jamais rencontrée jusqu'ici");
     }
 
+    /**
+     * Ce qui est rapporté est la <b>vraie absence</b> — le temps pendant lequel la personne n'a
+     * pas été vue — et non le temps écoulé depuis la dernière rencontre annoncée. Quelqu'un peut
+     * parler sans discontinuer pendant dix minutes sans qu'aucune rencontre ne soit annoncée.
+     */
     @Test
-    void leTempsEcouleDepuisLaDerniereRencontreEstRapporte() {
+    void laDureeDeLAbsenceEstRapportee() {
         LocalDateTime ilYATroisJours = LocalDateTime.now(horloge).minusDays(3);
-        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", ilYATroisJours, "son chat"));
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", ilYATroisJours));
 
+        // Première venue : personne ne sait combien de temps elle a duré, d'où -1.
+        percevoirMariePendant(2.0);
+        assertEquals(1, rencontres.size());
+        assertEquals(-1, rencontres.get(0).getSecondesDAbsence(), "première apparition");
+
+        // Elle disparaît une trentaine de secondes, puis revient : c'est ce trou-là qui compte.
+        avancerDe(30.0);
         percevoirMariePendant(2.0);
 
-        assertEquals(1, rencontres.size());
-        // Trois jours, à la poignée de secondes qu'a duré la confirmation près : ce qui est
-        // rapporté, c'est l'absence, pas l'instant exact où la présence a été tranchée.
-        long secondes = rencontres.get(0).getSecondesDepuisDerniereRencontre();
-        assertTrue(secondes >= Duration.ofDays(3).toSeconds()
-                        && secondes <= Duration.ofDays(3).toSeconds() + 2,
-                "trois jours attendus, obtenu " + secondes + " s");
-        assertEquals("son chat", rencontres.get(0).getPersonne().resumeDerniereConversation());
+        assertEquals(2, rencontres.size());
+        long absence = rencontres.get(1).getSecondesDAbsence();
+        assertTrue(absence >= 30 && absence <= 32, "environ 30 s d'absence attendues, obtenu " + absence);
+    }
+
+    /**
+     * Le pendant du test précédent : quelqu'un vu sans interruption pendant des minutes ne doit
+     * jamais se voir attribuer une absence, même si la temporisation entre rencontres a expiré.
+     */
+    @Test
+    void quelquUnVuSansInterruptionNaJamaisDAbsence() {
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
+
+        percevoirMariePendant(180.0);
+
+        assertEquals(1, rencontres.size(), "une seule venue, donc une seule rencontre");
     }
 
     @Test
     void laRencontreEstDateeDansLaBase() {
-        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null, null));
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
 
         percevoirMariePendant(2.0);
 

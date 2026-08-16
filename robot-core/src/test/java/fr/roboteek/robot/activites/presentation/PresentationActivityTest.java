@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -45,6 +45,8 @@ import static org.mockito.Mockito.when;
  * l'activité attendrait ses délais réels — huit secondes par question.
  */
 class PresentationActivityTest {
+
+    private static final Personne NICOLAS = new Personne("id-nicolas", "Nicolas", null);
 
     @TempDir
     File dossierTemp;
@@ -109,7 +111,7 @@ class PresentationActivityTest {
         assertEquals("Marie", enregistree.prenom());
         assertNotNull(enregistree.derniereRencontre(), "la rencontre doit être datée");
         assertEquals(List.of(enregistree.id()), enrolementsDemandes, "le visage appris est bien le sien");
-        verify(conversationActivity).setInterlocuteur("Marie");
+        verify(conversationActivity).setInterlocuteur(enregistree);
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("Enchanté Marie")));
     }
 
@@ -127,7 +129,7 @@ class PresentationActivityTest {
         activite.run();
 
         assertNull(personneEnregistree(), "rien ne doit être enregistré");
-        verify(conversationActivity, org.mockito.Mockito.never()).setInterlocuteur(anyString());
+        verify(conversationActivity, org.mockito.Mockito.never()).setInterlocuteur(any());
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("pas réussi à bien te regarder")));
     }
 
@@ -192,15 +194,18 @@ class PresentationActivityTest {
     @Test
     @Timeout(10)
     void unePersonneReconnueEnCoursDeRouteRecoitDesExcuses() {
-        activite.handleVisagePercuEvent(visagePercu("id-nicolas", "Nicolas"));
+        personneRepository.enregistrer(NICOLAS);
+        activite.handleVisagePercuEvent(visagePercu(NICOLAS.id(), NICOLAS.prenom()));
 
         activite.run();
 
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("Excuse-moi Nicolas")),
                 "le robot doit reconnaître son erreur, phrases dites : " + phrasesDites);
-        assertNull(personneEnregistree(), "personne de connu ne doit être réenregistré");
+        assertEquals(List.of(NICOLAS), List.copyOf(personneRepository.toutes()),
+                "aucune personne ne doit être créée : celle-là était déjà connue");
         assertTrue(enrolementsDemandes.isEmpty(), "aucun visage à apprendre");
-        verify(conversationActivity).setInterlocuteur("Nicolas");
+        // La personne relue en base : c'est elle, et non le visage perçu, qui désigne le fil.
+        verify(conversationActivity).setInterlocuteur(NICOLAS);
     }
 
     /** Un visage connu qui n'est pas celui qu'on aborde — plus petit — ne doit rien déclencher. */

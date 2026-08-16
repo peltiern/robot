@@ -53,7 +53,6 @@ class PersonneRepositoryTest {
         Personne relue = repository.parId(marie.id());
         assertEquals("Marie", relue.prenom());
         assertNull(relue.derniereRencontre());
-        assertNull(relue.resumeDerniereConversation());
     }
 
     @Test
@@ -74,12 +73,11 @@ class PersonneRepositoryTest {
         repository.enregistrer(marie);
 
         LocalDateTime maintenant = LocalDateTime.of(2026, 8, 9, 15, 0);
-        repository.enregistrer(marie.rencontreeLe(maintenant).avecResumeDeConversation("son chat"));
+        repository.enregistrer(marie.rencontreeLe(maintenant));
 
         assertEquals(1, repository.toutes().size());
         Personne relue = repository.parId(marie.id());
         assertEquals(maintenant, relue.derniereRencontre());
-        assertEquals("son chat", relue.resumeDerniereConversation());
     }
 
     @Test
