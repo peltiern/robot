@@ -4,6 +4,7 @@ import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.conversation.ConversationActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
+import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.StopEvent;
@@ -13,6 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Cerveau du robot nécessaire à la prise de décisions.
@@ -34,13 +41,27 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
 
     /**
      * Activité en cours.
+     * <p>
+     * Volatile : écrite par le thread de la boucle et par le thread qui dépose une demande
+     * de changement d'activité, lue par les deux.
      */
-    private AbstractActivity currentActivity;
+    private volatile AbstractActivity currentActivity;
 
     /**
      * Activité de conversation (activité par défaut).
      */
     private final ConversationActivity conversationActivity;
+
+    /**
+     * Toutes les activités connues, indexées par leur identifiant : ce que peut désigner un
+     * {@link DemandeActiviteEvent}.
+     */
+    private final Map<String, AbstractActivity> activitesParIdentifiant;
+
+    /**
+     * Activité réclamée, en attente que la boucle reprenne la main. {@code null} si aucune.
+     */
+    private final AtomicReference<AbstractActivity> activiteDemandee = new AtomicReference<>();
 
     /**
      * Logger.
@@ -52,9 +73,11 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private volatile boolean running = false;
 
-    public Cerveau(ConversationActivity conversationActivity) {
+    public Cerveau(ConversationActivity conversationActivity, List<AbstractActivity> activites) {
         super("Brain");
         this.conversationActivity = conversationActivity;
+        this.activitesParIdentifiant = activites.stream()
+                .collect(Collectors.toMap(AbstractActivity::identifiant, Function.identity()));
     }
 
     @Override
@@ -69,7 +92,16 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             if (currentActivity != null && currentActivity.isInitialized()) {
                 logger.debug("Lancement de l'activité");
                 boolean hasBeenStopped = currentActivity.run();
-                if (!hasBeenStopped) {
+                // La boucle est seule à changer d'activité : une demande déposée pendant que
+                // l'activité tournait n'est honorée qu'ici, une fois son run() rendu.
+                AbstractActivity activiteSuivante = activiteDemandee.getAndSet(null);
+                if (!running) {
+                    // Arrêt du robot en cours : ne rien relancer.
+                    break;
+                }
+                if (activiteSuivante != null) {
+                    initNewCurrentActivity(activiteSuivante);
+                } else if (!hasBeenStopped) {
                     initNewCurrentActivity(conversationActivity);
                 }
             } else {
@@ -121,6 +153,43 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     }
 
     /**
+     * Intercepte les demandes de changement d'activité.
+     * <p>
+     * Le changement n'a pas lieu ici : la boucle du cerveau est bloquée dans le {@code run()}
+     * de l'activité courante. On dépose la demande, puis on désactive l'activité en cours pour
+     * qu'elle rende la main — c'est ensuite le thread de la boucle, seul propriétaire du
+     * changement, qui bascule. Le listener reste donc court : il s'exécute sur le thread de
+     * l'émetteur (la boucle de capture vidéo, par exemple), qu'il ne doit pas retenir.
+     * <p>
+     * Aucun arbitrage pour l'instant — ni priorité, ni temporisation par personne, ni refus
+     * pendant un arrêt d'urgence : c'est l'étape suivante du chantier d'accueil.
+     *
+     * @param demandeActiviteEvent demande de changement d'activité
+     */
+    @EventListener
+    public void handleDemandeActiviteEvent(DemandeActiviteEvent demandeActiviteEvent) {
+        if (!running) {
+            return;
+        }
+        AbstractActivity activite = activitesParIdentifiant.get(demandeActiviteEvent.getIdActivite());
+        if (activite == null) {
+            logger.warn("Activité demandée inconnue : {} (connues : {})",
+                    demandeActiviteEvent.getIdActivite(), activitesParIdentifiant.keySet());
+            return;
+        }
+        AbstractActivity activiteCourante = currentActivity;
+        if (activite == activiteCourante) {
+            logger.debug("Activité {} déjà en cours, demande ignorée", activite.identifiant());
+            return;
+        }
+        logger.info("Activité demandée : {}", activite.identifiant());
+        activiteDemandee.set(activite);
+        if (activiteCourante != null) {
+            activiteCourante.desactiver();
+        }
+    }
+
+    /**
      * Intercepte les évènements de lecture.
      *
      * @param paroleEvent évènement de lecture
@@ -145,14 +214,14 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         // Stop current activity
         stopCurrentActivity();
         currentActivity = activity;
-        logger.info("Nouvelle activité : {}", currentActivity.getClass().getName());
+        logger.info("Nouvelle activité : {}", currentActivity.identifiant());
         // Activation : réinitialise l'activité et autorise le traitement des évènements
         currentActivity.activer();
     }
 
     private synchronized void stopCurrentActivity() {
         if (currentActivity != null) {
-            logger.debug("Arrêt de l'activité : {}", currentActivity.getClass().getName());
+            logger.debug("Arrêt de l'activité : {}", currentActivity.identifiant());
             // Désactivation : les évènements ne sont plus traités par cette activité
             currentActivity.desactiver();
             currentActivity = null;

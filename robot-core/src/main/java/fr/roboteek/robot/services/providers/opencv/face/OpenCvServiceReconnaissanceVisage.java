@@ -46,10 +46,7 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
 
     @Override
     public String identifier(Mat image, VisageDetecte visage) {
-        Mat aligne = new Mat();
-        reconnaisseur.alignCrop(image, visage.ligneBrute(), aligne);
-        Mat embedding = new Mat();
-        reconnaisseur.feature(aligne, embedding);
+        Mat embedding = calculerEmbedding(image, visage);
 
         String meilleurNom = null;
         double meilleurScore = SEUIL_COSINE;
@@ -61,6 +58,26 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
             }
         }
         return meilleurNom;
+    }
+
+    @Override
+    public float[] extraireEmbedding(Mat image, VisageDetecte visage) {
+        Mat embedding = calculerEmbedding(image, visage);
+        float[] valeurs = new float[embedding.cols()];
+        embedding.get(0, 0, valeurs);
+        return valeurs;
+    }
+
+    /**
+     * Recadre le visage sur ses points caractéristiques puis en calcule l'empreinte SFace
+     * (~68 ms sur Jetson Nano, voir {@code FaceRecognitionPoc}).
+     */
+    private Mat calculerEmbedding(Mat image, VisageDetecte visage) {
+        Mat aligne = new Mat();
+        reconnaisseur.alignCrop(image, visage.ligneBrute(), aligne);
+        Mat embedding = new Mat();
+        reconnaisseur.feature(aligne, embedding);
+        return embedding;
     }
 
     private Mat matDepuisEmbedding(float[] embedding) {

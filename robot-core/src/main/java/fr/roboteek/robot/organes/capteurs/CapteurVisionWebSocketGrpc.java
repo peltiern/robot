@@ -16,6 +16,8 @@ import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import fr.roboteek.robot.spring.server.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
+import fr.roboteek.robot.systemenerveux.event.VisagePercu;
+import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.webcam.SuiviVisageUtils;
 import nu.pattern.OpenCV;
@@ -123,6 +125,19 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private int indexFrame = 0;
 
     private List<RecognizedFace> derniersVisagesReconnus;
+
+    /**
+     * Indique si le dernier {@link VisagePercuEvent} publié annonçait au moins un visage :
+     * sert à n'émettre qu'un seul évènement quand le champ se vide (voir
+     * {@link #publierVisagesPercus(List)}).
+     */
+    private boolean visagesPercusPrecedemment = false;
+
+    /**
+     * Dernière composition de visages tracée, pour ne journaliser que les changements
+     * (quelqu'un arrive, est enfin reconnu, ou s'en va) et non chaque cycle.
+     */
+    private String derniereCompositionVisagesTracee = null;
 
     private ObjectDetectionResponse objectDetectionResponse;
 
@@ -316,6 +331,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                     visagesReconnus.add(visageReconnu);
                 }
                 derniersVisagesReconnus = visagesReconnus;
+                publierVisagesPercus(visagesReconnus);
             } catch (RuntimeException e) {
                 derniersVisagesReconnus = null;
                 if (indexFrame % 100 == 0) {
@@ -365,6 +381,50 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
             if (objectDetectionResponse != null && CollectionUtils.isNotEmpty(objectDetectionResponse.getObjects())) {
                 logger.debug("({} ms) objets : {}", fin - debut, objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
             }
+        }
+    }
+
+    /**
+     * Publie les visages perçus, <b>sans condition d'abonné WebSocket</b>, contrairement au
+     * flux vidéo : cette information pilote le comportement du robot (aller saluer quelqu'un,
+     * le regarder), elle doit donc parvenir au reste du système tablette éteinte.
+     * <p>
+     * Un évènement part à chaque cycle de reconnaissance tant qu'au moins un visage est là,
+     * puis un dernier quand le champ se vide — c'est le signal du départ. Les « toujours
+     * personne » qui suivent sont tus : sinon l'évènement partirait une dizaine de fois par
+     * seconde sur une pièce vide, et serait en plus rediffusé sur le WebSocket.
+     */
+    private void publierVisagesPercus(List<RecognizedFace> visages) {
+        boolean visagesPresents = !visages.isEmpty();
+        if (!visagesPresents && !visagesPercusPrecedemment) {
+            return;
+        }
+        visagesPercusPrecedemment = visagesPresents;
+        tracerCompositionVisages(visages);
+        List<VisagePercu> visagesPercus = visages.stream()
+                .map(visage -> new VisagePercu(visage.getName(), visage.getX(), visage.getY(), visage.getWidth(), visage.getHeight()))
+                .toList();
+        applicationEventPublisher.publishEvent(new VisagePercuEvent(visagesPercus, image.width(), image.height()));
+    }
+
+    /**
+     * Journalise qui le robot a devant lui, uniquement quand cela change : quelqu'un arrive,
+     * finit par être reconnu, ou s'en va.
+     * <p>
+     * En DEBUG : la perception clignote trop pour tenir dans une transcription — un visage
+     * immobile produit des dizaines de lignes par minute, et la reconnaissance elle-même oscille
+     * près de son seuil. Ce qui mérite le niveau INFO, c'est la rencontre décidée par le registre
+     * de présence, pas la matière première dont elle est tirée.
+     */
+    private void tracerCompositionVisages(List<RecognizedFace> visages) {
+        String composition = visages.isEmpty()
+                ? "plus personne"
+                : visages.stream()
+                        .map(visage -> visage.getName() != null ? visage.getName() : "inconnu")
+                        .collect(Collectors.joining(", "));
+        if (!composition.equals(derniereCompositionVisagesTracee)) {
+            derniereCompositionVisagesTracee = composition;
+            logger.debug("Visages perçus : {}", composition);
         }
     }
 

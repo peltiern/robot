@@ -3,11 +3,11 @@ package fr.roboteek.robot.poc;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.memoire.visage.VisageConnuRepository;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVisage;
+import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.objdetect.FaceRecognizerSF;
 
 import java.io.File;
 import java.util.List;
@@ -34,9 +34,11 @@ public class SeedVisagesConnus {
 
         OpenCV.loadLocally();
 
-        String cheminModeleSFace = Constantes.DOSSIER_VISAGE + File.separator + "face_recognition_sface_2021dec.onnx";
-        FaceRecognizerSF reconnaisseur = FaceRecognizerSF.create(cheminModeleSFace, "");
+        // Dépôt partagé avec le service : MapDB verrouille le fichier, deux ouvertures
+        // simultanées de la même base échouent (donc pas de getInstance() ici).
         VisageConnuRepository repository = new VisageConnuRepository();
+        String cheminModeleSFace = Constantes.DOSSIER_VISAGE + File.separator + "face_recognition_sface_2021dec.onnx";
+        OpenCvServiceReconnaissanceVisage reconnaissance = new OpenCvServiceReconnaissanceVisage(cheminModeleSFace, repository);
 
         for (int i = 0; i < args.length; i += 2) {
             String nom = args[i];
@@ -54,15 +56,7 @@ public class SeedVisagesConnus {
                 continue;
             }
 
-            Mat aligne = new Mat();
-            reconnaisseur.alignCrop(image, visages.get(0).ligneBrute(), aligne);
-            Mat embeddingMat = new Mat();
-            reconnaisseur.feature(aligne, embeddingMat);
-
-            float[] embedding = new float[embeddingMat.cols()];
-            embeddingMat.get(0, 0, embedding);
-
-            repository.ajouter(nom, embedding);
+            repository.ajouter(nom, reconnaissance.extraireEmbedding(image, visages.get(0)));
             System.out.println("Visage enregistré : " + nom + " (" + imagePath + ")");
         }
 
