@@ -1,6 +1,8 @@
 package fr.roboteek.robot.poc;
 
 import fr.roboteek.robot.Constantes;
+import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.personne.PersonneRepository;
 import fr.roboteek.robot.memoire.visage.VisageConnuRepository;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVisage;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
@@ -28,7 +30,7 @@ public class SeedVisagesConnus {
 
     public static void main(String[] args) {
         if (args.length < 2 || args.length % 2 != 0) {
-            System.err.println("Usage: SeedVisagesConnus <nom1> <image1.jpg> [<nom2> <image2.jpg> ...]");
+            System.err.println("Usage: SeedVisagesConnus <prénom1> <image1.jpg> [<prénom2> <image2.jpg> ...]");
             System.exit(1);
         }
 
@@ -37,11 +39,12 @@ public class SeedVisagesConnus {
         // Dépôt partagé avec le service : MapDB verrouille le fichier, deux ouvertures
         // simultanées de la même base échouent (donc pas de getInstance() ici).
         VisageConnuRepository repository = new VisageConnuRepository();
+        PersonneRepository personneRepository = new PersonneRepository();
         String cheminModeleSFace = Constantes.DOSSIER_VISAGE + File.separator + "face_recognition_sface_2021dec.onnx";
         OpenCvServiceReconnaissanceVisage reconnaissance = new OpenCvServiceReconnaissanceVisage(cheminModeleSFace, repository);
 
         for (int i = 0; i < args.length; i += 2) {
-            String nom = args[i];
+            String prenom = args[i];
             String imagePath = args[i + 1];
 
             Mat image = Imgcodecs.imread(imagePath);
@@ -56,10 +59,28 @@ public class SeedVisagesConnus {
                 continue;
             }
 
-            repository.ajouter(nom, reconnaissance.extraireEmbedding(image, visages.get(0)));
-            System.out.println("Visage enregistré : " + nom + " (" + imagePath + ")");
+            Personne personne = personnePourPrenom(personneRepository, prenom);
+            repository.ajouter(personne.id(), reconnaissance.extraireEmbedding(image, visages.get(0)));
+            System.out.println("Visage enregistré : " + prenom + " (" + imagePath + ")");
         }
 
+        personneRepository.close();
         repository.close();
+    }
+
+    /**
+     * Retrouve la personne portant ce prénom, ou la crée. Le rapprochement se fait sur le prénom
+     * faute de mieux — c'est la seule prise qu'offre la ligne de commande — ce qui suffit à cet
+     * utilitaire mais ne saurait servir de règle ailleurs : le prénom n'identifie personne.
+     */
+    private static Personne personnePourPrenom(PersonneRepository personneRepository, String prenom) {
+        for (Personne personne : personneRepository.toutes()) {
+            if (personne.prenom().equalsIgnoreCase(prenom)) {
+                return personne;
+            }
+        }
+        Personne nouvelle = Personne.nouvelle(prenom);
+        personneRepository.enregistrer(nouvelle);
+        return nouvelle;
     }
 }

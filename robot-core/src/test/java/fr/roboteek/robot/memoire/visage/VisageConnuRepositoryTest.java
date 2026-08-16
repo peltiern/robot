@@ -40,36 +40,36 @@ class VisageConnuRepositoryTest {
 
     @Test
     void ajouterPuisRelireUnVisage() {
-        repository.ajouter("Amy", new float[]{1f, 2f, 3f});
+        repository.ajouter("id-amy", new float[]{1f, 2f, 3f});
 
         List<VisageConnu> visages = repository.tousLesVisages();
 
         assertEquals(1, visages.size());
-        assertEquals("Amy", visages.get(0).nom());
+        assertEquals("id-amy", visages.get(0).idPersonne());
         assertArrayEquals(new float[]{1f, 2f, 3f}, visages.get(0).embedding());
     }
 
     @Test
-    void plusieursEntreesPourLeMemeNomSontToutesConservees() {
-        repository.ajouter("Amy", new float[]{1f, 2f});
-        repository.ajouter("Amy", new float[]{3f, 4f});
+    void plusieursEntreesPourLaMemePersonneSontToutesConservees() {
+        repository.ajouter("id-amy", new float[]{1f, 2f});
+        repository.ajouter("id-amy", new float[]{3f, 4f});
 
         List<VisageConnu> visages = repository.tousLesVisages();
 
         assertEquals(2, visages.size());
-        assertTrue(visages.stream().allMatch(v -> v.nom().equals("Amy")));
+        assertTrue(visages.stream().allMatch(v -> v.idPersonne().equals("id-amy")));
     }
 
     @Test
     void lesVisagesPersistentApresReouvertureDeLaBase() {
-        repository.ajouter("Einstein", new float[]{5f, 6f});
+        repository.ajouter("id-einstein", new float[]{5f, 6f});
         repository.close();
 
         VisageConnuRepository reouverte = new VisageConnuRepository(new File(dossierTemp, "visages.db").getAbsolutePath());
         List<VisageConnu> visages = reouverte.tousLesVisages();
 
         assertEquals(1, visages.size());
-        assertEquals("Einstein", visages.get(0).nom());
+        assertEquals("id-einstein", visages.get(0).idPersonne());
         reouverte.close();
 
         // Évite un double close() dans @AfterEach : la base a déjà été fermée puis rouverte.

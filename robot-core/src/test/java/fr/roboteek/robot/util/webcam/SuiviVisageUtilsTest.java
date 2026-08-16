@@ -26,19 +26,18 @@ class SuiviVisageUtilsTest {
 
     @Test
     void unVisagePrecedentProcheEstTrouve() {
-        RecognizedFace precedent = new RecognizedFace(100, 100, 50, 50);
-        precedent.setName("Amy");
+        VisageSuivi precedent = visageSuivi(100, 100, "id-amy", "Amy");
         // Centroïde décalé de quelques pixels seulement (petit mouvement entre 2 frames throttlées).
         RecognizedFace detecte = new RecognizedFace(105, 102, 50, 50);
 
-        RecognizedFace trouve = SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX);
+        VisageSuivi trouve = SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX);
 
         assertSame(precedent, trouve);
     }
 
     @Test
     void unVisagePrecedentTropLoinNestPasTrouve() {
-        RecognizedFace precedent = new RecognizedFace(100, 100, 50, 50);
+        VisageSuivi precedent = visageSuivi(100, 100, null, null);
         RecognizedFace detecte = new RecognizedFace(300, 300, 50, 50);
 
         assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX));
@@ -47,7 +46,7 @@ class SuiviVisageUtilsTest {
     @Test
     void exactementALaDistanceMaxNestPasRetenu() {
         // Centroïdes distants d'exactement 40 px (comparaison stricte : ne doit pas matcher).
-        RecognizedFace precedent = new RecognizedFace(100, 75, 50, 50);
+        VisageSuivi precedent = visageSuivi(100, 75, null, null);
         RecognizedFace detecte = new RecognizedFace(60, 75, 50, 50);
 
         assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX));
@@ -55,14 +54,18 @@ class SuiviVisageUtilsTest {
 
     @Test
     void leVisagePrecedentLePlusProcheEstRetenuParmiPlusieurs() {
-        RecognizedFace loin = new RecognizedFace(0, 0, 50, 50);
-        loin.setName("Loin");
-        RecognizedFace proche = new RecognizedFace(102, 100, 50, 50);
-        proche.setName("Proche");
+        VisageSuivi loin = visageSuivi(0, 0, "id-loin", "Loin");
+        VisageSuivi proche = visageSuivi(102, 100, "id-proche", "Proche");
         RecognizedFace detecte = new RecognizedFace(100, 100, 50, 50);
 
-        RecognizedFace trouve = SuiviVisageUtils.trouverVisagePrecedentProche(List.of(loin, proche), detecte, DISTANCE_MAX);
+        VisageSuivi trouve = SuiviVisageUtils.trouverVisagePrecedentProche(List.of(loin, proche), detecte, DISTANCE_MAX);
 
         assertSame(proche, trouve);
+    }
+
+    private static VisageSuivi visageSuivi(int x, int y, String idPersonne, String prenom) {
+        RecognizedFace boite = new RecognizedFace(x, y, 50, 50);
+        boite.setName(prenom);
+        return new VisageSuivi(boite, idPersonne);
     }
 }
