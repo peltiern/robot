@@ -1,7 +1,6 @@
 package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.AbstractActivity;
-import fr.roboteek.robot.activites.akinator.AkinatorActivity;
 import fr.roboteek.robot.activites.conversation.ConversationActivity;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
@@ -39,19 +38,20 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     /**
      * Activité à réclamer quand la phrase entendue se résume à l'un de ces mots.
      * <p>
-     * Plusieurs mots pour une même activité, et des mots <b>français courants</b> : le petit
-     * modèle Vosk ne restitue que ce que contient son lexique, et « akinator » n'y est pas — dit
-     * au robot, il en ressort « inhalateur » ou « akhenaton ». Le nom propre reste dans la table
-     * pour le jour où un modèle plus fourni le connaîtra, mais ce n'est pas lui qui déclenche.
+     * Des mots <b>français courants</b>, et plusieurs par activité : le petit modèle Vosk ne
+     * restitue que ce que contient son lexique. « Akinator » n'y est pas — dit au robot, il en
+     * ressort « inhalateur » ou « akhenaton ».
      * <p>
-     * La conversation y figure aussi, et c'est la porte de sortie : sans elle, une activité
-     * lancée à la voix ne se quitterait qu'en éteignant le robot, « au revoir » l'arrêtant pour
-     * de bon.
+     * <b>Les mots-clés d'Akinator ont été retirés le 2026-08-15</b>, et l'activité n'est donc plus
+     * atteignable. Elle est cassée depuis la mise à jour d'akiwrapper, qui échoue au démarrage sur
+     * {@code 'fa' is not a recognized language} : le cerveau se rattrapait et retombait sur la
+     * conversation, mais le robot promettait une devinette qu'il ne savait pas jouer. Remettre
+     * « devinette » et « devinettes » ici le jour où la bibliothèque sera réparée.
+     * <p>
+     * La conversation y figure, et c'est la porte de sortie : sans elle, une activité lancée à la
+     * voix ne se quitterait qu'en éteignant le robot, « au revoir » l'arrêtant pour de bon.
      */
     private static final Map<String, String> ACTIVITES_PAR_MOT_CLE = Map.of(
-            "devinette", AkinatorActivity.class.getSimpleName(),
-            "devinettes", AkinatorActivity.class.getSimpleName(),
-            "akinator", AkinatorActivity.class.getSimpleName(),
             "conversation", ConversationActivity.class.getSimpleName(),
             "discussion", ConversationActivity.class.getSimpleName());
 

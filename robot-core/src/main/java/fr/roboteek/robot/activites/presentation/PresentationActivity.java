@@ -116,7 +116,7 @@ public class PresentationActivity extends AbstractActivity {
     private final BlockingQueue<EnrolementTermineEvent> enrolementsTermines = new LinkedBlockingQueue<>();
 
     /**
-     * Prénom de quelqu'un de connu apparu <b>pendant</b> qu'on lui demandait le sien : la question
+     * Quelqu'un de connu apparu <b>pendant</b> qu'on lui demandait son prénom : la question
      * n'avait pas lieu d'être, il n'y a plus qu'à s'en excuser.
      * <p>
      * C'est le rattrapage qui permet de ne plus chercher à être sûr avant de parler. Reconnaître
@@ -124,7 +124,7 @@ public class PresentationActivity extends AbstractActivity {
      * bouge — et attendre cette certitude rendait le robot lent à aborder un vrai inconnu. Il
      * demande donc vite, et se corrige : « Excuse-moi Nicolas, je ne t'avais pas reconnu ! ».
      */
-    private volatile String prenomReconnuEnCoursDeRoute;
+    private volatile VisagePercu visageReconnuEnCoursDeRoute;
 
     /**
      * {@code @Autowired} obligatoire ici : cette classe a deux constructeurs, et Spring n'en
@@ -163,14 +163,14 @@ public class PresentationActivity extends AbstractActivity {
         reponsesEntendues.clear();
         parolesTerminees.clear();
         enrolementsTermines.clear();
-        prenomReconnuEnCoursDeRoute = null;
+        visageReconnuEnCoursDeRoute = null;
         initialized = true;
     }
 
     @Override
     public boolean run() {
         String prenom = demanderLePrenom();
-        if (prenomReconnuEnCoursDeRoute != null) {
+        if (visageReconnuEnCoursDeRoute != null) {
             return sExcuser();
         }
         if (prenom == null) {
@@ -185,10 +185,11 @@ public class PresentationActivity extends AbstractActivity {
             return stopActivity;
         }
 
-        personneRepository.enregistrer(personne.rencontreeLe(LocalDateTime.now()));
+        Personne personneEnregistree = personne.rencontreeLe(LocalDateTime.now());
+        personneRepository.enregistrer(personneEnregistree);
         // Pose l'interlocuteur avant de rendre la main : la conversation qui reprend derrière
         // saura à qui elle parle, et ouvrira le fil de mémoire de cette personne.
-        conversationActivity.setInterlocuteur(prenom);
+        conversationActivity.setInterlocuteur(personneEnregistree);
         logger.info("Nouvelle connaissance : {} ({})", prenom, personne.id());
         direEtAttendreLaFin("Enchanté " + prenom + " ! Je me souviendrai de toi.");
         return stopActivity;
@@ -202,7 +203,7 @@ public class PresentationActivity extends AbstractActivity {
     private String demanderLePrenom() {
         direEtAttendreLaFin(auHasard(SALUTATIONS));
 
-        for (int tentative = 0; tentative < TENTATIVES_MAX && !stopActivity && prenomReconnuEnCoursDeRoute == null; tentative++) {
+        for (int tentative = 0; tentative < TENTATIVES_MAX && !stopActivity && visageReconnuEnCoursDeRoute == null; tentative++) {
             if (tentative > 0) {
                 direEtAttendreLaFin(auHasard(RELANCES));
             }
@@ -219,7 +220,7 @@ public class PresentationActivity extends AbstractActivity {
             logger.info("Prénom {} non confirmé", prenom);
         }
 
-        if (!stopActivity && prenomReconnuEnCoursDeRoute == null) {
+        if (!stopActivity && visageReconnuEnCoursDeRoute == null) {
             direEtAttendreLaFin("Tant pis, ce sera pour une autre fois !");
         }
         return null;
@@ -230,9 +231,13 @@ public class PresentationActivity extends AbstractActivity {
      * ni visage à apprendre.
      */
     private boolean sExcuser() {
-        String prenom = prenomReconnuEnCoursDeRoute;
+        VisagePercu visage = visageReconnuEnCoursDeRoute;
+        String prenom = visage.prenom();
         logger.info("{} reconnu pendant la présentation : la question n'avait pas lieu d'être", prenom);
-        conversationActivity.setInterlocuteur(prenom);
+        // Relu depuis la base plutôt que reconstruit à partir du visage perçu : c'est la personne
+        // entière qui désigne son fil de conversation, et son identifiant seul ne suffit pas à
+        // l'écrire. Absente de la base, la conversation reprend simplement sans interlocuteur.
+        conversationActivity.setInterlocuteur(personneRepository.parId(visage.idPersonne()));
         // Dit au registre de présence que sa rencontre d'inconnu était une méprise : sans cela, sa
         // temporisation ferait ignorer le prochain inconnu, le vrai, pendant deux minutes.
         applicationEventPublisher.publishEvent(new RencontreInconnuInaboutieEvent("méprise sur " + prenom));
@@ -281,13 +286,13 @@ public class PresentationActivity extends AbstractActivity {
         // question tout de suite. D'un seul poll de huit secondes, le robot finirait sa relance
         // avant de s'apercevoir qu'il parle à quelqu'un qu'il connaît.
         long echeance = System.currentTimeMillis() + delaiReponseMs;
-        while (System.currentTimeMillis() < echeance && !stopActivity && prenomReconnuEnCoursDeRoute == null) {
+        while (System.currentTimeMillis() < echeance && !stopActivity && visageReconnuEnCoursDeRoute == null) {
             String reponse = attendre(reponsesEntendues, TRANCHE_ATTENTE_MS);
             if (reponse != null) {
                 return reponse;
             }
         }
-        if (prenomReconnuEnCoursDeRoute == null) {
+        if (visageReconnuEnCoursDeRoute == null) {
             logger.info("Pas de réponse au bout de {} ms", delaiReponseMs);
         }
         return null;
@@ -339,13 +344,13 @@ public class PresentationActivity extends AbstractActivity {
      */
     @EventListener
     public void handleVisagePercuEvent(VisagePercuEvent visagePercuEvent) {
-        if (!isActive() || prenomReconnuEnCoursDeRoute != null || visagePercuEvent.getVisages() == null) {
+        if (!isActive() || visageReconnuEnCoursDeRoute != null || visagePercuEvent.getVisages() == null) {
             return;
         }
         visagePercuEvent.getVisages().stream()
                 .max(Comparator.comparingLong(visage -> (long) visage.largeur() * visage.hauteur()))
                 .filter(VisagePercu::estConnu)
-                .ifPresent(visage -> prenomReconnuEnCoursDeRoute = visage.prenom());
+                .ifPresent(visage -> visageReconnuEnCoursDeRoute = visage);
     }
 
     /** Vrai si la réponse vaut acceptation. Le silence et le doute n'en sont pas une. */

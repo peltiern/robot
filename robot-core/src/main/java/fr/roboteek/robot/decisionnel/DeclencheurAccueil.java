@@ -1,6 +1,7 @@
 package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.presentation.PresentationActivity;
+import fr.roboteek.robot.activites.retrouvailles.RetrouvaillesActivity;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteRefuseeEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
@@ -29,8 +30,12 @@ public class DeclencheurAccueil {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    public DeclencheurAccueil(ApplicationEventPublisher applicationEventPublisher) {
+    private final RetrouvaillesActivity retrouvaillesActivity;
+
+    public DeclencheurAccueil(ApplicationEventPublisher applicationEventPublisher,
+                              RetrouvaillesActivity retrouvaillesActivity) {
         this.applicationEventPublisher = applicationEventPublisher;
+        this.retrouvaillesActivity = retrouvaillesActivity;
     }
 
     /**
@@ -39,14 +44,24 @@ public class DeclencheurAccueil {
      */
     @EventListener
     public void handleRencontreEvent(RencontreEvent rencontreEvent) {
-        if (rencontreEvent.getType() != RencontreEvent.TYPE.INCONNU) {
-            // Retrouvailles avec quelqu'un de connu : rien à demander, la conversation en cours
-            // sait déjà quoi en faire. C'est l'étape suivante du chantier.
+        if (rencontreEvent.getType() == RencontreEvent.TYPE.INCONNU) {
+            logger.info("Quelqu'un d'inconnu : demande de faire connaissance");
+            applicationEventPublisher.publishEvent(
+                    new DemandeActiviteEvent(PresentationActivity.class.getSimpleName()));
             return;
         }
-        logger.info("Quelqu'un d'inconnu : demande de faire connaissance");
+
+        if (rencontreEvent.getPersonne() == null) {
+            logger.warn("Retrouvailles annoncées sans personne : rien à saluer");
+            return;
+        }
+        logger.info("{} est de retour : demande de retrouvailles", rencontreEvent.getPersonne().prenom());
+        // Posée avant la demande : une demande d'activité ne transporte qu'un identifiant, et la
+        // boucle du cerveau peut lancer l'activité dès l'instant d'après.
+        retrouvaillesActivity.setPersonneRetrouvee(
+                rencontreEvent.getPersonne(), rencontreEvent.getSecondesDAbsence());
         applicationEventPublisher.publishEvent(
-                new DemandeActiviteEvent(PresentationActivity.class.getSimpleName()));
+                new DemandeActiviteEvent(RetrouvaillesActivity.class.getSimpleName()));
     }
 
     /**

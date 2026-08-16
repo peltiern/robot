@@ -21,8 +21,8 @@ class SuiviVisageUtilsTest {
     private static final double DISTANCE_MAX = 40;
     private static final double RAPPORT_TAILLE_MAX = 1.6;
 
-    private static final Personne NICOLAS = new Personne("id-nicolas", "Nicolas", null, null);
-    private static final Personne EINSTEIN = new Personne("id-einstein", "Einstein", null, null);
+    private static final Personne NICOLAS = new Personne("id-nicolas", "Nicolas", null);
+    private static final Personne EINSTEIN = new Personne("id-einstein", "Einstein", null);
 
     private static final long MAINTENANT = 100_000;
 

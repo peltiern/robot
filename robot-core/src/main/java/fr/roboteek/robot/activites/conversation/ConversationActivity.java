@@ -3,6 +3,7 @@ package fr.roboteek.robot.activites.conversation;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
+import fr.roboteek.robot.memoire.personne.Personne;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import org.apache.commons.lang3.StringUtils;
@@ -27,8 +28,11 @@ public class ConversationActivity extends AbstractActivity {
     /**
      * Personne avec qui le robot converse, {@code null} tant qu'elle n'est pas identifiée.
      * Détermine le fil de mémoire employé : chacun a le sien.
+     * <p>
+     * La {@link Personne} entière et non son prénom : c'est son identifiant qui désigne son fil,
+     * deux personnes pouvant porter le même prénom.
      */
-    private volatile String interlocuteur;
+    private volatile Personne interlocuteur;
 
     private final Logger logger = LoggerFactory.getLogger(ConversationActivity.class);
 
@@ -41,7 +45,7 @@ public class ConversationActivity extends AbstractActivity {
      * {@link #init()} : l'interlocuteur est posé <i>avant</i> de rendre la main à cette
      * activité (par celle qui vient de le reconnaître ou de faire sa connaissance).
      */
-    public void setInterlocuteur(String interlocuteur) {
+    public void setInterlocuteur(Personne interlocuteur) {
         this.interlocuteur = interlocuteur;
     }
 

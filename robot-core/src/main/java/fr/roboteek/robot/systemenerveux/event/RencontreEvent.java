@@ -28,21 +28,27 @@ public class RencontreEvent extends RobotEvent {
     private Personne personne;
 
     /**
-     * Temps écoulé depuis la dernière rencontre, en secondes ; {@code -1} si la personne est
-     * inconnue ou n'avait jamais été rencontrée. C'est ce qui permet de saluer autrement
-     * quelqu'un vu il y a une heure et quelqu'un vu il y a trois semaines.
+     * <b>Durée pendant laquelle la personne n'a pas été vue</b> avant de réapparaître, en
+     * secondes ; {@code -1} si elle est inconnue ou si c'est sa première apparition. C'est ce qui
+     * permet de saluer autrement quelqu'un revenu après trois semaines et quelqu'un qui s'est
+     * absenté trente secondes.
+     * <p>
+     * L'absence réelle, et non le temps écoulé depuis la dernière rencontre annoncée : ces deux
+     * durées n'ont rien à voir. Quelqu'un peut parler sans discontinuer pendant dix minutes sans
+     * qu'aucune rencontre ne soit annoncée — les avoir confondues a fait dire au robot « on
+     * parlait de la population française » douze secondes après en avoir parlé.
      */
-    private long secondesDepuisDerniereRencontre;
+    private long secondesDAbsence;
 
     public RencontreEvent() {
         super(EVENT_TYPE);
     }
 
-    public RencontreEvent(TYPE type, Personne personne, long secondesDepuisDerniereRencontre) {
+    public RencontreEvent(TYPE type, Personne personne, long secondesDAbsence) {
         super(EVENT_TYPE);
         this.type = type;
         this.personne = personne;
-        this.secondesDepuisDerniereRencontre = secondesDepuisDerniereRencontre;
+        this.secondesDAbsence = secondesDAbsence;
     }
 
     public TYPE getType() {
@@ -61,11 +67,11 @@ public class RencontreEvent extends RobotEvent {
         this.personne = personne;
     }
 
-    public long getSecondesDepuisDerniereRencontre() {
-        return secondesDepuisDerniereRencontre;
+    public long getSecondesDAbsence() {
+        return secondesDAbsence;
     }
 
-    public void setSecondesDepuisDerniereRencontre(long secondesDepuisDerniereRencontre) {
-        this.secondesDepuisDerniereRencontre = secondesDepuisDerniereRencontre;
+    public void setSecondesDAbsence(long secondesDAbsence) {
+        this.secondesDAbsence = secondesDAbsence;
     }
 }
