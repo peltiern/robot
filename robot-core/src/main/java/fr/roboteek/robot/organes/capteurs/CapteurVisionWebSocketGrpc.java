@@ -18,13 +18,12 @@ import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import fr.roboteek.robot.spring.server.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
-import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
-import fr.roboteek.robot.util.webcam.SuiviVisageUtils;
-import fr.roboteek.robot.util.webcam.VisageSuivi;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
+import fr.roboteek.robot.memoire.courtterme.VisageSuivi;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Arrays;
 import java.util.Base64;
@@ -99,61 +97,6 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private static final String DESTINATION_VIDEO = "/video";
 
     /**
-     * Rayon de suivi, <b>exprimé en largeurs du visage détecté</b> : sous cette distance de
-     * centroïde, un visage est considéré comme le même qu'à la frame précédente et on réutilise
-     * son nom sans relancer SFace (alignCrop + feature + comparaison à toute la base coûtent
-     * ~68 ms par visage, voir fr.roboteek.robot.poc.FaceRecognitionPoc).
-     * Seuls les visages déjà identifiés (nom non nul) sont ainsi suivis : un visage
-     * encore inconnu est retenté à chaque frame throttlée, pour lui laisser une chance
-     * d'être reconnu si les conditions (angle, éclairage) s'améliorent entre-temps.
-     * <p>
-     * Relatif et non absolu, parce que c'est la seule échelle qui ait un sens : un visage proche
-     * occupe 200 px et se déplace de plusieurs dizaines de pixels d'une frame à l'autre, un
-     * visage lointain en occupe 40 et bouge d'autant moins. Les valeurs absolues essayées avant
-     * (40 px, puis 80) étaient trop serrées dans un cas et trop larges dans l'autre.
-     */
-    private static final double RAYON_SUIVI_EN_LARGEURS_VISAGE = 0.7;
-
-    /**
-     * Écart de taille au-delà duquel deux visages proches ne sont pas le même (voir
-     * {@link SuiviVisageUtils}) : ce qui sépare une photo qu'on retire d'un visage qui prend sa
-     * place, c'est la taille, pas la position.
-     */
-    private static final double RAPPORT_TAILLE_MAX_SUIVI = 1.6;
-
-    /**
-     * Durée pendant laquelle les visages du dernier cycle restent une référence valable, même si
-     * la détection n'a rien vu entre-temps.
-     * <p>
-     * <b>C'est ce qui permet d'enjamber les trous de détection</b>, mesurés de 100 à 250 ms sur le
-     * robot. Sans elle, la mémoire du suivi était perdue à chaque clignotement, la personne
-     * redevenait un visage tout neuf, et une présence d'inconnu se constituait en parallèle de
-     * quelqu'un pourtant reconnu — assez pour déclencher une présentation. Constaté le 2026-08-12
-     * sur Einstein, reconnu puis abordé.
-     * <p>
-     * Elle ne dit rien de la <b>fraîcheur</b> des identités portées par ces visages : c'est
-     * {@link SuiviVisageUtils} qui s'en charge, et c'était la confusion de la première version.
-     */
-    private static final long REMANENCE_POSITIONS_MS = 1500;
-
-    /**
-     * Nombre d'empreintes relevées pour apprendre un visage.
-     * <p>
-     * Plusieurs et non une seule : une empreinte unique, prise de trois quarts ou à contre-jour,
-     * et la personne n'est plus jamais reconnue. Les cycles étant espacés d'environ un tiers de
-     * seconde, cinq empreintes couvrent près de deux secondes de menus changements de pose.
-     */
-    private static final int EMPREINTES_PAR_ENROLEMENT = 5;
-
-    /**
-     * Délai au bout duquel on renonce à compléter un enrôlement.
-     * <p>
-     * Indispensable : la personne peut se détourner ou partir entre la demande et la prise. Sans
-     * échéance, l'activité qui attend le résultat resterait suspendue et le cerveau avec elle.
-     */
-    private static final long DUREE_MAX_ENROLEMENT_MS = 5000;
-
-    /**
      * Capture vidéo.
      */
     private VideoCapture capture;
@@ -176,18 +119,6 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private int indexFrame = 0;
 
     /**
-     * Visages du dernier cycle de reconnaissance, avec leur identité : base du suivi par
-     * centroïde d'un cycle au suivant.
-     */
-    private List<VisageSuivi> derniersVisagesSuivis;
-
-    /** Instant du dernier cycle ayant identifié quelqu'un, qui date {@link #derniersVisagesSuivis}. */
-    private long instantDerniersVisagesSuivis = 0;
-
-    /** Boîtes des mêmes visages, telles que diffusées dans le flux vidéo. */
-    private List<RecognizedFace> derniersVisagesReconnus;
-
-    /**
      * Indique si le dernier {@link VisagePercuEvent} publié annonçait au moins un visage :
      * sert à n'émettre qu'un seul évènement quand le champ se vide (voir
      * {@link #publierVisagesPercus(List)}).
@@ -199,12 +130,6 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      * (quelqu'un arrive, est enfin reconnu, ou s'en va) et non chaque cycle.
      */
     private String derniereCompositionVisagesTracee = null;
-
-    /**
-     * Enrôlement en cours, {@code null} s'il n'y en a pas. Posé par le thread de l'évènement,
-     * consommé par la boucle de capture — d'où le {@code volatile}.
-     */
-    private volatile Enrolement enrolementEnCours;
 
     private ObjectDetectionResponse objectDetectionResponse;
 
@@ -225,6 +150,14 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      */
     @Autowired
     private PersonneRepository personneRepository;
+
+    /**
+     * Ce que le robot a en tête : visages suivis, apprentissage en cours. Appelée en direct depuis
+     * la boucle, et non par évènement — elle rend un résultat tout de suite, et l'image ne peut pas
+     * voyager (voir {@link MemoireCourtTerme}).
+     */
+    @Autowired
+    private MemoireCourtTerme memoireCourtTerme;
 
     /**
      * Horodatage de la dernière image publiée, pour cadencer le flux en temps réel plutôt
@@ -392,31 +325,15 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         if (serviceDetectionVisage != null && indexFrame % FREQUENCE_RECONNAISSANCE_VISAGE == 0) {
             try {
                 List<VisageDetecte> visagesDetectes = serviceDetectionVisage.detecter(image);
-                long maintenant = System.currentTimeMillis();
-                List<VisageSuivi> visagesPrecedents = identitesEncoreUtilisables();
-                List<VisageSuivi> visagesSuivis = new ArrayList<>();
-                for (VisageDetecte visageDetecte : visagesDetectes) {
-                    RecognizedFace boite = new RecognizedFace(visageDetecte.x(), visageDetecte.y(), visageDetecte.width(), visageDetecte.height());
-                    VisageSuivi visagePrecedentProche = SuiviVisageUtils.trouverVisagePrecedentProche(
-                            visagesPrecedents, boite, RAYON_SUIVI_EN_LARGEURS_VISAGE * visageDetecte.width(), RAPPORT_TAILLE_MAX_SUIVI);
-                    visagesSuivis.add(SuiviVisageUtils.identifier(boite, visagePrecedentProche, maintenant,
-                            () -> personneReconnue(image, visageDetecte)));
-                }
-                // Seuls les visages identifiés servent au suivi — un précédent sans identité
-                // n'évite aucun calcul — et un cycle qui n'identifie personne ne doit pas effacer
-                // ce qu'on savait : c'est précisément le trou de détection qu'il faut enjamber.
-                List<VisageSuivi> visagesIdentifies = visagesSuivis.stream().filter(VisageSuivi::estIdentifie).toList();
-                if (!visagesIdentifies.isEmpty()) {
-                    derniersVisagesSuivis = visagesIdentifies;
-                    instantDerniersVisagesSuivis = System.currentTimeMillis();
-                }
-                derniersVisagesReconnus = visagesSuivis.stream().map(VisageSuivi::boite).toList();
+                // Le suivi est une mémoire court terme, pas une affaire de capteur : on lui passe
+                // de quoi reconnaître — la fonction tient l'image, qui ne sort pas d'ici — et il
+                // rend les visages avec leur identité.
+                List<VisageSuivi> visagesSuivis = memoireCourtTerme.suivreLesVisages(
+                        visagesDetectes, visage -> personneReconnue(image, visage));
                 publierVisagesPercus(visagesSuivis);
-                poursuivreEnrolement(visagesDetectes);
+                memoireCourtTerme.avancerLEnrolement(() -> empreinteDuVisageLePlusProche(visagesDetectes));
             } catch (RuntimeException e) {
-                derniersVisagesSuivis = null;
-                instantDerniersVisagesSuivis = 0;
-                derniersVisagesReconnus = null;
+                memoireCourtTerme.oublierLesVisages();
                 if (indexFrame % 100 == 0) {
                     logger.warn("Reconnaissance de visages indisponible (le flux vidéo continue) : {}", e.getMessage());
                 }
@@ -448,18 +365,17 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
             VideoEvent videoEvent = new VideoEvent();
 
             videoEvent.setImageBase64(Base64.getEncoder().encodeToString(ba));
-            if (derniersVisagesReconnus != null) {
-                videoEvent.setFaceFound(!derniersVisagesReconnus.isEmpty());
-                videoEvent.setFaces(derniersVisagesReconnus);
-            }
+            List<RecognizedFace> boites = memoireCourtTerme.visagesVus().stream().map(VisageSuivi::boite).toList();
+            videoEvent.setFaceFound(!boites.isEmpty());
+            videoEvent.setFaces(boites);
             if (objectDetectionResponse != null) {
                 videoEvent.setObjectFound(objectDetectionResponse.isObjectFound());
                 videoEvent.setObjects(objectDetectionResponse.getObjects());
             }
             applicationEventPublisher.publishEvent(videoEvent);
             long fin = System.currentTimeMillis();
-            if (CollectionUtils.isNotEmpty(derniersVisagesReconnus)) {
-                logger.debug("({} ms) visages : {}", fin - debut, derniersVisagesReconnus.stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
+            if (CollectionUtils.isNotEmpty(boites)) {
+                logger.debug("({} ms) visages : {}", fin - debut, boites.stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
             }
             if (objectDetectionResponse != null && CollectionUtils.isNotEmpty(objectDetectionResponse.getObjects())) {
                 logger.debug("({} ms) objets : {}", fin - debut, objectDetectionResponse.getObjects().stream().map(DetectedObject::getName).collect(Collectors.joining(",")));
@@ -468,80 +384,34 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     }
 
     /**
-     * Identités du dernier cycle utile, tant qu'elles ne sont pas trop vieilles pour servir.
-     */
-    private List<VisageSuivi> identitesEncoreUtilisables() {
-        if (derniersVisagesSuivis == null
-                || System.currentTimeMillis() - instantDerniersVisagesSuivis > REMANENCE_POSITIONS_MS) {
-            return null;
-        }
-        return derniersVisagesSuivis;
-    }
-
-    /**
      * Prend en charge une demande d'apprentissage de visage.
      * <p>
-     * Le travail n'est pas fait ici : ce listener s'exécute sur le thread de l'émetteur, alors que
-     * les empreintes se relèvent sur les images à venir, dans la boucle de capture. On y dépose
-     * donc seulement l'intention, que {@link #poursuivreEnrolement} honorera cycle après cycle.
+     * L'organe ne fait ici que deux choses, et ce sont les deux seules qui le regardent : dire si
+     * sa vision est disponible — lui seul le sait — et passer la main à la mémoire court terme,
+     * qui tient la procédure. Le relevé, lui, se fera cycle après cycle dans la boucle de capture.
      */
     @EventListener
     public void handleDemandeEnrolementEvent(DemandeEnrolementEvent demandeEnrolementEvent) {
-        String idPersonne = demandeEnrolementEvent.getIdPersonne();
         if (!running || serviceDetectionVisage == null || serviceReconnaissanceVisage == null) {
-            // Répondre tout de même : celui qui attend ne doit jamais rester suspendu parce que
-            // les modèles n'ont pas pu être chargés.
-            logger.warn("Enrôlement impossible : la reconnaissance de visages n'est pas disponible");
-            applicationEventPublisher.publishEvent(new EnrolementTermineEvent(idPersonne, 0, false));
+            memoireCourtTerme.renoncerALEnrolement(demandeEnrolementEvent.getIdPersonne(),
+                    "la reconnaissance de visages n'est pas disponible");
             return;
         }
-        logger.info("Enrôlement demandé pour la personne {}", idPersonne);
-        enrolementEnCours = new Enrolement(idPersonne, System.currentTimeMillis() + DUREE_MAX_ENROLEMENT_MS);
+        String idPersonne = demandeEnrolementEvent.getIdPersonne();
+        memoireCourtTerme.demarrerUnEnrolement(idPersonne,
+                empreintes -> serviceReconnaissanceVisage.enrolerPersonne(idPersonne, empreintes));
     }
 
     /**
-     * Relève une empreinte de plus, et conclut quand le compte y est ou que le temps est écoulé.
-     * <p>
-     * Les empreintes ne sont écrites en base qu'à la fin, en une fois : un enrôlement interrompu
-     * ne doit pas laisser une personne à moitié apprise, reconnue une fois sur trois.
+     * Empreinte du visage auquel le robot parle — le plus gros, donc le plus proche —, ou
+     * {@code null} s'il n'y a personne. C'est le seul endroit où l'image sert à l'enrôlement, et
+     * elle ne va pas plus loin.
      */
-    private void poursuivreEnrolement(List<VisageDetecte> visagesDetectes) {
-        Enrolement enrolement = enrolementEnCours;
-        if (enrolement == null) {
-            return;
-        }
-        visagesDetectes.stream()
-                // Le plus gros visage, donc le plus proche : c'est à celui-là qu'on parle.
+    private float[] empreinteDuVisageLePlusProche(List<VisageDetecte> visagesDetectes) {
+        return visagesDetectes.stream()
                 .max(Comparator.comparingLong(visage -> (long) visage.width() * visage.height()))
-                .ifPresent(visage -> enrolement.empreintes.add(serviceReconnaissanceVisage.extraireEmbedding(image, visage)));
-
-        boolean compteAtteint = enrolement.empreintes.size() >= EMPREINTES_PAR_ENROLEMENT;
-        if (!compteAtteint && System.currentTimeMillis() < enrolement.echeanceMs) {
-            return;
-        }
-        enrolementEnCours = null;
-        boolean reussi = !enrolement.empreintes.isEmpty();
-        if (reussi) {
-            serviceReconnaissanceVisage.enrolerPersonne(enrolement.idPersonne, enrolement.empreintes);
-            logger.info("Personne {} apprise : {} empreinte(s)", enrolement.idPersonne, enrolement.empreintes.size());
-        } else {
-            logger.warn("Enrôlement de la personne {} abandonné : aucun visage vu à temps", enrolement.idPersonne);
-        }
-        applicationEventPublisher.publishEvent(
-                new EnrolementTermineEvent(enrolement.idPersonne, enrolement.empreintes.size(), reussi));
-    }
-
-    /** Empreintes relevées jusqu'ici pour une personne, et l'instant où l'on renonce. */
-    private static final class Enrolement {
-
-        private final String idPersonne;
-        private final long echeanceMs;
-        private final List<float[]> empreintes = new ArrayList<>();
-
-        private Enrolement(String idPersonne, long echeanceMs) {
-            this.idPersonne = idPersonne;
-            this.echeanceMs = echeanceMs;
-        }
+                .map(visage -> serviceReconnaissanceVisage.extraireEmbedding(image, visage))
+                .orElse(null);
     }
 
     /**

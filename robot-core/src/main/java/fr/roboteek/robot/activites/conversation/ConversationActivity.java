@@ -3,7 +3,7 @@ package fr.roboteek.robot.activites.conversation;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import org.apache.commons.lang3.StringUtils;
@@ -26,27 +26,21 @@ public class ConversationActivity extends AbstractActivity {
     private final ConversationIA conversationIA;
 
     /**
-     * Personne avec qui le robot converse, {@code null} tant qu'elle n'est pas identifiée.
-     * Détermine le fil de mémoire employé : chacun a le sien.
+     * Ce que le robot a en tête : c'est là qu'il va chercher à qui il parle.
      * <p>
-     * La {@link Personne} entière et non son prénom : c'est son identifiant qui désigne son fil,
-     * deux personnes pouvant porter le même prénom.
+     * <b>Demandé et non reçu.</b> L'interlocuteur était auparavant posé de l'extérieur, par
+     * l'accueil ou les retrouvailles, « avant de rendre la main » — un couplage qui obligeait
+     * chaque nouvelle activité à y penser, et qui laissait la conversation parler à quelqu'un qui
+     * était parti depuis. Le savoir appartient à la mémoire court terme, qui le tient à jour de
+     * ce que le robot voit ; la conversation n'a qu'à le lui demander au moment de répondre.
      */
-    private volatile Personne interlocuteur;
+    private final MemoireCourtTerme memoireCourtTerme;
 
     private final Logger logger = LoggerFactory.getLogger(ConversationActivity.class);
 
-    public ConversationActivity(ConversationIA conversationIA) {
+    public ConversationActivity(ConversationIA conversationIA, MemoireCourtTerme memoireCourtTerme) {
         this.conversationIA = conversationIA;
-    }
-
-    /**
-     * Désigne la personne à qui le robot parle. Volontairement pas remis à zéro par
-     * {@link #init()} : l'interlocuteur est posé <i>avant</i> de rendre la main à cette
-     * activité (par celle qui vient de le reconnaître ou de faire sa connaissance).
-     */
-    public void setInterlocuteur(Personne interlocuteur) {
-        this.interlocuteur = interlocuteur;
+        this.memoireCourtTerme = memoireCourtTerme;
     }
 
     @Override
@@ -87,7 +81,10 @@ public class ConversationActivity extends AbstractActivity {
                     // Conversation
                     RequeteIntelligenceArtificielle requete = new RequeteIntelligenceArtificielle();
                     requete.setInputText(texteReconnu);
-                    ReponseIntelligenceArtificielle reponse = conversationIA.repondreARequete(requete, interlocuteur);
+                    // Demandé à chaque échange, et non retenu : la personne peut avoir changé
+                    // entre deux phrases, ou être partie.
+                    ReponseIntelligenceArtificielle reponse =
+                            conversationIA.repondreARequete(requete, memoireCourtTerme.interlocuteur());
                     if (reponse != null && StringUtils.isNotBlank(reponse.getOutputText())) {
                         // Pas d'Animation.NEUTRAL avant de répondre : elle recentrait cou et yeux à
                         // chaque phrase, effaçant la pose du robot — y compris, désormais, le regard

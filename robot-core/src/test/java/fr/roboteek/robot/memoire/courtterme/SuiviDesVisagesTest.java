@@ -1,4 +1,4 @@
-package fr.roboteek.robot.util.webcam;
+package fr.roboteek.robot.memoire.courtterme;
 
 import fr.roboteek.robot.memoire.RecognizedFace;
 import fr.roboteek.robot.memoire.personne.Personne;
@@ -13,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Vérifie la logique de suivi par centroïde, indépendamment d'OpenCV/du matériel
- * (aucune dépendance webcam, modèles, ou Spring).
+ * Vérifie ce que le robot retient des visages d'une image à l'autre, indépendamment d'OpenCV et
+ * du matériel : aucune webcam, aucun modèle, aucune image.
  */
-class SuiviVisageUtilsTest {
+class SuiviDesVisagesTest {
 
-    private static final double DISTANCE_MAX = 40;
-    private static final double RAPPORT_TAILLE_MAX = 1.6;
+    /** Rayon effectif pour un visage de 50 px de large : 0,7 × 50 = 35 px. */
+    private static final int TAILLE_VISAGE = 50;
 
     private static final Personne NICOLAS = new Personne("id-nicolas", "Nicolas", null);
     private static final Personne EINSTEIN = new Personne("id-einstein", "Einstein", null);
@@ -30,8 +30,8 @@ class SuiviVisageUtilsTest {
     void aucunVisagePrecedentRenvoieNull() {
         RecognizedFace detecte = new RecognizedFace(100, 100, 50, 50);
 
-        assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(null, detecte, DISTANCE_MAX, RAPPORT_TAILLE_MAX));
-        assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(List.of(), detecte, DISTANCE_MAX, RAPPORT_TAILLE_MAX));
+        assertNull(SuiviDesVisages.trouverVisagePrecedentProche(null, detecte));
+        assertNull(SuiviDesVisages.trouverVisagePrecedentProche(List.of(), detecte));
     }
 
     @Test
@@ -40,7 +40,7 @@ class SuiviVisageUtilsTest {
         // Centroïde décalé de quelques pixels seulement (petit mouvement entre 2 frames throttlées).
         RecognizedFace detecte = new RecognizedFace(105, 102, 50, 50);
 
-        VisageSuivi trouve = SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX, RAPPORT_TAILLE_MAX);
+        VisageSuivi trouve = SuiviDesVisages.trouverVisagePrecedentProche(List.of(precedent), detecte);
 
         assertSame(precedent, trouve);
     }
@@ -50,16 +50,17 @@ class SuiviVisageUtilsTest {
         VisageSuivi precedent = visageSuivi(100, 100, 50, null, null);
         RecognizedFace detecte = new RecognizedFace(300, 300, 50, 50);
 
-        assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX, RAPPORT_TAILLE_MAX));
+        assertNull(SuiviDesVisages.trouverVisagePrecedentProche(List.of(precedent), detecte));
     }
 
     @Test
-    void exactementALaDistanceMaxNestPasRetenu() {
-        // Centroïdes distants d'exactement 40 px (comparaison stricte : ne doit pas matcher).
-        VisageSuivi precedent = visageSuivi(100, 75, 50, null, null);
-        RecognizedFace detecte = new RecognizedFace(60, 75, 50, 50);
+    void exactementAuRayonNestPasRetenu() {
+        // Rayon d'un visage de 50 px : 0,7 × 50 = 35 px. Centroïdes distants d'exactement 35 px,
+        // et la comparaison est stricte : ne doit pas matcher.
+        VisageSuivi precedent = visageSuivi(100, 75, TAILLE_VISAGE, null, null);
+        RecognizedFace detecte = new RecognizedFace(65, 75, TAILLE_VISAGE, TAILLE_VISAGE);
 
-        assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(List.of(precedent), detecte, DISTANCE_MAX, RAPPORT_TAILLE_MAX));
+        assertNull(SuiviDesVisages.trouverVisagePrecedentProche(List.of(precedent), detecte));
     }
 
     @Test
@@ -68,7 +69,7 @@ class SuiviVisageUtilsTest {
         VisageSuivi proche = visageSuivi(102, 100, 50, "id-proche", "Proche");
         RecognizedFace detecte = new RecognizedFace(100, 100, 50, 50);
 
-        VisageSuivi trouve = SuiviVisageUtils.trouverVisagePrecedentProche(List.of(loin, proche), detecte, DISTANCE_MAX, RAPPORT_TAILLE_MAX);
+        VisageSuivi trouve = SuiviDesVisages.trouverVisagePrecedentProche(List.of(loin, proche), detecte);
 
         assertSame(proche, trouve);
     }
@@ -82,7 +83,7 @@ class SuiviVisageUtilsTest {
         VisageSuivi photo = visageSuivi(100, 100, 40, "id-einstein", "Einstein");
         RecognizedFace vraiVisage = new RecognizedFace(95, 98, 120, 120);
 
-        assertNull(SuiviVisageUtils.trouverVisagePrecedentProche(List.of(photo), vraiVisage, 400, RAPPORT_TAILLE_MAX));
+        assertNull(SuiviDesVisages.trouverVisagePrecedentProche(List.of(photo), vraiVisage));
     }
 
     @Test
@@ -91,7 +92,7 @@ class SuiviVisageUtilsTest {
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
         CompteurDeReconnaissances sface = new CompteurDeReconnaissances(NICOLAS);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, precedent, MAINTENANT, sface);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, precedent, MAINTENANT, sface);
 
         assertEquals("id-einstein", resultat.idPersonne());
         assertEquals(0, sface.appels, "SFace ne doit pas être relancé sur une identité fraîche");
@@ -107,7 +108,7 @@ class SuiviVisageUtilsTest {
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
         CompteurDeReconnaissances sface = new CompteurDeReconnaissances(NICOLAS);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, precedent, MAINTENANT, sface);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, precedent, MAINTENANT, sface);
 
         assertEquals(1, sface.appels);
         assertEquals("id-nicolas", resultat.idPersonne());
@@ -124,7 +125,7 @@ class SuiviVisageUtilsTest {
         VisageSuivi precedent = identifie(100, 100, EINSTEIN, MAINTENANT - 500);
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, precedent, MAINTENANT, () -> null);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, precedent, MAINTENANT, () -> null);
 
         assertEquals(MAINTENANT - 500, resultat.instantIdentification());
     }
@@ -138,7 +139,7 @@ class SuiviVisageUtilsTest {
         VisageSuivi precedent = identifie(100, 100, EINSTEIN, MAINTENANT - 1200);
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, precedent, MAINTENANT, () -> null);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, precedent, MAINTENANT, () -> null);
 
         assertTrue(resultat.estIdentifie());
         assertEquals("Einstein", resultat.prenom());
@@ -149,7 +150,7 @@ class SuiviVisageUtilsTest {
         VisageSuivi precedent = identifie(100, 100, EINSTEIN, MAINTENANT - 3500);
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, precedent, MAINTENANT, () -> null);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, precedent, MAINTENANT, () -> null);
 
         assertFalse(resultat.estIdentifie());
         assertNull(resultat.prenom());
@@ -160,7 +161,7 @@ class SuiviVisageUtilsTest {
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
         CompteurDeReconnaissances sface = new CompteurDeReconnaissances(NICOLAS);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, null, MAINTENANT, sface);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, null, MAINTENANT, sface);
 
         assertEquals(1, sface.appels);
         assertEquals("id-nicolas", resultat.idPersonne());
@@ -172,7 +173,7 @@ class SuiviVisageUtilsTest {
         RecognizedFace detecte = new RecognizedFace(102, 100, 50, 50);
         CompteurDeReconnaissances sface = new CompteurDeReconnaissances(NICOLAS);
 
-        VisageSuivi resultat = SuiviVisageUtils.identifier(detecte, precedent, MAINTENANT, sface);
+        VisageSuivi resultat = SuiviDesVisages.identifier(detecte, precedent, MAINTENANT, sface);
 
         assertEquals(1, sface.appels);
         assertEquals("id-nicolas", resultat.idPersonne());
