@@ -6,6 +6,8 @@ import fr.roboteek.robot.memoire.DetectedObject;
 import fr.roboteek.robot.memoire.ObjectDetectionResponse;
 import fr.roboteek.robot.memoire.RecognizedFace;
 import fr.roboteek.robot.memoire.VisionArtificiellePythonGrpc;
+import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.personne.PersonneRepository;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
@@ -20,6 +22,7 @@ import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.webcam.SuiviVisageUtils;
+import fr.roboteek.robot.util.webcam.VisageSuivi;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.IOUtils;
@@ -124,6 +127,13 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
     private int indexFrame = 0;
 
+    /**
+     * Visages du dernier cycle de reconnaissance, avec leur identité : base du suivi par
+     * centroïde d'un cycle au suivant.
+     */
+    private List<VisageSuivi> derniersVisagesSuivis;
+
+    /** Boîtes des mêmes visages, telles que diffusées dans le flux vidéo. */
     private List<RecognizedFace> derniersVisagesReconnus;
 
     /**
@@ -151,6 +161,13 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      */
     @Autowired
     private RegistreAbonnesWebsocket registreAbonnesWebsocket;
+
+    /**
+     * Mémoire des personnes : la reconnaissance ne rend qu'un identifiant, le prénom se
+     * retrouve ici.
+     */
+    @Autowired
+    private PersonneRepository personneRepository;
 
     /**
      * Horodatage de la dernière image publiée, pour cadencer le flux en temps réel plutôt
@@ -318,21 +335,28 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         if (serviceDetectionVisage != null && indexFrame % FREQUENCE_RECONNAISSANCE_VISAGE == 0) {
             try {
                 List<VisageDetecte> visagesDetectes = serviceDetectionVisage.detecter(image);
-                List<RecognizedFace> visagesPrecedents = derniersVisagesReconnus;
-                List<RecognizedFace> visagesReconnus = new ArrayList<>();
+                List<VisageSuivi> visagesPrecedents = derniersVisagesSuivis;
+                List<VisageSuivi> visagesSuivis = new ArrayList<>();
                 for (VisageDetecte visageDetecte : visagesDetectes) {
-                    RecognizedFace visageReconnu = new RecognizedFace(visageDetecte.x(), visageDetecte.y(), visageDetecte.width(), visageDetecte.height());
-                    RecognizedFace visagePrecedentProche = SuiviVisageUtils.trouverVisagePrecedentProche(visagesPrecedents, visageReconnu, DISTANCE_MAX_SUIVI_VISAGE);
-                    if (visagePrecedentProche != null && visagePrecedentProche.getName() != null) {
-                        visageReconnu.setName(visagePrecedentProche.getName());
+                    RecognizedFace boite = new RecognizedFace(visageDetecte.x(), visageDetecte.y(), visageDetecte.width(), visageDetecte.height());
+                    VisageSuivi visagePrecedentProche = SuiviVisageUtils.trouverVisagePrecedentProche(visagesPrecedents, boite, DISTANCE_MAX_SUIVI_VISAGE);
+                    String idPersonne;
+                    if (visagePrecedentProche != null && visagePrecedentProche.estIdentifie()) {
+                        // Identité déjà trouvée à la frame précédente : ni SFace ni accès à la base.
+                        idPersonne = visagePrecedentProche.idPersonne();
+                        boite.setName(visagePrecedentProche.prenom());
                     } else {
-                        visageReconnu.setName(serviceReconnaissanceVisage.identifier(image, visageDetecte));
+                        Personne personne = personneReconnue(image, visageDetecte);
+                        idPersonne = personne != null ? personne.id() : null;
+                        boite.setName(personne != null ? personne.prenom() : null);
                     }
-                    visagesReconnus.add(visageReconnu);
+                    visagesSuivis.add(new VisageSuivi(boite, idPersonne));
                 }
-                derniersVisagesReconnus = visagesReconnus;
-                publierVisagesPercus(visagesReconnus);
+                derniersVisagesSuivis = visagesSuivis;
+                derniersVisagesReconnus = visagesSuivis.stream().map(VisageSuivi::boite).toList();
+                publierVisagesPercus(visagesSuivis);
             } catch (RuntimeException e) {
+                derniersVisagesSuivis = null;
                 derniersVisagesReconnus = null;
                 if (indexFrame % 100 == 0) {
                     logger.warn("Reconnaissance de visages indisponible (le flux vidéo continue) : {}", e.getMessage());
@@ -394,7 +418,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      * personne » qui suivent sont tus : sinon l'évènement partirait une dizaine de fois par
      * seconde sur une pièce vide, et serait en plus rediffusé sur le WebSocket.
      */
-    private void publierVisagesPercus(List<RecognizedFace> visages) {
+    private void publierVisagesPercus(List<VisageSuivi> visages) {
         boolean visagesPresents = !visages.isEmpty();
         if (!visagesPresents && !visagesPercusPrecedemment) {
             return;
@@ -402,9 +426,33 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         visagesPercusPrecedemment = visagesPresents;
         tracerCompositionVisages(visages);
         List<VisagePercu> visagesPercus = visages.stream()
-                .map(visage -> new VisagePercu(visage.getName(), visage.getX(), visage.getY(), visage.getWidth(), visage.getHeight()))
+                .map(visage -> new VisagePercu(visage.idPersonne(), visage.prenom(),
+                        visage.boite().getX(), visage.boite().getY(),
+                        visage.boite().getWidth(), visage.boite().getHeight()))
                 .toList();
         applicationEventPublisher.publishEvent(new VisagePercuEvent(visagesPercus, image.width(), image.height()));
+    }
+
+    /**
+     * Reconnaît la personne d'un visage détecté (SFace puis résolution en base).
+     * <p>
+     * Une empreinte peut désigner une personne absente de la base — enregistrement à moitié
+     * fait, base des personnes effacée sans la base des visages. Le visage est alors traité
+     * comme inconnu : mieux vaut redemander son prénom à quelqu'un que d'entretenir une
+     * identité fantôme.
+     *
+     * @return la personne reconnue, ou {@code null} si le visage est inconnu
+     */
+    private Personne personneReconnue(Mat image, VisageDetecte visageDetecte) {
+        String idPersonne = serviceReconnaissanceVisage.identifierPersonne(image, visageDetecte);
+        if (idPersonne == null) {
+            return null;
+        }
+        Personne personne = personneRepository.parId(idPersonne);
+        if (personne == null) {
+            logger.warn("Empreinte rattachée à une personne absente de la base ({}) : visage traité comme inconnu", idPersonne);
+        }
+        return personne;
     }
 
     /**
@@ -416,11 +464,11 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      * près de son seuil. Ce qui mérite le niveau INFO, c'est la rencontre décidée par le registre
      * de présence, pas la matière première dont elle est tirée.
      */
-    private void tracerCompositionVisages(List<RecognizedFace> visages) {
+    private void tracerCompositionVisages(List<VisageSuivi> visages) {
         String composition = visages.isEmpty()
                 ? "plus personne"
                 : visages.stream()
-                        .map(visage -> visage.getName() != null ? visage.getName() : "inconnu")
+                        .map(visage -> visage.estIdentifie() ? visage.prenom() : "inconnu")
                         .collect(Collectors.joining(", "));
         if (!composition.equals(derniereCompositionVisagesTracee)) {
             derniereCompositionVisagesTracee = composition;

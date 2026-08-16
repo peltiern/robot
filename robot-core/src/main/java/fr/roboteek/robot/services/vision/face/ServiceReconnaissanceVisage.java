@@ -13,10 +13,10 @@ public interface ServiceReconnaissanceVisage {
      *
      * @param image   l'image d'origine (le visage n'est pas encore recadré)
      * @param visage  le visage détecté à identifier
-     * @return le nom du visage connu le plus proche, ou {@code null} si aucun visage
-     * connu ne dépasse le seuil de similarité (visage inconnu)
+     * @return l'identifiant de la {@code Personne} dont l'empreinte est la plus proche, ou
+     * {@code null} si aucune ne dépasse le seuil de similarité (visage inconnu)
      */
-    String identifier(Mat image, VisageDetecte visage);
+    String identifierPersonne(Mat image, VisageDetecte visage);
 
     /**
      * Calcule l'empreinte biométrique d'un visage détecté, sous la forme attendue par

@@ -65,13 +65,13 @@ class OpenCvServiceReconnaissanceVisageTest {
 
     @Test
     void identifieLesVisagesEnregistres() {
-        assertEquals("Amy", identifierPremierVisage(IMAGE_AMY));
-        assertEquals("Einstein", identifierPremierVisage(IMAGE_EINSTEIN));
+        assertEquals("Amy", identifiantPersonnePremierVisage(IMAGE_AMY));
+        assertEquals("Einstein", identifiantPersonnePremierVisage(IMAGE_EINSTEIN));
     }
 
     @Test
     void unVisageNonEnregistreResteInconnu() {
-        assertNull(identifierPremierVisage(IMAGE_SHELDON));
+        assertNull(identifiantPersonnePremierVisage(IMAGE_SHELDON));
     }
 
     @Test
@@ -80,21 +80,21 @@ class OpenCvServiceReconnaissanceVisageTest {
         // empreinte extraite du service, et il doit alors se reconnaître lui-même.
         enregistrer("Sheldon", IMAGE_SHELDON);
 
-        assertEquals("Sheldon", identifierPremierVisage(IMAGE_SHELDON));
-        assertEquals("Amy", identifierPremierVisage(IMAGE_AMY));
+        assertEquals("Sheldon", identifiantPersonnePremierVisage(IMAGE_SHELDON));
+        assertEquals("Amy", identifiantPersonnePremierVisage(IMAGE_AMY));
     }
 
-    private void enregistrer(String nom, String cheminImage) {
+    private void enregistrer(String idPersonne, String cheminImage) {
         Mat image = Imgcodecs.imread(cheminImage);
         assertFalse(image.empty(), "Image de test introuvable : " + cheminImage);
         VisageDetecte visage = OpenCvServiceDetectionVisage.getInstance().detecter(image).get(0);
 
-        repository.ajouter(nom, reconnaissance.extraireEmbedding(image, visage));
+        repository.ajouter(idPersonne, reconnaissance.extraireEmbedding(image, visage));
     }
 
-    private String identifierPremierVisage(String cheminImage) {
+    private String identifiantPersonnePremierVisage(String cheminImage) {
         Mat image = Imgcodecs.imread(cheminImage);
         List<VisageDetecte> visages = OpenCvServiceDetectionVisage.getInstance().detecter(image);
-        return reconnaissance.identifier(image, visages.get(0));
+        return reconnaissance.identifierPersonne(image, visages.get(0));
     }
 }

@@ -119,4 +119,45 @@ public interface RobotConfig extends Config {
     @Key("robot.capteurs.vision.stream.jpeg.quality")
     @DefaultValue("60")
     int qualiteJpegFluxVideo();
+
+    /**
+     * Durée de présence continue, en secondes, avant de considérer que quelqu'un est vraiment là.
+     * <p>
+     * Exprimée en durée et non en nombre de cycles : la cadence de la reconnaissance varie avec
+     * la charge du Nano et le nombre de visages, un compte de cycles ne voudrait pas dire la même
+     * chose d'un moment à l'autre. Le baisser rend le robot plus prompt à aborder les gens, mais
+     * le fait réagir à quelqu'un qui ne fait que passer devant la caméra.
+     *
+     * @return la durée de présence à confirmer, en secondes
+     */
+    @Key("robot.presence.confirmation.seconds")
+    @DefaultValue("1.5")
+    double dureeConfirmationPresenceSecondes();
+
+    /**
+     * Durée d'absence, en secondes, au-delà de laquelle on considère la personne repartie.
+     * <p>
+     * C'est l'hystérésis qui absorbe le clignotement de la détection : mesuré sur le robot, un
+     * visage parfaitement immobile disparaît et réapparaît par trous de 100 à 250 ms, une seule
+     * frame ratée par YuNet suffisant à le faire s'évanouir. Sans ce délai, la même personne
+     * serait « repartie puis revenue » six fois en quinze secondes, et saluée à chaque fois.
+     *
+     * @return la durée d'absence tolérée avant de considérer la personne partie, en secondes
+     */
+    @Key("robot.presence.absence.seconds")
+    @DefaultValue("4.0")
+    double dureeAbsenceAvantDepartSecondes();
+
+    /**
+     * Délai minimal, en secondes, entre deux rencontres déclenchées pour la même personne.
+     * <p>
+     * Second garde-fou, indépendant du précédent : même si quelqu'un sort réellement du champ et
+     * revient, le robot ne doit pas rejouer les retrouvailles. Deux minutes par défaut, le temps
+     * qu'une vraie absence se distingue d'un aller-retour à la cuisine.
+     *
+     * @return la temporisation entre deux rencontres d'une même personne, en secondes
+     */
+    @Key("robot.presence.rencontre.temporisation.seconds")
+    @DefaultValue("120.0")
+    double temporisationEntreRencontresSecondes();
 }

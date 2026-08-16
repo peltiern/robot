@@ -3,7 +3,6 @@ package fr.roboteek.robot.activites.conversation;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
-import fr.roboteek.robot.organes.actionneurs.animation.Animation;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import org.apache.commons.lang3.StringUtils;
@@ -25,10 +24,25 @@ public class ConversationActivity extends AbstractActivity {
 
     private final ConversationIA conversationIA;
 
+    /**
+     * Personne avec qui le robot converse, {@code null} tant qu'elle n'est pas identifiée.
+     * Détermine le fil de mémoire employé : chacun a le sien.
+     */
+    private volatile String interlocuteur;
+
     private final Logger logger = LoggerFactory.getLogger(ConversationActivity.class);
 
     public ConversationActivity(ConversationIA conversationIA) {
         this.conversationIA = conversationIA;
+    }
+
+    /**
+     * Désigne la personne à qui le robot parle. Volontairement pas remis à zéro par
+     * {@link #init()} : l'interlocuteur est posé <i>avant</i> de rendre la main à cette
+     * activité (par celle qui vient de le reconnaître ou de faire sa connaissance).
+     */
+    public void setInterlocuteur(String interlocuteur) {
+        this.interlocuteur = interlocuteur;
     }
 
     @Override
@@ -48,7 +62,9 @@ public class ConversationActivity extends AbstractActivity {
                 break;
             }
         }
-        say("OK. On arrête de parler.");
+        // Plus de « OK. On arrête de parler. » ici : cette sortie n'est plus seulement l'extinction
+        // du robot (qui dit déjà « Au revoir. », les deux phrases se chevauchaient), c'est aussi le
+        // passage à une autre activité — annoncer la fin de la conversation y serait à contretemps.
         return stopActivity;
     }
 
@@ -67,9 +83,11 @@ public class ConversationActivity extends AbstractActivity {
                     // Conversation
                     RequeteIntelligenceArtificielle requete = new RequeteIntelligenceArtificielle();
                     requete.setInputText(texteReconnu);
-                    ReponseIntelligenceArtificielle reponse = conversationIA.repondreARequete(requete);
+                    ReponseIntelligenceArtificielle reponse = conversationIA.repondreARequete(requete, interlocuteur);
                     if (reponse != null && StringUtils.isNotBlank(reponse.getOutputText())) {
-                        playAnimation(Animation.NEUTRAL);
+                        // Pas d'Animation.NEUTRAL avant de répondre : elle recentrait cou et yeux à
+                        // chaque phrase, effaçant la pose du robot — y compris, désormais, le regard
+                        // posé sur son interlocuteur, qu'il perdrait de vue en lui répondant.
                         say(reponse.getOutputText());
                     } else {
                         // Rien à dire : relancer la reconnaissance nous-mêmes, sinon le robot reste sourd

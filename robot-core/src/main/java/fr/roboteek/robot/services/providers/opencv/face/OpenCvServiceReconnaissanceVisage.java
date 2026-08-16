@@ -45,19 +45,19 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
     }
 
     @Override
-    public String identifier(Mat image, VisageDetecte visage) {
+    public String identifierPersonne(Mat image, VisageDetecte visage) {
         Mat embedding = calculerEmbedding(image, visage);
 
-        String meilleurNom = null;
+        String meilleurIdPersonne = null;
         double meilleurScore = SEUIL_COSINE;
         for (VisageConnu visageConnu : visageConnuRepository.tousLesVisages()) {
             double score = reconnaisseur.match(embedding, matDepuisEmbedding(visageConnu.embedding()), FaceRecognizerSF.FR_COSINE);
             if (score > meilleurScore) {
                 meilleurScore = score;
-                meilleurNom = visageConnu.nom();
+                meilleurIdPersonne = visageConnu.idPersonne();
             }
         }
-        return meilleurNom;
+        return meilleurIdPersonne;
     }
 
     @Override
