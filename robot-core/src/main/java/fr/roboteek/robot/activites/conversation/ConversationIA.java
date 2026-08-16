@@ -2,8 +2,8 @@ package fr.roboteek.robot.activites.conversation;
 
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
-import fr.roboteek.robot.memoire.conversation.MapDbChatMemoryRepository;
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.conversation.ConversationRepository;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -28,8 +28,8 @@ import java.util.Locale;
  * <p>
  * Remplace l'ancien {@code OpenAIConversation} (langchain4j) : le modèle est configuré
  * dans {@code application.properties} ({@code spring.ai.anthropic.*}, clé d'API lue dans
- * le {@code .env}), la mémoire de conversation persiste dans MapDB via
- * {@link MapDbChatMemoryRepository}.
+ * le {@code .env}), la mémoire de conversation persiste en base via
+ * {@link ConversationRepository}.
  */
 @Component
 public class ConversationIA {
@@ -37,8 +37,8 @@ public class ConversationIA {
     /**
      * Identifiant de la conversation tenue avec un interlocuteur non identifié.
      * <p>
-     * Valeur historique conservée : c'est la clé sous laquelle toute la mémoire MapDB a été
-     * écrite jusqu'ici, en changer ferait repartir le robot de zéro.
+     * Valeur historique conservée : c'est la clé sous laquelle toute la mémoire de conversation
+     * a été écrite jusqu'ici, en changer ferait repartir le robot de zéro.
      */
     private static final String ID_CONVERSATION_PAR_DEFAUT = "wall-e";
 
@@ -83,7 +83,7 @@ public class ConversationIA {
 
     private final ChatClient chatClient;
 
-    public ConversationIA(ChatClient.Builder chatClientBuilder, MapDbChatMemoryRepository depotMemoireConversation) {
+    public ConversationIA(ChatClient.Builder chatClientBuilder, ConversationRepository depotMemoireConversation) {
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(depotMemoireConversation)
                 .maxMessages(TAILLE_MEMOIRE)

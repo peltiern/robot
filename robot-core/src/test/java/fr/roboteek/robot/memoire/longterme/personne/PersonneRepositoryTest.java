@@ -1,36 +1,37 @@
-package fr.roboteek.robot.memoire.personne;
+package fr.roboteek.robot.memoire.longterme.personne;
 
-import org.junit.jupiter.api.AfterEach;
+import fr.roboteek.robot.memoire.longterme.BaseMemoireDeTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Vérifie la persistance MapDB des personnes.
+ * Vérifie la persistance des personnes.
  */
 class PersonneRepositoryTest {
 
     @TempDir
     File dossierTemp;
 
+    private DataSource memoire;
+
     private PersonneRepository repository;
 
     @BeforeEach
     void setUp() {
-        repository = new PersonneRepository(cheminBase());
-    }
-
-    @AfterEach
-    void tearDown() {
-        repository.close();
+        memoire = BaseMemoireDeTest.dans(dossierTemp);
+        repository = new PersonneRepository(memoire);
     }
 
     @Test
@@ -81,17 +82,37 @@ class PersonneRepositoryTest {
     }
 
     @Test
+    void lesPersonnesSontRenduesParOrdreAlphabetique() {
+        repository.enregistrer(Personne.nouvelle("zoé"));
+        repository.enregistrer(Personne.nouvelle("Alice"));
+        repository.enregistrer(Personne.nouvelle("marc"));
+
+        assertEquals(List.of("Alice", "marc", "zoé"), repository.toutes().stream().map(Personne::prenom).toList());
+    }
+
+    @Test
+    void supprimerUnePersonneLaFaitDisparaitre() {
+        Personne marie = Personne.nouvelle("Marie");
+        repository.enregistrer(marie);
+
+        assertTrue(repository.supprimer(marie.id()));
+
+        assertNull(repository.parId(marie.id()));
+        assertTrue(repository.toutes().isEmpty());
+    }
+
+    @Test
+    void supprimerQuelquunQuiNexistePasNeFaitRien() {
+        assertFalse(repository.supprimer("inexistant"));
+    }
+
+    @Test
     void lesPersonnesPersistentApresReouvertureDeLaBase() {
         Personne marie = Personne.nouvelle("Marie");
         repository.enregistrer(marie);
-        repository.close();
 
-        repository = new PersonneRepository(cheminBase());
+        PersonneRepository relu = new PersonneRepository(BaseMemoireDeTest.dans(dossierTemp));
 
-        assertEquals("Marie", repository.parId(marie.id()).prenom());
-    }
-
-    private String cheminBase() {
-        return new File(dossierTemp, "personnes.db").getAbsolutePath();
+        assertEquals("Marie", relu.parId(marie.id()).prenom());
     }
 }

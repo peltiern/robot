@@ -1,8 +1,9 @@
 package fr.roboteek.robot.activites.presentation;
 
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
-import fr.roboteek.robot.memoire.personne.Personne;
-import fr.roboteek.robot.memoire.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.BaseMemoireDeTest;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
@@ -10,7 +11,6 @@ import fr.roboteek.robot.systemenerveux.event.ParoleTermineeEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -67,9 +67,15 @@ class PresentationActivityTest {
 
     private final List<String> enrolementsDemandes = new CopyOnWriteArrayList<>();
 
+    /**
+     * La personne telle qu'elle était en base <b>au moment où</b> son visage a été demandé.
+     * Les empreintes la référencent : si elle n'y est pas encore, la base refuse de les écrire.
+     */
+    private final List<Personne> personnesEnBaseALaDemande = new CopyOnWriteArrayList<>();
+
     @BeforeEach
     void setUp() {
-        personneRepository = new PersonneRepository(new File(dossierTemp, "personnes.db").getAbsolutePath());
+        personneRepository = new PersonneRepository(BaseMemoireDeTest.dans(dossierTemp));
         memoireCourtTerme = mock(MemoireCourtTerme.class);
         extractionPrenomIA = mock(ExtractionPrenomIA.class);
         // 200 ms au lieu de 8 s : les cas sans réponse attendraient sinon une demi-minute.
@@ -83,17 +89,16 @@ class PresentationActivityTest {
                 repondreSiProgramme(parole.getTexte());
             } else if (evenement instanceof DemandeEnrolementEvent demande) {
                 enrolementsDemandes.add(demande.getIdPersonne());
+                Personne enBase = personneRepository.parId(demande.getIdPersonne());
+                if (enBase != null) {
+                    personnesEnBaseALaDemande.add(enBase);
+                }
                 activite.handleEnrolementTermineEvent(
                         new EnrolementTermineEvent(demande.getIdPersonne(), enrolementReussi ? 5 : 0, enrolementReussi));
             }
         };
         ReflectionTestUtils.setField(activite, "applicationEventPublisher", publieur);
         activite.activer();
-    }
-
-    @AfterEach
-    void tearDown() {
-        personneRepository.close();
     }
 
     @Test
@@ -115,6 +120,31 @@ class PresentationActivityTest {
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("Enchanté Marie")));
     }
 
+    /**
+     * La personne doit être en base avant que son visage ne soit appris : les empreintes la
+     * référencent, et la base refuse celles qui ne désignent personne.
+     * <p>
+     * Écrite après une panne réelle, le 2026-08-16. La personne n'était enregistrée qu'une fois le
+     * visage appris ; l'insertion des empreintes échouait donc sur la clé étrangère, l'exception
+     * était avalée par la boucle vidéo, et le robot annonçait à Nicolas qu'il n'avait « pas réussi
+     * à bien le regarder » — dix secondes plus tard, et sans rien dans les logs.
+     */
+    @Test
+    @Timeout(10)
+    void lePersonneExisteEnBaseAvantQueSonVisageNeSoitAppris() {
+        repondreApres("comment tu t'appelles", "je m'appelle marie");
+        repondreApres("quel est ton prénom", "je m'appelle marie");
+        repondreApres("c'est bien ça", "oui");
+        when(extractionPrenomIA.extraire("je m'appelle marie")).thenReturn("Marie");
+
+        activite.run();
+
+        assertEquals(1, personnesEnBaseALaDemande.size(),
+                "la personne doit déjà être en base quand son visage est demandé");
+        assertEquals("Marie", personnesEnBaseALaDemande.getFirst().prenom());
+        assertEquals(enrolementsDemandes.getFirst(), personnesEnBaseALaDemande.getFirst().id());
+    }
+
     @Test
     @Timeout(10)
     void leVisageEstAppelAvantQueLaPersonneNeSoitEnregistree() {
@@ -128,7 +158,9 @@ class PresentationActivityTest {
 
         activite.run();
 
-        assertNull(personneEnregistree(), "rien ne doit être enregistré");
+        // Elle a bien été créée pour porter les empreintes, puis effacée faute de visage appris.
+        assertEquals(1, personnesEnBaseALaDemande.size());
+        assertNull(personneEnregistree(), "rien ne doit rester enregistré");
         verify(memoireCourtTerme, org.mockito.Mockito.never()).poserInterlocuteur(any());
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("pas réussi à bien te regarder")));
     }

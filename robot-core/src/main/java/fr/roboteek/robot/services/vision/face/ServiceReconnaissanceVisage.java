@@ -22,7 +22,7 @@ public interface ServiceReconnaissanceVisage {
 
     /**
      * Calcule l'empreinte biométrique d'un visage détecté, sous la forme attendue par
-     * {@code VisageConnuRepository.ajouter(nom, embedding)}.
+     * {@code VisageConnuRepository.ajouter(idPersonne, embedding)}.
      * <p>
      * C'est ce qui manquait pour enrôler quelqu'un : {@link #identifier} calculait déjà cette
      * empreinte, mais la gardait pour lui — la base ne pouvait donc être peuplée que par
@@ -37,9 +37,10 @@ public interface ServiceReconnaissanceVisage {
     /**
      * Rattache des empreintes à une personne : à partir de cet instant, elle est reconnue.
      * <p>
-     * L'enregistrement passe par le service et non par la base directement, et ce n'est pas un
-     * détail : <b>MapDB verrouille son fichier</b>, et c'est le service qui le détient. Ouvrir un
-     * second accès pour écrire échouerait.
+     * L'enregistrement passe par le service et non par la base directement, pour que celui qui
+     * enrôle n'ait pas à savoir sous quelle forme une empreinte se range. Ce n'était autrefois pas
+     * un choix mais une contrainte : MapDB verrouillait son fichier, et le service en était le seul
+     * détenteur.
      *
      * @param idPersonne identifiant de la personne
      * @param empreintes empreintes relevées, plusieurs valant mieux qu'une — une seule prise à

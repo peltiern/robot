@@ -1,14 +1,14 @@
 package fr.roboteek.robot.memoire.courtterme;
 
-import fr.roboteek.robot.memoire.personne.Personne;
-import fr.roboteek.robot.memoire.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.BaseMemoireDeTest;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreEvent;
 import fr.roboteek.robot.util.HorlogeReglable;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -52,7 +52,7 @@ class RegistrePresenceTest {
     @BeforeEach
     void setUp() {
         horloge = new HorlogeReglable(Instant.parse("2026-08-09T15:00:00Z"));
-        personneRepository = new PersonneRepository(new File(dossierTemp, "personnes.db").getAbsolutePath());
+        personneRepository = new PersonneRepository(BaseMemoireDeTest.dans(dossierTemp));
         rencontres = new ArrayList<>();
         ApplicationEventPublisher publieur = evenement -> {
             if (evenement instanceof RencontreEvent rencontre) {
@@ -60,11 +60,6 @@ class RegistrePresenceTest {
             }
         };
         registre = new RegistrePresence(personneRepository, publieur, horloge);
-    }
-
-    @AfterEach
-    void tearDown() {
-        personneRepository.close();
     }
 
     @Test

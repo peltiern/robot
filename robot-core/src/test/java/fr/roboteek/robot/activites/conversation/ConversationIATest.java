@@ -1,6 +1,6 @@
 package fr.roboteek.robot.activites.conversation;
 
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 

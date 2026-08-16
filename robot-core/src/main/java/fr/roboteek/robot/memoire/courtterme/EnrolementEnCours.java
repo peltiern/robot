@@ -122,6 +122,12 @@ public class EnrolementEnCours {
      * <p>
      * Les empreintes ne sont écrites qu'ici, en une fois : un enrôlement interrompu ne doit pas
      * laisser une personne à moitié apprise, reconnue une fois sur trois.
+     * <p>
+     * <b>Le résultat part quoi qu'il arrive</b>, y compris si l'écriture échoue. Même règle que
+     * pour {@link #renoncer} : celui qui attend ne doit jamais rester suspendu. Sans cette garde,
+     * un refus de la base a fait attendre dix secondes à l'activité de présentation, qui a conclu
+     * à un visage mal vu — et l'exception, avalée par la boucle vidéo, n'a laissé aucune trace
+     * dans les logs. Une panne d'écriture doit se dire, pas se déguiser en personne mal cadrée.
      */
     private void conclure() {
         String personne = idPersonne;
@@ -131,11 +137,17 @@ public class EnrolementEnCours {
 
         boolean reussi = !relevees.isEmpty();
         if (reussi) {
-            ecrireEnMemoireLongue.accept(relevees);
-            logger.info("Personne {} apprise : {} empreinte(s)", personne, relevees.size());
+            try {
+                ecrireEnMemoireLongue.accept(relevees);
+                logger.info("Personne {} apprise : {} empreinte(s)", personne, relevees.size());
+            } catch (RuntimeException e) {
+                reussi = false;
+                logger.error("Empreintes de la personne {} non enregistrées : {}", personne, e.getMessage(), e);
+            }
         } else {
             logger.warn("Enrôlement de la personne {} abandonné : aucun visage vu à temps", personne);
         }
-        applicationEventPublisher.publishEvent(new EnrolementTermineEvent(personne, relevees.size(), reussi));
+        applicationEventPublisher.publishEvent(
+                new EnrolementTermineEvent(personne, reussi ? relevees.size() : 0, reussi));
     }
 }

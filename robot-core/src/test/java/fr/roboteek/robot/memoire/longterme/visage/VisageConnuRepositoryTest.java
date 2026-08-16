@@ -1,36 +1,51 @@
-package fr.roboteek.robot.memoire.visage;
+package fr.roboteek.robot.memoire.longterme.visage;
 
-import org.junit.jupiter.api.AfterEach;
+import fr.roboteek.robot.memoire.longterme.BaseMemoireDeTest;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Vérifie la persistance MapDB des visages connus, indépendamment d'OpenCV/des
- * modèles ONNX (pure logique de stockage).
+ * Vérifie la persistance des visages connus, indépendamment d'OpenCV et des modèles ONNX
+ * (pure logique de stockage).
  */
 class VisageConnuRepositoryTest {
 
     @TempDir
     File dossierTemp;
 
+    private DataSource memoire;
+
     private VisageConnuRepository repository;
+
+    private PersonneRepository personneRepository;
+
+    private Personne amy;
+
+    private Personne einstein;
 
     @BeforeEach
     void setUp() {
-        repository = new VisageConnuRepository(new File(dossierTemp, "visages.db").getAbsolutePath());
-    }
+        memoire = BaseMemoireDeTest.dans(dossierTemp);
+        repository = new VisageConnuRepository(memoire);
+        personneRepository = new PersonneRepository(memoire);
 
-    @AfterEach
-    void tearDown() {
-        repository.close();
+        amy = Personne.nouvelle("Amy");
+        einstein = Personne.nouvelle("Einstein");
+        personneRepository.enregistrer(amy);
+        personneRepository.enregistrer(einstein);
     }
 
     @Test
@@ -40,39 +55,78 @@ class VisageConnuRepositoryTest {
 
     @Test
     void ajouterPuisRelireUnVisage() {
-        repository.ajouter("id-amy", new float[]{1f, 2f, 3f});
+        repository.ajouter(amy.id(), new float[]{1f, 2f, 3f});
 
         List<VisageConnu> visages = repository.tousLesVisages();
 
         assertEquals(1, visages.size());
-        assertEquals("id-amy", visages.get(0).idPersonne());
+        assertEquals(amy.id(), visages.get(0).idPersonne());
         assertArrayEquals(new float[]{1f, 2f, 3f}, visages.get(0).embedding());
     }
 
     @Test
     void plusieursEntreesPourLaMemePersonneSontToutesConservees() {
-        repository.ajouter("id-amy", new float[]{1f, 2f});
-        repository.ajouter("id-amy", new float[]{3f, 4f});
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+        repository.ajouter(amy.id(), new float[]{3f, 4f});
 
         List<VisageConnu> visages = repository.tousLesVisages();
 
         assertEquals(2, visages.size());
-        assertTrue(visages.stream().allMatch(v -> v.idPersonne().equals("id-amy")));
+        assertTrue(visages.stream().allMatch(visage -> visage.idPersonne().equals(amy.id())));
+    }
+
+    @Test
+    void lesVisagesSeRetrouventParPersonne() {
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+        repository.ajouter(amy.id(), new float[]{3f, 4f});
+        repository.ajouter(einstein.id(), new float[]{5f, 6f});
+
+        assertEquals(2, repository.parPersonne(amy.id()).size());
+        assertEquals(1, repository.parPersonne(einstein.id()).size());
+        assertEquals(Map.of(amy.id(), 2, einstein.id(), 1), repository.nombreParPersonne());
+    }
+
+    @Test
+    void oublierLesVisagesDunePersonneLaisseCeuxDesAutres() {
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+        repository.ajouter(einstein.id(), new float[]{5f, 6f});
+
+        assertEquals(1, repository.supprimerParPersonne(amy.id()));
+
+        assertTrue(repository.parPersonne(amy.id()).isEmpty());
+        assertEquals(1, repository.parPersonne(einstein.id()).size());
+    }
+
+    /**
+     * Le cœur de l'affaire : une empreinte qui survit à sa personne ferait « reconnaître » au
+     * robot quelqu'un qui n'existe plus, et la reconnaissance rendrait un identifiant introuvable.
+     */
+    @Test
+    void supprimerUnePersonneEmporteSesVisages() {
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+        repository.ajouter(einstein.id(), new float[]{5f, 6f});
+
+        personneRepository.supprimer(amy.id());
+
+        assertEquals(1, repository.tousLesVisages().size());
+        assertEquals(einstein.id(), repository.tousLesVisages().get(0).idPersonne());
+    }
+
+    /** Même garde-fou dans l'autre sens : pas d'empreinte rattachée à personne. */
+    @Test
+    void unVisageNePeutPasDesignerQuelquunDinconnu() {
+        assertThrows(RuntimeException.class, () -> repository.ajouter("inexistant", new float[]{1f, 2f}));
     }
 
     @Test
     void lesVisagesPersistentApresReouvertureDeLaBase() {
-        repository.ajouter("id-einstein", new float[]{5f, 6f});
-        repository.close();
+        repository.ajouter(einstein.id(), new float[]{5f, 6f});
 
-        VisageConnuRepository reouverte = new VisageConnuRepository(new File(dossierTemp, "visages.db").getAbsolutePath());
-        List<VisageConnu> visages = reouverte.tousLesVisages();
+        VisageConnuRepository relu = new VisageConnuRepository(BaseMemoireDeTest.dans(dossierTemp));
+        List<VisageConnu> visages = relu.tousLesVisages();
 
         assertEquals(1, visages.size());
-        assertEquals("id-einstein", visages.get(0).idPersonne());
-        reouverte.close();
-
-        // Évite un double close() dans @AfterEach : la base a déjà été fermée puis rouverte.
-        repository = new VisageConnuRepository(new File(dossierTemp, "visages-vide.db").getAbsolutePath());
+        assertEquals(einstein.id(), visages.get(0).idPersonne());
+        assertArrayEquals(new float[]{5f, 6f}, visages.get(0).embedding());
     }
 }

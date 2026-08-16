@@ -1,7 +1,7 @@
 package fr.roboteek.robot.memoire.courtterme;
 
 import fr.roboteek.robot.memoire.RecognizedFace;
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

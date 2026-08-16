@@ -3,7 +3,7 @@ package fr.roboteek.robot.activites.retrouvailles;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.conversation.ConversationIA;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,7 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * <p>
  * <b>Il n'y a pas de résumé à stocker</b>, contrairement à ce qui était prévu au départ : la
  * mémoire de conversation est déjà tenue <i>par personne</i> et persistée
- * ({@link ConversationIA}, cent messages par fil dans MapDB). Le souvenir est donc déjà là ; tout
+ * ({@link ConversationIA}, cent messages par fil en base). Le souvenir est donc déjà là ; tout
  * ce qui manquait, c'était de dire au robot qui il a en face et de lui demander d'en tirer une
  * phrase. Le champ {@code resumeDerniereConversation} prévu à l'origine sur {@link Personne} n'a
  * donc jamais servi, et a été retiré.

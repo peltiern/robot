@@ -1,6 +1,5 @@
-package fr.roboteek.robot.memoire.personne;
+package fr.roboteek.robot.memoire.longterme.personne;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,20 +10,20 @@ import java.util.UUID;
  * L'identité est portée par {@link #id}, pas par le prénom : deux personnes peuvent
  * s'appeler Marie, et une même personne peut voir son prénom corrigé après une
  * reconnaissance vocale approximative. C'est cet identifiant que référencent les empreintes
- * biométriques ({@code VisageConnu}) et le fil de conversation ({@code ConversationIA}).
+ * biométriques ({@code VisageConnu}), le journal des rencontres et le fil de conversation.
  * <p>
  * <b>Rien n'est stocké ici du contenu des échanges.</b> Un champ {@code resumeDerniereConversation}
  * l'a été un temps, en prévision des retrouvailles ; il s'est révélé inutile et a été retiré le
  * 2026-08-15. La mémoire de conversation est tenue par personne et persistée par
- * {@code ConversationIA} (cent messages par fil), le robot a donc déjà de quoi se souvenir — bien
- * mieux qu'une phrase de résumé. Ne pas le réintroduire sans avoir constaté que la mémoire de
- * conversation ne suffit pas.
+ * {@code ConversationRepository} (cent messages par fil), le robot a donc déjà de quoi se
+ * souvenir — bien mieux qu'une phrase de résumé. Ne pas le réintroduire sans avoir constaté que
+ * la mémoire de conversation ne suffit pas.
  *
  * @param id                identifiant stable, jamais réutilisé
  * @param prenom            prénom tel que la personne l'a donné
  * @param derniereRencontre date de la dernière rencontre, {@code null} si jamais rencontrée
  */
-public record Personne(String id, String prenom, LocalDateTime derniereRencontre) implements Serializable {
+public record Personne(String id, String prenom, LocalDateTime derniereRencontre) {
 
     /** Crée une personne encore jamais rencontrée. */
     public static Personne nouvelle(String prenom) {
@@ -34,5 +33,10 @@ public record Personne(String id, String prenom, LocalDateTime derniereRencontre
     /** Copie datée d'une nouvelle rencontre. */
     public Personne rencontreeLe(LocalDateTime instant) {
         return new Personne(id, prenom, instant);
+    }
+
+    /** Copie portant un autre prénom, quand celui retenu était mal compris. */
+    public Personne renommee(String nouveauPrenom) {
+        return new Personne(id, nouveauPrenom, derniereRencontre);
     }
 }

@@ -2,7 +2,7 @@ package fr.roboteek.robot.activites.retrouvailles;
 
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.activites.conversation.ConversationIA;
-import fr.roboteek.robot.memoire.personne.Personne;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
