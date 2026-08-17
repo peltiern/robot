@@ -109,6 +109,23 @@ public class MemoireCourtTerme {
         this.interlocuteur = personne;
     }
 
+    /**
+     * Sort quelqu'un de la tête du robot : sa présence, son suivi, et le fait qu'il lui parlait.
+     * <p>
+     * Appelé quand la personne vient d'être effacée de la mémoire longue. Sans cela, le robot
+     * continuerait un moment de la croire devant lui et de lui parler — en cherchant en base une
+     * identité qui n'y est plus. Les visages suivis sont oubliés en bloc plutôt que triés : le
+     * suivi se refait en trois images, ce n'est pas un état qu'il vaut la peine de réparer.
+     */
+    public void oublier(String idPersonne) {
+        registrePresence.oublier(idPersonne);
+        suiviDesVisages.oublierTout();
+        Personne connu = interlocuteur;
+        if (connu != null && connu.id().equals(idPersonne)) {
+            interlocuteur = null;
+        }
+    }
+
     /** Les visages du dernier cycle, pour qui veut les afficher. */
     public List<VisageSuivi> visagesVus() {
         return suiviDesVisages.derniersVisages();
@@ -120,7 +137,7 @@ public class MemoireCourtTerme {
     }
 
     /** Ouvre un apprentissage de visage. Voir {@link EnrolementEnCours}. */
-    public void demarrerUnEnrolement(String idPersonne, Consumer<List<float[]>> ecrireEnMemoireLongue) {
+    public void demarrerUnEnrolement(String idPersonne, Consumer<List<PriseDeVisage>> ecrireEnMemoireLongue) {
         enrolementEnCours.demarrer(idPersonne, ecrireEnMemoireLongue);
     }
 
@@ -130,8 +147,8 @@ public class MemoireCourtTerme {
     }
 
     /** Avance l'apprentissage d'une image. Sans effet s'il n'y en a pas en cours. */
-    public void avancerLEnrolement(Supplier<float[]> empreinteDuVisageLePlusProche) {
-        enrolementEnCours.avancer(empreinteDuVisageLePlusProche);
+    public void avancerLEnrolement(Supplier<PriseDeVisage> visageLePlusProche) {
+        enrolementEnCours.avancer(visageLePlusProche);
     }
 
     /**

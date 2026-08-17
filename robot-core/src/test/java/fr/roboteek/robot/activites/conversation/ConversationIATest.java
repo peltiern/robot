@@ -6,7 +6,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Vérifie la clé du fil de mémoire, sans client d'IA ni réseau : c'est elle qui décide de qui se
@@ -32,20 +31,24 @@ class ConversationIATest {
         assertEquals(idConversation(marie), idConversation(marieRevue));
     }
 
-    /** Le prénom est dans la clé pour qu'un humain s'y retrouve en ouvrant la base. */
+    /**
+     * La clé ne tient qu'à l'identifiant.
+     * <p>
+     * Le prénom y a figuré, en simple étiquette, pour s'y retrouver en ouvrant la base. Il en a été
+     * retiré le 2026-08-16 : renommer quelqu'un changeait sa clé, et le robot repartait d'une page
+     * blanche avec lui sans que rien ne le signale — précisément au moment où l'on corrige un
+     * prénom mal compris, donc où l'on tient le plus à ce qu'il se souvienne.
+     */
     @Test
-    void lePrenomFigureDansLaCle() {
-        String cle = idConversation(new Personne("id-marie", "Marie", null));
-
-        assertTrue(cle.startsWith("personne-marie-"), "clé obtenue : " + cle);
-        assertTrue(cle.endsWith("id-marie"), "clé obtenue : " + cle);
+    void laCleNeTientQuALIdentifiant() {
+        assertEquals("personne-id-marie", idConversation(new Personne("id-marie", "Marie", null)));
     }
 
     @Test
-    void unPrenomAccentueOuEspaceDonneUneCleLisible() {
-        String cle = idConversation(new Personne("id-1", "Jean-Éric ", null));
+    void renommerQuelquunNeChangePasSonFil() {
+        Personne marie = new Personne("id-marie", "Marie", null);
 
-        assertEquals("personne-jeaneric-id-1", cle);
+        assertEquals(idConversation(marie), idConversation(marie.renommee("Marion")));
     }
 
     @Test

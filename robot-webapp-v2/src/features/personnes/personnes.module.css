@@ -1,0 +1,534 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Répertoire : la liste des personnes connues à gauche, la fiche à droite.
+
+   Même vocabulaire que le reste du HUD — carters, bordures franches, coins
+   ronds, tout en jetons de palette pour suivre le thème actif. Les cibles
+   respectent --tactile : cet écran se manipule au pouce sur la tablette.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.page {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* ── Colonne de gauche : la liste ───────────────────────────────────────── */
+
+.colonne {
+  width: 320px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px;
+  gap: 10px;
+  border-right: 1px solid var(--bordure);
+  background: var(--carter);
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.titre {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  color: var(--texte-faible);
+}
+
+.rafraichir {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-puce);
+  background: var(--carter-clair);
+  color: var(--texte-faible);
+  cursor: pointer;
+}
+
+.rafraichir:active {
+  transform: scale(0.94);
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carte {
+  width: 100%;
+  min-height: var(--tactile);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-puce);
+  background: var(--carter-clair);
+  color: var(--texte);
+  text-align: left;
+  cursor: pointer;
+}
+
+.carteActive {
+  border-color: var(--donnee);
+  background: color-mix(in srgb, var(--donnee) 14%, var(--carter-clair));
+}
+
+/* Le portrait, ou l'initiale tant qu'il n'y en a pas : un rond gris ne
+   distinguerait rien, une lettre si. Mêmes règles pour l'image et pour la
+   lettre, afin que la mise en page ne bouge pas d'une fiche à l'autre. */
+.vignette,
+.vignetteGrande {
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--creux, var(--fond));
+  border: 1px solid var(--bordure);
+  color: var(--donnee);
+  font-weight: 700;
+  /* Vaut pour les <img> : le portrait est carré, le cadre est rond. */
+  object-fit: cover;
+}
+
+.vignette {
+  width: 40px;
+  height: 40px;
+}
+
+/* Le portrait de la fiche est franchement plus gros que celui de la liste : c'est
+   lui qui dit d'un coup d'œil qui on est en train de regarder, et il doit se
+   reconnaître à un bras de distance sur la tablette. 112 px, soit la hauteur du
+   bloc prénom + résumé + action qu'il côtoie. */
+.vignetteGrande {
+  width: 112px;
+  height: 112px;
+  font-size: 2.8rem;
+}
+
+.identite {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.prenom {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  font-size: 0.75rem;
+  color: var(--texte-faible);
+}
+
+.alerte {
+  margin-left: auto;
+  color: var(--alarme);
+  display: grid;
+  place-items: center;
+}
+
+/* ── Volet de droite : la fiche ─────────────────────────────────────────── */
+
+.volet {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.vide {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: var(--texte-faible);
+}
+
+.fiche {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px;
+  gap: 14px;
+}
+
+.ficheEntete {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+/* Le portrait occupe la première colonne sur toute la hauteur de l'entête ;
+   prénom, résumé et actions s'empilent à sa droite. */
+.ficheEntete > :first-child {
+  grid-row: 1 / -1;
+}
+
+.ficheEntete > :not(:first-child) {
+  grid-column: 2;
+}
+
+.titreAjout {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* ── Ajout de photos ────────────────────────────────────────────────────── */
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-bloc);
+  background: var(--carter);
+}
+
+.champPrenom {
+  min-height: 44px;
+  max-width: 320px;
+  padding: 0 12px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-puce);
+  background: var(--carter-clair);
+  color: var(--texte);
+  font-size: 1.1rem;
+}
+
+.formulaire input[type='file'] {
+  color: var(--texte-faible);
+  font-size: 0.85rem;
+}
+
+.conseil {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--texte-faible);
+}
+
+/* Action discrète, qui ne doit pas rivaliser avec les boutons du bas. */
+.lien {
+  justify-self: start;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  color: var(--donnee);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.prenomModifiable {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--texte);
+  cursor: pointer;
+}
+
+.prenomModifiable h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.prenomModifiable svg {
+  width: 18px;
+  height: 18px;
+  color: var(--texte-faible);
+}
+
+.renommage {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.renommage input {
+  min-height: 44px;
+  flex: 1;
+  max-width: 300px;
+  padding: 0 12px;
+  border: 1px solid var(--donnee);
+  border-radius: var(--r-puce);
+  background: var(--carter-clair);
+  color: var(--texte);
+  font-size: 1.1rem;
+}
+
+.renommage button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-puce);
+  background: var(--carter-clair);
+  color: var(--texte);
+  cursor: pointer;
+}
+
+.resume {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--texte-faible);
+}
+
+/* ── Timeline et conversation, côte à côte ──────────────────────────────── */
+
+.colonnes {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.4fr);
+  gap: 14px;
+}
+
+/* Sous 900 px, les deux blocs s'empilent : côte à côte, aucun des deux ne
+   serait lisible sur la tablette en portrait. */
+@media (max-width: 900px) {
+  .colonnes {
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(160px, auto);
+    overflow-y: auto;
+  }
+}
+
+.bloc {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-bloc);
+  background: var(--carter);
+}
+
+.bloc h3 {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--texte-faible);
+}
+
+.timeline,
+.fil {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jalon {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.pucePremiere,
+.puceRetour {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  margin-top: 5px;
+  border-radius: 50%;
+}
+
+/* La première rencontre est pleine, les retours sont creux : le début de
+   l'histoire se repère sans avoir à lire. */
+.pucePremiere {
+  background: var(--donnee);
+}
+
+.puceRetour {
+  border: 2px solid var(--texte-faible);
+}
+
+.jalonTexte {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.jalonDate {
+  font-size: 0.85rem;
+}
+
+.jalonQuoi {
+  font-size: 0.75rem;
+  color: var(--texte-faible);
+}
+
+.messagePersonne,
+.messageRobot {
+  padding: 8px 12px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  max-width: 85%;
+  overflow-wrap: anywhere;
+}
+
+.messagePersonne {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--donnee) 22%, var(--carter-clair));
+}
+
+.messageRobot {
+  align-self: flex-start;
+  background: var(--carter-clair);
+  border: 1px solid var(--bordure);
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action,
+.actionArmee,
+.actionDanger,
+.actionDangerArmee {
+  min-height: var(--tactile);
+  padding: 0 18px;
+  border-radius: var(--r-puce);
+  border: 1px solid var(--bordure);
+  background: var(--carter-clair);
+  color: var(--texte);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.actionDanger {
+  border-color: color-mix(in srgb, var(--alarme) 55%, var(--bordure));
+  color: var(--alarme);
+}
+
+/* Armé : le bouton dit ce qu'il va faire et à qui. Un second clic suffit, sans
+   boîte de dialogue — `confirm()` bloque le navigateur et gèlerait le flux
+   vidéo qui continue de tourner dans la coque. */
+.actionArmee {
+  border-color: var(--donnee);
+  background: color-mix(in srgb, var(--donnee) 26%, var(--carter-clair));
+}
+
+.actionDangerArmee {
+  border-color: var(--alarme);
+  background: var(--alarme);
+  color: var(--fond);
+  font-weight: 600;
+}
+
+/* ── États ──────────────────────────────────────────────────────────────── */
+
+.attente,
+.erreur {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--texte-faible);
+}
+
+.erreur {
+  color: var(--alarme);
+}
+
+/* ── Portrait agrandi ───────────────────────────────────────────────────── */
+
+/* Le portrait de la fiche est un bouton, mais ne doit rien en montrer : ni
+   cadre, ni fond, seulement le curseur et un léger retrait au toucher. */
+.portraitCliquable {
+  padding: 0;
+  border: none;
+  background: none;
+  line-height: 0;
+  cursor: zoom-in;
+}
+
+.portraitCliquable:active {
+  transform: scale(0.96);
+}
+
+/* Le voile couvre la vue, pas l'écran : la barre d'état et le rail restent
+   accessibles, et on n'a pas l'impression que l'application s'est figée. */
+.voile {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--fond) 88%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+.portrait {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Borné à 384 px, la taille à laquelle les portraits sont enregistrés : au-delà
+   ce ne serait plus qu'un étirement. `vmin` le rend plus petit sur une tablette
+   étroite plutôt que de le laisser déborder. */
+.portrait img {
+  width: min(384px, 70vmin);
+  height: min(384px, 70vmin);
+  border-radius: var(--r-bloc);
+  border: 1px solid var(--bordure);
+  object-fit: cover;
+}
+
+.portrait figcaption {
+  font-size: 1.2rem;
+  color: var(--texte);
+}
+
+.fermer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: var(--tactile);
+  height: var(--tactile);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--bordure);
+  border-radius: var(--r-puce);
+  background: var(--carter-clair);
+  color: var(--texte);
+  cursor: pointer;
+}

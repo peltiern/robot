@@ -16,14 +16,16 @@ import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVi
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.ServiceDetectionVisage;
 import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
+import fr.roboteek.robot.services.vision.face.DecoupeDeVignette;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
-import fr.roboteek.robot.spring.server.websocket.RegistreAbonnesWebsocket;
+import fr.roboteek.robot.web.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
+import fr.roboteek.robot.memoire.courtterme.PriseDeVisage;
 import fr.roboteek.robot.memoire.courtterme.VisageSuivi;
 import nu.pattern.OpenCV;
 import org.apache.commons.collections4.CollectionUtils;
@@ -48,6 +50,7 @@ import java.util.Comparator;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static fr.roboteek.robot.configuration.Configurations.robotConfig;
@@ -340,7 +343,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                 List<VisageSuivi> visagesSuivis = memoireCourtTerme.suivreLesVisages(
                         visagesDetectes, visage -> personneReconnue(image, visage));
                 publierVisagesPercus(visagesSuivis);
-                memoireCourtTerme.avancerLEnrolement(() -> empreinteDuVisageLePlusProche(visagesDetectes));
+                memoireCourtTerme.avancerLEnrolement(() -> priseDuVisageLePlusProche(visagesDetectes));
             } catch (RuntimeException e) {
                 memoireCourtTerme.oublierLesVisages();
                 if (indexFrame % 100 == 0) {
@@ -407,19 +410,38 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
             return;
         }
         String idPersonne = demandeEnrolementEvent.getIdPersonne();
-        memoireCourtTerme.demarrerUnEnrolement(idPersonne,
-                empreintes -> serviceReconnaissanceVisage.enrolerPersonne(idPersonne, empreintes));
+        memoireCourtTerme.demarrerUnEnrolement(idPersonne, prises -> retenir(idPersonne, prises));
     }
 
     /**
-     * Empreinte du visage auquel le robot parle — le plus gros, donc le plus proche —, ou
-     * {@code null} s'il n'y a personne. C'est le seul endroit où l'image sert à l'enrôlement, et
-     * elle ne va pas plus loin.
+     * Écrit en mémoire longue ce qu'un enrôlement a relevé : les empreintes, et le portrait.
+     * <p>
+     * Le portrait est pris parmi les mêmes images que les empreintes, et c'est tout l'intérêt de
+     * le faire ici : le robot tient déjà la personne bien cadrée, il n'y a rien à lui redemander.
+     * On garde la <b>dernière</b> vignette obtenue — les premières images d'un enrôlement
+     * attrapent souvent quelqu'un encore en train de se tourner vers la caméra.
      */
-    private float[] empreinteDuVisageLePlusProche(List<VisageDetecte> visagesDetectes) {
+    private void retenir(String idPersonne, List<PriseDeVisage> prises) {
+        serviceReconnaissanceVisage.enrolerPersonne(idPersonne,
+                prises.stream().map(PriseDeVisage::empreinte).toList());
+
+        prises.stream()
+                .map(PriseDeVisage::vignette)
+                .filter(Objects::nonNull)
+                .reduce((premiere, derniere) -> derniere)
+                .ifPresent(vignette -> personneRepository.enregistrerVignette(idPersonne, vignette));
+    }
+
+    /**
+     * Empreinte et portrait du visage auquel le robot parle — le plus gros, donc le plus proche —,
+     * ou {@code null} s'il n'y a personne. C'est le seul endroit où l'image sert à l'enrôlement, et
+     * elle ne va pas plus loin : il n'en sort que 128 flottants et un JPEG.
+     */
+    private PriseDeVisage priseDuVisageLePlusProche(List<VisageDetecte> visagesDetectes) {
         return visagesDetectes.stream()
                 .max(Comparator.comparingLong(visage -> (long) visage.width() * visage.height()))
-                .map(visage -> serviceReconnaissanceVisage.extraireEmbedding(image, visage))
+                .map(visage -> new PriseDeVisage(serviceReconnaissanceVisage.extraireEmbedding(image, visage),
+                        DecoupeDeVignette.enJpeg(image, visage)))
                 .orElse(null);
     }
 

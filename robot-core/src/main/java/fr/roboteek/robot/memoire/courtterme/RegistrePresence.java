@@ -165,6 +165,19 @@ public class RegistrePresence {
     }
 
     /**
+     * Oublie tout ce qu'on savait de la présence de quelqu'un.
+     * <p>
+     * Appelé quand la personne est effacée de la mémoire longue : sa présence traînerait sinon ici
+     * jusqu'au redémarrage, et le robot continuerait de la compter parmi ceux qu'il a devant lui —
+     * en interrogeant une base où elle n'est plus.
+     */
+    public synchronized void oublier(String idPersonne) {
+        if (presences.remove(idPersonne) != null) {
+            logger.info("Présence de {} oubliée : la personne n'est plus connue", idPersonne);
+        }
+    }
+
+    /**
      * Les personnes que le robot a devant lui à cet instant — vues assez récemment pour qu'on les
      * croie encore là, l'inconnu mis à part.
      * <p>

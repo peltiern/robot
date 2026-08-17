@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteDataSource;
 
 import javax.sql.DataSource;
 import java.io.File;
+import java.util.List;
 
 /**
  * La base unique où le robot garde ce qui doit lui survivre : les personnes, leurs visages,
@@ -90,5 +92,36 @@ public class BaseMemoire {
     public static void appliquerLeSchema(DataSource source) {
         ResourceDatabasePopulator schema = new ResourceDatabasePopulator(new ClassPathResource("memoire/schema.sql"));
         schema.execute(source);
+        ajouterLesColonnesManquantes(source);
+    }
+
+    /**
+     * Rattrape les colonnes ajoutées à une table qui existait déjà.
+     * <p>
+     * Indispensable, et facile à oublier : {@code CREATE TABLE IF NOT EXISTS} ne touche pas à une
+     * table en place. Sur une base neuve, {@code schema.sql} suffit et ce qui suit ne fait rien ;
+     * sur la base du robot, où des personnes sont déjà enregistrées, la colonne ne serait jamais
+     * apparue et toute lecture de la vignette aurait échoué au premier appel — en production
+     * seulement, jamais sur un poste de développement.
+     * <p>
+     * SQLite ne connaît pas {@code ADD COLUMN IF NOT EXISTS} : on regarde d'abord ce que la table
+     * contient. {@code schema.sql} reste la description de référence — ce qui est ajouté ici doit
+     * y figurer aussi, pour qu'une base neuve et une base migrée aient la même forme.
+     */
+    private static void ajouterLesColonnesManquantes(DataSource source) {
+        ajouterLaColonneSiElleManque(source, "personne", "vignette", "BLOB");
+    }
+
+    private static void ajouterLaColonneSiElleManque(DataSource source, String table, String colonne, String type) {
+        JdbcClient jdbc = JdbcClient.create(source);
+        List<String> colonnes = jdbc.sql("SELECT name FROM pragma_table_info(?)")
+                .param(table)
+                .query(String.class)
+                .list();
+        if (colonnes.contains(colonne)) {
+            return;
+        }
+        jdbc.sql("ALTER TABLE " + table + " ADD COLUMN " + colonne + " " + type).update();
+        logger.info("Mémoire longue : colonne {}.{} ajoutée", table, colonne);
     }
 }

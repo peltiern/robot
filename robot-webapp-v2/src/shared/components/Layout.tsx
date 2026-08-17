@@ -43,8 +43,11 @@ export function Layout() {
     chargerArretUrgence()
   }, [connecte, chargerOrganes, chargerArretUrgence])
 
-  // L'atelier prend l'écran en entier : la colonne et les volets s'effacent.
-  const pilotage = useLocation().pathname !== '/atelier'
+  // Seul le pilotage porte la colonne et les volets : l'atelier comme le
+  // répertoire prennent l'écran en entier. Écrit en liste blanche et non en
+  // « tout sauf l'atelier » — sinon chaque vue ajoutée hériterait par défaut
+  // d'une colonne qui n'a rien à lui dire.
+  const pilotage = useLocation().pathname === '/pilotage'
 
   return (
     <div className={styles.app}>

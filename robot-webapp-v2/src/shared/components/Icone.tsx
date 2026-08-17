@@ -28,6 +28,9 @@ export type NomIcone =
   | 'visage'
   | 'objet'
   | 'reprise'
+  | 'recharger'
+  | 'crayon'
+  | 'plus'
   | 'alerte'
   | 'chenille'
   | 'manette'
@@ -117,6 +120,22 @@ const TRACES: Record<NomIcone, ReactNode> = {
     </>
   ),
   reprise: <path d="M7.5 5.4 19 12 7.5 18.6z" />,
+  // Flèche qui revient sur elle-même : relire, et non rejouer (cf. `reprise`).
+  recharger: (
+    <>
+      <path d="M20.2 12a8.2 8.2 0 1 1-2.4-5.8" />
+      <path d="M20.5 4.2v4.4h-4.4" />
+    </>
+  ),
+  plus: <path d="M12 5.2v13.6M5.2 12h13.6" />,
+  // Crayon : corriger ce qui est écrit. Le distinguer de `reglage`, qui ouvre des
+  // réglages — un prénom mal compris se rature, il ne se paramètre pas.
+  crayon: (
+    <>
+      <path d="M4.2 15.5 15.6 4.1a2.4 2.4 0 0 1 3.4 0l.9.9a2.4 2.4 0 0 1 0 3.4L8.5 19.8l-5 1.2z" />
+      <path d="m14.4 5.3 4.3 4.3" />
+    </>
+  ),
   alerte: (
     <>
       <path d="M12 3.6 22 20H2z" />

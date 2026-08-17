@@ -12,7 +12,7 @@ const VOLETS: { cle: keyof Volets; icone: NomIcone; libelle: string }[] = [
 ]
 
 /**
- * Rail d'outils. Les deux premiers boutons sont les seuls vrais onglets de
+ * Rail d'outils. Les trois premiers boutons sont les seuls vrais onglets de
  * l'application ; tout le reste montre et cache des volets sans rien démonter —
  * les abonnements WebSocket ne sont jamais coupés par un geste d'affichage.
  *
@@ -35,6 +35,13 @@ export function Rail({ pilotage }: { pilotage: boolean }) {
       >
         <Icone nom="camera" />
         <span>PILOTAGE</span>
+      </NavLink>
+      <NavLink
+        to="/personnes"
+        className={({ isActive }) => `${styles.outil} ${isActive ? styles.outilActif : ''}`}
+      >
+        <Icone nom="visage" />
+        <span>QUI ?</span>
       </NavLink>
       <NavLink
         to="/atelier"

@@ -14,7 +14,7 @@ import com.google.common.primitives.Bytes;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
-import fr.roboteek.robot.spring.server.websocket.RegistreAbonnesWebsocket;
+import fr.roboteek.robot.web.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

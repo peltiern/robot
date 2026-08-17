@@ -9,7 +9,12 @@ CREATE TABLE IF NOT EXISTS personne (
     id                 TEXT PRIMARY KEY,
     prenom             TEXT NOT NULL,
     -- ISO-8601 local, ou NULL tant que la personne n'a jamais été rencontrée.
-    derniere_rencontre TEXT
+    derniere_rencontre TEXT,
+    -- Visage recadré, JPEG, quelques kilo-octets. En base et non en fichier : c'est le seul
+    -- moyen qu'elle disparaisse avec la personne. Un fichier sur disque serait justement la
+    -- chose qui survivrait à une suppression, après tout le soin mis aux ON DELETE CASCADE.
+    -- Jamais lue par la liste (les requêtes nomment leurs colonnes), seulement par la fiche.
+    vignette           BLOB
 );
 
 -- Empreintes biométriques SFace. Plusieurs par personne, volontairement : une seule prise de
@@ -30,9 +35,11 @@ CREATE TABLE IF NOT EXISTS rencontre (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,
     id_personne       TEXT NOT NULL REFERENCES personne(id) ON DELETE CASCADE,
     instant           TEXT NOT NULL,
-    -- ACCUEIL, RETROUVAILLES ou REPRISE : ce que le robot a fait de cette rencontre.
+    -- PREMIERE (on vient de faire connaissance) ou RETOUR. Ce que le robot a ensuite *fait* de
+    -- cette rencontre — saluer, reprendre la conversation, se taire — ne se journalise pas : c'est
+    -- une décision du cerveau, qui peut encore être refusée après coup.
     type              TEXT NOT NULL,
-    -- Durée de l'absence qui a précédé, -1 à la toute première apparition.
+    -- Durée de l'absence qui a précédé, -1 pour une première rencontre.
     secondes_absence  INTEGER NOT NULL
 );
 

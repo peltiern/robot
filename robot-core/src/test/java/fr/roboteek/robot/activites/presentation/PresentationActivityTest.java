@@ -4,6 +4,9 @@ import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.memoire.longterme.BaseMemoireDeTest;
 import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.rencontre.JournalDesRencontres;
+import fr.roboteek.robot.memoire.longterme.rencontre.Rencontre;
+import fr.roboteek.robot.memoire.longterme.rencontre.RencontreRepository;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import javax.sql.DataSource;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +56,7 @@ class PresentationActivityTest {
     File dossierTemp;
 
     private PersonneRepository personneRepository;
+    private JournalDesRencontres journalDesRencontres;
     private MemoireCourtTerme memoireCourtTerme;
     private ExtractionPrenomIA extractionPrenomIA;
     private PresentationActivity activite;
@@ -75,11 +80,14 @@ class PresentationActivityTest {
 
     @BeforeEach
     void setUp() {
-        personneRepository = new PersonneRepository(BaseMemoireDeTest.dans(dossierTemp));
+        DataSource memoire = BaseMemoireDeTest.dans(dossierTemp);
+        personneRepository = new PersonneRepository(memoire);
         memoireCourtTerme = mock(MemoireCourtTerme.class);
         extractionPrenomIA = mock(ExtractionPrenomIA.class);
         // 200 ms au lieu de 8 s : les cas sans réponse attendraient sinon une demi-minute.
-        activite = new PresentationActivity(memoireCourtTerme, extractionPrenomIA, personneRepository, 200);
+        journalDesRencontres = new JournalDesRencontres(new RencontreRepository(memoire));
+        activite = new PresentationActivity(memoireCourtTerme, extractionPrenomIA, personneRepository,
+                journalDesRencontres, 200);
 
         ApplicationEventPublisher publieur = evenement -> {
             if (evenement instanceof ParoleEvent parole) {
@@ -118,6 +126,12 @@ class PresentationActivityTest {
         assertEquals(List.of(enregistree.id()), enrolementsDemandes, "le visage appris est bien le sien");
         verify(memoireCourtTerme).poserInterlocuteur(enregistree);
         assertTrue(phrasesDites.stream().anyMatch(phrase -> phrase.contains("Enchanté Marie")));
+
+        // Le jour où on fait connaissance ouvre la timeline : aucun évènement ne le dirait à sa
+        // place, RegistrePresence comptant déjà la personne comme rencontrée après l'enrôlement.
+        List<Rencontre> histoire = journalDesRencontres.pourPersonne(enregistree.id());
+        assertEquals(1, histoire.size());
+        assertEquals(Rencontre.Type.PREMIERE, histoire.getFirst().type());
     }
 
     /**

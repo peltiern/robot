@@ -52,10 +52,10 @@ public class EnrolementEnCours {
 
     private long echeanceMs;
 
-    private final List<float[]> empreintes = new ArrayList<>();
+    private final List<PriseDeVisage> prises = new ArrayList<>();
 
     /**
-     * Ce qu'on fera des empreintes une fois le compte atteint, fourni par l'organe qui a lancé
+     * Ce qu'on fera des prises une fois le compte atteint, fourni par l'organe qui a lancé
      * l'apprentissage.
      * <p>
      * Fourni et non injecté : la reconnaissance de visages n'est pas un bean Spring — l'organe de
@@ -63,7 +63,7 @@ public class EnrolementEnCours {
      * La mémoire courte décide <b>quand</b> écrire, l'organe sait <b>comment</b> ; c'est le même
      * partage que pour l'extraction des empreintes.
      */
-    private Consumer<List<float[]>> ecrireEnMemoireLongue;
+    private Consumer<List<PriseDeVisage>> ecrireEnMemoireLongue;
 
     public EnrolementEnCours(ApplicationEventPublisher applicationEventPublisher) {
         this.applicationEventPublisher = applicationEventPublisher;
@@ -72,35 +72,35 @@ public class EnrolementEnCours {
     /**
      * Ouvre un apprentissage : les empreintes se relèveront sur les images à venir.
      *
-     * @param ecrireEnMemoireLongue ce qui rendra ces empreintes durables, appelé une seule fois,
+     * @param ecrireEnMemoireLongue ce qui rendra ces prises durables, appelé une seule fois,
      *                              à la fin, et seulement s'il y a quelque chose à écrire
      */
-    public synchronized void demarrer(String idPersonne, Consumer<List<float[]>> ecrireEnMemoireLongue) {
+    public synchronized void demarrer(String idPersonne, Consumer<List<PriseDeVisage>> ecrireEnMemoireLongue) {
         this.idPersonne = idPersonne;
         this.ecrireEnMemoireLongue = ecrireEnMemoireLongue;
         this.echeanceMs = System.currentTimeMillis() + DUREE_MAX_MS;
-        this.empreintes.clear();
+        this.prises.clear();
         logger.info("Enrôlement démarré pour la personne {}", idPersonne);
     }
 
     /**
-     * Avance d'une image : relève une empreinte de plus si on en a une, et conclut quand le compte
+     * Avance d'une image : relève une prise de plus si on en a une, et conclut quand le compte
      * y est ou que le temps est écoulé.
      *
-     * @param empreinteDuVisageLePlusProche rend l'empreinte du visage auquel on parle, ou
-     *                                      {@code null} si aucun visage n'est visible.
-     *                                      Volontairement paresseux : l'extraction coûte ~68 ms,
-     *                                      elle ne doit pas être payée hors d'un enrôlement.
+     * @param visageLePlusProche rend l'empreinte et le portrait du visage auquel on parle, ou
+     *                           {@code null} si aucun visage n'est visible. Volontairement
+     *                           paresseux : l'extraction coûte ~68 ms, elle ne doit pas être
+     *                           payée hors d'un enrôlement.
      */
-    public synchronized void avancer(Supplier<float[]> empreinteDuVisageLePlusProche) {
+    public synchronized void avancer(Supplier<PriseDeVisage> visageLePlusProche) {
         if (idPersonne == null) {
             return;
         }
-        float[] empreinte = empreinteDuVisageLePlusProche.get();
-        if (empreinte != null) {
-            empreintes.add(empreinte);
+        PriseDeVisage prise = visageLePlusProche.get();
+        if (prise != null) {
+            prises.add(prise);
         }
-        if (empreintes.size() < EMPREINTES_ATTENDUES && System.currentTimeMillis() < echeanceMs) {
+        if (prises.size() < EMPREINTES_ATTENDUES && System.currentTimeMillis() < echeanceMs) {
             return;
         }
         conclure();
@@ -113,7 +113,7 @@ public class EnrolementEnCours {
     public synchronized void renoncer(String idPersonne, String motif) {
         logger.warn("Enrôlement de la personne {} impossible : {}", idPersonne, motif);
         this.idPersonne = null;
-        empreintes.clear();
+        prises.clear();
         applicationEventPublisher.publishEvent(new EnrolementTermineEvent(idPersonne, 0, false));
     }
 
@@ -131,9 +131,9 @@ public class EnrolementEnCours {
      */
     private void conclure() {
         String personne = idPersonne;
-        List<float[]> relevees = List.copyOf(empreintes);
+        List<PriseDeVisage> relevees = List.copyOf(prises);
         idPersonne = null;
-        empreintes.clear();
+        prises.clear();
 
         boolean reussi = !relevees.isEmpty();
         if (reussi) {

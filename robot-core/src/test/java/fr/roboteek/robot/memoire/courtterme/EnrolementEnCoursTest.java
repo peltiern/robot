@@ -26,7 +26,7 @@ class EnrolementEnCoursTest {
     private final List<EnrolementTermineEvent> resultats = new ArrayList<>();
 
     /** Ce qui a été écrit en mémoire longue, et rien d'autre : le test tient le stylo. */
-    private final List<List<float[]>> ecrituresEnMemoireLongue = new ArrayList<>();
+    private final List<List<PriseDeVisage>> ecrituresEnMemoireLongue = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
@@ -43,7 +43,7 @@ class EnrolementEnCoursTest {
         enrolement.demarrer(ID_MARIE, ecrituresEnMemoireLongue::add);
 
         for (int i = 0; i < 5; i++) {
-            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+            enrolement.avancer(EnrolementEnCoursTest::prise);
         }
 
         assertEquals(1, ecrituresEnMemoireLongue.size(), "une seule écriture, à la fin");
@@ -59,7 +59,7 @@ class EnrolementEnCoursTest {
         enrolement.demarrer(ID_MARIE, ecrituresEnMemoireLongue::add);
 
         for (int i = 0; i < 4; i++) {
-            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+            enrolement.avancer(EnrolementEnCoursTest::prise);
         }
 
         assertTrue(ecrituresEnMemoireLongue.isEmpty(), "rien ne doit être écrit");
@@ -112,7 +112,7 @@ class EnrolementEnCoursTest {
         });
 
         for (int i = 0; i < 5; i++) {
-            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+            enrolement.avancer(EnrolementEnCoursTest::prise);
         }
 
         assertEquals(1, resultats.size(), "celui qui attend ne doit jamais rester suspendu");
@@ -128,12 +128,12 @@ class EnrolementEnCoursTest {
             throw new IllegalStateException("la base refuse");
         });
         for (int i = 0; i < 5; i++) {
-            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+            enrolement.avancer(EnrolementEnCoursTest::prise);
         }
 
         enrolement.demarrer("id-paul", ecrituresEnMemoireLongue::add);
         for (int i = 0; i < 5; i++) {
-            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+            enrolement.avancer(EnrolementEnCoursTest::prise);
         }
 
         assertEquals(1, ecrituresEnMemoireLongue.size());
@@ -144,12 +144,12 @@ class EnrolementEnCoursTest {
     @Test
     void unNouvelEnrolementRepartDeZero() {
         enrolement.demarrer(ID_MARIE, ecrituresEnMemoireLongue::add);
-        enrolement.avancer(EnrolementEnCoursTest::empreinte);
-        enrolement.avancer(EnrolementEnCoursTest::empreinte);
+        enrolement.avancer(EnrolementEnCoursTest::prise);
+        enrolement.avancer(EnrolementEnCoursTest::prise);
 
         enrolement.demarrer("id-paul", ecrituresEnMemoireLongue::add);
         for (int i = 0; i < 5; i++) {
-            enrolement.avancer(EnrolementEnCoursTest::empreinte);
+            enrolement.avancer(EnrolementEnCoursTest::prise);
         }
 
         assertEquals(1, ecrituresEnMemoireLongue.size(), "seul le second enrôlement a abouti");
@@ -157,7 +157,41 @@ class EnrolementEnCoursTest {
         assertEquals("id-paul", resultats.getFirst().getIdPersonne());
     }
 
-    private static float[] empreinte() {
-        return new float[]{0.1f, 0.2f, 0.3f};
+    /**
+     * Un enrôlement rend aussi le portrait, et c'est le dernier qui compte.
+     * <p>
+     * Les premières images attrapent souvent quelqu'un encore en train de se tourner vers la
+     * caméra : la vignette gardée doit être celle de la fin.
+     */
+    @Test
+    void lePortraitVoyageAvecLesEmpreintes() {
+        enrolement.demarrer(ID_MARIE, ecrituresEnMemoireLongue::add);
+
+        for (int i = 0; i < 5; i++) {
+            int numero = i;
+            enrolement.avancer(() -> new PriseDeVisage(new float[]{0.1f}, ("portrait-" + numero).getBytes()));
+        }
+
+        List<PriseDeVisage> ecrites = ecrituresEnMemoireLongue.getFirst();
+        assertEquals(5, ecrites.size());
+        assertEquals("portrait-4", new String(ecrites.getLast().vignette()));
+    }
+
+    /** Un visage contre le bord n'a pas de portrait : ça ne doit pas gâcher l'enrôlement. */
+    @Test
+    void unePriseSansPortraitResteUneEmpreinteValable() {
+        enrolement.demarrer(ID_MARIE, ecrituresEnMemoireLongue::add);
+
+        for (int i = 0; i < 5; i++) {
+            enrolement.avancer(() -> new PriseDeVisage(new float[]{0.1f}, null));
+        }
+
+        assertEquals(5, ecrituresEnMemoireLongue.getFirst().size());
+        assertTrue(resultats.getFirst().isReussi());
+    }
+
+    /** Une image d'enrôlement telle que l'organe de vision la rend : empreinte et portrait. */
+    private static PriseDeVisage prise() {
+        return new PriseDeVisage(new float[]{0.1f, 0.2f, 0.3f}, "jpeg".getBytes());
     }
 }
