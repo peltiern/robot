@@ -22,6 +22,11 @@ import java.util.List;
  * installation neuve, et l'échec ferait alors tomber le contexte entier au lieu de priver le
  * robot de la seule reconnaissance. L'organe de vision le charge lui-même, et se contente d'un
  * avertissement s'il n'y arrive pas.
+ * <p>
+ * <b>Instance unique, et les méthodes qui touchent au reconnaisseur sont donc synchronisées</b>,
+ * pour la même raison que {@link OpenCvServiceDetectionVisage} : la boucle vidéo n'est plus seule
+ * à s'en servir depuis que l'interface web importe des photos, et les objets dnn d'OpenCV ne
+ * supportent pas deux threads à la fois.
  */
 public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceVisage {
 
@@ -58,7 +63,7 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
     }
 
     @Override
-    public String identifierPersonne(Mat image, VisageDetecte visage) {
+    public synchronized String identifierPersonne(Mat image, VisageDetecte visage) {
         Mat embedding = calculerEmbedding(image, visage);
 
         String meilleurIdPersonne = null;
@@ -74,7 +79,7 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
     }
 
     @Override
-    public float[] extraireEmbedding(Mat image, VisageDetecte visage) {
+    public synchronized float[] extraireEmbedding(Mat image, VisageDetecte visage) {
         Mat embedding = calculerEmbedding(image, visage);
         float[] valeurs = new float[embedding.cols()];
         embedding.get(0, 0, valeurs);
@@ -82,7 +87,7 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
     }
 
     @Override
-    public void enrolerPersonne(String idPersonne, List<float[]> empreintes) {
+    public synchronized void enrolerPersonne(String idPersonne, List<float[]> empreintes) {
         empreintes.forEach(empreinte -> visageConnuRepository.ajouter(idPersonne, empreinte));
     }
 

@@ -15,6 +15,18 @@ import java.util.List;
  * Détection de visages via YuNet (OpenCV), CPU pur — modèle ONNX chargé depuis
  * {@code ${ROBOT_HOME}/visage}. Latence mesurée sur Jetson Nano 4 Go : voir
  * {@code fr.roboteek.robot.poc.FaceRecognitionPoc} (~60-150 ms/frame).
+ * <p>
+ * <b>Instance unique, et {@link #detecter} est donc synchronisée.</b> Ce n'était pas nécessaire
+ * tant que seule la boucle vidéo s'en servait ; l'import de photos par l'interface web l'appelle
+ * désormais depuis un thread HTTP, et {@code FaceDetectorYN} n'est pas réentrant — le backend dnn
+ * tient une table de réutilisation de tampons que deux threads corrompent aussitôt. Vu sur le
+ * robot le 2026-08-17 : {@code (-215:Assertion failed) mapIt != reuseMap.end()}, en plein
+ * {@code detect}.
+ * <p>
+ * {@link #tailleCourante} rend la serrure doublement nécessaire : la webcam est en 640×480, une
+ * photo importée fait tout autre chose, et chaque changement rebascule la taille d'entrée du
+ * détecteur. Sans exclusion mutuelle, un import ferait travailler la boucle vidéo sur une taille
+ * qui n'est pas la sienne — sans le moindre message.
  */
 public class OpenCvServiceDetectionVisage implements ServiceDetectionVisage {
 
@@ -44,7 +56,7 @@ public class OpenCvServiceDetectionVisage implements ServiceDetectionVisage {
     }
 
     @Override
-    public List<VisageDetecte> detecter(Mat image) {
+    public synchronized List<VisageDetecte> detecter(Mat image) {
         Size taille = new Size(image.cols(), image.rows());
         if (!taille.equals(tailleCourante)) {
             detecteur.setInputSize(taille);

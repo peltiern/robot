@@ -17,7 +17,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.text.Normalizer;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -41,9 +40,6 @@ public class ConversationIA {
      * a été écrite jusqu'ici, en changer ferait repartir le robot de zéro.
      */
     private static final String ID_CONVERSATION_PAR_DEFAUT = "wall-e";
-
-    /** Préfixe des conversations rattachées à une personne identifiée. */
-    private static final String PREFIXE_CONVERSATION_PERSONNE = "personne-";
 
     /** Fil de la chauffe : un échange sans intérêt, qui ne doit polluer la mémoire de personne. */
     private static final String ID_CONVERSATION_CHAUFFE = "chauffe";
@@ -225,29 +221,14 @@ public class ConversationIA {
      * <b>Puis il a été bâti sur le seul prénom, ce qui rouvrait le même trou en plus discret</b> :
      * deux personnes prénommées Nicolas se seraient partagé un fil, et le robot aurait raconté à
      * l'une ce que l'autre lui avait confié. C'est précisément ce contre quoi
-     * {@link Personne#id()} existe. Le prénom reste dans la clé, mais en simple étiquette : il n'y
-     * a que l'identifiant qui distingue, et lui seul est unique.
+     * {@link Personne#id()} existe, et c'est lui seul qui bâtit la clé — voir
+     * {@link ConversationRepository#idConversationDe}.
      */
     private static String idConversation(Personne interlocuteur) {
         if (interlocuteur == null || StringUtils.isBlank(interlocuteur.id())) {
             return ID_CONVERSATION_PAR_DEFAUT;
         }
-        return PREFIXE_CONVERSATION_PERSONNE + etiquette(interlocuteur.prenom()) + "-" + interlocuteur.id();
-    }
-
-    /**
-     * Part lisible de la clé de conversation : elle ne sert qu'à s'y retrouver en ouvrant la base,
-     * jamais à identifier. Réduite à des lettres et des chiffres, les accents et les espaces
-     * n'ayant rien à faire dans une clé.
-     */
-    private static String etiquette(String prenom) {
-        if (StringUtils.isBlank(prenom)) {
-            return "anonyme";
-        }
-        String sansAccent = Normalizer.normalize(prenom.trim(), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "");
-        String nettoye = sansAccent.toLowerCase(Locale.FRENCH).replaceAll("[^a-z0-9]", "");
-        return nettoye.isEmpty() ? "anonyme" : nettoye;
+        return ConversationRepository.idConversationDe(interlocuteur.id());
     }
 
     /** Phrase du prompt système présentant la personne en face du robot. */

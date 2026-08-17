@@ -9,7 +9,9 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -104,6 +106,58 @@ class PersonneRepositoryTest {
     @Test
     void supprimerQuelquunQuiNexistePasNeFaitRien() {
         assertFalse(repository.supprimer("inexistant"));
+    }
+
+    @Test
+    void sansPortraitLaVignetteEstAbsente() {
+        Personne marie = Personne.nouvelle("Marie");
+        repository.enregistrer(marie);
+
+        assertNull(repository.vignette(marie.id()));
+        assertNull(repository.vignette("inexistant"));
+        assertTrue(repository.idsAvecVignette().isEmpty());
+    }
+
+    @Test
+    void enregistrerPuisRelireUnPortrait() {
+        Personne marie = Personne.nouvelle("Marie");
+        repository.enregistrer(marie);
+
+        repository.enregistrerVignette(marie.id(), "un-jpeg".getBytes());
+
+        assertArrayEquals("un-jpeg".getBytes(), repository.vignette(marie.id()));
+        assertEquals(Set.of(marie.id()), repository.idsAvecVignette());
+    }
+
+    /** Le dernier enrôlement fait foi : les gens changent, la photo doit suivre. */
+    @Test
+    void unNouveauPortraitRemplaceLAncien() {
+        Personne marie = Personne.nouvelle("Marie");
+        repository.enregistrer(marie);
+        repository.enregistrerVignette(marie.id(), "ancien".getBytes());
+
+        repository.enregistrerVignette(marie.id(), "recent".getBytes());
+
+        assertArrayEquals("recent".getBytes(), repository.vignette(marie.id()));
+    }
+
+    /**
+     * Renommer ne touche pas au portrait.
+     * <p>
+     * {@code enregistrer} fait un {@code INSERT ... ON CONFLICT DO UPDATE} qui ne nomme que le
+     * prénom et la date : s'il écrasait toute la ligne, corriger un prénom mal compris effacerait
+     * la photo au passage, sans que rien ne le signale.
+     */
+    @Test
+    void renommerNeFaitPasPerdreLePortrait() {
+        Personne marie = Personne.nouvelle("Marie");
+        repository.enregistrer(marie);
+        repository.enregistrerVignette(marie.id(), "un-jpeg".getBytes());
+
+        repository.enregistrer(marie.renommee("Marion"));
+
+        assertEquals("Marion", repository.parId(marie.id()).prenom());
+        assertArrayEquals("un-jpeg".getBytes(), repository.vignette(marie.id()));
     }
 
     @Test

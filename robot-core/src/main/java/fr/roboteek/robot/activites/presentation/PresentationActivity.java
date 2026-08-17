@@ -4,6 +4,7 @@ import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.memoire.longterme.personne.PersonneRepository;
+import fr.roboteek.robot.memoire.longterme.rencontre.JournalDesRencontres;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
 import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.RencontreSansSuiteEvent;
@@ -105,6 +106,9 @@ public class PresentationActivity extends AbstractActivity {
 
     private final PersonneRepository personneRepository;
 
+    /** L'histoire des rencontres, à laquelle celle-ci ouvre le premier chapitre. */
+    private final JournalDesRencontres journalDesRencontres;
+
     /**
      * Ce que le robot a entendu depuis la dernière question. Une file et non une variable : le
      * listener s'exécute sur un autre thread que le script, et {@code poll} avec délai est
@@ -135,18 +139,21 @@ public class PresentationActivity extends AbstractActivity {
     @Autowired
     public PresentationActivity(MemoireCourtTerme memoireCourtTerme,
                                 ExtractionPrenomIA extractionPrenomIA,
-                                PersonneRepository personneRepository) {
-        this(memoireCourtTerme, extractionPrenomIA, personneRepository, DELAI_REPONSE_MS);
+                                PersonneRepository personneRepository,
+                                JournalDesRencontres journalDesRencontres) {
+        this(memoireCourtTerme, extractionPrenomIA, personneRepository, journalDesRencontres, DELAI_REPONSE_MS);
     }
 
     /** Permet aux tests de ne pas attendre huit secondes à chaque question sans réponse. */
     PresentationActivity(MemoireCourtTerme memoireCourtTerme,
                          ExtractionPrenomIA extractionPrenomIA,
                          PersonneRepository personneRepository,
+                         JournalDesRencontres journalDesRencontres,
                          long delaiReponseMs) {
         this.memoireCourtTerme = memoireCourtTerme;
         this.extractionPrenomIA = extractionPrenomIA;
         this.personneRepository = personneRepository;
+        this.journalDesRencontres = journalDesRencontres;
         this.delaiReponseMs = delaiReponseMs;
     }
 
@@ -192,6 +199,7 @@ public class PresentationActivity extends AbstractActivity {
 
         Personne personneEnregistree = personne.rencontreeLe(LocalDateTime.now());
         personneRepository.enregistrer(personneEnregistree);
+        journalDesRencontres.inscrirePremiereRencontre(personneEnregistree);
         // Le robot connaît cette personne avant de savoir la reconnaître : c'est le seul cas où
         // l'interlocuteur se pose au lieu de se déduire de ce qu'on voit.
         memoireCourtTerme.poserInterlocuteur(personneEnregistree);
