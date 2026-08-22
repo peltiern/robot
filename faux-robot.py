@@ -33,7 +33,11 @@ ORGANES = [
         {"id": "cpuCharge", "libelle": "Charge CPU", "unite": "%", "min": 0, "max": 100, "valeur": 34},
         {"id": "memoire", "libelle": "Mémoire", "unite": "%", "min": 0, "max": 100, "valeur": 71},
         {"id": "temperatureCpu", "libelle": "Température CPU", "unite": "°C", "min": 0, "max": 100, "valeur": 42},
-        {"id": "disque", "libelle": "Disque", "unite": "%", "min": 0, "max": 100, "valeur": 58}]},
+        {"id": "disque", "libelle": "Disque", "unite": "%", "min": 0, "max": 100, "valeur": 58},
+        # Échelle = la taille du disque, et « hautEstBon » parce qu'ici monter est une bonne
+        # nouvelle : sans ce drapeau, un disque presque plein s'afficherait en vert.
+        {"id": "disqueLibre", "libelle": "Espace libre", "unite": "Go", "min": 0, "max": 58,
+         "valeur": 24, "hautEstBon": True}]},
     # Organes sans capacité, présents pour leur seule santé (cf. OrganeController).
     {"id": "chenille-gauche", "libelle": "Chenille gauche", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
     {"id": "chenille-droite", "libelle": "Chenille droite", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
@@ -143,12 +147,19 @@ async def boucle_video(_app):
 
 async def boucle_telemetrie(_app):
     v = {"cpuCharge": 34, "memoire": 71, "temperatureCpu": 42, "disque": 58}
+    # Hors du dictionnaire qui dérive au hasard : l'espace libre se déduit du remplissage, et
+    # l'uptime ne fait que croître — c'est justement pourquoi il n'a pas de jauge.
+    disque_total_go = 58
+    depart = time.time()
     pos = {"pan": 0, "tilt": 1, "upDown": 12, "oeilGauche": 2, "oeilDroit": 2}
     bornes = {"pan": (-60, 60), "tilt": (-8, 7), "upDown": (-10, 60), "oeilGauche": (-5, 20), "oeilDroit": (-5, 20)}
     while True:
         for k in v:
             v[k] = max(0, min(100, v[k] + random.uniform(-3, 3)))
-        await envoyer("/events/telemetrie-organe", json.dumps({"eventType": "telemetrie-organe", "idOrgane": "materiel", "valeurs": v}))
+        mesures = dict(v)
+        mesures["disqueLibre"] = disque_total_go * (100 - v["disque"]) / 100
+        mesures["uptimeSecondes"] = 275400 + time.time() - depart
+        await envoyer("/events/telemetrie-organe", json.dumps({"eventType": "telemetrie-organe", "idOrgane": "materiel", "valeurs": mesures}))
         for k in pos:
             lo, hi = bornes[k]
             pos[k] = max(lo, min(hi, pos[k] + random.uniform(-4, 4)))

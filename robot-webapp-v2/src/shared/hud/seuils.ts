@@ -17,11 +17,19 @@ export function fractionMesure(
   return Math.max(0, Math.min(1, (valeur - min) / (max - min)))
 }
 
-/** Vert jusqu'à 70 % de l'échelle, ambre jusqu'à 90 %, rouge au-delà. */
-export function couleurSeuil(fraction: number | null): string {
+/**
+ * Vert jusqu'à 70 % de l'échelle, ambre jusqu'à 90 %, rouge au-delà.
+ *
+ * `hautEstBon` retourne l'échelle avant d'en tirer la couleur, sans toucher au remplissage :
+ * l'anneau montre toujours la vraie fraction, seule la couleur change de sens. Sans ça, un disque
+ * dont il ne reste que 3 Go sur 60 s'affichait d'un vert franc — l'anneau presque vide disait la
+ * vérité, la couleur disait le contraire, et c'est la couleur qu'on lit de loin.
+ */
+export function couleurSeuil(fraction: number | null, hautEstBon = false): string {
   if (fraction == null) return 'var(--texte)'
-  if (fraction >= 0.9) return 'var(--alarme)'
-  if (fraction >= 0.7) return 'var(--veille)'
+  const gravite = hautEstBon ? 1 - fraction : fraction
+  if (gravite >= 0.9) return 'var(--alarme)'
+  if (gravite >= 0.7) return 'var(--veille)'
   return 'var(--ok)'
 }
 
@@ -34,7 +42,9 @@ export function couleurSeuil(fraction: number | null): string {
  * Les anneaux des Vitaux, eux, gardent leur vert : on les regarde pour lire une
  * valeur, pas pour être alerté.
  */
-export function couleurAlerte(fraction: number | null): string | null {
-  if (fraction == null || fraction < 0.7) return null
-  return couleurSeuil(fraction)
+export function couleurAlerte(fraction: number | null, hautEstBon = false): string | null {
+  if (fraction == null) return null
+  const gravite = hautEstBon ? 1 - fraction : fraction
+  if (gravite < 0.7) return null
+  return couleurSeuil(fraction, hautEstBon)
 }

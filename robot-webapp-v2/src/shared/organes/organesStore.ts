@@ -23,6 +23,8 @@ export interface Mesure {
   min: number
   max: number
   valeur: number | null
+  /** Vrai quand monter est une bonne nouvelle (espace libre, charge de batterie). */
+  hautEstBon?: boolean
 }
 
 /** État vital d'un organe, tel que le renvoie la découverte de capacités. */

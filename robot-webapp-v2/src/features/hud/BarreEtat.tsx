@@ -102,7 +102,10 @@ export function BarreEtat() {
         {EPINGLEES.filter((m) => valeurs[m.id] != null).map((epinglee) => {
           const echelle = echelles[epinglee.id]
           const alerte = echelle
-            ? couleurAlerte(fractionMesure(valeurs[epinglee.id], echelle.min, echelle.max))
+            ? couleurAlerte(
+                fractionMesure(valeurs[epinglee.id], echelle.min, echelle.max),
+                echelle.hautEstBon,
+              )
             : null
           return (
             <div

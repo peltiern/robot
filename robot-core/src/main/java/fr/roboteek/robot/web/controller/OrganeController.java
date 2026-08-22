@@ -169,7 +169,12 @@ public class OrganeController {
                 new Mesure("cpuCharge", "Charge CPU", "%", 0, 100, capteurMateriel.getChargeCpuPourcent()),
                 new Mesure("memoire", "Mémoire", "%", 0, 100, capteurMateriel.getMemoireUtiliseePourcent()),
                 new Mesure("temperatureCpu", "Température CPU", "°C", 0, 100, capteurMateriel.getTemperatureCpu()),
-                new Mesure("disque", "Disque", "%", 0, 100, capteurMateriel.getDisqueUtilisePourcent())
+                new Mesure("disque", "Disque", "%", 0, 100, capteurMateriel.getDisqueUtilisePourcent()),
+                // Échelle = la taille du disque relevé, et non une constante : le Jetson, un poste
+                // de développement et une carte SD de rechange n'ont pas la même, et l'anneau doit
+                // se remplir sur la bonne.
+                new Mesure("disqueLibre", "Espace libre", "Go", 0, capteurMateriel.getDisqueTotalGo(),
+                        capteurMateriel.getDisqueLibreGo(), true)
         ), toSante(sante.get("materiel")));
     }
 }

@@ -391,6 +391,17 @@
   border-style: dashed;
 }
 
+/*
+ * Uptime : une ligne de texte sous les jauges, et non une jauge de plus. Une durée qui ne fait
+ * que croître ne se remplit sur aucune échelle.
+ */
+.uptime {
+  margin: 2px 12px 10px;
+  font-size: 11px;
+  color: var(--texte-faible);
+  text-align: center;
+}
+
 .composeur {
   display: flex;
   gap: 8px;

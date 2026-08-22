@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.capteurs;
 
+import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
@@ -12,13 +13,18 @@ import oshi.hardware.Sensors;
 import oshi.nativefree.SystemInfo;
 import oshi.software.os.FileSystem;
 import oshi.software.os.OSFileStore;
+import oshi.software.os.OperatingSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Capteur « matériel » : relevé des métriques de la machine hôte (CPU, mémoire, température,
@@ -50,6 +56,10 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
     private final GlobalMemory memoire;
     private final Sensors capteurs;
     private final FileSystem systemeFichiers;
+    private final OperatingSystem systemeExploitation;
+
+    /** Octets dans un gigaoctet, au sens des constructeurs comme des explorateurs de fichiers. */
+    private static final double OCTETS_PAR_GO = 1024d * 1024 * 1024;
 
     private long[] derniersTicksCpu;
 
@@ -57,6 +67,9 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
     private volatile double memoireUtiliseePourcent;
     private volatile Double temperatureCpu;
     private volatile double disqueUtilisePourcent;
+    private volatile double disqueLibreGo;
+    private volatile double disqueTotalGo;
+    private volatile double uptimeSecondes;
 
     private volatile boolean running = false;
 
@@ -66,7 +79,8 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
         this.processeur = materiel.getProcessor();
         this.memoire = materiel.getMemory();
         this.capteurs = materiel.getSensors();
-        this.systemeFichiers = systemInfo.getOperatingSystem().getFileSystem();
+        this.systemeExploitation = systemInfo.getOperatingSystem();
+        this.systemeFichiers = systemeExploitation.getFileSystem();
         this.derniersTicksCpu = processeur.getSystemCpuLoadTicks();
     }
 
@@ -101,14 +115,21 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
             mesures.put("temperatureCpu", temperatureCpu);
         }
         mesures.put("disque", disqueUtilisePourcent);
+        mesures.put("disqueLibre", disqueLibreGo);
+        // L'uptime ne figure pas dans /api/organes : une valeur qui ne fait que croître n'a pas
+        // d'échelle, donc pas de jauge. Il voyage tout de même avec la télémétrie, l'interface
+        // l'affiche en toutes lettres.
+        mesures.put("uptimeSecondes", uptimeSecondes);
         return mesures;
     }
 
     /**
      * Recalcule toutes les métriques. Chaque métrique est isolée dans son propre {@code try} :
-     * un capteur illisible dans un environnement donné (ex. température CPU indisponible dans le
-     * conteneur Docker du robot) ne doit pas faire perdre les autres métriques de ce relevé, ni
-     * interrompre les relevés suivants.
+     * un capteur illisible sur une machine donnée ne doit pas faire perdre les autres métriques de
+     * ce relevé, ni interrompre les relevés suivants. La température était l'exemple attendu — elle
+     * remonte en fait très bien depuis le conteneur du Jetson (42 °C mesurés le 2026-08-22), mais
+     * rien ne le garantit sur une autre machine, d'où le repli sur {@code null} plutôt qu'une
+     * valeur inventée.
      */
     private void rafraichir() {
         try {
@@ -135,23 +156,63 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
         }
 
         try {
-            disqueUtilisePourcent = calculerUtilisationDisqueRacine();
+            releverLeDisque();
         } catch (RuntimeException e) {
             logger.warn("Lecture de l'utilisation disque échouée : {}", e.getMessage());
         }
+
+        try {
+            uptimeSecondes = systemeExploitation.getSystemUptime();
+        } catch (RuntimeException e) {
+            logger.warn("Lecture de l'uptime échouée : {}", e.getMessage());
+        }
     }
 
-    /** Utilisation (%) du point de montage racine, ou du premier système de fichiers à défaut. */
-    private double calculerUtilisationDisqueRacine() {
-        OSFileStore fs = systemeFichiers.getFileStores(true).stream()
-                .filter(store -> "/".equals(store.getMount()))
-                .findFirst()
-                .or(() -> systemeFichiers.getFileStores(true).stream().findFirst())
+    /**
+     * Relève le disque qui compte : celui où vit {@code ROBOT_HOME}, à défaut la racine, à défaut
+     * le premier système de fichiers venu.
+     * <p>
+     * Le robot tourne en conteneur, et {@code /} y désigne l'overlay de l'image, pas le support où
+     * s'entassent réellement les modèles Vosk et Piper, la base SQLite et les vignettes —
+     * {@code ROBOT_HOME} est un volume monté depuis l'hôte. Regarder la racine reviendrait à
+     * surveiller le mauvais disque, et à annoncer de la place quand il n'y en a plus là où on
+     * écrit.
+     * <p>
+     * Espace <b>utilisable</b> et non « libre » : les deux diffèrent de la réserve du superutilisateur
+     * (5 % sur ext4 par défaut, mesuré 7,5 Go d'écart sur un disque de 146 Go). C'est l'utilisable
+     * qu'on peut réellement remplir.
+     */
+    private void releverLeDisque() {
+        List<OSFileStore> stores = systemeFichiers.getFileStores(true);
+        OSFileStore fs = magasinDe(stores, System.getenv(Constantes.ENV_VAR_ROBOT_HOME))
+                .or(() -> stores.stream().filter(store -> "/".equals(store.getMount())).findFirst())
+                .or(() -> stores.stream().findFirst())
                 .orElse(null);
         if (fs == null || fs.getTotalSpace() == 0) {
-            return 0;
+            return;
         }
-        return (double) (fs.getTotalSpace() - fs.getUsableSpace()) / fs.getTotalSpace() * 100;
+        disqueTotalGo = fs.getTotalSpace() / OCTETS_PAR_GO;
+        disqueLibreGo = fs.getUsableSpace() / OCTETS_PAR_GO;
+        disqueUtilisePourcent = (double) (fs.getTotalSpace() - fs.getUsableSpace()) / fs.getTotalSpace() * 100;
+    }
+
+    /**
+     * Le magasin qui porte ce chemin : le point de montage le plus long dont il descend. Le plus
+     * long, parce que tout chemin descend de {@code /} — sans ce critère, un volume dédié serait
+     * systématiquement confondu avec la racine.
+     */
+    private static Optional<OSFileStore> magasinDe(List<OSFileStore> stores, String chemin) {
+        if (chemin == null || chemin.isBlank()) {
+            return Optional.empty();
+        }
+        String cible = chemin.endsWith(File.separator) ? chemin : chemin + File.separator;
+        return stores.stream()
+                .filter(store -> {
+                    String mount = store.getMount().endsWith(File.separator)
+                            ? store.getMount() : store.getMount() + File.separator;
+                    return cible.startsWith(mount);
+                })
+                .max(Comparator.comparingInt(store -> store.getMount().length()));
     }
 
     public double getChargeCpuPourcent() {
@@ -169,6 +230,21 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
 
     public double getDisqueUtilisePourcent() {
         return disqueUtilisePourcent;
+    }
+
+    /** Espace réellement remplissable, en Go, là où le robot écrit. */
+    public double getDisqueLibreGo() {
+        return disqueLibreGo;
+    }
+
+    /** Taille totale du même disque, en Go : c'est l'échelle de l'espace libre. */
+    public double getDisqueTotalGo() {
+        return disqueTotalGo;
+    }
+
+    /** Depuis combien de temps la machine tourne, en secondes. */
+    public double getUptimeSecondes() {
+        return uptimeSecondes;
     }
 
     @Override

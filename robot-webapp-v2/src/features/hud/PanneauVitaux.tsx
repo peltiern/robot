@@ -26,6 +26,10 @@ export function PanneauVitaux() {
   const historique = useTelemetryStore((s) => s.historique)
 
   const mesures = capteurs(organes).flatMap((organe) => organe.mesures)
+  // L'uptime n'est pas déclaré comme mesure par le robot, justement pour qu'il n'atterrisse pas
+  // dans cette grille : une valeur qui ne fait que croître n'a pas d'échelle, donc pas d'anneau.
+  // Il arrive avec la télémétrie et se lit en toutes lettres, sous les jauges.
+  const uptime = valeurs['uptimeSecondes']
 
   return (
     <section className={styles.bloc}>
@@ -70,8 +74,30 @@ export function PanneauVitaux() {
           ))}
         </div>
       )}
+
+      {connecte && uptime != null && (
+        <p className={styles.uptime}>
+          Debout depuis <span className="data">{dureeLisible(uptime)}</span>
+        </p>
+      )}
     </section>
   )
+}
+
+/**
+ * Durée en clair, à deux unités au plus : « 3 j 4 h », « 5 h 12 min », « 12 min ».
+ *
+ * Deux unités suffisent parce qu'on ne lit pas cette ligne pour chronométrer, mais pour répondre
+ * à une seule question — le Jetson a-t-il redémarré dans mon dos ? Les secondes n'y ajoutent
+ * rien, et elles feraient changer la ligne à chaque relevé.
+ */
+function dureeLisible(secondes: number): string {
+  const minutes = Math.floor(secondes / 60)
+  const heures = Math.floor(minutes / 60)
+  const jours = Math.floor(heures / 24)
+  if (jours > 0) return `${jours} j ${heures % 24} h`
+  if (heures > 0) return `${heures} h ${minutes % 60} min`
+  return `${minutes} min`
 }
 
 function CarteMesure({
@@ -86,7 +112,13 @@ function CarteMesure({
   return (
     <div className={styles.mesure}>
       <span className={styles.mesureNom}>{mesure.libelle}</span>
-      <Anneau valeur={valeur} min={mesure.min} max={mesure.max} unite={mesure.unite} />
+      <Anneau
+        valeur={valeur}
+        min={mesure.min}
+        max={mesure.max}
+        unite={mesure.unite}
+        hautEstBon={mesure.hautEstBon}
+      />
       <Tendance historique={historique} />
     </div>
   )
@@ -101,11 +133,13 @@ function Anneau({
   min,
   max,
   unite,
+  hautEstBon,
 }: {
   valeur: number | null
   min: number
   max: number
   unite: string
+  hautEstBon?: boolean
 }) {
   const rayon = 42
   const circonference = 2 * Math.PI * rayon
@@ -124,7 +158,7 @@ function Anneau({
             cy="50"
             r={rayon}
             fill="none"
-            stroke={couleurSeuil(fraction)}
+            stroke={couleurSeuil(fraction, hautEstBon)}
             strokeWidth="8"
             strokeLinecap="round"
             strokeDasharray={circonference}
