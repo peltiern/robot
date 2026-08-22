@@ -40,8 +40,10 @@ export function ConversationProvider() {
 
         enAttente.current.push({
           texte: evenement.texte,
-          fromRobot: evenement.idLocuteur === -1,
+          fromRobot: evenement.duRobot,
           time: horodatageRobotEnMs(evenement.dateTime, Date.now()),
+          idPersonne: evenement.idPersonne,
+          prenom: evenement.prenom,
         })
         // L'onglet en arrière-plan suspend les rAF : au-delà de la profondeur du fil, les plus
         // anciens seraient de toute façon écartés à l'ingestion.

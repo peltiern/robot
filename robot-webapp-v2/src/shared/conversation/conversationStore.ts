@@ -8,12 +8,17 @@ export interface ChatMessage {
   texte: string
   fromRobot: boolean
   time: number
+  /** Qui a parlé, si le robot le savait. Absent quand c'est lui qui parle. */
+  idPersonne?: string
+  prenom?: string
 }
 
 /** Message reçu, avant numérotation par le store. */
 export interface MessageRecu {
   texte: string
   fromRobot: boolean
+  idPersonne?: string
+  prenom?: string
   /** Instant d'émission par le robot, en millisecondes epoch (voir `horodatageRobotEnMs`). */
   time: number
 }
@@ -56,6 +61,8 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       texte: recu.texte,
       fromRobot: recu.fromRobot,
       time: recu.time,
+      idPersonne: recu.idPersonne,
+      prenom: recu.prenom,
     }))
 
     const messages = [...get().messages, ...ajouts]

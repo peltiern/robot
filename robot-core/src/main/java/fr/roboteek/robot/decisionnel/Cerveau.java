@@ -2,6 +2,8 @@ package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.conversation.ConversationActivity;
+import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
+import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.systemenerveux.event.ConversationEvent;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
@@ -91,6 +93,15 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     private final ArbitrageActivites arbitrageActivites;
 
     /**
+     * Ce que le robot a en tête, dont la personne à qui il parle.
+     * <p>
+     * Le décisionnel touche ici à la mémoire courte, et c'est assumé : c'est le seul endroit qui
+     * sache <b>quand</b> le robot entend, et donc le seul instant où la question « à qui ? » ait
+     * un sens. L'accueil et les retrouvailles s'y adressent déjà de la même façon.
+     */
+    private final MemoireCourtTerme memoireCourtTerme;
+
+    /**
      * Logger.
      */
     private final Logger logger = LoggerFactory.getLogger(Cerveau.class);
@@ -100,12 +111,14 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private volatile boolean running = false;
 
-    public Cerveau(ConversationActivity conversationActivity, List<AbstractActivity> activites, ArbitrageActivites arbitrageActivites) {
+    public Cerveau(ConversationActivity conversationActivity, List<AbstractActivity> activites,
+                   ArbitrageActivites arbitrageActivites, MemoireCourtTerme memoireCourtTerme) {
         super("Brain");
         this.conversationActivity = conversationActivity;
         this.activitesParIdentifiant = activites.stream()
                 .collect(Collectors.toMap(AbstractActivity::identifiant, Function.identity()));
         this.arbitrageActivites = arbitrageActivites;
+        this.memoireCourtTerme = memoireCourtTerme;
     }
 
     @Override
@@ -165,7 +178,16 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             // Envoi d'un évènement de conversation au serveur
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(reconnaissanceVocaleEvent.getTexteReconnu());
-            conversationEvent.setIdLocuteur(0);
+            // Qui parle : celui que le robot croit avoir devant lui à l'instant où il entend.
+            // C'est une approximation, et elle est tenue pour honnête : quelqu'un qui parle hors
+            // champ, ou une reconnaissance qui cligne à cet instant, donnera une bulle anonyme.
+            // Une bulle sans portrait dit que le robot ne savait pas à qui il parlait — c'est une
+            // information, pas un défaut d'affichage.
+            final Personne interlocuteur = memoireCourtTerme.interlocuteur();
+            if (interlocuteur != null) {
+                conversationEvent.setIdPersonne(interlocuteur.id());
+                conversationEvent.setPrenom(interlocuteur.prenom());
+            }
             applicationEventPublisher.publishEvent(conversationEvent);
 
             if (texteReconnu != null && !texteReconnu.equals("")) {
@@ -241,7 +263,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             // Envoi d'un évènement de conversation au serveur
             final ConversationEvent conversationEvent = new ConversationEvent();
             conversationEvent.setTexte(paroleEvent.getTexte());
-            conversationEvent.setIdLocuteur(-1);
+            conversationEvent.setDuRobot(true);
             applicationEventPublisher.publishEvent(conversationEvent);
         }
     }

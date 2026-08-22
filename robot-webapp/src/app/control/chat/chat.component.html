@@ -2,7 +2,7 @@
   <ul class="message-list" #scrollMe>
     <li *ngFor="let message of messages" #item>
       <div *ngIf="
-                  message.idLocuteur === -1;
+                  message.duRobot;
                  then robot_msg;
                  else user_msg
                "

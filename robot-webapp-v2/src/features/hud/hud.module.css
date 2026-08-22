@@ -326,6 +326,8 @@
 
 .msg {
   display: flex;
+  align-items: flex-end;
+  gap: 7px;
   max-width: 96%;
 }
 
@@ -358,6 +360,35 @@
   background: var(--fond);
   border: 2px solid var(--bordure);
   border-bottom-right-radius: 5px;
+}
+
+/*
+ * Portrait de celui qui a parlé, au pied de sa bulle. Taille fixe et `flex: none` : le fil
+ * défile en continu et une image qui se rétrécit sous la pression du texte ferait tressauter
+ * toute la colonne à chaque message un peu long.
+ */
+.portrait {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--bordure);
+  background: var(--fond);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.portraitInitiale {
+  color: var(--accent);
+}
+
+.portraitInconnu {
+  color: var(--texte-faible);
+  border-style: dashed;
 }
 
 .composeur {

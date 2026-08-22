@@ -21,13 +21,17 @@ export interface VideoEvent {
 }
 
 /**
- * ConversationEvent (topic `/events/conversation`) — un tour de dialogue.
- * idLocuteur : -1 = robot, 0 = inconnu, > 0 = identifiant d'une personne.
+ * ConversationEvent (topic `/events/conversation`) — un tour de dialogue, et qui l'a prononcé.
+ *
+ * `idPersonne` et `prenom` sont absents quand le robot parle, et quand il ne sait pas à qui il
+ * parle : personne d'identifié devant lui au moment où il a entendu.
  */
 export interface ConversationEvent {
   eventType: 'conversation'
   texte: string
-  idLocuteur: number
+  duRobot: boolean
+  idPersonne?: string
+  prenom?: string
   /**
    * Instant d'émission par le robot (`RobotEvent.dateTime`), en ISO-8601 local sans fuseau et
    * avec une précision nanoseconde. À convertir via `horodatageRobotEnMs`.
