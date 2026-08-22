@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Icone } from '../../shared/components/Icone'
 import { useWebSocketStore } from '../../shared/websocket/websocketStore'
 import { useConversationStore } from '../../shared/conversation/conversationStore'
+import { PortraitBulle } from './PortraitBulle'
+import { useRepertoirePourLeFil } from './repertoirePourLeFil'
 import styles from './hud.module.css'
 
 /**
@@ -10,11 +12,16 @@ import styles from './hud.module.css'
  * Le fil vient du store partagé (alimenté par `ConversationProvider`, monté au
  * niveau du Layout) : il survit à un passage par l'atelier, et les échanges qui
  * ont lieu pendant ce temps sont bien captés.
+ *
+ * Chaque bulle humaine porte le portrait de celui qui a parlé. Sans cela le fil
+ * ne disait jamais qui s'adressait au robot — ce qui se voit dès que deux
+ * personnes alternent devant lui.
  */
 export function PanneauDialogue() {
   const connecte = useWebSocketStore((s) => s.connected)
   const parler = useWebSocketStore((s) => s.speak)
   const messages = useConversationStore((s) => s.messages)
+  useRepertoirePourLeFil(messages)
 
   const [brouillon, setBrouillon] = useState('')
   const filRef = useRef<HTMLDivElement>(null)
@@ -54,6 +61,9 @@ export function PanneauDialogue() {
                 {message.texte}
                 <span className={`${styles.heure} data`}>{heure(message.time)}</span>
               </div>
+              {!message.fromRobot && (
+                <PortraitBulle idPersonne={message.idPersonne} prenom={message.prenom} />
+              )}
             </div>
           ))
         )}

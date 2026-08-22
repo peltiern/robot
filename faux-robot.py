@@ -156,11 +156,19 @@ async def boucle_telemetrie(_app):
         await asyncio.sleep(1.2)
 
 
+# Qui parle : le robot, quelqu'un qu'il reconnaît, ou quelqu'un qu'il entend sans savoir qui c'est.
+# Les trois cas sont joués pour que le fil du HUD montre ses trois portraits — le vrai robot, lui,
+# retombe sur l'anonyme dès que la reconnaissance cligne au moment où il écoute.
+ROBOT = None
+NICOLAS = ("11111111-1111-1111-1111-111111111111", "Nicolas")
+SANDRA = ("22222222-2222-2222-2222-222222222222", "Sandra")
+ANONYME = (None, None)
+
 ECHANGES = [
-    (0, "salut wall-e"), (-1, "Salut Nicolas. Je t'écoute."),
-    (0, "qu'est-ce que tu vois là"), (-1, "Je vois Nicolas, et une chaise derrière lui."),
-    (0, "tourne la tête à gauche"), (-1, "Voilà. Je regarde à gauche."),
-    (0, "raconte-moi une blague"), (-1, "Pourquoi le robot a traversé la route ? Il suivait son programme."),
+    (NICOLAS, "salut wall-e"), (ROBOT, "Salut Nicolas. Je t'écoute."),
+    (SANDRA, "qu'est-ce que tu vois là"), (ROBOT, "Je vois Nicolas et Sandra, et une chaise derrière eux."),
+    (ANONYME, "tourne la tête à gauche"), (ROBOT, "Voilà. Je regarde à gauche."),
+    (NICOLAS, "raconte-moi une blague"), (ROBOT, "Pourquoi le robot a traversé la route ? Il suivait son programme."),
 ]
 
 
@@ -169,10 +177,12 @@ async def boucle_conversation(_app):
     while True:
         locuteur, texte = ECHANGES[i % len(ECHANGES)]
         i += 1
-        if locuteur == 0:
+        if locuteur is not ROBOT:
             await envoyer("/events/reconnaissance-vocale", json.dumps({"eventType": "reconnaissance-vocale", "texteReconnu": texte}))
+        id_personne, prenom = locuteur if locuteur is not ROBOT else ANONYME
         await envoyer("/events/conversation", json.dumps({
-            "eventType": "conversation", "texte": texte, "idLocuteur": locuteur,
+            "eventType": "conversation", "texte": texte, "duRobot": locuteur is ROBOT,
+            "idPersonne": id_personne, "prenom": prenom,
             "dateTime": time.strftime("%Y-%m-%dT%H:%M:%S")}))
         await asyncio.sleep(3.5)
 
