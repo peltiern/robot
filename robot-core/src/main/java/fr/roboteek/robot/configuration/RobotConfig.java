@@ -330,6 +330,25 @@ public interface RobotConfig extends Config {
     double temporisationRegardSecondes();
 
     /**
+     * Durée pendant laquelle la manette garde la main sur le cou, en secondes, comptée à partir
+     * de son <b>dernier</b> ordre.
+     * <p>
+     * Le regard et la manette commandent le même servo, et rien ne les départageait : une
+     * correction du regard s'intercalait au milieu d'un mouvement piloté à la main. Celui qui
+     * conduit gagne, et le délai court depuis le dernier ordre — donc depuis le relâchement du
+     * joystick, qui envoie un {@code STOPPER}. Le suivi reprend ensuite tout seul, sans rien à
+     * rallumer.
+     * <p>
+     * Trop court, le regard reprend la tête entre deux coups de joystick ; trop long, le robot
+     * paraît absent après qu'on a lâché la manette.
+     *
+     * @return la durée de priorité de la manette après son dernier ordre, en secondes
+     */
+    @Key("robot.regard.priorite.manette.seconds")
+    @DefaultValue("3.0")
+    double prioriteManetteSecondes();
+
+    /**
      * Inverse le sens de rotation panoramique pour le regard.
      * <p>
      * Étalonnage à faire <b>une fois</b> : le sens dépend du montage du servo, que rien dans le

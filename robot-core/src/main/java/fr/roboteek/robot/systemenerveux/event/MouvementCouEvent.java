@@ -125,6 +125,12 @@ public class MouvementCouEvent extends RobotEvent {
      */
     private boolean synchrone = false;
 
+    /**
+     * Qui demande ce mouvement. Sert à ceux qui commandent le cou pour se départager, jamais à
+     * l'organe qui l'exécute (voir {@link OrigineMouvement}).
+     */
+    private OrigineMouvement origine = OrigineMouvement.AUTRE;
+
     public MouvementCouEvent() {
         super(EVENT_TYPE);
     }
@@ -226,6 +232,14 @@ public class MouvementCouEvent extends RobotEvent {
 
     public boolean isSynchrone() {
         return synchrone;
+    }
+
+    public OrigineMouvement getOrigine() {
+        return origine;
+    }
+
+    public void setOrigine(OrigineMouvement origine) {
+        this.origine = origine;
     }
 
     public void setSynchrone(boolean synchrone) {
@@ -343,6 +357,7 @@ public class MouvementCouEvent extends RobotEvent {
                 ", vitesseRoulis=" + vitesseRoulis +
                 ", accelerationRoulis=" + accelerationRoulis +
                 ", synchrone=" + synchrone +
+                ", origine=" + origine +
                 '}';
     }
 }

@@ -177,7 +177,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private void processJoystickLeftY(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_LEFT_AXIS_Y);
         if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
-            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
             mouvementCouEvent.setAccelerationMonterDescendre(2000D);
             double absolute = Math.abs(leftYValue.getCurrentNumericValue());
             double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
@@ -242,7 +242,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private void processJoystickRightX(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> leftXValue = event.getMapValues().get(LogitechComponent.JOYSTICK_RIGHT_AXIS_X);
         if (Math.abs(leftXValue.getCurrentNumericValue() - leftXValue.getOldNumericValue()) > 0.03) {
-            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
             mouvementCouEvent.setAccelerationPanoramique(2000D);
             double absolute = Math.abs(leftXValue.getCurrentNumericValue());
             double value = (absolute < 0.15) ? 0 : leftXValue.getCurrentNumericValue();
@@ -260,7 +260,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private void processJoystickRightY(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> leftYValue = event.getMapValues().get(LogitechComponent.JOYSTICK_RIGHT_AXIS_Y);
         if (Math.abs(leftYValue.getCurrentNumericValue() - leftYValue.getOldNumericValue()) > 0.03) {
-            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
             mouvementCouEvent.setAccelerationInclinaison(2000D);
             double absolute = Math.abs(leftYValue.getCurrentNumericValue());
             double value = (absolute < 0.15) ? 0 : leftYValue.getCurrentNumericValue();
@@ -383,7 +383,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private void publierRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS sens) {
         double amplitudeMax = phidgetsConfig().eyeMotorRelativePositionMax()
                 - phidgetsConfig().eyeMotorRelativePositionMin();
-        MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+        MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
         mouvementCouEvent.setMouvementRoulis(sens);
         mouvementCouEvent.setAccelerationRoulis(2000D);
         mouvementCouEvent.setVitesseRoulis(50D);
@@ -417,6 +417,20 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     }
 
     /**
+     * Un ordre de cou signé « manette ».
+     * <p>
+     * Passer par cette fabrique plutôt que par le constructeur n'est pas une coquetterie : c'est
+     * cette signature qui fait taire le suivi de visage le temps que quelqu'un conduise (cf.
+     * {@code Regard}). Un ordre publié sans elle se ferait contredire par le regard au milieu du
+     * mouvement.
+     */
+    private MouvementCouEvent ordreDuCouDeLaManette() {
+        MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+        mouvementCouEvent.setOrigine(OrigineMouvement.MANETTE);
+        return mouvementCouEvent;
+    }
+
+    /**
      * Stoppe les deux yeux (fin d'un roulis).
      */
     private void publierArretYeux() {
@@ -430,7 +444,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private void processButtonStart(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> startValue = event.getMapValues().get(LogitechComponent.BUTTON_START);
         if (startValue.getCurrentPressed()) {
-            MouvementCouEvent mouvementCouEvent = new MouvementCouEvent();
+            MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
             mouvementCouEvent.setAccelerationInclinaison(80D);
             mouvementCouEvent.setVitesseInclinaison(40D);
             mouvementCouEvent.setPositionInclinaison(0);

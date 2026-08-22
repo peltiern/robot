@@ -1,6 +1,7 @@
 package fr.roboteek.robot.decisionnel;
 
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
+import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import fr.roboteek.robot.util.HorlogeReglable;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Les réglages sont ceux par défaut de {@code RobotConfig} (aucun {@code robot.properties} n'est
  * lisible en test, Owner retombe donc sur les {@code @DefaultValue}) : champ de 60°, zone morte
  * de 5°, une unité de cou par degré vu en panoramique et 0,3 en inclinaison, une correction
- * par seconde, sens non inversé.
+ * par seconde, manette prioritaire 3 secondes, sens non inversé.
  */
 class RegardTest {
 
@@ -53,6 +54,10 @@ class RegardTest {
         ApplicationEventPublisher publieur = evenement -> {
             if (evenement instanceof MouvementCouEvent mouvement) {
                 mouvements.add(mouvement);
+                // Le bus Spring est synchrone : le regard reçoit ses propres ordres en retour,
+                // exactement comme sur le robot. C'est ce qui met à l'épreuve le filtre sur
+                // l'origine — sans lui, la première correction suspendrait toutes les suivantes.
+                regard.handleMouvementCouEvent(mouvement);
             }
         };
         regard = new Regard(publieur, horloge);
@@ -181,6 +186,77 @@ class RegardTest {
         regard.handleVisagePercuEvent(new VisagePercuEvent(List.of(visageCentreEn(100)), 0, 0));
 
         assertTrue(mouvements.isEmpty());
+    }
+
+    @Test
+    void laManetteFaitTaireLeRegardPendantQuOnConduit() {
+        conduire();
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+
+        assertTrue(mouvements.isEmpty(), "quelqu'un conduit : le regard n'a pas à s'en mêler");
+    }
+
+    @Test
+    void laManetteGardeLaMainQuelquesSecondesApresSonDernierOrdre() {
+        // Le relâchement du joystick est lui-même un ordre (un STOPPER) : la priorité court à
+        // partir de là, pas à partir du début de la conduite.
+        conduire();
+        horloge.avancerDe(Duration.ofMillis(2900));
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+
+        assertTrue(mouvements.isEmpty(), "moins de 3 s depuis le dernier ordre de la manette");
+    }
+
+    @Test
+    void leSuiviReprendSeulUneFoisLaManetteLachee() {
+        conduire();
+        horloge.avancerDe(Duration.ofMillis(3100));
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+
+        assertEquals(1, mouvements.size(), "rien à rallumer : le regard reprend de lui-même");
+    }
+
+    @Test
+    void chaqueOrdreDeLaManetteRepousseLaReprise() {
+        // Une conduite continue est une rafale d'ordres : c'est le dernier qui compte, sans quoi
+        // le regard reprendrait la main au milieu d'un mouvement piloté.
+        conduire();
+        horloge.avancerDe(Duration.ofMillis(2000));
+        conduire();
+        horloge.avancerDe(Duration.ofMillis(2000));
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+
+        assertTrue(mouvements.isEmpty(), "4 s depuis le premier ordre, mais 2 s depuis le dernier");
+    }
+
+    @Test
+    void leRegardNeSeSuspendPasLuiMeme() {
+        // Ses propres ordres lui reviennent par le bus : sans le filtre sur l'origine, la première
+        // correction suspendrait toutes les suivantes.
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+        horloge.avancerDe(Duration.ofMillis(1100));
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+
+        assertEquals(2, mouvements.size());
+    }
+
+    @Test
+    void unOrdreDeCouVenuDAilleursNInterrompsPasLeSuivi() {
+        // Animations, HUD, réflexes : eux ne prennent pas la main, seule la manette est prioritaire.
+        MouvementCouEvent ordre = new MouvementCouEvent();
+        ordre.setOrigine(OrigineMouvement.AUTRE);
+        regard.handleMouvementCouEvent(ordre);
+
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 1));
+
+        assertEquals(1, mouvements.size());
+    }
+
+    /** Un ordre de cou venu de la manette, comme en publie le contrôleur à chaque coup de joystick. */
+    private void conduire() {
+        MouvementCouEvent ordre = new MouvementCouEvent();
+        ordre.setOrigine(OrigineMouvement.MANETTE);
+        regard.handleMouvementCouEvent(ordre);
     }
 
     private void percevoir(VisagePercu... visages) {

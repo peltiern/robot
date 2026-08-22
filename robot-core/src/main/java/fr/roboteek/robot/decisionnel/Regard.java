@@ -3,6 +3,7 @@ package fr.roboteek.robot.decisionnel;
 import jakarta.annotation.PostConstruct;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
+import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
 import org.slf4j.Logger;
@@ -47,6 +48,12 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * petits à-coups au lieu d'un mouvement. Ce qui protège d'un dépassement, ce n'est pas de viser
  * court, c'est la justesse de l'échelle, et la zone morte absorbe ce qu'il en reste.
  * <p>
+ * <b>La manette est prioritaire</b> : tant que quelqu'un conduit, le regard se tait. Sans ça, les
+ * deux se disputaient le même servo — le regard envoie une correction par seconde, la manette des
+ * ordres continus, et rien ne disait qui gagne. La priorité court depuis le <b>dernier</b> ordre
+ * de la manette, donc depuis le relâchement du joystick (qui envoie un {@code STOPPER}) : le suivi
+ * reprend seul, il n'y a pas d'interrupteur à penser à rallumer.
+ * <p>
  * Aucun besoin de connaître l'arrêt d'urgence : le cou refuse déjà tout ordre de mouvement tant
  * qu'il est armé.
  */
@@ -76,6 +83,9 @@ public class Regard {
     /** Instant de la dernière correction, qui porte la temporisation. {@code null} si aucune. */
     private Instant derniereCorrection;
 
+    /** Instant du dernier ordre de cou venu de la manette. {@code null} si personne n'a conduit. */
+    private Instant dernierOrdreManette;
+
     /**
      * {@code @Autowired} obligatoire ici : cette classe a deux constructeurs, et Spring n'en
      * choisit aucun d'office — il se rabat alors sur un constructeur vide, qui n'existe pas, et
@@ -104,10 +114,12 @@ public class Regard {
     void annoncerReglages() {
         RobotConfig reglages = robotConfig();
         logger.info("Regard : {}, {} / {} unité(s) de cou par degré vu (panoramique / inclinaison), "
-                        + "zone morte {} degrés, une correction toutes les {} s",
+                        + "zone morte {} degrés, une correction toutes les {} s, "
+                        + "manette prioritaire {} s après son dernier ordre",
                 reglages.regardEnabled() ? "actif" : "inactif",
                 reglages.commandePanoramiqueParDegreVu(), reglages.commandeInclinaisonParDegreVu(),
-                reglages.zoneMorteRegardDegres(), reglages.temporisationRegardSecondes());
+                reglages.zoneMorteRegardDegres(), reglages.temporisationRegardSecondes(),
+                reglages.prioriteManetteSecondes());
     }
 
     /**
@@ -122,6 +134,13 @@ public class Regard {
         RobotConfig reglages = robotConfig();
         if (!reglages.regardEnabled()
                 || visagePercuEvent.getLargeurImage() <= 0 || visagePercuEvent.getHauteurImage() <= 0) {
+            return;
+        }
+        Instant maintenant = horloge.instant();
+        if (manetteALaMain(maintenant, reglages)) {
+            // Volontairement muet : la scène est perçue dix fois par seconde, et le dire à chaque
+            // fois noierait le journal pendant toute la conduite. La prise de main, elle, est
+            // journalisée une fois (voir handleMouvementCouEvent).
             return;
         }
         VisagePercu cible = visageRegarde(visagePercuEvent.getVisages());
@@ -142,7 +161,6 @@ public class Regard {
         if (!corrigerPanoramique && !corrigerInclinaison) {
             return;
         }
-        Instant maintenant = horloge.instant();
         if (derniereCorrection != null
                 && secondesEcoulees(derniereCorrection, maintenant) < reglages.temporisationRegardSecondes()) {
             return;
@@ -179,6 +197,34 @@ public class Regard {
                 arrondi(commandePanoramique), arrondi(commandeInclinaison),
                 visagePercuEvent.getVisages().size());
         tournerLaTete(commandePanoramique, commandeInclinaison, reglages);
+    }
+
+    /**
+     * La manette prend la main sur le cou, et la garde un moment.
+     * <p>
+     * Le regard reçoit ici ses propres ordres en retour — il publie sur le même bus — d'où le
+     * filtre sur l'origine, qui est aussi ce qui l'empêche de se suspendre lui-même.
+     * <p>
+     * On ne mémorise que l'instant : pas de « début » ni de « fin » de conduite à tenir, donc rien
+     * à réarmer si un {@code STOPPER} se perd. Le pire qu'il puisse arriver est que le suivi
+     * reprenne quelques secondes trop tard.
+     */
+    @EventListener
+    public synchronized void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
+        if (mouvementCouEvent.getOrigine() != OrigineMouvement.MANETTE) {
+            return;
+        }
+        Instant maintenant = horloge.instant();
+        if (!manetteALaMain(maintenant, robotConfig())) {
+            logger.info("Regard : la manette prend la main sur le cou, suivi de visage suspendu");
+        }
+        dernierOrdreManette = maintenant;
+    }
+
+    /** Vrai tant que le dernier ordre de la manette est assez récent pour lui garder la main. */
+    private boolean manetteALaMain(Instant maintenant, RobotConfig reglages) {
+        return dernierOrdreManette != null
+                && secondesEcoulees(dernierOrdreManette, maintenant) < reglages.prioriteManetteSecondes();
     }
 
     /**
@@ -242,6 +288,7 @@ public class Regard {
      */
     private void tournerLaTete(double anglePanoramique, double angleInclinaison, RobotConfig reglages) {
         MouvementCouEvent mouvement = new MouvementCouEvent();
+        mouvement.setOrigine(OrigineMouvement.REGARD);
         // Rotation relative et non position absolue : le cou n'a pas à savoir d'où il part, et
         // nous n'avons aucun moyen fiable de le lui dire (servos RC sans retour de position).
         if (anglePanoramique != 0) {

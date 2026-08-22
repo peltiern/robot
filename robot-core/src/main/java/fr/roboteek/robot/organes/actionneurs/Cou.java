@@ -203,6 +203,14 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
      * @param angle angle en degrés (négatif : à droite, positif : à gauche)
      */
     public void tournerTeteGaucheDroite(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+        // Une consigne d'angle ou de position laisse le servo ARRÊTÉ sur sa cible : le mouvement
+        // continu éventuellement en cours est terminé, et le drapeau doit le dire. Sans ça, un
+        // ordre du regard reçu pendant que le joystick était maintenu laissait le drapeau sur
+        // TOURNER_DROITE, et les ordres suivants du joystick — jugés « déjà en cours » — ne
+        // faisaient plus que régler une vitesse : la tête restait plantée jusqu'à ce qu'on
+        // recentre le stick. Le watchdog n'y perd rien, enMouvement() couvre déjà les consignes
+        // de position par la variation constatée.
+        mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
         moteurPanoramique.rotate(angle, vitesse, acceleration, waitForPosition);
     }
 
@@ -215,6 +223,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         double positionMoteur = phidgetsConfig.neckLeftRightMotorInitialPosition() - position;
         if (positionMoteur >= moteurPanoramique.getPositionMin() && positionMoteur <= moteurPanoramique.getPositionMax()) {
             logger.debug("POS_GD = {}", positionMoteur);
+        // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
+        // tournerTeteGaucheDroite).
+            mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
             moteurPanoramique.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -261,6 +272,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
      * @param angle angle en degrés (négatif : en bas, positif : en haut)
      */
     public void tournerTeteHautBas(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+        // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
+        // tournerTeteGaucheDroite).
+        mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
         moteurInclinaison.rotate(angle, vitesse, acceleration, waitForPosition);
     }
 
@@ -273,6 +287,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         double positionMoteur = phidgetsConfig.neckTiltMotorInitialPosition() - position;
         if (positionMoteur >= moteurInclinaison.getPositionMin() && positionMoteur <= moteurInclinaison.getPositionMax()) {
             logger.debug("POS_HB = {}", positionMoteur);
+        // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
+        // tournerTeteGaucheDroite).
+            mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
             moteurInclinaison.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -320,6 +337,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
      * @param angle angle en degrés (négatif : descend, positif : monte)
      */
     public void monterDescendreTete(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+        // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
+        // tournerTeteGaucheDroite).
+        mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
         moteurMonterDescendre.rotate(angle, vitesse, acceleration, waitForPosition);
     }
 
@@ -332,6 +352,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         double positionMoteur = phidgetsConfig.neckUpDownMotorInitialPosition() - position;
         if (positionMoteur >= moteurMonterDescendre.getPositionMin() && positionMoteur <= moteurMonterDescendre.getPositionMax()) {
             logger.debug("POS_MD = {}", positionMoteur);
+        // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
+        // tournerTeteGaucheDroite).
+            mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
             moteurMonterDescendre.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
