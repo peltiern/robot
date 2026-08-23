@@ -1,4 +1,4 @@
-import { useHudStore } from '../../shared/hud/hudStore'
+import { useHudStore } from '../../shared/stores/hudStore'
 import { PanneauDialogue } from './PanneauDialogue'
 import { PanneauVitaux } from './PanneauVitaux'
 import styles from './hud.module.css'

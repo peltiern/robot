@@ -1,4 +1,4 @@
-import type { Organe } from './organesStore'
+import type { Organe } from '../stores/organesStore'
 
 /**
  * Correspondance articulation → évènement WebSocket à publier.

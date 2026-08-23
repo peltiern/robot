@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTopic } from '../../shared/websocket/useTopic'
-import { useWebSocketStore } from '../../shared/websocket/websocketStore'
-import { useAudioStore } from '../../shared/audio/audioStore'
-import { useConversationStore } from '../../shared/conversation/conversationStore'
+import { useWebSocketStore } from '../../shared/stores/websocketStore'
+import { useAudioStore } from '../../shared/stores/audioStore'
+import { useConversationStore } from '../../shared/stores/conversationStore'
 import type { ReconnaissanceVocaleEvent } from '../../shared/types/events'
 import styles from './pilotage.module.css'
 

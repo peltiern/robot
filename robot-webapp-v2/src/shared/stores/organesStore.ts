@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { useTelemetryStore } from '../telemetry/telemetryStore'
-import { useSanteStore, type EtatSante } from '../sante/santeStore'
+import { useTelemetryStore } from '../stores/telemetryStore'
+import { useSanteStore, type EtatSante } from '../stores/santeStore'
 
 export type Orientation = 'VERTICAL' | 'HORIZONTAL' | 'ROTATION'
 

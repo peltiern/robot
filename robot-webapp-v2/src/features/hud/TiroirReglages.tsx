@@ -1,9 +1,9 @@
 import { Icone } from '../../shared/components/Icone'
-import { useHudStore } from '../../shared/hud/hudStore'
-import { useThemeStore, PALETTES } from '../../shared/theme/themeStore'
-import { useAudioStore } from '../../shared/audio/audioStore'
-import { useOrganesStore } from '../../shared/organes/organesStore'
-import { useWebSocketStore } from '../../shared/websocket/websocketStore'
+import { useHudStore } from '../../shared/stores/hudStore'
+import { useThemeStore, PALETTES } from '../../shared/stores/themeStore'
+import { useAudioStore } from '../../shared/stores/audioStore'
+import { useOrganesStore } from '../../shared/stores/organesStore'
+import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import styles from './hud.module.css'
 
 /**

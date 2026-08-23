@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { IMessage } from '@stomp/stompjs'
-import { useWebSocketStore } from './websocketStore'
+import { useWebSocketStore } from '../stores/websocketStore'
 
 /**
  * S'abonne à un topic STOMP et appelle `handler` à chaque message.
