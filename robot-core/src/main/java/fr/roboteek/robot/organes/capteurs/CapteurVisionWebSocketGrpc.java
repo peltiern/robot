@@ -16,7 +16,7 @@ import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVi
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
 import fr.roboteek.robot.services.vision.face.ServiceDetectionVisage;
 import fr.roboteek.robot.services.vision.face.ServiceReconnaissanceVisage;
-import fr.roboteek.robot.services.vision.face.DecoupeDeVignette;
+import fr.roboteek.robot.services.vision.face.VisageDansLImage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import fr.roboteek.robot.web.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
@@ -419,7 +419,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         return visagesDetectes.stream()
                 .max(Comparator.comparingLong(visage -> (long) visage.width() * visage.height()))
                 .map(visage -> new PriseDeVisage(serviceReconnaissanceVisage.extraireEmbedding(image, visage),
-                        DecoupeDeVignette.enJpeg(image, visage)))
+                        VisageDansLImage.portraitJpeg(image, visage)))
                 .orElse(null);
     }
 

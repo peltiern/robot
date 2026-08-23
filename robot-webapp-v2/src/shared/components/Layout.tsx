@@ -1,14 +1,10 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
-import { useWebSocketStore } from '../websocket/websocketStore'
-import { TelemetryProvider } from '../telemetry/TelemetryProvider'
-import { ConversationProvider } from '../conversation/ConversationProvider'
-import { AudioProvider } from '../audio/AudioProvider'
-import { VideoProvider } from '../video/VideoProvider'
-import { useOrganesStore } from '../organes/organesStore'
-import { useArretUrgenceStore } from '../securite/arretUrgenceStore'
-import { ArretUrgenceProvider } from '../securite/ArretUrgenceProvider'
-import { SanteProvider } from '../sante/SanteProvider'
+import { useWebSocketStore } from '../stores/websocketStore'
+import { FluxRobot } from '../flux/FluxRobot'
+import { VideoProvider } from '../flux/VideoProvider'
+import { useOrganesStore } from '../stores/organesStore'
+import { useArretUrgenceStore } from '../stores/arretUrgenceStore'
 import { BarreEtat } from '../../features/hud/BarreEtat'
 import { Rail } from '../../features/hud/Rail'
 import { ColonneDroite } from '../../features/hud/ColonneDroite'
@@ -51,12 +47,8 @@ export function Layout() {
 
   return (
     <div className={styles.app}>
-      <TelemetryProvider />
-      <ConversationProvider />
-      <AudioProvider />
+      <FluxRobot />
       <VideoProvider />
-      <ArretUrgenceProvider />
-      <SanteProvider />
 
       <BarreEtat />
 

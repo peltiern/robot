@@ -7,7 +7,7 @@ import { LibraryPanel }    from './components/LibraryPanel'
 import { toAnimation }     from './utils/convert'
 import { animationApi }    from '../../shared/api/animationApi'
 import type { Animation }  from '../../shared/types/animation'
-import { useWebSocketStore } from '../../shared/websocket/websocketStore'
+import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import styles from './AnimationPage.module.css'
 
 export function AnimationPage() {

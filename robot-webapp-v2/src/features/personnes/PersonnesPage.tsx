@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icone } from '../../shared/components/Icone'
-import { usePersonnesStore } from '../../shared/personnes/personnesStore'
+import { usePersonnesStore } from '../../shared/stores/personnesStore'
 import { FichePersonne } from './FichePersonne'
 import { ChoixDePhotos } from './ChoixDePhotos'
 import { Vignette } from './Vignette'

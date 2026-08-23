@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { usePersonnesStore } from '../../shared/personnes/personnesStore'
-import type { ChatMessage } from '../../shared/conversation/conversationStore'
+import { usePersonnesStore } from '../../shared/stores/personnesStore'
+import type { ChatMessage } from '../../shared/stores/conversationStore'
 
 /**
  * Tient le répertoire à jour de ce que le fil demande.

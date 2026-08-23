@@ -1,7 +1,7 @@
 package fr.roboteek.robot.configuration.speech;
 
-import fr.roboteek.robot.services.recognizer.SpeechRecognizerProvider;
-import fr.roboteek.robot.services.synthesizer.SpeechSynthesizerProvider;
+import fr.roboteek.robot.services.recognizer.SpeechRecognizerService;
+import fr.roboteek.robot.services.synthesizer.SpeechSynthesizerService;
 import org.aeonbits.owner.Config;
 
 import static org.aeonbits.owner.Config.*;
@@ -17,9 +17,9 @@ public interface SpeechProviderConfig extends Config {
 
     @Key("speech.recognizer.provider")
     @DefaultValue("GOOGLE")
-    SpeechRecognizerProvider recognizerProvider();
+    SpeechRecognizerService.Provider recognizerProvider();
 
     @Key("speech.synthesizer.provider")
     @DefaultValue("GOOGLE")
-    SpeechSynthesizerProvider synthesizerProvider();
+    SpeechSynthesizerService.Provider synthesizerProvider();
 }

@@ -1,13 +1,17 @@
 package fr.roboteek.robot.services.synthesizer;
 
 /**
- * Interface de synthèse vocale.
+ * Synthèse vocale : d'un texte vers un WAV.
  */
 public interface SpeechSynthesizerService {
 
+    /** Fournisseurs disponibles, choisis dans {@code robot.properties}. */
+    enum Provider {
+        GOOGLE,
+        PIPER
+    }
+
     /**
-     * Synthétise un texte en voix sous forme de fichier audio WAV.
-     *
      * @param texte le texte à synthétiser
      * @return le contenu du fichier WAV
      */

@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { useWebSocketStore } from '../../shared/websocket/websocketStore'
+import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import { useTopic } from '../../shared/websocket/useTopic'
 import {
   actionneurs,
   useOrganesStore,
   type Articulation,
-} from '../../shared/organes/organesStore'
-import { COMMANDE, estPilotable, evenementsRecentrage } from '../../shared/organes/commandes'
-import { useArretUrgenceStore } from '../../shared/securite/arretUrgenceStore'
+} from '../../shared/stores/organesStore'
+import { COMMANDE, estPilotable, evenementsRecentrage } from '../../shared/api/commandes'
+import { useArretUrgenceStore } from '../../shared/stores/arretUrgenceStore'
 import styles from './pilotage.module.css'
 
 /**

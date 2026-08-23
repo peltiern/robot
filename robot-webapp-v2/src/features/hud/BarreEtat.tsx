@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Icone, type NomIcone } from '../../shared/components/Icone'
 import { IconesSante } from './PastillesSante'
-import { useWebSocketStore } from '../../shared/websocket/websocketStore'
-import { useTelemetryStore } from '../../shared/telemetry/telemetryStore'
-import { useVideoStore } from '../../shared/video/videoStore'
-import { capteurs, useOrganesStore, type Mesure } from '../../shared/organes/organesStore'
-import { useArretUrgenceStore } from '../../shared/securite/arretUrgenceStore'
-import { couleurAlerte, fractionMesure } from '../../shared/hud/seuils'
+import { useWebSocketStore } from '../../shared/stores/websocketStore'
+import { useTelemetryStore } from '../../shared/stores/telemetryStore'
+import { useVideoStore } from '../../shared/stores/videoStore'
+import { capteurs, useOrganesStore, type Mesure } from '../../shared/stores/organesStore'
+import { useArretUrgenceStore } from '../../shared/stores/arretUrgenceStore'
+import { couleurAlerte, fractionMesure } from '../../shared/utils/seuils'
 import styles from './hud.module.css'
 
 /**

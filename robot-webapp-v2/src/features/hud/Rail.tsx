@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router'
 import { Icone, type NomIcone } from '../../shared/components/Icone'
-import { useHudStore, type Volets } from '../../shared/hud/hudStore'
-import { useAudioStore } from '../../shared/audio/audioStore'
+import { useHudStore, type Volets } from '../../shared/stores/hudStore'
+import { useAudioStore } from '../../shared/stores/audioStore'
 import styles from './hud.module.css'
 
 const VOLETS: { cle: keyof Volets; icone: NomIcone; libelle: string }[] = [

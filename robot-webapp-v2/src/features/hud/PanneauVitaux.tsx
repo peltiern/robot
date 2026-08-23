@@ -1,8 +1,8 @@
 import { Icone } from '../../shared/components/Icone'
-import { useTelemetryStore } from '../../shared/telemetry/telemetryStore'
-import { useOrganesStore, capteurs, type Mesure } from '../../shared/organes/organesStore'
-import { useWebSocketStore } from '../../shared/websocket/websocketStore'
-import { couleurSeuil, fractionMesure } from '../../shared/hud/seuils'
+import { useTelemetryStore } from '../../shared/stores/telemetryStore'
+import { useOrganesStore, capteurs, type Mesure } from '../../shared/stores/organesStore'
+import { useWebSocketStore } from '../../shared/stores/websocketStore'
+import { couleurSeuil, fractionMesure } from '../../shared/utils/seuils'
 import { PastillesSante } from './PastillesSante'
 import styles from './hud.module.css'
 

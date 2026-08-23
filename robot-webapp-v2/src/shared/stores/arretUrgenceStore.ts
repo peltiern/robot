@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { useWebSocketStore } from '../websocket/websocketStore'
+import { useWebSocketStore } from '../stores/websocketStore'
 
 /**
  * Arrêt d'urgence des moteurs.

@@ -3,8 +3,7 @@ package fr.roboteek.robot.memoire.longterme.visage;
 import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceDetectionVisage;
 import fr.roboteek.robot.services.providers.opencv.face.OpenCvServiceReconnaissanceVisage;
-import fr.roboteek.robot.services.vision.face.DecoupeDeVignette;
-import fr.roboteek.robot.services.vision.face.NetteteDuVisage;
+import fr.roboteek.robot.services.vision.face.VisageDansLImage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -48,7 +47,7 @@ public class ApprentissageParPhoto {
     private static final float SCORE_MINIMAL = 0.9f;
 
     /**
-     * Netteté minimale du visage, en variance du laplacien (voir {@link NetteteDuVisage}).
+     * Netteté minimale du visage, en variance du laplacien (voir {@link VisageDansLImage#nettete}).
      * <p>
      * Mesuré sur les photos d'exemple du dépôt, visage ramené à 192 px : les originaux donnent
      * 222, 537, 1146 et 3423 ; les mêmes franchement floutés donnent 3, 8, 15 et 52. Cent laisse
@@ -99,12 +98,12 @@ public class ApprentissageParPhoto {
             // retient la meilleure similarité parmi toutes les empreintes connues, et celle-là
             // peut dépasser le seuil face à quelqu'un d'AUTRE. Le robot appellerait alors Sandra
             // « Nicolas ». Mieux vaut pas d'empreinte du tout.
-            double nettete = NetteteDuVisage.mesurer(image, visage);
+            double nettete = VisageDansLImage.nettete(image, visage);
             if (nettete < NETTETE_MINIMALE) {
                 throw new PhotoInexploitable("photo trop floue pour apprendre ce visage");
             }
             return new Empreinte(reconnaissance().extraireEmbedding(image, visage),
-                    DecoupeDeVignette.enJpeg(image, visage));
+                    VisageDansLImage.portraitJpeg(image, visage));
         } finally {
             image.release();
         }

@@ -1,5 +1,5 @@
 import { urlVignette } from '../../shared/api/personneApi'
-import { usePersonnesStore } from '../../shared/personnes/personnesStore'
+import { usePersonnesStore } from '../../shared/stores/personnesStore'
 import styles from './hud.module.css'
 
 interface Props {

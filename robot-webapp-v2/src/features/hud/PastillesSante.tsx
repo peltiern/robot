@@ -1,5 +1,5 @@
 import { Icone, type NomIcone } from '../../shared/components/Icone'
-import { useSanteStore, type SanteOrgane } from '../../shared/sante/santeStore'
+import { useSanteStore, type SanteOrgane } from '../../shared/stores/santeStore'
 import styles from './hud.module.css'
 
 /**

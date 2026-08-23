@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
-import type { IMessage } from '@stomp/stompjs'
-import { useTopic } from '../websocket/useTopic'
-import { useWebSocketStore } from '../websocket/websocketStore'
-import { useVideoStore } from './videoStore'
+import { useEvenement } from '../websocket/useEvenement'
+import { useWebSocketStore } from '../stores/websocketStore'
+import { useVideoStore } from '../stores/videoStore'
 import type { VideoEvent } from '../types/events'
 
 /** Intervalle minimal entre deux rafraîchissements de l'indicateur FPS. */
@@ -17,8 +16,8 @@ function base64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Composant sans rendu : alimente le store vidéo depuis `/video`. À monter une
- * seule fois, au niveau du Layout.
+ * Le flux vidéo, à part des autres ({@link FluxRobot}) : il saute les images en retard au lieu de
+ * les empiler, et gère des Blob URL à libérer.
  */
 export function VideoProvider() {
   const poserTrame = useVideoStore((s) => s.poserTrame)
@@ -76,26 +75,16 @@ export function VideoProvider() {
     }
   }, [poserTrame, majFps])
 
-  useTopic(
+  useEvenement<VideoEvent>(
     '/video',
-    useCallback(
-      (msg: IMessage) => {
-        let event: VideoEvent
-        try {
-          event = JSON.parse(msg.body)
-        } catch {
-          return
-        }
-        if (!event?.imageBase64) return
-
-        // La trame précédente non encore publiée est simplement écrasée.
-        trameEnAttente.current = event
-        if (rafEnCours.current === null) {
-          rafEnCours.current = requestAnimationFrame(publierTrameEnAttente)
-        }
-      },
-      [publierTrameEnAttente],
-    ),
+    (event) => {
+      // La trame précédente non encore publiée est simplement écrasée.
+      trameEnAttente.current = event
+      if (rafEnCours.current === null) {
+        rafEnCours.current = requestAnimationFrame(publierTrameEnAttente)
+      }
+    },
+    (event) => !!event.imageBase64,
   )
 
   // Libération du Blob URL précédent : le nettoyage s'exécute quand l'URL change,
