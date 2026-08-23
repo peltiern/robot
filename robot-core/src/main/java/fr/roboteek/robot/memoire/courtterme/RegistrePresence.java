@@ -295,13 +295,39 @@ public class RegistrePresence {
         }
 
         LocalDateTime maintenant = LocalDateTime.now(horloge);
+        long absence = absenceReelle(secondesDAbsence, personne, maintenant);
+
         Personne personneAJour = personne.rencontreeLe(maintenant);
         personneRepository.enregistrer(personneAJour);
 
-        logger.info("Rencontre : {}, absent pendant {} s (vu pour la dernière fois le {})",
-                personne.prenom(), secondesDAbsence, personne.derniereRencontre());
+        logger.info("Rencontre : {}, pas vu depuis {} s (dernière rencontre le {})",
+                personne.prenom(), absence, personne.derniereRencontre());
         applicationEventPublisher.publishEvent(
-                new RencontreEvent(RencontreEvent.TYPE.CONNU_REVU, personneAJour, secondesDAbsence));
+                new RencontreEvent(RencontreEvent.TYPE.CONNU_REVU, personneAJour, absence));
+    }
+
+    /**
+     * Depuis combien de temps le robot n'avait pas vu quelqu'un, en allant le demander à la
+     * mémoire longue quand la mémoire courte l'ignore.
+     * <p>
+     * Elle l'ignore à chaque démarrage : cette mémoire-ci vient d'être créée vide, la première
+     * personne reconnue n'y a donc aucun passé et son absence sort à {@code -1}. Or {@code -1}
+     * veut dire « on ne s'est jamais parlé », et le robot accueillait un familier par « ravi de
+     * te rencontrer » — au redémarrage, c'est-à-dire tous les jours.
+     * <p>
+     * La mémoire longue, elle, sait : c'est {@code derniereRencontre}. Le {@code -1} n'est gardé
+     * que lorsqu'elle ne sait pas non plus — quelqu'un enregistré par photo et vu pour la première
+     * fois, où « on ne s'est jamais parlé » est la vérité.
+     */
+    private static long absenceReelle(long secondesDAbsence, Personne personne, LocalDateTime maintenant) {
+        if (secondesDAbsence >= 0) {
+            return secondesDAbsence;
+        }
+        if (personne.derniereRencontre() == null) {
+            return -1;
+        }
+        // Jamais négatif : une horloge qui recule ne doit pas se relire comme « jamais rencontré ».
+        return Math.max(0, Duration.between(personne.derniereRencontre(), maintenant).toSeconds());
     }
 
     private static double secondesEcoulees(Instant debut, Instant fin) {

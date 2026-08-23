@@ -286,18 +286,55 @@ class RegistrePresenceTest {
         LocalDateTime ilYATroisJours = LocalDateTime.now(horloge).minusDays(3);
         personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", ilYATroisJours));
 
-        // Première venue : personne ne sait combien de temps elle a duré, d'où -1.
+        // Première venue depuis le démarrage : ce registre ne sait rien d'elle, mais la mémoire
+        // longue si — trois jours.
         percevoirMariePendant(2.0);
         assertEquals(1, rencontres.size());
-        assertEquals(-1, rencontres.get(0).getSecondesDAbsence(), "première apparition");
+        long depuisLaMemoireLongue = rencontres.get(0).getSecondesDAbsence();
+        assertTrue(depuisLaMemoireLongue >= Duration.ofDays(3).toSeconds(),
+                "trois jours attendus depuis la mémoire longue, obtenu " + depuisLaMemoireLongue);
 
-        // Elle disparaît une trentaine de secondes, puis revient : c'est ce trou-là qui compte.
+        // Elle disparaît une trentaine de secondes, puis revient : c'est ce trou-là qui compte,
+        // et non plus la mémoire longue.
         avancerDe(30.0);
         percevoirMariePendant(2.0);
 
         assertEquals(2, rencontres.size());
         long absence = rencontres.get(1).getSecondesDAbsence();
         assertTrue(absence >= 30 && absence <= 32, "environ 30 s d'absence attendues, obtenu " + absence);
+    }
+
+    /**
+     * Le défaut qui a motivé tout ceci : au redémarrage, ce registre repart vide, et la première
+     * personne reconnue n'y a aucun passé. Elle sortait donc à {@code -1}, ce qui veut dire « on
+     * ne s'est jamais parlé » — et le robot accueillait un familier par « ravi de te rencontrer »,
+     * à chaque démarrage.
+     */
+    @Test
+    void auDemarrageLAbsenceVientDeLaMemoireLongue() {
+        LocalDateTime ilYAUneHeure = LocalDateTime.now(horloge).minusHours(1);
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", ilYAUneHeure));
+
+        percevoirMariePendant(2.0);
+
+        assertEquals(1, rencontres.size());
+        long absence = rencontres.get(0).getSecondesDAbsence();
+        assertTrue(absence >= Duration.ofHours(1).toSeconds() && absence < Duration.ofHours(2).toSeconds(),
+                "une heure attendue, obtenu " + absence);
+    }
+
+    /**
+     * Et le cas où {@code -1} reste la vérité : quelqu'un enregistré par photo, jamais rencontré.
+     * La mémoire longue ne sait pas non plus, et « on ne s'est jamais parlé » est exact.
+     */
+    @Test
+    void quelquUnJamaisRencontreGardeUneAbsenceInconnue() {
+        personneRepository.enregistrer(new Personne(ID_MARIE, "Marie", null));
+
+        percevoirMariePendant(2.0);
+
+        assertEquals(1, rencontres.size());
+        assertEquals(-1, rencontres.get(0).getSecondesDAbsence(), "jamais rencontrée, donc inconnue");
     }
 
     /**
