@@ -50,6 +50,41 @@ class WatchDogTest {
         assertTrue(arretUrgence.estActif());
     }
 
+    /**
+     * Le robot s'arrête, et le cou bouge — il rejoint sa position de repos. C'est le seul moment
+     * où « un organe muet » et « quelque chose bouge » sont vrais ensemble sans qu'il y ait la
+     * moindre panne : l'ordonnanceur qui produit les battements est déjà éteint.
+     * <p>
+     * Sans le retrait, le watchdog coupait les moteurs au milieu de ce mouvement de repos.
+     */
+    @Test
+    void pendantLArretDuRobotLeWatchdogNeCoupeRien() {
+        OrganeFactice manette = new OrganeFactice("manette", true);
+        OrganeFactice cou = new OrganeFactice("cou", true).enMouvement(true);
+
+        WatchDog watchDog = watchDog(manette, cou);
+        cou.battuA(maintenant.get());
+
+        watchDog.handleContextClosedEvent(null);
+        watchDog.verifier();
+
+        assertFalse(arretUrgence.estActif(), "arrêt d'urgence déclenché pendant l'arrêt du robot");
+    }
+
+    /** Et tant que l'arrêt n'a pas commencé, rien ne change : le watchdog coupe toujours. */
+    @Test
+    void avantLArretLeWatchdogCoupeToujours() {
+        OrganeFactice manette = new OrganeFactice("manette", true);
+        OrganeFactice cou = new OrganeFactice("cou", true).enMouvement(true);
+
+        WatchDog watchDog = watchDog(manette, cou);
+        cou.battuA(maintenant.get());
+
+        watchDog.verifier();
+
+        assertTrue(arretUrgence.estActif());
+    }
+
     @Test
     void unOrganeMuetSurUnRobotImmobileNeCoupeRien() {
         OrganeFactice manette = new OrganeFactice("manette", true);
