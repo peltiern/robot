@@ -17,11 +17,7 @@ public class ParoleTermineeEvent extends RobotEvent {
     public static final String EVENT_TYPE = "parole-terminee";
 
     /** Le texte qui vient d'être dit, pour que l'attente sache de quelle phrase il s'agit. */
-    private String texte;
-
-    public ParoleTermineeEvent() {
-        super(EVENT_TYPE);
-    }
+    private final String texte;
 
     public ParoleTermineeEvent(String texte) {
         super(EVENT_TYPE);
@@ -32,7 +28,4 @@ public class ParoleTermineeEvent extends RobotEvent {
         return texte;
     }
 
-    public void setTexte(String texte) {
-        this.texte = texte;
-    }
 }

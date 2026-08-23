@@ -22,10 +22,10 @@ public class RencontreEvent extends RobotEvent {
         CONNU_REVU
     }
 
-    private TYPE type;
+    private final TYPE type;
 
     /** La personne rencontrée, {@code null} pour un {@link TYPE#INCONNU}. */
-    private Personne personne;
+    private final Personne personne;
 
     /**
      * <b>Durée pendant laquelle la personne n'a pas été vue</b> avant de réapparaître, en
@@ -38,11 +38,7 @@ public class RencontreEvent extends RobotEvent {
      * qu'aucune rencontre ne soit annoncée — les avoir confondues a fait dire au robot « on
      * parlait de la population française » douze secondes après en avoir parlé.
      */
-    private long secondesDAbsence;
-
-    public RencontreEvent() {
-        super(EVENT_TYPE);
-    }
+    private final long secondesDAbsence;
 
     public RencontreEvent(TYPE type, Personne personne, long secondesDAbsence) {
         super(EVENT_TYPE);
@@ -55,23 +51,12 @@ public class RencontreEvent extends RobotEvent {
         return type;
     }
 
-    public void setType(TYPE type) {
-        this.type = type;
-    }
-
     public Personne getPersonne() {
         return personne;
-    }
-
-    public void setPersonne(Personne personne) {
-        this.personne = personne;
     }
 
     public long getSecondesDAbsence() {
         return secondesDAbsence;
     }
 
-    public void setSecondesDAbsence(long secondesDAbsence) {
-        this.secondesDAbsence = secondesDAbsence;
-    }
 }

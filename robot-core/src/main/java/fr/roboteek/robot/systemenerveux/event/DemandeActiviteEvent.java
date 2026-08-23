@@ -1,15 +1,12 @@
 package fr.roboteek.robot.systemenerveux.event;
 
 /**
- * Demande de changement d'activité adressée au cerveau.
+ * Demande de changement d'activité adressée au cerveau. C'est par là que passe tout ce qui peut
+ * faire changer le robot d'occupation : la voix, un visage qui apparaît, un bouton de l'interface.
  * <p>
- * Jusqu'ici, le seul déclencheur d'activité était la voix, câblé en dur dans le cerveau :
- * rien d'autre — un visage qui apparaît, un bouton de l'interface — ne pouvait faire changer
- * le robot d'occupation. Cet évènement ouvre cette porte.
- * <p>
- * L'activité est désignée par son identifiant ({@code AbstractActivity.identifiant()}, soit
- * le nom simple de sa classe) et non par une référence : l'évènement est aussi rediffusé sur
- * le WebSocket, où un bean n'a rien à faire.
+ * L'activité est désignée par son identifiant ({@code AbstractActivity.identifiant()}, soit le nom
+ * simple de sa classe) et non par une référence : l'évènement est rediffusé sur le WebSocket, où
+ * un bean n'a rien à faire.
  */
 public class DemandeActiviteEvent extends RobotEvent {
 
@@ -18,6 +15,12 @@ public class DemandeActiviteEvent extends RobotEvent {
     /** Identifiant de l'activité demandée. */
     private String idActivite;
 
+    /**
+     * Constructeur vide exigé par la désérialisation : cet évènement arrive aussi de l'interface,
+     * sur {@code /app/robotevents}. Le supprimer laisse Gson allouer l'objet sans passer par aucun
+     * constructeur — l'évènement entre alors <b>sans date</b>, l'interface n'en envoyant pas, et
+     * rien ne compile en rouge. Voir {@code EvenementsEntrantsTest}.
+     */
     public DemandeActiviteEvent() {
         super(EVENT_TYPE);
     }
@@ -31,7 +34,4 @@ public class DemandeActiviteEvent extends RobotEvent {
         return idActivite;
     }
 
-    public void setIdActivite(String idActivite) {
-        this.idActivite = idActivite;
-    }
 }

@@ -19,11 +19,7 @@ public class SanteOrganesEvent extends RobotEvent {
     public static final String EVENT_TYPE = "sante-organes";
 
     /** Santé de chaque organe surveillé, au moment du relevé. */
-    private List<SanteOrgane> organes;
-
-    public SanteOrganesEvent() {
-        super(EVENT_TYPE);
-    }
+    private final List<SanteOrgane> organes;
 
     public SanteOrganesEvent(List<SanteOrgane> organes) {
         super(EVENT_TYPE);
@@ -34,7 +30,4 @@ public class SanteOrganesEvent extends RobotEvent {
         return organes;
     }
 
-    public void setOrganes(List<SanteOrgane> organes) {
-        this.organes = organes;
-    }
 }

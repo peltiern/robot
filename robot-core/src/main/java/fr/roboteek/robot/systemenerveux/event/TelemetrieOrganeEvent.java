@@ -22,14 +22,10 @@ public class TelemetrieOrganeEvent extends RobotEvent {
     public static final String EVENT_TYPE = "telemetrie-organe";
 
     /** Identifiant de l'organe émetteur (ex. {@code cou}, {@code yeux}, {@code materiel}). */
-    private String organeId;
+    private final String organeId;
 
     /** Carte {@code id → valeur} (mêmes identifiants que dans {@code /api/organes}). */
-    private Map<String, Double> valeurs;
-
-    public TelemetrieOrganeEvent() {
-        super(EVENT_TYPE);
-    }
+    private final Map<String, Double> valeurs;
 
     public TelemetrieOrganeEvent(String organeId, Map<String, Double> valeurs) {
         super(EVENT_TYPE);
@@ -41,15 +37,8 @@ public class TelemetrieOrganeEvent extends RobotEvent {
         return organeId;
     }
 
-    public void setOrganeId(String organeId) {
-        this.organeId = organeId;
-    }
-
     public Map<String, Double> getValeurs() {
         return valeurs;
     }
 
-    public void setValeurs(Map<String, Double> valeurs) {
-        this.valeurs = valeurs;
-    }
 }

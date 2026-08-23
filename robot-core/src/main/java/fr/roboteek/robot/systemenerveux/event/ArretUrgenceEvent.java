@@ -23,6 +23,12 @@ public class ArretUrgenceEvent extends RobotEvent {
      */
     private String origine;
 
+    /**
+     * Constructeur vide exigé par la désérialisation : cet évènement arrive aussi de l'interface,
+     * sur {@code /app/robotevents}. Le supprimer laisse Gson allouer l'objet sans passer par aucun
+     * constructeur — l'évènement entre alors <b>sans date</b>, l'interface n'en envoyant pas, et
+     * rien ne compile en rouge. Voir {@code EvenementsEntrantsTest}.
+     */
     public ArretUrgenceEvent() {
         super(EVENT_TYPE);
     }
@@ -37,16 +43,8 @@ public class ArretUrgenceEvent extends RobotEvent {
         return actif;
     }
 
-    public void setActif(boolean actif) {
-        this.actif = actif;
-    }
-
     public String getOrigine() {
         return origine;
-    }
-
-    public void setOrigine(String origine) {
-        this.origine = origine;
     }
 
     @Override
