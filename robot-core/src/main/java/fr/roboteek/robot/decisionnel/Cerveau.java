@@ -77,7 +77,12 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     private final Map<String, AbstractActivity> activitesParIdentifiant;
 
     /** Activité réclamée, en attente que la boucle reprenne la main. {@code null} si aucune. */
-    private final AtomicReference<AbstractActivity> activiteDemandee = new AtomicReference<>();
+    /**
+     * La demande acceptée, en attente que la boucle la reprenne. L'évènement entier et non la
+     * seule activité : c'est lui qui porte ce que la demande visait, et l'activité doit le
+     * recevoir au lancement, pas avant (voir {@link AbstractActivity#preparer}).
+     */
+    private final AtomicReference<DemandeActiviteEvent> demandeAcceptee = new AtomicReference<>();
 
     /** Décide des demandes de changement d'activité (priorité, temporisation, arrêt d'urgence). */
     private final ArbitrageActivites arbitrageActivites;
@@ -128,12 +133,18 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
                 }
                 // La boucle est seule à changer d'activité : une demande déposée pendant que
                 // l'activité tournait n'est honorée qu'ici, une fois son run() rendu.
-                AbstractActivity activiteSuivante = activiteDemandee.getAndSet(null);
+                DemandeActiviteEvent demandeSuivante = demandeAcceptee.getAndSet(null);
                 if (!running) {
                     // Arrêt du robot en cours : ne rien relancer.
                     break;
                 }
+                AbstractActivity activiteSuivante = demandeSuivante == null
+                        ? null
+                        : activitesParIdentifiant.get(demandeSuivante.getIdActivite());
                 if (activiteSuivante != null) {
+                    // Remise ici, et pas au moment de la demande : c'est le seul instant où l'on
+                    // sait que c'est bien cette demande-là qui va être jouée.
+                    activiteSuivante.preparer(demandeSuivante);
                     initNewCurrentActivity(activiteSuivante);
                 } else if (!hasBeenStopped) {
                     initNewCurrentActivity(conversationActivity);
@@ -225,12 +236,12 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
             // Le refus est annoncé, et pas seulement journalisé : celui qui a fait la demande doit
             // pouvoir en tenir compte. Sans quoi elle disparaît, et rien ne la rejoue une fois la
             // cause du refus levée.
-            applicationEventPublisher.publishEvent(
-                    new DemandeActiviteRefuseeEvent(activite.identifiant(), decision.name()));
+            applicationEventPublisher.publishEvent(new DemandeActiviteRefuseeEvent(
+                    activite.identifiant(), decision.name(), demandeActiviteEvent.getIdPersonne()));
             return;
         }
         logger.info("Activité demandée : {}", activite.identifiant());
-        activiteDemandee.set(activite);
+        demandeAcceptee.set(demandeActiviteEvent);
         if (activiteCourante != null) {
             activiteCourante.desactiver();
         }

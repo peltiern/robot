@@ -16,6 +16,14 @@ public class DemandeActiviteEvent extends RobotEvent {
     private String idActivite;
 
     /**
+     * Qui la demande vise, {@code null} quand elle ne vise personne.
+     * <p>
+     * Un identifiant et non une {@code Personne} : l'évènement est rediffusé sur le WebSocket, où
+     * un bean n'a rien à faire. Il suffit à l'activité pour retrouver ce qu'on lui a confié.
+     */
+    private String idPersonne;
+
+    /**
      * Constructeur vide exigé par la désérialisation : cet évènement arrive aussi de l'interface,
      * sur {@code /app/robotevents}. Le supprimer laisse Gson allouer l'objet sans passer par aucun
      * constructeur — l'évènement entre alors <b>sans date</b>, l'interface n'en envoyant pas, et
@@ -26,12 +34,21 @@ public class DemandeActiviteEvent extends RobotEvent {
     }
 
     public DemandeActiviteEvent(String idActivite) {
+        this(idActivite, null);
+    }
+
+    public DemandeActiviteEvent(String idActivite, String idPersonne) {
         super(EVENT_TYPE);
         this.idActivite = idActivite;
+        this.idPersonne = idPersonne;
     }
 
     public String getIdActivite() {
         return idActivite;
+    }
+
+    public String getIdPersonne() {
+        return idPersonne;
     }
 
 }

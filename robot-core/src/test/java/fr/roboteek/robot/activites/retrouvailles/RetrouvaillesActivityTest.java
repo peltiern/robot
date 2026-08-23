@@ -3,6 +3,7 @@ package fr.roboteek.robot.activites.retrouvailles;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.activites.conversation.ConversationIA;
 import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -51,10 +53,52 @@ class RetrouvaillesActivityTest {
         activite.activer();
     }
 
+    /**
+     * Ce que fait le cerveau : on confie les retrouvailles, puis il les remet à l'activité au
+     * moment où il la lance — et pas avant.
+     */
+    private void confierEtLancer(Personne personne, long secondesDAbsence) {
+        activite.confier(personne, secondesDAbsence);
+        activite.preparer(new DemandeActiviteEvent(
+                RetrouvaillesActivity.class.getSimpleName(), personne.id()));
+    }
+
+    /**
+     * Le défaut qui a motivé la table par personne : deux venues se confirment coup sur coup, et
+     * le cerveau ne lance que celle qu'il a acceptée. Avec un champ unique, la seconde écrasait la
+     * première et le robot saluait Paul sous le nom de Marie — indiscernable d'une erreur de
+     * reconnaissance.
+     */
+    @Test
+    void deuxVenuesCoupSurCoupNeSeMarchentPasDessus() {
+        Personne paul = new Personne("id-paul", "Paul", null);
+        when(conversationIA.saluerRetrouvailles(MARIE, 3600, false)).thenReturn("Salut Marie !");
+        when(conversationIA.saluerRetrouvailles(paul, 3600, false)).thenReturn("Salut Paul !");
+
+        // Les deux sont confiées ; c'est celle de Marie que le cerveau a acceptée.
+        activite.confier(MARIE, 3600);
+        activite.confier(paul, 3600);
+        activite.preparer(new DemandeActiviteEvent(
+                RetrouvaillesActivity.class.getSimpleName(), MARIE.id()));
+
+        activite.run();
+
+        assertEquals(List.of("Salut Marie !"), phrasesDites);
+    }
+
+    /** Et ce qu'on n'a pas joué se reprend, pour que la venue ne soit pas perdue. */
+    @Test
+    void cequiNaPasEteJoueSeReprend() {
+        activite.confier(MARIE, 3600);
+
+        assertEquals(MARIE, activite.reprendre(MARIE.id()));
+        assertNull(activite.reprendre(MARIE.id()), "repris deux fois");
+    }
+
     @Test
     void laPhraseComposeeParLIaEstDite() {
         when(conversationIA.saluerRetrouvailles(MARIE, 3600, false)).thenReturn("Salut Marie ! Alors, ce chat ?");
-        activite.setPersonneRetrouvee(MARIE, 3600);
+        confierEtLancer(MARIE, 3600);
 
         activite.run();
 
@@ -68,7 +112,7 @@ class RetrouvaillesActivityTest {
     @Test
     void uneLongueAbsenceDemandeUneSalutation() {
         when(conversationIA.saluerRetrouvailles(any(Personne.class), anyLong(), anyBoolean())).thenReturn("Salut Marie !");
-        activite.setPersonneRetrouvee(MARIE, 3600);
+        confierEtLancer(MARIE, 3600);
 
         activite.run();
 
@@ -79,7 +123,7 @@ class RetrouvaillesActivityTest {
     @Test
     void uneCourteAbsenceDemandeUneReprise() {
         when(conversationIA.saluerRetrouvailles(any(Personne.class), anyLong(), anyBoolean())).thenReturn("On en était où ?");
-        activite.setPersonneRetrouvee(MARIE, 120);
+        confierEtLancer(MARIE, 120);
 
         activite.run();
 
@@ -92,7 +136,7 @@ class RetrouvaillesActivityTest {
      */
     @Test
     void uneAbsenceDeQuelquesSecondesNeFaitRienDire() {
-        activite.setPersonneRetrouvee(MARIE, 40);
+        confierEtLancer(MARIE, 40);
 
         activite.run();
 
@@ -106,7 +150,7 @@ class RetrouvaillesActivityTest {
     @Test
     void uneDerniereRencontreInconnueDemandeUneSalutation() {
         when(conversationIA.saluerRetrouvailles(any(Personne.class), anyLong(), anyBoolean())).thenReturn("Salut Marie !");
-        activite.setPersonneRetrouvee(MARIE, -1);
+        confierEtLancer(MARIE, -1);
 
         activite.run();
 
@@ -116,7 +160,7 @@ class RetrouvaillesActivityTest {
     @Test
     void lInterlocuteurEstPoseAvantDeParler() {
         when(conversationIA.saluerRetrouvailles(any(Personne.class), anyLong(), anyBoolean())).thenReturn("Coucou Marie !");
-        activite.setPersonneRetrouvee(MARIE, 1000);
+        confierEtLancer(MARIE, 1000);
 
         activite.run();
 
@@ -126,7 +170,7 @@ class RetrouvaillesActivityTest {
     @Test
     void unePhraseDeSecoursEstDiteSiLIaNeRepondPas() {
         when(conversationIA.saluerRetrouvailles(any(Personne.class), anyLong(), anyBoolean())).thenReturn(null);
-        activite.setPersonneRetrouvee(MARIE, 1000);
+        confierEtLancer(MARIE, 1000);
 
         activite.run();
 
@@ -134,9 +178,11 @@ class RetrouvaillesActivityTest {
         assertTrue(phrasesDites.getFirst().contains("Marie"), "phrase dite : " + phrasesDites);
     }
 
+    /** Demande sans cible, ou cible qu'on ne nous a jamais confiée : on ne dit rien. */
     @Test
     void sansPersonneRienNEstDit() {
-        activite.setPersonneRetrouvee(null, -1);
+        activite.preparer(new DemandeActiviteEvent(
+                RetrouvaillesActivity.class.getSimpleName(), "id-inconnu"));
 
         activite.run();
 
