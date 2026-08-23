@@ -30,7 +30,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 /**
  * Classe représentant le cou du robot.
  * <p>
- * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle} en phase
+ * Cycle de vie géré par {@link SmartLifecycle} en phase
  * {@link RobotLifecyclePhases#ACTIONNEURS_AVEC_MOTEUR}. Les moteurs ne sont créés
  * et engagés qu'au {@code start()} — pas à la construction du bean — pour respecter
  * l'ordre des phases (moteurs derniers démarrés, premiers arrêtés).
@@ -40,24 +40,16 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 @Component
 public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveille {
 
-    /**
-     * Moteur "Panoramique".
-     */
+    /** Moteur "Panoramique". */
     private PhidgetsServoMotor moteurPanoramique;
 
-    /**
-     * Moteur "Inclinaison".
-     */
+    /** Moteur "Inclinaison". */
     private PhidgetsServoMotor moteurInclinaison;
 
-    /**
-     * Moteur "Monter - Descendre".
-     */
+    /** Moteur "Monter - Descendre". */
     private PhidgetsServoMotor moteurMonterDescendre;
 
-    /**
-     * Phidgets configuration.
-     */
+    /** Phidgets configuration. */
     private PhidgetsConfig phidgetsConfig;
 
     // Volatiles : écrits par les threads d'évènements, lus par le watchdog (enMouvement()).
@@ -65,14 +57,10 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     private volatile MOUVEMENTS_INCLINAISON mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
     private volatile MOUVEMENTS_MONTER_DESCENDRE mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(Cou.class);
 
-    /**
-     * Tolérance (en degrés) pour considérer une position servo atteinte.
-     */
+    /** Tolérance (en degrés) pour considérer une position servo atteinte. */
     private static final double TOLERANCE_POSITION = 1.0;
 
     /**
@@ -101,9 +89,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /** Instant de la dernière variation de position constatée. */
     private volatile long instantDerniereVariation = 0L;
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     /**
@@ -113,9 +99,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
      */
     private volatile boolean arretUrgence = false;
 
-    /**
-     * Constructeur.
-     */
+    /** Constructeur. */
     public Cou() {
         super();
         phidgetsConfig = phidgetsConfig();
@@ -173,9 +157,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         logger.info("Cou : fin initialisation");
     }
 
-    /**
-     * Tourne la tête à gauche sans s'arrêter.
-     */
+    /** Tourne la tête à gauche sans s'arrêter. */
     public void tournerAGauche(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsPanoramiqueEnCours != MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE) {
             mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE;
@@ -185,9 +167,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
     }
 
-    /**
-     * Tourne la tête à droite sans s'arrêter.
-     */
+    /** Tourne la tête à droite sans s'arrêter. */
     public void tournerADroite(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsPanoramiqueEnCours != MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE) {
             mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE;
@@ -230,17 +210,13 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
     }
 
-    /**
-     * Stoppe le mouvement de la tête sur le plan "Gauche / Droite".
-     */
+    /** Stoppe le mouvement de la tête sur le plan "Gauche / Droite". */
     public void stopperTeteGaucheDroite() {
         moteurPanoramique.stop();
         mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
     }
 
-    /**
-     * Tourne la tête en bas sans s'arrêter.
-     */
+    /** Tourne la tête en bas sans s'arrêter. */
     public void tournerEnBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.TOURNER_BAS) {
             logger.debug("BAS");
@@ -252,9 +228,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
     }
 
-    /**
-     * Tourne la tête en haut sans s'arrêter.
-     */
+    /** Tourne la tête en haut sans s'arrêter. */
     public void tournerEnHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.TOURNER_HAUT) {
             logger.debug("HAUT");
@@ -294,18 +268,14 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
     }
 
-    /**
-     * Stoppe le mouvement de la tête sur le plan "Haut / Bas".
-     */
+    /** Stoppe le mouvement de la tête sur le plan "Haut / Bas". */
     public void stopperTeteHautBas() {
         logger.debug("STOP HAUT BAS");
         moteurInclinaison.stop();
         mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
     }
 
-    /**
-     * Descend la tête sans s'arrêter.
-     */
+    /** Descend la tête sans s'arrêter. */
     public void descendre(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE) {
             logger.debug("DESCENDRE");
@@ -317,9 +287,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
     }
 
-    /**
-     * Monte la tête sans s'arrêter.
-     */
+    /** Monte la tête sans s'arrêter. */
     public void monter(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.MONTER) {
             logger.debug("MONTER");
@@ -359,9 +327,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
     }
 
-    /**
-     * Stoppe le mouvement de la tête sur le plan "Monter - Descendre".
-     */
+    /** Stoppe le mouvement de la tête sur le plan "Monter - Descendre". */
     public void stopperTeteMonterDescendre() {
         logger.debug("STOP MonterDescendre");
         moteurMonterDescendre.stop();
@@ -524,16 +490,12 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
                 phidgetsConfig.neckUpDownMotorMinPosition(), phidgetsConfig.neckUpDownMotorMaxPosition());
     }
 
-    /**
-     * Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près.
-     */
+    /** Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près. */
     private static boolean estAtteinte(PhidgetsServoMotor moteur, double cible) {
         return Math.abs(moteur.getPositionReelle() - cible) < TOLERANCE_POSITION;
     }
 
-    /**
-     * Remet la tête à sa position par défaut.
-     */
+    /** Remet la tête à sa position par défaut. */
     private void reset() {
         moteurInclinaison.setPositionCible(phidgetsConfig.neckTiltMotorInitialPosition(), null, null, false);
         moteurPanoramique.setPositionCible(phidgetsConfig.neckLeftRightMotorInitialPosition(), null, null, false);

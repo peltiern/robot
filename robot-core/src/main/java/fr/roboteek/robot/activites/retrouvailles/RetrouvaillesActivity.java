@@ -20,19 +20,13 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * secondes (la conversation n'a jamais été interrompue), reprendre le fil sans saluer si elle se
  * compte en minutes, saluer au-delà. Les deux seuils sont dans {@code robot.properties}.
  * <p>
- * <b>Il n'y a pas de résumé à stocker</b>, contrairement à ce qui était prévu au départ : la
- * mémoire de conversation est déjà tenue <i>par personne</i> et persistée
- * ({@link ConversationIA}, cent messages par fil en base). Le souvenir est donc déjà là ; tout
- * ce qui manquait, c'était de dire au robot qui il a en face et de lui demander d'en tirer une
- * phrase. Le champ {@code resumeDerniereConversation} prévu à l'origine sur {@link Personne} n'a
- * donc jamais servi, et a été retiré.
+ * <b>Aucun résumé à stocker</b> : {@link ConversationIA} tient déjà le fil de chacun en base. Le
+ * souvenir est là ; il suffit de dire au robot qui il a en face et de lui demander une phrase.
  * <p>
  * Une activité et non un simple écouteur de {@code RencontreEvent} : c'est ce qui la fait passer
- * par l'arbitrage du cerveau, donc jamais un « bonjour Marie » par-dessus une présentation en
- * cours, et une temporisation si quelqu'un fait des allers-retours devant la caméra.
- * <p>
- * Elle dure le temps d'une phrase, puis rend la main à la conversation — qui reprend en sachant
- * à qui elle parle, sur le fil de mémoire de cette personne.
+ * par l'arbitrage du cerveau — jamais un « bonjour Marie » par-dessus une présentation en cours.
+ * Elle dure le temps d'une phrase, puis rend la main à la conversation, qui reprend en sachant à
+ * qui elle parle.
  */
 @Component
 public class RetrouvaillesActivity extends AbstractActivity {

@@ -11,22 +11,16 @@ import org.opencv.imgproc.Imgproc;
 /**
  * Découpe le portrait d'une personne dans l'image où son visage vient d'être détecté.
  * <p>
- * Le seul endroit du projet où une image devient durable — et il est fait pour tenir la règle
- * « l'image ne voyage pas » : le {@code Mat} entre ici et n'en ressort qu'en JPEG, quelques
- * kilo-octets. Ni l'organe de vision ni le contrôleur REST ne manipulent d'image au-delà.
+ * Le seul endroit du projet où une image devient durable : le {@code Mat} entre ici et n'en
+ * ressort qu'en JPEG, quelques kilo-octets.
  */
 public final class DecoupeDeVignette {
 
     /**
-     * Côté de la vignette.
+     * Côté de la vignette, assez grand pour que la fiche puisse l'agrandir sans que ça se voie.
      * <p>
-     * Passé de 192 à 384 le 2026-08-17, quand la fiche a permis d'agrandir le portrait d'un clic :
-     * en 192 l'agrandissement n'était qu'un étirement, et se voyait. Le coût reste dérisoire —
-     * quelques dizaines de kilo-octets par personne, soit moins qu'une seule photo de téléphone
-     * pour tout le répertoire.
-     * <p>
-     * Sans effet sur les portraits déjà enregistrés : ils garderont leur taille jusqu'au prochain
-     * apprentissage, caméra ou photo.
+     * Le changer n'affecte que les portraits à venir : les autres gardent leur taille jusqu'au
+     * prochain apprentissage.
      */
     private static final int COTE = 384;
 

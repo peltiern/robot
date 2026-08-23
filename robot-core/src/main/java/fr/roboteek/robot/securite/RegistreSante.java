@@ -71,7 +71,7 @@ public class RegistreSante {
      * contexte, donc après le {@code start()} de tous les organes. Entre les deux, un organe est en
      * service et pourtant hors d'état de battre. La conduite différentielle, démarrée cinq secondes
      * avant la fin du démarrage, était ainsi déclarée muette avant même que le robot ne soit prêt
-     * (constaté sur le robot le 2026-08-08). Aucun organe n'est donc jugé tant que l'application
+     * (constaté sur le robot). Aucun organe n'est donc jugé tant que l'application
      * n'a pas fini de démarrer.
      */
     @EventListener(ApplicationReadyEvent.class)

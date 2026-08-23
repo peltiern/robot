@@ -40,11 +40,10 @@ public class ConversationRepository implements ChatMemoryRepository {
     /**
      * La clé du fil d'une personne, bâtie sur son seul identifiant.
      * <p>
-     * Le prénom y figurait autrefois, en simple étiquette, pour s'y retrouver en ouvrant la base.
-     * Il en a été retiré le 2026-08-16 : renommer quelqu'un changeait sa clé, et le robot repartait
-     * d'une page blanche avec lui sans que rien ne le signale — précisément au moment où l'on
-     * corrige un prénom mal compris, donc où l'on tient le plus à ce qu'il se souvienne. Se
-     * retrouver dans la base est désormais l'affaire d'une jointure.
+     * <b>Le prénom n'y entre pas</b>, même en simple étiquette pour s'y retrouver en ouvrant la
+     * base : renommer quelqu'un changerait sa clé, et le robot repartirait d'une page blanche avec
+     * lui sans que rien ne le signale — précisément au moment où l'on corrige un prénom mal
+     * compris, donc où l'on tient le plus à ce qu'il se souvienne.
      */
     public static String idConversationDe(String idPersonne) {
         return PREFIXE_PERSONNE + idPersonne;

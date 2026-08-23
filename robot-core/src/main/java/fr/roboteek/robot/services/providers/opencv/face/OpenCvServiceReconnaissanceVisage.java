@@ -54,11 +54,6 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
 
     /**
      * Charge le service au premier appel, puis le rend tel quel.
-     * <p>
-     * Le dépôt est passé plutôt que construit ici : depuis le passage à SQLite, il n'y a qu'un
-     * dépôt de visages dans toute l'application, et c'est un bean Spring. Du temps de MapDB, ce
-     * service ouvrait sa propre base et en détenait le verrou — tout le reste du programme devait
-     * alors passer par lui pour écrire une empreinte.
      *
      * @param visageConnuRepository le dépôt, ignoré si le service est déjà chargé
      */

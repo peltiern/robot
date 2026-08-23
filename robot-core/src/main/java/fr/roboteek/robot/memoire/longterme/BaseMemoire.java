@@ -19,23 +19,9 @@ import java.util.List;
  * La base unique où le robot garde ce qui doit lui survivre : les personnes, leurs visages,
  * leurs rencontres et leurs conversations.
  * <p>
- * Un seul fichier SQLite, {@code memoire.db}, là où il y avait quatre bases MapDB séparées.
- * Ce n'est pas un détail de rangement : c'est ce qui permet d'effacer une personne <b>et</b>
- * tout ce qui s'y rattache sans risquer d'en oublier un morceau, une empreinte orpheline
- * suffisant à faire « reconnaître » au robot quelqu'un qui n'existe plus.
- * <p>
- * MapDB a été abandonné le 2026-08-16 pour trois raisons tenaces :
- * <ul>
- *   <li>il stockait les records par <b>sérialisation Java</b> — ajouter un champ relisait les
- *       anciennes entrées sans la moindre erreur, le champ à {@code null} ;</li>
- *   <li>il <b>verrouillait son fichier</b>, si bien qu'un dépôt ne pouvait pas être partagé
- *       entre plusieurs beans : écrire une empreinte devait passer par le service de
- *       reconnaissance, seul détenteur du verrou ;</li>
- *   <li>il n'offrait <b>ni index ni requête</b> : retrouver les visages d'une personne imposait
- *       de tout charger et de filtrer en mémoire.</li>
- * </ul>
- * Les données MapDB n'ont pas été reprises : on est reparti d'une base vide, les visages se
- * réimportant par fichier.
+ * Un seul fichier SQLite, et des liens en cascade entre les tables : c'est ce qui permet
+ * d'effacer une personne <b>et</b> tout ce qui s'y rattache sans en oublier un morceau. Une
+ * empreinte orpheline suffirait à faire « reconnaître » au robot quelqu'un qui n'existe plus.
  */
 @Configuration
 public class BaseMemoire {

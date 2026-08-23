@@ -118,9 +118,7 @@ public class OrganeController {
         return etat == null ? null : new Sante(etat.etat(), etat.ageMillis(), etat.surveille());
     }
 
-    /**
-     * Renvoie un organe précis par son identifiant, ou 404 s'il est inconnu.
-     */
+    /** Renvoie un organe précis par son identifiant, ou 404 s'il est inconnu. */
     @GetMapping("/{id}")
     public ResponseEntity<Organe> parId(@PathVariable String id) {
         return lister().stream()

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 /**
  * Capteur vocal avec appel d'un web service externe pour effectuer la reconnaisance vocale.
  * <p>
- * Migré en bean Spring : cycle de vie (acquisition micro) géré par {@link SmartLifecycle},
+ * Cycle de vie (acquisition micro) géré par {@link SmartLifecycle},
  * évènements de contrôle reçus via les évènements Spring (voir {@link AbstractCapteurVocal}).
  * <p>
  * Décode <b>au fil de la parole</b> quand le moteur le sait faire (Vosk, via
@@ -34,9 +34,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal implements SmartLifecycle, OrganeSurveille {
 
-    /**
-     * Speech recognizer.
-     */
+    /** Speech recognizer. */
     private SpeechRecognizerService speechRecognizerService;
 
     /**
@@ -58,14 +56,10 @@ public class CapteurVocalAvecReconnaissance extends AbstractCapteurVocal impleme
      */
     private long instantFinPhrase;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(CapteurVocalAvecReconnaissance.class);
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     public CapteurVocalAvecReconnaissance() {

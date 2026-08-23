@@ -15,9 +15,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Vérifie la persistance des conversations, sans appeler la moindre IA.
- */
+/** Vérifie la persistance des conversations, sans appeler la moindre IA. */
 class ConversationRepositoryTest {
 
     @TempDir

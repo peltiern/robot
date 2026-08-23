@@ -14,7 +14,7 @@ import fr.roboteek.robot.memoire.RecognizedFace;
  * Il date la dernière fois que <b>SFace</b> a confirmé cette identité, et non la dernière fois
  * qu'elle a été recopiée d'un cycle au suivant : une identité héritée conserve donc la date de
  * son origine et finit par périmer. Sans cette distinction, une étiquette posée une fois se
- * recopiait indéfiniment — constaté sur le robot le 2026-08-15, où un visage ayant hérité du nom
+ * recopiait indéfiniment — constaté sur le robot, où un visage ayant hérité du nom
  * d'une photo voisine le gardait tant que la personne restait dans le champ.
  *
  * @param boite                 boîte englobante, portant le prénom affiché dans le flux vidéo

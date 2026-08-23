@@ -19,7 +19,7 @@ import java.util.Map;
  * ({@link LogitechComponent}, carte d'état) est identique, si bien que
  * {@link RobotLogitechController} est inchangé.
  * <p>
- * Calibré et validé sur le robot le 2026-07-24 (manette F710 en mode XInput, bouton
+ * Calibré et validé sur le robot (manette F710 en mode XInput, bouton
  * MODE désactivé) : gâchettes livrées par input4j directement en -1..1 (repos -1, pas
  * de renormalisation), axes Y non inversés.
  */
@@ -108,7 +108,7 @@ public class LogitechControllerInput4j {
         });
 
         // Gâchettes analogiques : input4j les livre déjà en -1..1 (repos -1), pas de
-        // renormalisation (le test 2026-07-24 montrait des valeurs hors bornes avec v*2-1).
+        // renormalisation (v*2-1 donnait des valeurs hors bornes).
         device.onAxisChanged(XInput.LEFT_TRIGGER, v -> {
             float old = buttonAnalogLeft2Value;
             buttonAnalogLeft2Value = v;

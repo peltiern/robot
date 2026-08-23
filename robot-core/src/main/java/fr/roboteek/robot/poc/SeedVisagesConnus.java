@@ -39,8 +39,8 @@ public class SeedVisagesConnus {
 
         OpenCV.loadLocally();
 
-        // La même base que celle du robot, ouverte à part : SQLite l'accepte, contrairement à
-        // MapDB qui en verrouillait le fichier. Le robot n'a donc plus besoin d'être arrêté.
+        // La même base que celle du robot, ouverte à part : SQLite l'accepte, le robot n'a donc
+        // pas besoin d'être arrêté.
         DataSource memoire = BaseMemoire.sourceVers(
                 new File(Constantes.DOSSIER_MEMOIRE, "memoire.db").getAbsolutePath());
         BaseMemoire.appliquerLeSchema(memoire);

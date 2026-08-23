@@ -32,9 +32,8 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * tête, le visage se retrouve recentré et la correction suivante n'a plus lieu d'être : la
  * convergence vient de la géométrie, pas d'un asservissement.
  * <p>
- * Ce n'est <b>pas</b> le suivi asservi (vitesse commandée en continu sur l'erreur), qui reste un
- * chantier à part entière : les servos RC du cou ne rendent pas leur position réelle, ce qui
- * l'avait déjà fait échouer une fois.
+ * Ce n'est <b>pas</b> un suivi asservi (vitesse commandée en continu sur l'erreur) : les servos
+ * RC du cou ne rendent pas leur position réelle, ce qui l'a déjà fait échouer.
  * <p>
  * Deux garde-fous contre le tic nerveux, tous deux réglables à chaud :
  * <ul>
@@ -43,19 +42,15 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  *       sans elle, les corrections s'empileraient sur une image d'avant le mouvement.</li>
  * </ul>
  * <p>
- * Il n'y a en revanche <b>aucun amortissement</b> : l'écart mesuré est corrigé en entier. Essayé
- * le 2026-08-12, n'en corriger que 70 % n'a produit qu'une chose — la tête arrivait en quatre
- * petits à-coups au lieu d'un mouvement. Ce qui protège d'un dépassement, ce n'est pas de viser
- * court, c'est la justesse de l'échelle, et la zone morte absorbe ce qu'il en reste.
+ * <b>Aucun amortissement</b> : l'écart mesuré est corrigé en entier. N'en corriger que 70 % fait
+ * arriver la tête en quatre à-coups au lieu d'un mouvement. Ce qui protège du dépassement, ce
+ * n'est pas de viser court mais la justesse de l'échelle, et la zone morte absorbe le reste.
  * <p>
- * <b>La manette est prioritaire</b> : tant que quelqu'un conduit, le regard se tait. Sans ça, les
- * deux se disputaient le même servo — le regard envoie une correction par seconde, la manette des
- * ordres continus, et rien ne disait qui gagne. La priorité court depuis le <b>dernier</b> ordre
- * de la manette, donc depuis le relâchement du joystick (qui envoie un {@code STOPPER}) : le suivi
- * reprend seul, il n'y a pas d'interrupteur à penser à rallumer.
+ * <b>La manette est prioritaire</b> : tant que quelqu'un conduit, le regard se tait — sinon les
+ * deux se disputent le même servo. La priorité court depuis le <b>dernier</b> ordre de la manette,
+ * donc depuis le relâchement du joystick : le suivi reprend seul, sans interrupteur à rallumer.
  * <p>
- * Aucun besoin de connaître l'arrêt d'urgence : le cou refuse déjà tout ordre de mouvement tant
- * qu'il est armé.
+ * Rien à savoir de l'arrêt d'urgence : le cou refuse déjà tout mouvement tant qu'il est armé.
  */
 @Component
 public class Regard {
@@ -63,16 +58,11 @@ public class Regard {
     private static final Logger logger = LoggerFactory.getLogger(Regard.class);
 
     /**
-     * Consigne si faible qu'elle ne vaut pas la peine d'être envoyée.
+     * Consigne si faible qu'elle ne vaut pas la peine d'être envoyée. Simple garde-fou : un
+     * dixième de degré n'a aucun sens, et le répéter dix fois par seconde noierait les journaux.
      * <p>
-     * Volontairement basse. Elle avait d'abord été fixée à 2,5, en croyant tenir une zone
-     * insensible du servo : des consignes de 1,6 à 1,9 laissaient la position inchangée, relevé
-     * après relevé. Le journal des butées a montré autre chose — ces consignes-là allaient
-     * <b>toutes vers le haut</b>, c'est-à-dire vers une butée déjà atteinte. Ce n'était pas le
-     * servo qui était sourd, c'était le cou qui était au bout.
-     * <p>
-     * Le seuil reste, mais comme simple garde-fou : une consigne d'un dixième de degré n'a aucun
-     * sens, et la répéter dix fois par seconde noierait les journaux.
+     * Volontairement basse : ce qui ressemble à une zone insensible du servo est en général un
+     * cou arrivé en butée, et monter le seuil pour cette raison-là serait une erreur.
      */
     private static final double COMMANDE_MINIMALE = 1.0;
 
@@ -248,7 +238,7 @@ public class Regard {
      * <p>
      * <b>La totalité de l'écart, pas une fraction</b> : le cou se commande en absolu — il lit sa
      * position et y ajoute l'angle — donc viser juste est un calcul, pas une approche. N'en
-     * corriger qu'une part, comme essayé le 2026-08-12, ne fait qu'étaler le même mouvement en
+     * corriger qu'une part ne fait qu'étaler le même mouvement en
      * quatre petits à-coups.
      */
     private static double commande(double ecartDegres, double commandeParDegreVu) {
@@ -263,9 +253,7 @@ public class Regard {
         return visage.y() + visage.hauteur() / 2.0;
     }
 
-    /**
-     * Distance focale de la caméra exprimée en pixels, déduite du champ de vision déclaré.
-     */
+    /** Distance focale de la caméra exprimée en pixels, déduite du champ de vision déclaré. */
     private static double focalePixels(int largeurImage, double champHorizontalDegres) {
         return (largeurImage / 2.0) / Math.tan(Math.toRadians(champHorizontalDegres / 2.0));
     }

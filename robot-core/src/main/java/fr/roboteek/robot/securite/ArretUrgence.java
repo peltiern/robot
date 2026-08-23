@@ -10,29 +10,21 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Arrêt d'urgence des moteurs : un seul état, plusieurs déclencheurs.
+ * Arrêt d'urgence des moteurs : un seul état, plusieurs déclencheurs — bouton B de la manette,
+ * bouton du HUD, {@link WatchDog}, ou {@link #declencher(String)} depuis n'importe quel code.
  * <p>
- * <b>Ce que ça fait.</b> Au déclenchement, chaque organe à moteur coupe ses moteurs sur-le-champ
- * (cou, yeux, chenilles), le lecteur d'animations vide sa file, et <b>tout ordre de mouvement est
- * refusé</b> jusqu'au réarmement — manette, animation, comportement ou interface. C'est ce
- * verrouillage qui distingue l'arrêt d'urgence d'un simple « stop » : sans lui, le premier
- * évènement venu (une animation en cours, un cran de joystick) relancerait le mouvement dans la
- * seconde.
+ * <b>Ce que ça fait.</b> Chaque organe à moteur coupe sur-le-champ, le lecteur d'animations vide
+ * sa file, et <b>tout ordre de mouvement est refusé</b> jusqu'au réarmement. C'est ce verrouillage
+ * qui distingue l'arrêt d'urgence d'un simple « stop » : sans lui, le premier évènement venu
+ * relancerait le mouvement dans la seconde.
  * <p>
- * <b>Ce que ça ne fait pas.</b> Les servos ne sont <b>pas</b> désengagés : sans couple, la tête
- * tomberait sous son propre poids (c'est pourquoi l'arrêt applicatif la ramène d'abord à une
- * position d'appui, cf. {@code Cou.arreter()}). Ils sont donc figés là où ils sont, couple
- * maintenu. Ce n'est pas non plus une coupure d'alimentation : la seule vraie sécurité matérielle
- * reste l'interrupteur du robot. Enfin, ça ne touche ni la parole, ni les capteurs, ni la
- * conversation — le robot reste joignable et peut expliquer ce qui se passe.
+ * <b>Ce que ça ne fait pas.</b> Les servos ne sont pas désengagés — sans couple, la tête tomberait
+ * sous son poids ; ils restent figés là où ils sont. Ce n'est pas une coupure d'alimentation, la
+ * seule vraie sécurité matérielle reste l'interrupteur. Et ça ne touche ni la parole ni les
+ * capteurs : le robot reste joignable et peut expliquer ce qui se passe.
  * <p>
- * <b>Déclencheurs.</b> Bouton B de la manette, bouton du HUD, et cette API pour tout code Java
- * (le futur watchdog « organe critique mort → arrêt moteurs » n'aura qu'à appeler
- * {@link #declencher(String)}).
- * <p>
- * L'état est propagé par un {@link ArretUrgenceEvent}, que chaque organe mémorise de son côté :
- * aucun organe ne dépend de cette classe, ils ne connaissent que l'évènement — comme pour tout le
- * reste du système nerveux.
+ * L'état est propagé par un {@link ArretUrgenceEvent} : aucun organe ne dépend de cette classe,
+ * ils ne connaissent que l'évènement.
  */
 @Component
 public class ArretUrgence {

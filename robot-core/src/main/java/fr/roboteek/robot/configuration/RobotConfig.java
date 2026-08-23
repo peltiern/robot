@@ -4,6 +4,11 @@ import org.aeonbits.owner.Config;
 
 import static org.aeonbits.owner.Config.*;
 
+/**
+ * Les réglages du robot, lus dans {@code $ROBOT_HOME/configuration/robot.properties} et
+ * <b>rechargés à chaud</b> : tout ce qui est ici se règle sur le robot en marche, sans
+ * reconstruire ni redémarrer. C'est ce qui permet de chercher un compromis en l'observant.
+ */
 @HotReload(type = HotReloadType.ASYNC)
 @Sources({"file:${ROBOT_HOME}/configuration/robot.properties"})
 public interface RobotConfig extends Config {
@@ -12,19 +17,11 @@ public interface RobotConfig extends Config {
     @DefaultValue("fr-FR")
     String languageCode();
 
-    /**
-     * Name of the the webcam to select.
-     *
-     * @return the the webcam to select
-     */
+    /** Name of the the webcam to select. */
     @Key("device.webcam.name")
     String webcamName();
 
-    /**
-     * Name of the the microphone to select.
-     *
-     * @return the the microphone to select
-     */
+    /** Name of the the microphone to select. */
     @Key("device.microphone.name")
     String microphoneName();
 
@@ -33,14 +30,11 @@ public interface RobotConfig extends Config {
      * <p>
      * C'est le poste dominant du délai perçu entre la fin de la parole et le texte reconnu : la
      * reconnaissance ne peut pas démarrer (en batch) ou se conclure (en streaming) avant qu'il soit
-     * écoulé. Configurable et rechargé à chaud (voir {@code @HotReload} sur cette interface) pour
-     * pouvoir chercher le bon compromis sans reconstruire ni redéployer.
+     * écoulé.
      * <p>
      * Le baisser rend le robot plus réactif mais coupe les phrases sur une simple hésitation : le
      * fragment déjà détecté part à la reconnaissance, et la suite est perdue puisque l'écoute est
-     * mise en pause pendant la réponse. C'est ce qui avait motivé le passage de 0,6 à 1,2 s.
-     *
-     * @return la durée de silence marquant la fin d'une phrase, en secondes
+     * mise en pause pendant la réponse.
      */
     @Key("speech.recognizer.silence.duration.seconds")
     @DefaultValue("1.2")
@@ -49,8 +43,6 @@ public interface RobotConfig extends Config {
     /**
      * Indique si l'organe de vision (webcam + serveur Python) doit être démarré.
      * Désactivé par défaut : nécessite une webcam et le serveur Python gRPC (localhost:50051).
-     *
-     * @return true si la vision est activée
      */
     @Key("robot.capteurs.vision.enabled")
     @DefaultValue("false")
@@ -63,12 +55,8 @@ public interface RobotConfig extends Config {
      * la boucle de capture tourne libre (~30 images/s) et rien, en aval, n'applique de
      * contre-pression au producteur. Si le navigateur ou le WiFi n'écoule pas le flux aussi
      * vite qu'il est produit, les images s'empilent dans le tampon de la session jusqu'à la
-     * limite, et Spring ferme la session (« Buffer size ... exceeds the allowed limit »).
-     * <p>
-     * Rechargé à chaud (voir {@code @HotReload} sur cette interface) : la valeur peut être
-     * ajustée en observant les FPS affichés par la webapp, sans reconstruire ni redémarrer.
-     *
-     * @return la cadence maximale de publication, en images par seconde
+     * limite, et Spring ferme la session (« Buffer size ... exceeds the allowed limit »). À ajuster
+     * en observant les FPS affichés par la webapp.
      */
     @Key("robot.capteurs.vision.stream.fps")
     @DefaultValue("8")
@@ -79,8 +67,6 @@ public interface RobotConfig extends Config {
      * les pastilles d'état de l'interface continuent de fonctionner : seul le déclenchement de
      * l'arrêt d'urgence est supprimé. Utile pour mettre au point un organe sans se faire couper
      * les moteurs, ou pour écarter le watchdog en cas de doute sur un faux positif.
-     *
-     * @return true si le watchdog est autorisé à déclencher l'arrêt d'urgence
      */
     @Key("robot.watchdog.enabled")
     @DefaultValue("true")
@@ -94,11 +80,6 @@ public interface RobotConfig extends Config {
      * pointe de charge sur le Nano ne doit jamais passer pour une panne. Un watchdog qui se
      * déclenche à tort finit débranché — mieux vaut réagir en trois secondes à coup sûr qu'en une
      * seconde de temps en temps à tort.
-     * <p>
-     * Rechargé à chaud (voir {@code @HotReload} sur cette interface) : réglable sur le robot sans
-     * reconstruire ni redémarrer.
-     *
-     * @return la durée de silence tolérée, en secondes
      */
     @Key("robot.watchdog.silence.seconds")
     @DefaultValue("3.0")
@@ -113,8 +94,6 @@ public interface RobotConfig extends Config {
      * <p>
      * S'applique aussi à l'image transmise au serveur Python de détection, qui consomme le
      * même encodage.
-     *
-     * @return la qualité JPEG, entre 0 et 100
      */
     @Key("robot.capteurs.vision.stream.jpeg.quality")
     @DefaultValue("60")
@@ -127,8 +106,6 @@ public interface RobotConfig extends Config {
      * la charge du Nano et le nombre de visages, un compte de cycles ne voudrait pas dire la même
      * chose d'un moment à l'autre. Le baisser rend le robot plus prompt à aborder les gens, mais
      * le fait réagir à quelqu'un qui ne fait que passer devant la caméra.
-     *
-     * @return la durée de présence à confirmer, en secondes
      */
     @Key("robot.presence.confirmation.seconds")
     @DefaultValue("1.5")
@@ -141,8 +118,6 @@ public interface RobotConfig extends Config {
      * visage parfaitement immobile disparaît et réapparaît par trous de 100 à 250 ms, une seule
      * frame ratée par YuNet suffisant à le faire s'évanouir. Sans ce délai, la même personne
      * serait « repartie puis revenue » six fois en quinze secondes, et saluée à chaque fois.
-     *
-     * @return la durée d'absence tolérée avant de considérer la personne partie, en secondes
      */
     @Key("robot.presence.absence.seconds")
     @DefaultValue("4.0")
@@ -152,16 +127,12 @@ public interface RobotConfig extends Config {
      * Trou maximal toléré, en secondes, <b>tant que la venue n'est pas encore confirmée</b> : au
      * delà, le décompte de présence repart de zéro.
      * <p>
-     * Sans lui, la tolérance de {@link #dureeAbsenceAvantDepartSecondes()} — 4 s, faite pour ne pas
-     * croire quelqu'un parti — s'appliquait aussi à la confirmation : des perceptions éparses,
-     * espacées de trois secondes, finissaient par cumuler la durée exigée comme si elles avaient été
-     * continues. Le robot pouvait donc aborder quelqu'un qu'il n'avait fait qu'entrevoir.
-     * <p>
-     * Ce que ce seuil garantit : plusieurs visages vus <b>à la suite</b> avant de décider quoi que
-     * ce soit, inconnu comme connu. Une seconde laisse passer le clignotement de la détection
-     * (trous de 100 à 250 ms) sans laisser passer une apparition intermittente.
-     *
-     * @return le trou maximal toléré pendant la phase de confirmation, en secondes
+     * Sans lui, la tolérance de {@link #dureeAbsenceAvantDepartSecondes()} — faite pour ne pas
+     * croire quelqu'un parti — vaudrait aussi pour la confirmation : des perceptions éparses,
+     * espacées de trois secondes, cumuleraient la durée exigée comme si elles se suivaient, et le
+     * robot aborderait quelqu'un qu'il n'a fait qu'entrevoir. Ce seuil garantit plusieurs visages
+     * vus <b>à la suite</b>, tout en laissant passer le clignotement de la détection (100 à
+     * 250 ms).
      */
     @Key("robot.presence.continuite.seconds")
     @DefaultValue("1.0")
@@ -172,14 +143,11 @@ public interface RobotConfig extends Config {
      * départagés au nombre de fois qu'ils ont été vus.
      * <p>
      * Un même visage sort tantôt reconnu, tantôt inconnu — la reconnaissance oscille autour de son
-     * seuil. Les deux lectures accumulaient jusqu'ici leur présence chacune de leur côté, si bien
-     * que l'inconnu pouvait se confirmer alors que la personne était reconnue trois fois sur cinq.
-     * Sur cette fenêtre, c'est la lecture majoritaire qui l'emporte.
+     * seuil. Sans cette fenêtre, les deux lectures accumulent leur présence chacune de leur côté et
+     * l'inconnu peut se confirmer alors que la personne est reconnue trois fois sur cinq.
      * <p>
      * Trop courte, elle ne départage rien ; trop longue, elle fait traîner l'abord d'un vrai
      * inconnu, dont le compte doit d'abord dépasser celui des connus.
-     *
-     * @return la fenêtre d'arbitrage entre identités, en secondes
      */
     @Key("robot.presence.fenetre.seconds")
     @DefaultValue("3.0")
@@ -189,10 +157,7 @@ public interface RobotConfig extends Config {
      * Délai minimal, en secondes, entre deux rencontres déclenchées pour la même personne.
      * <p>
      * Second garde-fou, indépendant du précédent : même si quelqu'un sort réellement du champ et
-     * revient, le robot ne doit pas rejouer les retrouvailles. Deux minutes par défaut, le temps
-     * qu'une vraie absence se distingue d'un aller-retour à la cuisine.
-     *
-     * @return la temporisation entre deux rencontres d'une même personne, en secondes
+     * revient, le robot ne doit pas rejouer les retrouvailles aussitôt.
      */
     @Key("robot.presence.rencontre.temporisation.seconds")
     @DefaultValue("30.0")
@@ -202,11 +167,8 @@ public interface RobotConfig extends Config {
      * Durée d'absence en deçà de laquelle le robot <b>reprend</b> la conversation au lieu de
      * saluer.
      * <p>
-     * Quelqu'un qui s'absente une minute n'a pas besoin d'un nouveau bonjour : ce qu'il attend,
-     * c'est qu'on reprenne où on en était. Au-delà, l'absence se remarque, et une salutation
-     * redevient la bonne réaction.
-     *
-     * @return la durée d'absence sous laquelle on reprend sans saluer, en secondes
+     * Quelqu'un qui s'absente une minute n'attend pas un nouveau bonjour mais qu'on reprenne où
+     * on en était. Au-delà, l'absence se remarque et la salutation redevient juste.
      */
     @Key("robot.retrouvailles.reprise.seconds")
     @DefaultValue("300.0")
@@ -215,12 +177,9 @@ public interface RobotConfig extends Config {
     /**
      * Durée d'absence en deçà de laquelle le robot ne dit <b>rien du tout</b> au retour.
      * <p>
-     * Une absence de quelques secondes n'en est pas une : la personne s'est tournée, s'est levée,
-     * est sortie du champ un instant. La conversation n'a jamais été interrompue, et la reprendre
-     * à voix haute revient à la couper. Constaté le 2026-08-15 : « on parlait de la population
-     * française » douze secondes après en avoir parlé.
-     *
-     * @return la durée d'absence sous laquelle le retour passe sous silence, en secondes
+     * La personne s'est tournée, s'est levée, est sortie du champ un instant : la conversation
+     * n'a jamais été interrompue, et la reprendre à voix haute revient à la couper — « on parlait
+     * de la population française », douze secondes après en avoir parlé.
      */
     @Key("robot.retrouvailles.silence.seconds")
     @DefaultValue("60.0")
@@ -230,23 +189,16 @@ public interface RobotConfig extends Config {
      * Délai minimal, en secondes, avant qu'une activité qui vient de se terminer puisse être
      * réclamée à nouveau.
      * <p>
-     * Garde-fou du cerveau, distinct de {@link #temporisationEntreRencontresSecondes()} qui
-     * raisonne, lui, par personne : celui-ci protège de toute demande insistante, d'où qu'elle
-     * vienne. Le cas qu'il traite est celui d'une activité qui tourne court — quelqu'un qu'on
-     * aborde et qui ne répond pas — et dont la cause est toujours là quand elle se termine :
-     * sans délai, elle repartirait aussitôt, en boucle.
-     *
-     * @return la temporisation avant relance d'une même activité, en secondes
+     * Distinct de {@link #temporisationEntreRencontresSecondes()}, qui raisonne par personne :
+     * celui-ci protège de toute demande insistante. Le cas traité est l'activité qui tourne court
+     * — quelqu'un qu'on aborde et qui ne répond pas — dont la cause est encore là à la fin : sans
+     * délai, elle repartirait en boucle.
      */
     @Key("robot.activite.temporisation.seconds")
     @DefaultValue("30.0")
     double delaiAvantRelanceActiviteSecondes();
 
-    /**
-     * Indique si le robot tourne la tête vers les visages qu'il perçoit.
-     *
-     * @return true si le regard est activé
-     */
+    /** Indique si le robot tourne la tête vers les visages qu'il perçoit. */
     @Key("robot.regard.enabled")
     @DefaultValue("true")
     boolean regardEnabled();
@@ -257,8 +209,6 @@ public interface RobotConfig extends Config {
      * C'est lui qui convertit un écart en pixels en un angle de rotation du cou : une valeur
      * fausse ne fait pas regarder à côté, elle fait sous-corriger ou dépasser. À mesurer une fois
      * (repère à distance connue) plutôt qu'à croire sur parole du fabricant.
-     *
-     * @return le champ horizontal de la caméra, en degrés
      */
     @Key("robot.regard.camera.champ.horizontal.degres")
     @DefaultValue("60.0")
@@ -269,8 +219,6 @@ public interface RobotConfig extends Config {
      * <p>
      * Sans cette zone morte, la moindre imprécision de la boîte englobante — qui respire d'une
      * image à l'autre — suffirait à faire bouger la tête en permanence.
-     *
-     * @return la zone morte du regard, en degrés
      */
     @Key("robot.regard.zone.morte.degres")
     @DefaultValue("5.0")
@@ -279,21 +227,13 @@ public interface RobotConfig extends Config {
     /**
      * Combien d'unités de commande du cou valent un degré d'écart vu par la caméra.
      * <p>
-     * <b>Seul et unique réglage entre l'écart perçu et la consigne envoyée</b>, et c'est
-     * délibéré : le cou se commande en position absolue (il lit où il est et ajoute l'angle), la
-     * cible est donc calculée directement, pas approchée. Corriger volontairement moins que
-     * l'écart n'apporte rien qu'une suite de petits mouvements — c'est exactement ce qu'un
-     * amortissement, essayé le 2026-08-12, a produit.
+     * <b>Seul réglage entre l'écart perçu et la consigne envoyée</b> : le cou se commande en
+     * position absolue, la cible est donc calculée directement et non approchée. Corriger moins
+     * que l'écart n'apporte qu'une suite de petits mouvements.
      * <p>
-     * Mesuré sur le robot le 2026-08-12, sur des relevés où la personne ne bougeait pas : une
-     * unité de commande déplace le regard d'<b>un degré apparent</b>. Deux causes s'y multiplient
-     * sans qu'un essai les sépare — un champ de vision réel différent du déclaré, et une unité de
-     * servo qui ne vaut pas forcément un degré de tête. Le produit, lui, se mesure : commander un
-     * angle connu et regarder de combien l'écart perçu a changé, <b>une fois la tête
-     * stabilisée</b>. Mesurer pendant qu'elle traverse surestime largement le déplacement, et
-     * c'est ce qui avait d'abord fait croire à un facteur 2.
-     *
-     * @return le nombre d'unités de commande panoramique par degré d'écart perçu
+     * Se mesure en commandant un angle connu et en regardant de combien l'écart perçu a changé,
+     * <b>une fois la tête stabilisée</b> — mesurer pendant qu'elle traverse surestime largement
+     * le déplacement.
      */
     @Key("robot.regard.panoramique.commande.par.degre.vu")
     @DefaultValue("1.0")
@@ -302,15 +242,12 @@ public interface RobotConfig extends Config {
     /**
      * Idem pour l'inclinaison — <b>et la valeur n'est pas la même</b>.
      * <p>
-     * Mesuré le 2026-08-12 : une unité de commande déplace le regard d'environ <b>trois degrés</b>
-     * en inclinaison (quatre relevés concordants : 6,3 commandés pour 22,6° vus), contre un seul
-     * en panoramique. Les deux servos n'entraînent pas la tête avec le même bras de levier, et
-     * une échelle commune faisait donc dépasser lourdement sur cet axe.
+     * Une unité de commande déplace le regard d'environ <b>trois degrés</b> en inclinaison (6,3
+     * commandés pour 22,6° vus) contre un seul en panoramique : les deux servos n'ont pas le même
+     * bras de levier, et une échelle commune fait dépasser lourdement sur cet axe.
      * <p>
-     * 0,3 plutôt que le tiers exact, et c'est délibéré : sous-corriger ne coûte qu'un mouvement de
-     * plus, sur-corriger fait osciller la tête sans fin.
-     *
-     * @return le nombre d'unités de commande d'inclinaison par degré d'écart perçu
+     * 0,3 plutôt que le tiers exact : sous-corriger ne coûte qu'un mouvement de plus,
+     * sur-corriger fait osciller la tête sans fin.
      */
     @Key("robot.regard.inclinaison.commande.par.degre.vu")
     @DefaultValue("0.3")
@@ -322,8 +259,6 @@ public interface RobotConfig extends Config {
      * Le temps que le servo arrive et que la caméra — portée par la tête — voie le résultat.
      * Trop court, les corrections s'empilent sur une image d'avant le mouvement et la tête part
      * trop loin.
-     *
-     * @return la temporisation entre deux corrections du regard, en secondes
      */
     @Key("robot.regard.temporisation.seconds")
     @DefaultValue("1.0")
@@ -341,8 +276,6 @@ public interface RobotConfig extends Config {
      * <p>
      * Trop court, le regard reprend la tête entre deux coups de joystick ; trop long, le robot
      * paraît absent après qu'on a lâché la manette.
-     *
-     * @return la durée de priorité de la manette après son dernier ordre, en secondes
      */
     @Key("robot.regard.priorite.manette.seconds")
     @DefaultValue("3.0")
@@ -353,10 +286,8 @@ public interface RobotConfig extends Config {
      * <p>
      * Étalonnage à faire <b>une fois</b> : le sens dépend du montage du servo, que rien dans le
      * code ne permet de deviner (les deux conventions de {@code MouvementCouEvent} se
-     * contredisent d'ailleurs). Vérifié sur le robot le 2026-08-12 : {@code false} est le bon
+     * contredisent d'ailleurs). Vérifié sur le robot : {@code false} est le bon
      * sens. Rechargé à chaud, sans reconstruire l'image.
-     *
-     * @return true si le sens de rotation panoramique doit être inversé
      */
     @Key("robot.regard.panoramique.sens.inverse")
     @DefaultValue("false")
@@ -368,8 +299,6 @@ public interface RobotConfig extends Config {
      * Réglage indépendant du panoramique : les deux servos sont montés séparément, et rien ne
      * garantit qu'ils partagent la même convention. Si le robot lève la tête quand il devrait la
      * baisser, passer à {@code true}.
-     *
-     * @return true si le sens de rotation en inclinaison doit être inversé
      */
     @Key("robot.regard.inclinaison.sens.inverse")
     @DefaultValue("false")

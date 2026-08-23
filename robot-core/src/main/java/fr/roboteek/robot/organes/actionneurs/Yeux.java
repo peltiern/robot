@@ -30,7 +30,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 /**
  * Classe représentant les yeux du robot.
  * <p>
- * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle} en phase
+ * Cycle de vie géré par {@link SmartLifecycle} en phase
  * {@link RobotLifecyclePhases#ACTIONNEURS_AVEC_MOTEUR}. Les moteurs ne sont créés
  * et engagés qu'au {@code start()} — pas à la construction du bean — pour respecter
  * l'ordre des phases (moteurs derniers démarrés, premiers arrêtés).
@@ -40,33 +40,23 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 @Component
 public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurveille {
 
-    /**
-     * Moteur Gauche / Droite.
-     */
+    /** Moteur Gauche / Droite. */
     private PhidgetsServoMotor moteurOeilGauche;
 
-    /**
-     * Moteur Haut / Bas.
-     */
+    /** Moteur Haut / Bas. */
     private PhidgetsServoMotor moteurOeilDroit;
 
-    /**
-     * Phidgets Configuration.
-     */
+    /** Phidgets Configuration. */
     private PhidgetsConfig phidgetsConfig;
 
     // Volatiles : écrits par les threads d'évènements, lus par le watchdog (enMouvement()).
     private volatile MOUVEMENTS_OEIL mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.STOPPER;
     private volatile MOUVEMENTS_OEIL mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(Yeux.class);
 
-    /**
-     * Tolérance (en degrés) pour considérer une position servo atteinte.
-     */
+    /** Tolérance (en degrés) pour considérer une position servo atteinte. */
     private static final double TOLERANCE_POSITION = 1.0;
 
     /**
@@ -95,9 +85,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     /** Instant de la dernière variation de position constatée. */
     private volatile long instantDerniereVariation = 0L;
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     /**
@@ -106,9 +94,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      */
     private volatile boolean arretUrgence = false;
 
-    /**
-     * Constructeur.
-     */
+    /** Constructeur. */
     public Yeux() {
         super();
         phidgetsConfig = phidgetsConfig();
@@ -152,9 +138,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         logger.info("Yeux : fin initialisation");
     }
 
-    /**
-     * Tourne l'oeil gauche vers le bas sans s'arrêter.
-     */
+    /** Tourne l'oeil gauche vers le bas sans s'arrêter. */
     public void tournerOeilGaucheVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
@@ -162,9 +146,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         }
     }
 
-    /**
-     * Tourne l'oeil gauche vers le haut sans s'arrêter.
-     */
+    /** Tourne l'oeil gauche vers le haut sans s'arrêter. */
     public void tournerOeilGaucheVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
@@ -193,17 +175,13 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         }
     }
 
-    /**
-     * Stoppe le mouvement de l'oeil gauche.
-     */
+    /** Stoppe le mouvement de l'oeil gauche. */
     public void stopperOeilGauche() {
         moteurOeilGauche.stop();
         mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.STOPPER;
     }
 
-    /**
-     * Tourne l'oeil droit vers le bas sans s'arrêter.
-     */
+    /** Tourne l'oeil droit vers le bas sans s'arrêter. */
     public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
@@ -211,9 +189,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         }
     }
 
-    /**
-     * Tourne l'oeil droit vers le haut sans s'arrêter.
-     */
+    /** Tourne l'oeil droit vers le haut sans s'arrêter. */
     public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
@@ -242,9 +218,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         }
     }
 
-    /**
-     * Stoppe le mouvement de l'oeil droit.
-     */
+    /** Stoppe le mouvement de l'oeil droit. */
     public void stopperOeilDroit() {
         moteurOeilDroit.stop();
         mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
@@ -298,9 +272,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         positionnerOeilDroit(cibleDroit, vitesse, acceleration, waitForPosition);
     }
 
-    /**
-     * Borne une valeur dans l'intervalle [min, max].
-     */
+    /** Borne une valeur dans l'intervalle [min, max]. */
     private static double clamp(double valeur, double min, double max) {
         return Math.max(min, Math.min(max, valeur));
     }
@@ -419,9 +391,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         moteurOeilDroit.close();
     }
 
-    /**
-     * Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près.
-     */
+    /** Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près. */
     private static boolean estAtteinte(PhidgetsServoMotor moteur, double cible) {
         return Math.abs(moteur.getPositionReelle() - cible) < TOLERANCE_POSITION;
     }
@@ -438,9 +408,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
                 Math.min(phidgetsConfig.eyeMotorRelativePositionMax() + MARGE_REPOS, repos));
     }
 
-    /**
-     * Remet les yeux à leur position par défaut.
-     */
+    /** Remet les yeux à leur position par défaut. */
     private void reset() {
         moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
         moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
@@ -495,9 +463,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         return reelle == null ? null : toPositionRelativeOeilGauche(reelle);
     }
 
-    /**
-     * Position relative courante de l'œil droit, ou {@code null} si l'organe n'est pas démarré.
-     */
+    /** Position relative courante de l'œil droit, ou {@code null} si l'organe n'est pas démarré. */
     public Double getPositionOeilDroitCourante() {
         if (!running || moteurOeilDroit == null) {
             return null;

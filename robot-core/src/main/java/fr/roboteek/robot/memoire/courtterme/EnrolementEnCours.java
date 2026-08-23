@@ -15,13 +15,8 @@ import java.util.function.Supplier;
  * L'apprentissage d'un visage pendant qu'il se fait : les empreintes déjà relevées, et jusqu'à
  * quand on accepte d'attendre les suivantes.
  * <p>
- * Mémoire court terme, parce que c'est exactement ce que c'est — quelque chose que le robot a en
- * tête le temps de quelques images, et qui ne survit ni à son terme ni à un redémarrage. Ce qui
- * doit durer part dans la mémoire longue, {@code VisageConnu}, et seulement à la fin.
- * <p>
- * <b>Aucune image n'arrive ici</b> : l'organe de vision extrait l'empreinte pendant qu'il tient
- * le {@code Mat}, et ne transmet que le résultat — 128 flottants. Voir {@link SuiviDesVisages}
- * pour la même règle appliquée au suivi.
+ * Mémoire court terme : quelque chose que le robot a en tête le temps de quelques images. Ce qui
+ * doit durer part dans {@code VisageConnu}, et seulement à la fin.
  */
 @Component
 public class EnrolementEnCours {

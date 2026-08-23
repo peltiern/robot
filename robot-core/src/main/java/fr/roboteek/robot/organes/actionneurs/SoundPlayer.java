@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * Lecteur de sons du robot.
  * <p>
- * Premier organe migré en bean Spring : cycle de vie géré par {@link SmartLifecycle},
+ * Cycle de vie géré par {@link SmartLifecycle},
  * évènements reçus via {@link EventListener} (relayés depuis le bus Guava par le pont
  * tant que la migration n'est pas terminée).
  *

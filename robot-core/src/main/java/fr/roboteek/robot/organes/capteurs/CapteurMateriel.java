@@ -33,7 +33,7 @@ import java.util.Optional;
  * {@code oshi.nativefree.SystemInfo} (et non {@code oshi.SystemInfo}, classe de la variante JNA
  * classique) : c'est le point d'entrée propre à {@code oshi-core-ffm}.
  * <p>
- * Migré au même moule que les autres organes : bean Spring {@link SmartLifecycle} en phase
+ * Bean {@link SmartLifecycle} en phase
  * {@link RobotLifecyclePhases#CAPTEURS}, thread de scrutation ({@link AbstractOrganeWithThread}),
  * publication d'un {@link TelemetrieOrganeEvent} sur le bus applicatif à chaque relevé — c'est
  * {@code WebsocketBroadcaster} (générique, déjà en place) qui le diffuse vers les clients sur
@@ -127,7 +127,7 @@ public class CapteurMateriel extends AbstractOrganeWithThread implements SmartLi
      * Recalcule toutes les métriques. Chaque métrique est isolée dans son propre {@code try} :
      * un capteur illisible sur une machine donnée ne doit pas faire perdre les autres métriques de
      * ce relevé, ni interrompre les relevés suivants. La température était l'exemple attendu — elle
-     * remonte en fait très bien depuis le conteneur du Jetson (42 °C mesurés le 2026-08-22), mais
+     * remonte en fait très bien depuis le conteneur du Jetson (42 °C mesurés), mais
      * rien ne le garantit sur une autre machine, d'où le repli sur {@code null} plutôt qu'une
      * valeur inventée.
      */

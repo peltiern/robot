@@ -34,18 +34,12 @@ interface ConversationState {
 let prochainId = 1
 
 /**
- * Store de conversation partagé, alimenté en continu par `ConversationProvider` (monté une seule
- * fois au niveau du Layout, donc vivant pendant toute la session — comme la connexion WebSocket
- * elle-même).
+ * Le fil de discussion, partagé par toute l'application et alimenté en continu — d'où le store
+ * plutôt que l'état d'une page : le robot peut tenir une conversation entière pendant qu'on
+ * regarde ailleurs, et l'abonnement ne doit pas disparaître avec le composant.
  *
- * Auparavant le fil vivait dans l'état local de `DialoguePage`, avec deux conséquences : il était
- * perdu à chaque navigation, et surtout l'abonnement à `/events/conversation` disparaissait avec
- * le composant — le robot pouvait tenir une conversation entière pendant que l'utilisateur était
- * sur une autre page sans qu'aucun message ne soit capté.
- *
- * L'historique reste volontairement en mémoire du navigateur : le robot conserve de son côté une
- * mémoire persistante des échanges (MapDB, pour le contexte du modèle), mais elle n'est pas
- * exposée par l'API. Un rechargement de page repart donc d'un fil vide.
+ * L'historique vit en mémoire du navigateur : le robot garde le sien de son côté, pour le
+ * contexte du modèle, mais l'API ne l'expose pas. Un rechargement de page repart d'un fil vide.
  */
 export const useConversationStore = create<ConversationState>((set, get) => ({
   messages: [],

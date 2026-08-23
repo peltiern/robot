@@ -17,10 +17,6 @@ import java.util.stream.Collectors;
 /**
  * Accès à la table {@code visage} : les empreintes biométriques qui permettent de reconnaître
  * quelqu'un.
- * <p>
- * C'est un bean Spring, contrairement à ce qu'il en était du temps de MapDB : le service de
- * reconnaissance détenait alors le verrou du fichier, et tout le reste du programme devait passer
- * par lui pour écrire une empreinte. Le dépôt se partage désormais comme n'importe quel autre.
  */
 @Component
 public class VisageConnuRepository {

@@ -18,9 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Vérifie la persistance des personnes.
- */
+/** Vérifie la persistance des personnes. */
 class PersonneRepositoryTest {
 
     @TempDir

@@ -8,19 +8,13 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
 
     private static final Logger logger = LoggerFactory.getLogger(PhidgetDCMotor.class);
 
-    /**
-     * Moteur Phidget associé.
-     */
+    /** Moteur Phidget associé. */
     private DCMotor motor;
 
-    /**
-     * Accélération par défaut.
-     */
+    /** Accélération par défaut. */
     private double accelerationParDefaut;
 
-    /**
-     * Constructeur d'un moteur Phidget.
-     */
+    /** Constructeur d'un moteur Phidget. */
     public PhidgetDCMotor(int deviceSerialNumber, int hubPort, double accelerationParDefaut) {
         try {
             this.accelerationParDefaut = accelerationParDefaut;

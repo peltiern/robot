@@ -32,26 +32,21 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * Qui est devant le robot, depuis quand — et à partir de là, quand une rencontre mérite d'être
  * annoncée.
  * <p>
- * Mémoire courte, sans persistance : tout est perdu au redémarrage, et c'est voulu. Ce qui doit
- * survivre vit dans {@link PersonneRepository}.
- * <p>
  * Toute la raison d'être de cette classe est l'hystérésis. La perception brute
- * ({@link VisagePercuEvent}) clignote : mesuré sur le robot, un visage immobile disparaît et
- * réapparaît par trous de 100 à 250 ms, une seule frame ratée par le détecteur suffisant. Branché
- * directement dessus, un comportement d'accueil demanderait son prénom à la même personne six fois
- * par quart de minute — et le robot finirait débranché. D'où trois garde-fous, tous réglables à
+ * ({@link VisagePercuEvent}) clignote : un visage immobile disparaît et réapparaît par trous de
+ * 100 à 250 ms, une frame ratée suffisant. Branché directement dessus, un accueil demanderait son
+ * prénom à la même personne six fois par quart de minute. D'où trois garde-fous, réglables à
  * chaud dans {@code robot.properties} :
  * <ul>
- *   <li>une <b>durée de présence continue</b> avant de croire que quelqu'un est là — continue au
- *       sens strict : un trou franc fait repartir le décompte, sans quoi des perceptions éparses
- *       finiraient par cumuler la durée exigée ;</li>
+ *   <li>une <b>durée de présence continue</b> avant de croire que quelqu'un est là — au sens
+ *       strict : un trou franc fait repartir le décompte, sans quoi des perceptions éparses
+ *       cumuleraient la durée exigée ;</li>
  *   <li>une <b>durée d'absence</b> avant de le croire parti, qui absorbe le clignotement ;</li>
- *   <li>une <b>temporisation par personne</b>, qui empêche de resaluer un habitué des allers-retours.</li>
+ *   <li>une <b>temporisation par personne</b>, contre l'habitué des allers-retours.</li>
  * </ul>
  * <p>
- * Le départ n'est jamais constaté sur le moment mais déduit au retour (« ça fait plus de N secondes
- * que je ne t'avais pas vu »). C'est ce qui évite une tâche périodique de surveillance : sans
- * personne dans le champ, il n'y a rien à faire, donc rien à réveiller.
+ * Le départ n'est jamais constaté sur le moment mais déduit au retour. C'est ce qui évite une
+ * tâche périodique : sans personne dans le champ, il n'y a rien à réveiller.
  */
 @Component
 public class RegistrePresence {

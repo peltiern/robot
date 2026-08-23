@@ -18,25 +18,20 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 /**
  * Décide si une demande de changement d'activité mérite d'être honorée.
  * <p>
- * Jusqu'ici le cerveau obéissait à toute demande : la première venue interrompait ce qui tournait.
- * Ça suffisait tant que rien n'en émettait, mais les demandes à venir naissent de la perception —
- * un visage qui apparaît — et la perception, elle, n'a aucune retenue. D'où trois garde-fous, et
- * un seul endroit où ils vivent :
+ * Les demandes naissent de la perception — un visage qui apparaît — et la perception n'a aucune
+ * retenue. D'où trois garde-fous, en un seul endroit :
  * <ul>
- *   <li><b>l'arrêt d'urgence</b> : tant qu'il est armé, le robot ne se lance dans rien de neuf.
- *       Les activités d'accueil bougent (tête, chenilles) et leurs ordres seraient refusés en
- *       route — une activité à moitié jouée est pire que pas d'activité du tout ;</li>
- *   <li><b>la priorité</b> : une activité en cours ne se laisse pas interrompre par moins
- *       important qu'elle (voir {@link AbstractActivity#priorite()}) ;</li>
- *   <li><b>la temporisation</b> : une activité qui vient de se terminer ne se relance pas dans la
- *       foulée. C'est le garde-fou anti pot-de-colle du côté du cerveau : si une présentation
- *       tourne court — personne muette, prénom refusé — la même demande revient aussitôt, et sans
- *       ce délai le robot repartirait en boucle.</li>
+ *   <li><b>l'arrêt d'urgence</b> : le robot ne se lance dans rien de neuf tant qu'il est armé. Les
+ *       activités d'accueil bougent, leurs ordres seraient refusés en route, et une activité à
+ *       moitié jouée est pire que pas d'activité ;</li>
+ *   <li><b>la priorité</b> : une activité en cours ne cède pas à moins important qu'elle (voir
+ *       {@link AbstractActivity#priorite()}) ;</li>
+ *   <li><b>la temporisation</b> : une activité qui tourne court — personne muette, prénom refusé —
+ *       voit la même demande revenir aussitôt, et repartirait en boucle sans ce délai.</li>
  * </ul>
  * <p>
  * Classe séparée du {@link Cerveau} pour être vérifiable : tout se décide ici avec une horloge
- * qu'un test maîtrise, alors que le cerveau, lui, est un thread bloqué dans le {@code run()} de
- * son activité.
+ * qu'un test maîtrise, quand le cerveau est un thread bloqué dans le {@code run()} de son activité.
  */
 @Component
 public class ArbitrageActivites {

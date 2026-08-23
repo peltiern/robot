@@ -20,9 +20,7 @@ import org.springframework.util.ClassUtils;
  */
 public abstract class AbstractActivity {
 
-    /**
-     * Priorité d'une activité ordinaire, celle qu'on interrompt sans façon.
-     */
+    /** Priorité d'une activité ordinaire, celle qu'on interrompt sans façon. */
     public static final int PRIORITE_NORMALE = 0;
 
     /**
@@ -31,23 +29,17 @@ public abstract class AbstractActivity {
      */
     public static final int PRIORITE_HAUTE = 10;
 
-    /**
-     * Flag to indicate that the activity is stopped.
-     */
+    /** Flag to indicate that the activity is stopped. */
     protected volatile boolean stopActivity;
 
     protected volatile boolean initialized;
 
-    /**
-     * Flag indiquant que l'activité est l'activité courante du Cerveau.
-     */
+    /** Flag indiquant que l'activité est l'activité courante du Cerveau. */
     private volatile boolean active;
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    /**
-     * Publication des évènements du système nerveux (injecté par Spring).
-     */
+    /** Publication des évènements du système nerveux (injecté par Spring). */
     @Autowired
     protected ApplicationEventPublisher applicationEventPublisher;
 

@@ -12,12 +12,9 @@ import java.util.UUID;
  * reconnaissance vocale approximative. C'est cet identifiant que référencent les empreintes
  * biométriques ({@code VisageConnu}), le journal des rencontres et le fil de conversation.
  * <p>
- * <b>Rien n'est stocké ici du contenu des échanges.</b> Un champ {@code resumeDerniereConversation}
- * l'a été un temps, en prévision des retrouvailles ; il s'est révélé inutile et a été retiré le
- * 2026-08-15. La mémoire de conversation est tenue par personne et persistée par
- * {@code ConversationRepository} (cent messages par fil), le robot a donc déjà de quoi se
- * souvenir — bien mieux qu'une phrase de résumé. Ne pas le réintroduire sans avoir constaté que
- * la mémoire de conversation ne suffit pas.
+ * <b>Rien n'est stocké ici du contenu des échanges.</b> {@code ConversationRepository} tient le
+ * fil de chacun, cent messages durant : le robot a déjà de quoi se souvenir, bien mieux qu'une
+ * phrase de résumé. Ne pas ajouter de résumé ici sans avoir constaté que ce fil ne suffit pas.
  *
  * @param id                identifiant stable, jamais réutilisé
  * @param prenom            prénom tel que la personne l'a donné

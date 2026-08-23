@@ -25,104 +25,64 @@ public class MouvementCouEvent extends RobotEvent {
 
     public static final double ACCELERATION_NEUTRE = 99999;
 
-    /**
-     * Mouvement "Panoramique à effectuer.
-     */
+    /** Mouvement "Panoramique à effectuer. */
     private MOUVEMENTS_PANORAMIQUE mouvementPanoramique;
 
-    /**
-     * Position "Panoramique" (0 : à gauche, 180 : à droite).
-     */
+    /** Position "Panoramique" (0 : à gauche, 180 : à droite). */
     private double positionPanoramique = POSITION_NEUTRE;
 
-    /**
-     * Angle "Panoramique".
-     */
+    /** Angle "Panoramique". */
     private double anglePanoramique = ANGLE_NEUTRE;
 
-    /**
-     * Vitesse du mouvement "Panoramique".
-     */
+    /** Vitesse du mouvement "Panoramique". */
     private Double vitessePanoramique;
 
-    /**
-     * Accélération du mouvement "Panoramique".
-     */
+    /** Accélération du mouvement "Panoramique". */
     private Double accelerationPanoramique;
 
-    /**
-     * Mouvement "Inclinaison" à effectuer.
-     */
+    /** Mouvement "Inclinaison" à effectuer. */
     private MOUVEMENTS_INCLINAISON mouvementInclinaison;
 
-    /**
-     * Position "Inclinaison" (0 : en bas, 180 : en haut).
-     */
+    /** Position "Inclinaison" (0 : en bas, 180 : en haut). */
     private double positionInclinaison = POSITION_NEUTRE;
 
-    /**
-     * Angle "Inclinaison".
-     */
+    /** Angle "Inclinaison". */
     private double angleInclinaison = ANGLE_NEUTRE;
 
-    /**
-     * Vitesse du mouvement "Inclinaison".
-     */
+    /** Vitesse du mouvement "Inclinaison". */
     private Double vitesseInclinaison;
 
-    /**
-     * Accélération du mouvement "Inclinaison".
-     */
+    /** Accélération du mouvement "Inclinaison". */
     private Double accelerationInclinaison;
 
-    /**
-     * Mouvement "Monter - Descendre" à effectuer.
-     */
+    /** Mouvement "Monter - Descendre" à effectuer. */
     private MOUVEMENTS_MONTER_DESCENDRE mouvementMonterDescendre;
 
-    /**
-     * Position "Monter - Descendre" (0 : en bas, 180 : en haut).
-     */
+    /** Position "Monter - Descendre" (0 : en bas, 180 : en haut). */
     private double positionMonterDescendre = POSITION_NEUTRE;
 
-    /**
-     * Angle "Monter - Descendre".
-     */
+    /** Angle "Monter - Descendre". */
     private double angleMonterDescendre = ANGLE_NEUTRE;
 
-    /**
-     * Vitesse du mouvement "Monter - Descendre".
-     */
+    /** Vitesse du mouvement "Monter - Descendre". */
     private Double vitesseMonterDescendre;
 
-    /**
-     * Accélération du mouvement "Monter - Descendre".
-     */
+    /** Accélération du mouvement "Monter - Descendre". */
     private Double accelerationMonterDescendre;
 
-    /**
-     * Mouvement "Roulis" à effectuer.
-     */
+    /** Mouvement "Roulis" à effectuer. */
     private MOUVEMENTS_ROULIS mouvementRoulis;
 
-    /**
-     * Position du roulis (-90 : en bas, 90 : en haut).
-     */
+    /** Position du roulis (-90 : en bas, 90 : en haut). */
     private double positionRoulis = POSITION_NEUTRE;
 
-    /**
-     * Vitesse du mouvement "Roulis".
-     */
+    /** Vitesse du mouvement "Roulis". */
     private Double vitesseRoulis;
 
-    /**
-     * Accélération du mouvement "Roulis".
-     */
+    /** Accélération du mouvement "Roulis". */
     private Double accelerationRoulis;
 
-    /**
-     * Flag indiquant que le mouvement doit être synchrone.
-     */
+    /** Flag indiquant que le mouvement doit être synchrone. */
     private boolean synchrone = false;
 
     /**

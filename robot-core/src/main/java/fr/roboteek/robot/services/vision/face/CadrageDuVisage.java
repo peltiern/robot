@@ -5,18 +5,16 @@ import org.opencv.core.Rect;
 /**
  * Le carré qu'on découpe autour d'un visage détecté.
  * <p>
- * Partagé par le portrait ({@link DecoupeDeVignette}) et la mesure de netteté
- * ({@link NetteteDuVisage}) : les deux doivent regarder exactement la même zone, sans quoi on
- * jugerait la qualité d'une image et on en enregistrerait une autre.
+ * Partagé par {@link DecoupeDeVignette} et {@link NetteteDuVisage} : les deux doivent regarder
+ * exactement la même zone, sans quoi on jugerait la qualité d'une image et on en enregistrerait
+ * une autre.
  */
 public final class CadrageDuVisage {
 
     /**
-     * Marge ajoutée autour de la boîte du visage, en proportion de sa taille.
-     * <p>
-     * La détection cadre au plus près des sourcils et du menton : sans marge, le portrait est un
-     * gros plan sur des yeux et une bouche, où l'on ne reconnaît personne. Un tiers laisse entrer
-     * le front, les cheveux et un peu d'épaules.
+     * Marge autour de la boîte du visage, en proportion de sa taille. La détection cadre au plus
+     * près des sourcils et du menton : sans marge, le portrait est un gros plan sur des yeux et
+     * une bouche, où l'on ne reconnaît personne.
      */
     private static final double MARGE = 0.33;
 
@@ -26,10 +24,9 @@ public final class CadrageDuVisage {
     /**
      * Carré centré sur le visage, marge comprise, ramené dans les bords de l'image.
      * <p>
-     * Carré et non au format de la boîte : une vignette ronde ou carrée à l'écran déformerait un
-     * portrait rectangulaire. Ramené dans les bords parce qu'un visage au ras du cadre — ce qui
-     * arrive tout le temps, le robot suit les gens du regard — donnerait sinon un rectangle qui
-     * déborde, et OpenCV lèverait une exception au milieu de la boucle vidéo.
+     * Carré, parce qu'une vignette carrée à l'écran déformerait un portrait rectangulaire. Ramené
+     * dans les bords, parce qu'un visage au ras du cadre — ce qui arrive tout le temps, le robot
+     * suit les gens du regard — déborderait, et OpenCV lèverait en pleine boucle vidéo.
      *
      * @return {@code null} si le visage est trop près du bord pour qu'il reste quelque chose
      */

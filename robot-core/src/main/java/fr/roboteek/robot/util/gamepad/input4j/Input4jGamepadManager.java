@@ -45,7 +45,7 @@ import java.util.stream.Stream;
  *   débranchement et qu'input4j n'en rouvre jamais d'autre. Une découverte neuve est d'ailleurs
  *   indispensable : au rebranchement, le noyau peut attribuer un tout autre numéro d'évènement.</li>
  * </ul>
- * Sans ça (constaté sur le robot le 2026-08-07) : {@code poll()} continue de rendre la main sans
+ * Sans ça, constaté sur le robot : {@code poll()} continue de rendre la main sans
  * erreur sur un périphérique arraché — le plugin Linux se contente de renvoyer les <b>dernières
  * valeurs lues</b> — et la manette passe pour vivante, joystick figé sur sa dernière position
  * comprise. Exactement ce que le watchdog doit attraper.
@@ -59,7 +59,7 @@ import java.util.stream.Stream;
  * <p>
  * Une tentative par seconde tant que la manette est absente — ce que faisait la première version —
  * revient donc à fuir une poignée de descripteurs par seconde <b>dans le processus qui pilote les
- * moteurs</b>. Le robot est parti en {@code SIGSEGV} dans du code natif le 2026-08-08, une minute
+ * moteurs</b>. Le robot est parti en {@code SIGSEGV} dans du code natif, une minute
  * après un débranchement, au premier mouvement demandé.
  * <p>
  * D'où la règle : on ne relance une découverte que lorsqu'un <b>nouveau nœud</b> est apparu sous

@@ -12,21 +12,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Ce que le robot a en tête, là, maintenant.
+ * Ce que le robot a en tête, là, maintenant : qui est devant lui, quels visages il vient de voir,
+ * quel apprentissage est en cours.
  * <p>
- * Point d'entrée unique de la mémoire court terme : qui est devant lui, quels visages il vient de
- * voir, quel apprentissage est en cours. Le reste du robot s'adresse ici plutôt qu'aux trois
- * mémoires qu'il y a derrière — elles peuvent alors changer, se scinder ou se rejoindre sans que
- * personne d'autre ait à le savoir.
+ * Point d'entrée unique : le reste du robot s'adresse ici plutôt qu'aux trois mémoires qu'il y a
+ * derrière, qui peuvent alors changer sans que personne d'autre ait à le savoir.
  * <p>
- * <b>Court terme</b> veut dire exactement cela : rien de ce qui est ici ne survit à un
- * redémarrage, et c'est voulu. Ce qui doit durer vit dans {@code memoire/personne},
- * {@code memoire/visage} et {@code memoire/conversation}.
- * <p>
- * Cette mémoire ne perçoit rien elle-même : les organes lui apportent ce qu'ils ont vu. Et
- * <b>aucune image n'y entre jamais</b> — le {@code Mat} de la webcam est unique et réécrit à
- * chaque lecture, il ne peut pas voyager. Les organes passent donc des fonctions qui, elles,
- * tiennent l'image, et n'en font sortir que des boîtes et des empreintes.
+ * Cette mémoire ne perçoit rien elle-même, les organes lui apportent ce qu'ils ont vu — sous forme
+ * de fonctions qui, elles, tiennent l'image, et n'en font sortir que des boîtes et des empreintes.
  */
 @Component
 public class MemoireCourtTerme {
