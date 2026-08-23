@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -29,8 +30,33 @@ public class VisageConnuRepository {
 
     private final JdbcClient jdbc;
 
+    /** Voir {@link #version()}. */
+    private final AtomicInteger version = new AtomicInteger();
+
     public VisageConnuRepository(DataSource sourceDeDonneesMemoire) {
         this.jdbc = JdbcClient.create(sourceDeDonneesMemoire);
+    }
+
+    /**
+     * Numéro de version du contenu de la table, changé à chaque écriture.
+     * <p>
+     * C'est ce qui permet à la reconnaissance de garder les empreintes en mémoire : elle ne relit
+     * la base que si ce numéro a bougé, au lieu de la relire à chaque image.
+     */
+    public int version() {
+        return version.get();
+    }
+
+    /**
+     * Signale que la table a changé sans passer par ce dépôt : c'est le cas quand on efface une
+     * personne, SQLite emportant ses visages en cascade.
+     * <p>
+     * Sans ce signal, la reconnaissance comparerait encore les visages qu'elle voit à l'empreinte
+     * de quelqu'un qui n'existe plus — exactement l'empreinte orpheline que la cascade est là pour
+     * éviter.
+     */
+    public void noterChangementExterne() {
+        version.incrementAndGet();
     }
 
     /** Toutes les empreintes, celles de tout le monde : ce que parcourt la reconnaissance. */
@@ -71,6 +97,7 @@ public class VisageConnuRepository {
         jdbc.sql("INSERT INTO visage (id, id_personne, empreinte) VALUES (?, ?, ?)")
                 .params(UUID.randomUUID().toString(), idPersonne, enOctets(embedding))
                 .update();
+        version.incrementAndGet();
     }
 
     /**
@@ -81,7 +108,9 @@ public class VisageConnuRepository {
      * @return le nombre d'empreintes effacées
      */
     public int supprimerParPersonne(String idPersonne) {
-        return jdbc.sql("DELETE FROM visage WHERE id_personne = ?").param(idPersonne).update();
+        int effaces = jdbc.sql("DELETE FROM visage WHERE id_personne = ?").param(idPersonne).update();
+        version.incrementAndGet();
+        return effaces;
     }
 
     private static VisageConnu lire(ResultSet ligne, int numeroLigne) throws SQLException {

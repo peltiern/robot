@@ -63,16 +63,28 @@ public class OpenCvServiceDetectionVisage implements ServiceDetectionVisage {
             tailleCourante = taille;
         }
 
+        // Tous les Mat ouverts ici sont refermés avant de sortir : OpenCV ne libère leur mémoire
+        // native qu'au passage du ramasse-miettes, invisible au tas Java, et cette méthode tourne
+        // dix fois par seconde dans la boucle vidéo.
         Mat visages = new Mat();
-        detecteur.detect(image, visages);
+        try {
+            detecteur.detect(image, visages);
 
-        List<VisageDetecte> resultat = new ArrayList<>();
-        for (int i = 0; i < visages.rows(); i++) {
-            Mat ligne = visages.row(i);
-            float[] donnees = new float[NB_COLONNES_DETECTION];
-            ligne.get(0, 0, donnees);
-            resultat.add(new VisageDetecte((int) donnees[0], (int) donnees[1], (int) donnees[2], (int) donnees[3], donnees[14], ligne.clone()));
+            List<VisageDetecte> resultat = new ArrayList<>();
+            for (int i = 0; i < visages.rows(); i++) {
+                Mat ligne = visages.row(i);
+                try {
+                    float[] donnees = new float[NB_COLONNES_DETECTION];
+                    ligne.get(0, 0, donnees);
+                    resultat.add(new VisageDetecte((int) donnees[0], (int) donnees[1],
+                            (int) donnees[2], (int) donnees[3], donnees[14], donnees));
+                } finally {
+                    ligne.release();
+                }
+            }
+            return resultat;
+        } finally {
+            visages.release();
         }
-        return resultat;
     }
 }

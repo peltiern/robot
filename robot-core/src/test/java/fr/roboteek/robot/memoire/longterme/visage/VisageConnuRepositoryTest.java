@@ -14,6 +14,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -128,5 +129,41 @@ class VisageConnuRepositoryTest {
         assertEquals(1, visages.size());
         assertEquals(einstein.id(), visages.get(0).idPersonne());
         assertArrayEquals(new float[]{5f, 6f}, visages.get(0).embedding());
+    }
+    /**
+     * La reconnaissance garde les empreintes en mémoire et ne relit la base que si ce numéro a
+     * bougé : s'il ne bougeait pas, un visage tout juste appris ne serait jamais reconnu.
+     */
+    @Test
+    void ajouterUnVisageChangeLaVersion() {
+        int avant = repository.version();
+
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+
+        assertNotEquals(avant, repository.version());
+    }
+
+    /** Et dans l'autre sens : sans changement de version, un visage effacé resterait reconnu. */
+    @Test
+    void effacerLesVisagesDunePersonneChangeLaVersion() {
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+        int avant = repository.version();
+
+        repository.supprimerParPersonne(amy.id());
+
+        assertNotEquals(avant, repository.version());
+    }
+
+    /** Lire ne change rien : autrement le cache se rechargerait à chaque image, sans raison. */
+    @Test
+    void lireNeChangePasLaVersion() {
+        repository.ajouter(amy.id(), new float[]{1f, 2f});
+        int avant = repository.version();
+
+        repository.tousLesVisages();
+        repository.parPersonne(amy.id());
+        repository.nombreParPersonne();
+
+        assertEquals(avant, repository.version());
     }
 }

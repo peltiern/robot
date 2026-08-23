@@ -4,6 +4,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.Rect;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -44,14 +45,19 @@ public final class DecoupeDeVignette {
         if (cadre == null) {
             return null;
         }
+        // La sous-image partage les pixels de l'originale mais reste un objet natif à part
+        // entière : sans ce release, elle n'est rendue qu'au passage du ramasse-miettes.
+        Mat decoupe = new Mat(image, cadre);
         Mat portrait = new Mat();
+        MatOfByte tampon = new MatOfByte();
         try {
-            Imgproc.resize(new Mat(image, cadre), portrait, new org.opencv.core.Size(COTE, COTE));
-            MatOfByte tampon = new MatOfByte();
+            Imgproc.resize(decoupe, portrait, new Size(COTE, COTE));
             Imgcodecs.imencode(".jpg", portrait, tampon, new MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, QUALITE_JPEG));
             return tampon.toArray();
         } finally {
+            decoupe.release();
             portrait.release();
+            tampon.release();
         }
     }
 

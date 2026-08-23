@@ -51,19 +51,23 @@ public final class NetteteDuVisage {
         if (cadre == null) {
             return 0;
         }
+        // La sous-image partage les pixels de l'originale mais reste un objet natif à part
+        // entière : sans ce release, elle n'est rendue qu'au passage du ramasse-miettes.
+        Mat decoupe = new Mat(image, cadre);
         Mat ramene = new Mat();
         Mat gris = new Mat();
         Mat laplacien = new Mat();
         MatOfDouble moyenne = new MatOfDouble();
         MatOfDouble ecartType = new MatOfDouble();
         try {
-            Imgproc.resize(new Mat(image, cadre), ramene, new Size(COTE_DE_MESURE, COTE_DE_MESURE));
+            Imgproc.resize(decoupe, ramene, new Size(COTE_DE_MESURE, COTE_DE_MESURE));
             Imgproc.cvtColor(ramene, gris, Imgproc.COLOR_BGR2GRAY);
             Imgproc.Laplacian(gris, laplacien, CvType.CV_64F);
             Core.meanStdDev(laplacien, moyenne, ecartType);
             double ecart = ecartType.get(0, 0)[0];
             return ecart * ecart;
         } finally {
+            decoupe.release();
             ramene.release();
             gris.release();
             laplacien.release();

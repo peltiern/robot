@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -106,6 +107,21 @@ class RepertoireDesPersonnesTest {
         assertEquals(1, visageConnuRepository.parPersonne(paul.id()).size());
         assertEquals(1, journalDesRencontres.pourPersonne(paul.id()).size());
         assertEquals(2, repertoire.conversation(paul.id()).size());
+    }
+
+    /**
+     * Les visages partent en cascade, sans passer par leur dépôt : la reconnaissance, qui les
+     * garde en mémoire, doit être prévenue. Sans ce signal elle comparerait encore les visages
+     * qu'elle voit à l'empreinte d'une disparue, et le robot la saluerait.
+     */
+    @Test
+    void supprimerPrevientLaReconnaissanceQueDesVisagesOntDisparu() {
+        peuplerToutPour(marie);
+        int avant = visageConnuRepository.version();
+
+        repertoire.supprimer(marie.id());
+
+        assertNotEquals(avant, visageConnuRepository.version());
     }
 
     /**
