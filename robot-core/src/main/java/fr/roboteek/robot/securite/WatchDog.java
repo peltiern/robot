@@ -6,6 +6,8 @@ import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
@@ -69,6 +71,10 @@ public class WatchDog implements SmartLifecycle {
     private int tours = 0;
 
     private volatile boolean running = false;
+
+    /** Voir {@link #handleContextClosedEvent}. */
+    private volatile boolean arretEnCours = false;
+
     private Thread thread;
 
     public WatchDog(RegistreSante registreSante, ArretUrgence arretUrgence,
@@ -83,6 +89,9 @@ public class WatchDog implements SmartLifecycle {
      * décide s'il faut couper. Public pour être testable sans thread ni contexte Spring.
      */
     public void verifier() {
+        if (arretEnCours) {
+            return;
+        }
         long delaiMillis = (long) (robotConfig.watchDogSilenceSecondes() * 1000);
         List<SanteOrgane> releve = registreSante.releve(delaiMillis);
 
@@ -153,6 +162,29 @@ public class WatchDog implements SmartLifecycle {
         return nouveau;
     }
 
+    /**
+     * Le robot s'arrête : le watchdog se retire.
+     * <p>
+     * Les battements cessent d'être un signal dès cet instant, et bien avant que les organes ne
+     * soient arrêtés. Celui des yeux et du cou vient d'un {@code @Scheduled}, et Spring éteint son
+     * ordonnanceur au début de la fermeture — les yeux se taisent donc alors que leur cycle de vie
+     * les dit encore en service, et rien de ce qu'un organe déclare ne peut le rattraper.
+     * <p>
+     * Sans ce retrait, le watchdog les jugeait muets pendant l'arrêt. Il ne coupait rien tant que
+     * le robot était immobile — seul le garde-fou « rien ne bouge » l'en empêchait — mais le cou
+     * <b>bouge</b> pendant l'arrêt, il rejoint sa position de repos. Un arrêt d'urgence à cet
+     * instant couperait les moteurs au milieu de ce mouvement, c'est-à-dire exactement ce que cette
+     * position de repos existe pour éviter.
+     * <p>
+     * {@link ContextClosedEvent} est publié avant que le moindre {@code SmartLifecycle} ne soit
+     * arrêté : le retrait est donc en place avant le premier organe.
+     */
+    @EventListener
+    public void handleContextClosedEvent(ContextClosedEvent contextClosedEvent) {
+        arretEnCours = true;
+        logger.info("Watchdog en retrait : le robot s'arrête, les battements ne veulent plus rien dire");
+    }
+
     @Override
     public void start() {
         running = true;
@@ -194,9 +226,8 @@ public class WatchDog implements SmartLifecycle {
     }
 
     /**
-     * Phase infrastructure : démarré avant tous les organes, arrêté après eux. Il surveille donc
-     * pendant tout l'arrêt, où les organes passent hors service les uns après les autres — ce qui
-     * ne déclenche rien, un organe hors service n'étant jamais jugé muet.
+     * Phase infrastructure : démarré avant tous les organes, arrêté après eux. Il ne juge pourtant
+     * rien pendant l'arrêt — voir {@link #handleContextClosedEvent}.
      */
     @Override
     public int getPhase() {
