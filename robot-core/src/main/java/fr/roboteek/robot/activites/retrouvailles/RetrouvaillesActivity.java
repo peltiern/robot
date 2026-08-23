@@ -4,11 +4,15 @@ import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.conversation.ConversationIA;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.memoire.longterme.personne.Personne;
+import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
@@ -44,14 +48,25 @@ public class RetrouvaillesActivity extends AbstractActivity {
     private final ConversationIA conversationIA;
 
     /**
-     * La personne à saluer, posée par {@code DeclencheurAccueil} <b>avant</b> de réclamer
-     * l'activité — comme l'interlocuteur de la conversation. Une demande d'activité ne transporte
-     * qu'un identifiant, elle ne peut pas la porter elle-même.
+     * Les retrouvailles qu'on nous a confiées, par personne, en attendant que le cerveau en lance
+     * une — s'il en lance une.
+     * <p>
+     * Par personne, et non dans un champ unique : deux venues peuvent se confirmer coup sur coup,
+     * et la seconde écrasait la première. Le cerveau ne lance rien lui-même — il dépose la demande
+     * et sa boucle la reprend plus tard —, si bien qu'un champ unique faisait saluer la dernière
+     * personne annoncée sous le nom de celle pour qui l'activité avait été acceptée.
+     * <p>
+     * Une entrée dont la demande a été refusée reste ici jusqu'à la venue suivante de la même
+     * personne, qui la remplace : la table est donc bornée par la taille du répertoire.
      */
-    private volatile Personne personne;
+    private final Map<String, Retrouvailles> confiees = new ConcurrentHashMap<>();
 
-    /** Temps écoulé depuis la dernière rencontre, en secondes ; {@code -1} si on ne sait pas. */
-    private volatile long secondesDAbsence = -1;
+    /** Celles que le cerveau vient de lancer, remises par {@link #preparer}. */
+    private volatile Retrouvailles enCours;
+
+    /** Ce qu'il faut savoir pour saluer quelqu'un : qui, et depuis combien de temps absent. */
+    private record Retrouvailles(Personne personne, long secondesDAbsence) {
+    }
 
     @Autowired
     public RetrouvaillesActivity(MemoireCourtTerme memoireCourtTerme, ConversationIA conversationIA) {
@@ -59,9 +74,24 @@ public class RetrouvaillesActivity extends AbstractActivity {
         this.conversationIA = conversationIA;
     }
 
-    public void setPersonneRetrouvee(Personne personne, long secondesDAbsence) {
-        this.personne = personne;
-        this.secondesDAbsence = secondesDAbsence;
+    /** Confie des retrouvailles, sans rien décider : c'est l'arbitrage qui tranchera. */
+    public void confier(Personne personne, long secondesDAbsence) {
+        confiees.put(personne.id(), new Retrouvailles(personne, secondesDAbsence));
+    }
+
+    /** Reprend ce qu'on avait confié, quand la demande n'a pas abouti. */
+    public Personne reprendre(String idPersonne) {
+        Retrouvailles retirees = idPersonne == null ? null : confiees.remove(idPersonne);
+        return retirees == null ? null : retirees.personne();
+    }
+
+    @Override
+    public void preparer(DemandeActiviteEvent demandeActiviteEvent) {
+        enCours = reprendreRetrouvailles(demandeActiviteEvent.getIdPersonne());
+    }
+
+    private Retrouvailles reprendreRetrouvailles(String idPersonne) {
+        return idPersonne == null ? null : confiees.remove(idPersonne);
     }
 
     @Override
@@ -71,12 +101,14 @@ public class RetrouvaillesActivity extends AbstractActivity {
 
     @Override
     public boolean run() {
-        Personne personneRetrouvee = personne;
+        Retrouvailles retrouvailles = enCours;
+        Personne personneRetrouvee = retrouvailles == null ? null : retrouvailles.personne();
         if (personneRetrouvee == null || StringUtils.isBlank(personneRetrouvee.prenom())) {
             logger.warn("Retrouvailles demandées sans personne : rien à dire");
             return stopActivity;
         }
 
+        long secondesDAbsence = retrouvailles.secondesDAbsence();
         String prenom = personneRetrouvee.prenom();
         // Posé sans attendre : la salutation part sur le fil de cette personne, et la
         // conversation qui reprend derrière y reste même si un cycle la manque.

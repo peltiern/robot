@@ -1,6 +1,7 @@
 package fr.roboteek.robot.activites;
 
 import fr.roboteek.robot.organes.actionneurs.animation.Animation;
+import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import org.slf4j.Logger;
@@ -50,6 +51,19 @@ public abstract class AbstractActivity {
      * {@link ClassUtils#getUserClass} et non {@code getClass()} : les activités sont proxiées
      * par CGLIB (@Async) et la classe du proxy s'appelle « ConversationActivity$$SpringCGLIB$$0 ».
      */
+    /**
+     * Ce que la demande visait, remis à l'activité au moment précis où le cerveau la lance.
+     * <p>
+     * Une demande ne transporte qu'un identifiant de personne, jamais un bean : à l'activité de
+     * retrouver ce qu'on lui a confié. Rien à faire pour la plupart d'entre elles.
+     * <p>
+     * <b>Remis au lancement et pas avant.</b> Poser la cible dans un champ dès la demande la
+     * laissait écraser par une demande suivante, refusée ou non : le cerveau ne lance rien
+     * lui-même, il dépose, et c'est sa boucle qui lit — plus tard.
+     */
+    public void preparer(DemandeActiviteEvent demandeActiviteEvent) {
+    }
+
     public String identifiant() {
         return ClassUtils.getUserClass(this).getSimpleName();
     }

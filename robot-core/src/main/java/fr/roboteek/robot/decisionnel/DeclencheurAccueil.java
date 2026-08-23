@@ -33,13 +33,6 @@ public class DeclencheurAccueil {
 
     private final RetrouvaillesActivity retrouvaillesActivity;
 
-    /**
-     * La personne dont on vient de réclamer les retrouvailles, le temps de savoir si le cerveau
-     * les accepte. Le refus revient dans la même pile d'appels que la demande, la valeur est donc
-     * toujours la bonne au moment où on la lit.
-     */
-    private Personne personneDesRetrouvaillesReclamees;
-
     public DeclencheurAccueil(ApplicationEventPublisher applicationEventPublisher,
                               RetrouvaillesActivity retrouvaillesActivity) {
         this.applicationEventPublisher = applicationEventPublisher;
@@ -63,14 +56,13 @@ public class DeclencheurAccueil {
             logger.warn("Retrouvailles annoncées sans personne : rien à saluer");
             return;
         }
-        logger.info("{} est de retour : demande de retrouvailles", rencontreEvent.getPersonne().prenom());
-        personneDesRetrouvaillesReclamees = rencontreEvent.getPersonne();
-        // Posée avant la demande : une demande d'activité ne transporte qu'un identifiant, et la
-        // boucle du cerveau peut lancer l'activité dès l'instant d'après.
-        retrouvaillesActivity.setPersonneRetrouvee(
-                rencontreEvent.getPersonne(), rencontreEvent.getSecondesDAbsence());
-        applicationEventPublisher.publishEvent(
-                new DemandeActiviteEvent(RetrouvaillesActivity.class.getSimpleName()));
+        Personne personne = rencontreEvent.getPersonne();
+        logger.info("{} est de retour : demande de retrouvailles", personne.prenom());
+        // Confiées, pas posées : l'activité ne les reprendra que si le cerveau lance celle-ci, et
+        // c'est la demande qui dit laquelle. Deux venues coup sur coup ne se marchent plus dessus.
+        retrouvaillesActivity.confier(personne, rencontreEvent.getSecondesDAbsence());
+        applicationEventPublisher.publishEvent(new DemandeActiviteEvent(
+                RetrouvaillesActivity.class.getSimpleName(), personne.id()));
     }
 
     /**
@@ -94,10 +86,9 @@ public class DeclencheurAccueil {
             applicationEventPublisher.publishEvent(
                     new RencontreSansSuiteEvent(null, "accueil refusé : " + motif));
         } else if (RetrouvaillesActivity.class.getSimpleName().equals(idActivite)) {
-            // La personne visée est celle de la demande qu'on vient de faire : la chaîne est
-            // synchrone — publier la demande appelle le cerveau, qui publie le refus, qui nous
-            // revient — donc c'est bien la bonne, sans risque d'en croiser une autre.
-            Personne personne = personneDesRetrouvaillesReclamees;
+            // Le refus porte l'identifiant de la demande refusée : c'est bien cette personne-là
+            // dont on reprend les retrouvailles, et pas la dernière annoncée.
+            Personne personne = retrouvaillesActivity.reprendre(demandeActiviteRefuseeEvent.getIdPersonne());
             logger.info("Retrouvailles avec {} refusées ({}) : la rencontre est rendue",
                     personne == null ? "?" : personne.prenom(), motif);
             applicationEventPublisher.publishEvent(

@@ -16,10 +16,14 @@ public class DemandeActiviteRefuseeEvent extends RobotEvent {
     /** Le motif du refus, nommé par {@code ArbitrageActivites.Decision}. */
     private final String motif;
 
-    public DemandeActiviteRefuseeEvent(String idActivite, String motif) {
+    /** Qui la demande refusée visait, repris tel quel de celle-ci ; {@code null} si personne. */
+    private final String idPersonne;
+
+    public DemandeActiviteRefuseeEvent(String idActivite, String motif, String idPersonne) {
         super(EVENT_TYPE);
         this.idActivite = idActivite;
         this.motif = motif;
+        this.idPersonne = idPersonne;
     }
 
     public String getIdActivite() {
@@ -28,6 +32,10 @@ public class DemandeActiviteRefuseeEvent extends RobotEvent {
 
     public String getMotif() {
         return motif;
+    }
+
+    public String getIdPersonne() {
+        return idPersonne;
     }
 
 }
