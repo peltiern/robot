@@ -91,6 +91,9 @@ public class RepertoireDesPersonnes {
             apprendre(personne.id(), photos);
         } catch (RuntimeException e) {
             personneRepository.supprimer(personne.id());
+            // La cascade SQLite a pu emporter des empreintes déjà écrites : la reconnaissance
+            // doit le savoir, elle les garde en mémoire (voir VisageConnuRepository.version).
+            visageConnuRepository.noterChangementExterne();
             throw e;
         }
         logger.info("Personne {} créée par photo : {} ({} photo(s))", personne.id(), personne.prenom(), photos.size());
@@ -215,6 +218,10 @@ public class RepertoireDesPersonnes {
         }
         conversationRepository.deleteByConversationId(ConversationRepository.idConversationDe(id));
         personneRepository.supprimer(id);
+        // Les visages sont partis en cascade, sans passer par leur dépôt : sans ce signal, la
+        // reconnaissance continuerait de comparer ce qu'elle voit à l'empreinte de quelqu'un qui
+        // n'existe plus, et le robot saluerait un disparu.
+        visageConnuRepository.noterChangementExterne();
         memoireCourtTerme.oublier(id);
         logger.info("Personne {} ({}) oubliée : fiche, visages, rencontres et conversation", personne.prenom(), id);
         return true;
