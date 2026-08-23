@@ -12,17 +12,13 @@ public class EnrolementTermineEvent extends RobotEvent {
     public static final String EVENT_TYPE = "enrolement-termine";
 
     /** Identifiant de la personne concernée, tel que demandé. */
-    private String idPersonne;
+    private final String idPersonne;
 
     /** Nombre d'empreintes effectivement enregistrées. */
-    private int nombreEmpreintes;
+    private final int nombreEmpreintes;
 
     /** Vrai si le visage est désormais reconnaissable. */
-    private boolean reussi;
-
-    public EnrolementTermineEvent() {
-        super(EVENT_TYPE);
-    }
+    private final boolean reussi;
 
     public EnrolementTermineEvent(String idPersonne, int nombreEmpreintes, boolean reussi) {
         super(EVENT_TYPE);
@@ -35,23 +31,12 @@ public class EnrolementTermineEvent extends RobotEvent {
         return idPersonne;
     }
 
-    public void setIdPersonne(String idPersonne) {
-        this.idPersonne = idPersonne;
-    }
-
     public int getNombreEmpreintes() {
         return nombreEmpreintes;
-    }
-
-    public void setNombreEmpreintes(int nombreEmpreintes) {
-        this.nombreEmpreintes = nombreEmpreintes;
     }
 
     public boolean isReussi() {
         return reussi;
     }
 
-    public void setReussi(boolean reussi) {
-        this.reussi = reussi;
-    }
 }

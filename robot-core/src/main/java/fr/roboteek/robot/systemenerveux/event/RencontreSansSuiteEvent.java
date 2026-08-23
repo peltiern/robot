@@ -20,14 +20,10 @@ public class RencontreSansSuiteEvent extends RobotEvent {
     public static final String EVENT_TYPE = "rencontre-sans-suite";
 
     /** La personne dont la venue est à rendre ; {@code null} désigne l'inconnu. */
-    private Personne personne;
+    private final Personne personne;
 
     /** Ce qui a fait échouer la rencontre, pour les journaux. */
-    private String motif;
-
-    public RencontreSansSuiteEvent() {
-        super(EVENT_TYPE);
-    }
+    private final String motif;
 
     public RencontreSansSuiteEvent(Personne personne, String motif) {
         super(EVENT_TYPE);
@@ -39,15 +35,8 @@ public class RencontreSansSuiteEvent extends RobotEvent {
         return personne;
     }
 
-    public void setPersonne(Personne personne) {
-        this.personne = personne;
-    }
-
     public String getMotif() {
         return motif;
     }
 
-    public void setMotif(String motif) {
-        this.motif = motif;
-    }
 }

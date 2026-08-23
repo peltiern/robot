@@ -16,11 +16,7 @@ public class DemandeEnrolementEvent extends RobotEvent {
     public static final String EVENT_TYPE = "demande-enrolement";
 
     /** Identifiant de la personne à qui rattacher les empreintes relevées. */
-    private String idPersonne;
-
-    public DemandeEnrolementEvent() {
-        super(EVENT_TYPE);
-    }
+    private final String idPersonne;
 
     public DemandeEnrolementEvent(String idPersonne) {
         super(EVENT_TYPE);
@@ -31,7 +27,4 @@ public class DemandeEnrolementEvent extends RobotEvent {
         return idPersonne;
     }
 
-    public void setIdPersonne(String idPersonne) {
-        this.idPersonne = idPersonne;
-    }
 }

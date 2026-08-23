@@ -24,17 +24,13 @@ public class VisagePercuEvent extends RobotEvent {
      * Visages présents dans le champ. Liste <b>vide</b> = le champ vient de se vider,
      * signal du départ de la personne.
      */
-    private List<VisagePercu> visages;
+    private final List<VisagePercu> visages;
 
     /** Largeur de l'image analysée, en pixels. */
-    private int largeurImage;
+    private final int largeurImage;
 
     /** Hauteur de l'image analysée, en pixels. */
-    private int hauteurImage;
-
-    public VisagePercuEvent() {
-        super(EVENT_TYPE);
-    }
+    private final int hauteurImage;
 
     public VisagePercuEvent(List<VisagePercu> visages, int largeurImage, int hauteurImage) {
         super(EVENT_TYPE);
@@ -47,23 +43,12 @@ public class VisagePercuEvent extends RobotEvent {
         return visages;
     }
 
-    public void setVisages(List<VisagePercu> visages) {
-        this.visages = visages;
-    }
-
     public int getLargeurImage() {
         return largeurImage;
-    }
-
-    public void setLargeurImage(int largeurImage) {
-        this.largeurImage = largeurImage;
     }
 
     public int getHauteurImage() {
         return hauteurImage;
     }
 
-    public void setHauteurImage(int hauteurImage) {
-        this.hauteurImage = hauteurImage;
-    }
 }

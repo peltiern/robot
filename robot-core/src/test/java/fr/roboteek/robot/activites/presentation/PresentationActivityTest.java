@@ -259,12 +259,10 @@ class PresentationActivityTest {
     @Test
     @Timeout(10)
     void unVisageConnuPlusPetitQueLInterlocuteurNInterromptRien() {
-        VisagePercuEvent evenement = new VisagePercuEvent();
-        evenement.setLargeurImage(640);
-        evenement.setHauteurImage(480);
-        evenement.setVisages(List.of(
-                new VisagePercu("id-einstein", "Einstein", 0, 0, 40, 40),
-                new VisagePercu(null, null, 200, 200, 200, 200)));
+        VisagePercuEvent evenement = new VisagePercuEvent(
+                List.of(new VisagePercu("id-einstein", "Einstein", 0, 0, 40, 40),
+                        new VisagePercu(null, null, 200, 200, 200, 200)),
+                640, 480);
 
         activite.handleVisagePercuEvent(evenement);
         activite.run();
@@ -274,11 +272,8 @@ class PresentationActivityTest {
     }
 
     private static VisagePercuEvent visagePercu(String idPersonne, String prenom) {
-        VisagePercuEvent evenement = new VisagePercuEvent();
-        evenement.setLargeurImage(640);
-        evenement.setHauteurImage(480);
-        evenement.setVisages(List.of(new VisagePercu(idPersonne, prenom, 200, 150, 120, 120)));
-        return evenement;
+        return new VisagePercuEvent(
+                List.of(new VisagePercu(idPersonne, prenom, 200, 150, 120, 120)), 640, 480);
     }
 
     /** Programme une réponse vocale, servie dès qu'une phrase dite contient {@code cle}. */
