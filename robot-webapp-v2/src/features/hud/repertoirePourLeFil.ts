@@ -5,19 +5,14 @@ import type { ChatMessage } from '../../shared/conversation/conversationStore'
 /**
  * Tient le répertoire à jour de ce que le fil demande.
  *
- * Le HUD n'ouvre jamais la page des personnes : sans cela le store resterait vide et toutes les
- * bulles porteraient une initiale. Et la liste ne suffit pas à être chargée une fois pour toutes —
- * le robot fait connaissance en cours de route, et celle qu'il vient d'apprendre parle dans la
- * minute qui suit.
+ * Le HUD n'ouvre jamais la page des personnes, et le robot fait connaissance en cours de route :
+ * la liste ne peut donc être ni ignorée, ni chargée une fois pour toutes.
  *
- * Rien n'est demandé tant qu'aucune bulle ne nomme quelqu'un d'introuvable. La première version
- * réclamait la liste dès le montage : le HUD ouvert robot éteint — le cas de tous les démarrages —
- * partait aussitôt sur un appel voué au refus de connexion. Or il n'y a alors pas la moindre bulle
- * à illustrer, donc rien à aller chercher.
- *
- * Un identifiant n'est cherché qu'une fois, sans quoi une personne effacée depuis ferait boucler
- * la tablette sur le robot. Mais il n'est tenu pour cherché que si le robot a répondu : autrement
- * une coupure au mauvais moment condamnerait ces portraits jusqu'au rechargement de la page.
+ * Rien n'est demandé tant qu'aucune bulle ne nomme quelqu'un d'introuvable — le HUD ouvert robot
+ * éteint, le cas de tous les démarrages, n'a aucune bulle à illustrer. Un identifiant n'est
+ * cherché qu'une fois, sinon une personne effacée ferait boucler la tablette ; mais il n'est tenu
+ * pour cherché que si le robot a répondu, sinon une coupure condamnerait ces portraits jusqu'au
+ * rechargement de la page.
  */
 export function useRepertoirePourLeFil(messages: ChatMessage[]) {
   const liste = usePersonnesStore((s) => s.liste)

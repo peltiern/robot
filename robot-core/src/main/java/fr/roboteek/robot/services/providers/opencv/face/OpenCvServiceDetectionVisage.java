@@ -20,7 +20,7 @@ import java.util.List;
  * tant que seule la boucle vidéo s'en servait ; l'import de photos par l'interface web l'appelle
  * désormais depuis un thread HTTP, et {@code FaceDetectorYN} n'est pas réentrant — le backend dnn
  * tient une table de réutilisation de tampons que deux threads corrompent aussitôt. Vu sur le
- * robot le 2026-08-17 : {@code (-215:Assertion failed) mapIt != reuseMap.end()}, en plein
+ * robot : {@code (-215:Assertion failed) mapIt != reuseMap.end()}, en plein
  * {@code detect}.
  * <p>
  * {@link #tailleCourante} rend la serrure doublement nécessaire : la webcam est en 640×480, une

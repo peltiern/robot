@@ -69,7 +69,7 @@ public class VoskSpeechRecognizerService implements SpeechRecognizerService, Str
      * {@link Recognizer} Vosk est un objet natif non réentrant : le réinitialiser pendant qu'il
      * décode corrompt le tas.
      * <p>
-     * Ce n'est pas une précaution théorique — c'est arrivé le 2026-08-12 sur le robot, quand
+     * Ce n'est pas une précaution théorique — c'est arrivé sur le robot, quand
      * quelqu'un a répondu à l'instant précis où le robot commençait à parler : SIGSEGV dans
      * {@code vosk_recognizer_reset}, JVM à terre, « malloc(): corrupted top size ».
      * <p>

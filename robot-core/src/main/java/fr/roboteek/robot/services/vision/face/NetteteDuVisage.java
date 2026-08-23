@@ -9,31 +9,24 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 /**
- * Mesure si un visage est net ou flou, par la variance du laplacien.
+ * Mesure si un visage est net ou flou, par la variance du laplacien : une image nette a des
+ * contours marqués, donc une forte variance ; une image floue les étale, et la variance s'effondre.
  * <p>
- * Le laplacien accentue les changements brusques de luminosité — les contours. Une image nette en
- * a beaucoup et des marqués, donc une forte variance ; une image floue les a tous étalés, et la
- * variance s'effondre. C'est la mesure classique du flou, et elle ne coûte presque rien.
- * <p>
- * <b>Pourquoi s'en soucier.</b> Une photo un peu floue passe très bien la détection de visage :
- * YuNet y trouve un visage, et l'empreinte part en base comme les autres. Mais la reconnaissance
- * retient la <b>meilleure</b> similarité parmi toutes les empreintes connues, avec un seuil bas :
- * une empreinte bâclée n'est pas seulement inutile, elle peut dépasser ce seuil face à quelqu'un
- * d'<b>autre</b>, et le robot appellerait alors Sandra « Nicolas ». Une mauvaise empreinte est
- * pire que pas d'empreinte du tout.
+ * <b>Pourquoi s'en soucier</b> : une photo floue passe très bien la détection, et son empreinte
+ * part en base comme les autres. Mais la reconnaissance retient la <b>meilleure</b> similarité
+ * parmi toutes les empreintes connues : une empreinte bâclée peut dépasser le seuil face à
+ * quelqu'un d'<b>autre</b>, et le robot appellerait alors Sandra « Nicolas ». Une mauvaise
+ * empreinte est pire que pas d'empreinte du tout.
  */
 public final class NetteteDuVisage {
 
     /**
-     * Côté auquel le visage est ramené avant la mesure.
+     * Côté auquel le visage est ramené avant la mesure. La variance du laplacien dépend de la
+     * résolution : sans normalisation, le même visage donnerait un score dix fois plus élevé sur
+     * une photo de téléphone que sur une image de webcam.
      * <p>
-     * Indispensable : la variance du laplacien dépend de la résolution, et sans cette
-     * normalisation le même visage donnerait un score dix fois plus élevé sur une photo de
-     * téléphone que sur une image de webcam. Le seuil ne voudrait alors plus rien dire.
-     * <p>
-     * <b>Ne pas l'aligner sur la taille de la vignette</b>, même si les deux valaient 192 au
-     * départ : le seuil de netteté a été calibré à cette taille-là, sur de vraies photos. Les
-     * changer ensemble rendrait silencieusement le seuil faux.
+     * <b>Ne pas l'aligner sur la taille de la vignette</b> : le seuil de netteté est calibré à
+     * cette taille-ci, et les changer ensemble le rendrait silencieusement faux.
      */
     private static final int COTE_DE_MESURE = 192;
 

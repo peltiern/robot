@@ -61,11 +61,9 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
  * de vision artificielle (gRPC, détection d'objets / reconnaissance de visages) et
  * publie un {@link VideoEvent} par image.
  * <p>
- * Migré en bean Spring mais <b>désactivé par défaut</b> (comme l'ancien démarrage
- * qui ne l'instanciait pas). Pour l'activer : {@code robot.capteurs.vision.enabled=true}
- * dans {@code robot.properties} (lu via {@link RobotConfig}, modifiable sans rebuild).
- * Le bean est toujours créé mais reste inerte tant que le flag est faux (garde dans
- * {@link #start()}).
+ * <b>Désactivé par défaut</b> : {@code robot.capteurs.vision.enabled=true} dans
+ * {@code robot.properties} pour l'activer. Le bean est toujours créé mais reste inerte tant que
+ * le drapeau est faux.
  * <p>
  * Dégradation gracieuse : si aucune webcam n'est trouvée, l'organe reste inerte
  * sans faire échouer le démarrage ; si le serveur Python est absent, les appels
@@ -78,13 +76,9 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
     private static final Logger logger = LoggerFactory.getLogger(CapteurVisionWebSocketGrpc.class);
 
-    /**
-     * Largeur de la vidéo issue de la webcam.
-     */
+    /** Largeur de la vidéo issue de la webcam. */
     private static final int LARGEUR_WEBCAM = 640;
-    /**
-     * Hauteur de la vidéo issue de la webcam.
-     */
+    /** Hauteur de la vidéo issue de la webcam. */
     private static final int HAUTEUR_WEBCAM = 480;
 
     /**
@@ -100,14 +94,10 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      */
     private static final String DESTINATION_VIDEO = "/video";
 
-    /**
-     * Capture vidéo.
-     */
+    /** Capture vidéo. */
     private VideoCapture capture;
 
-    /**
-     * Image en cours.
-     */
+    /** Image en cours. */
     private Mat image;
 
     private VisionArtificiellePythonGrpc visionArtificiellePythonGrpc;
@@ -137,14 +127,10 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
     private ObjectDetectionResponse objectDetectionResponse;
 
-    /**
-     * Configuration.
-     */
+    /** Configuration. */
     private RobotConfig robotConfig;
 
-    /**
-     * Registre des abonnements WebSocket : sert à ne rien produire quand personne ne regarde.
-     */
+    /** Registre des abonnements WebSocket : sert à ne rien produire quand personne ne regarde. */
     @Autowired
     private RegistreAbonnesWebsocket registreAbonnesWebsocket;
 
@@ -178,9 +164,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      */
     private long dernierePublicationVideoMs = 0;
 
-    /**
-     * Indique si le flux vidéo est en cours de diffusion, pour ne tracer que les transitions.
-     */
+    /** Indique si le flux vidéo est en cours de diffusion, pour ne tracer que les transitions. */
     private boolean fluxVideoDiffuse = false;
 
     /**
@@ -190,19 +174,13 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
      */
     private MatOfInt parametresJpeg;
 
-    /**
-     * Qualité JPEG ayant servi à construire {@link #parametresJpeg}.
-     */
+    /** Qualité JPEG ayant servi à construire {@link #parametresJpeg}. */
     private int qualiteJpegCourante = -1;
 
-    /**
-     * Flag indiquant de stopper le thread de capture.
-     */
+    /** Flag indiquant de stopper le thread de capture. */
     private volatile boolean stopperThread = false;
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     public CapteurVisionWebSocketGrpc() {

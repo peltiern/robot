@@ -19,7 +19,7 @@ import java.util.List;
  * d'horloge, RMS/crête/saturation, répartition spectrale par PSD de Welch).
  * <p>
  * Écrite pour trancher le choix de la fréquence de capture, à l'époque où le robot capturait en
- * 44,1 kHz et ré-échantillonnait vers le 16 kHz exigé par Vosk. <b>Verdict rendu le 2026-07-29</b>
+ * 44,1 kHz et ré-échantillonnait vers le 16 kHz exigé par Vosk. <b>Verdict</b>
  * : le ReSpeaker (ArrayUAC10) n'expose <i>que</i> du 16 kHz, tout le reste étant fabriqué par la
  * couche {@code plug} d'ALSA — le robot capture donc désormais nativement en 16 kHz
  * ({@link fr.roboteek.robot.Constantes#FREQUENCE_ECHANTILLONNAGE_CAPTURE_HZ}) et plus aucun

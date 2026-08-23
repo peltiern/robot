@@ -23,9 +23,7 @@ public abstract class AbstractOrgane {
      */
     private volatile long dernierBattement = 0L;
 
-    /**
-     * Constructeur.
-     */
+    /** Constructeur. */
     public AbstractOrgane() {
     }
 

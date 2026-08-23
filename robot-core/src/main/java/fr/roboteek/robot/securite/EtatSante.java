@@ -3,9 +3,9 @@ package fr.roboteek.robot.securite;
 /**
  * État de santé d'un organe, tel que le watchdog le juge et que l'interface l'affiche.
  * <p>
- * Trois états et non deux : un organe <b>éteint volontairement</b> (vision désactivée par
- * configuration, manette absente) ne doit pas se lire comme en panne. Confondre les deux, c'est
- * afficher en permanence des pastilles rouges qu'on finit par ne plus regarder.
+ * Trois états et non deux : un organe éteint volontairement (vision désactivée, manette absente)
+ * ne doit pas se lire comme en panne, sous peine d'afficher en permanence des pastilles rouges
+ * qu'on finit par ne plus regarder.
  */
 public enum EtatSante {
 

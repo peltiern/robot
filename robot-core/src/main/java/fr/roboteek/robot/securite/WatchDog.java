@@ -19,32 +19,26 @@ import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 /**
  * Watchdog : coupe les moteurs quand un organe du mouvement cesse de donner signe de vie.
  * <p>
- * <b>Le scénario qui justifie tout.</b> Le robot roule et ce qui devait l'arrêter meurt. Les ordres
- * de mouvement continus ({@code AVANCER}, {@code TOURNER_GAUCHE}) n'expirent jamais d'eux-mêmes :
- * les chenilles tournent jusqu'à recevoir un {@code STOPPER}. Si le thread de scrutation de la
- * manette meurt pendant une marche avant, plus personne n'enverra jamais ce {@code STOPPER} — le
- * robot part tout droit, et le bouton d'arrêt d'urgence de la manette est mort avec le reste.
+ * <b>Le scénario qui justifie tout</b> : le robot roule et ce qui devait l'arrêter meurt. Les
+ * ordres de mouvement continus n'expirent jamais d'eux-mêmes, les chenilles tournent jusqu'à
+ * recevoir un {@code STOPPER}. Si le thread de la manette meurt pendant une marche avant, plus
+ * personne n'enverra ce {@code STOPPER} — et son bouton d'arrêt d'urgence est mort avec le reste.
  * <p>
  * <b>Trois garde-fous, parce qu'un watchdog qui se déclenche à tort finit débranché :</b>
  * <ul>
- *   <li><b>périmètre étroit</b> : seuls les organes qui provoquent ou exécutent un mouvement
+ *   <li><b>périmètre étroit</b> : seuls les organes du mouvement
  *   ({@link OrganeSurveille#provoqueUnMouvement()}) peuvent déclencher ; un capteur muet est un
- *   incident à journaliser, pas une urgence ;</li>
- *   <li><b>délai large</b> : plusieurs dizaines de fois la période de battement de l'organe le plus
- *   lent, pour qu'une pause du ramasse-miettes sur le Nano ne passe jamais pour une panne ;</li>
- *   <li><b>rien ne bouge, rien ne se passe</b> : un thread mort sur un robot à l'arrêt donne une
- *   ligne de journal. Couper les moteurs d'un robot immobile n'apporte aucune sécurité et coûte un
- *   réarmement à l'utilisateur, qui apprendrait vite à ignorer l'alerte.</li>
+ *   incident à journaliser ;</li>
+ *   <li><b>délai large</b> : plusieurs dizaines de battements de l'organe le plus lent, pour
+ *   qu'une pause du ramasse-miettes sur le Nano ne passe pas pour une panne ;</li>
+ *   <li><b>rien ne bouge, rien ne se passe</b> : couper les moteurs d'un robot immobile n'apporte
+ *   aucune sécurité et coûte un réarmement, qu'on apprendrait vite à ignorer.</li>
  * </ul>
  * <p>
- * <b>Son propre thread, et pas l'ordonnanceur Spring.</b> Un surveillant ne partage pas son fil
- * d'exécution avec ce qu'il surveille : les battements du cou et des yeux sont émis depuis des
- * tâches {@code @Scheduled}, et si cet ordonnanceur venait à se bloquer, un watchdog qui y
- * tournerait aussi se tairait en même temps que ses témoins — panne totale, silence total. Thread
- * de plateforme et non virtuel, pour la même raison : ne dépendre de rien d'autre.
- * <p>
- * Le déclenchement passe par {@link ArretUrgence#declencher(String)} : même verrou, même
- * propagation, même réarmement que le bouton B de la manette ou celui du HUD.
+ * <b>Son propre thread, et pas l'ordonnanceur Spring</b> : un surveillant ne partage pas son fil
+ * avec ce qu'il surveille. Les battements du cou et des yeux viennent de tâches {@code @Scheduled}
+ * — si cet ordonnanceur se bloquait, le watchdog se tairait en même temps que ses témoins. Thread
+ * de plateforme et non virtuel, pour la même raison.
  */
 @Component
 public class WatchDog implements SmartLifecycle {
@@ -134,9 +128,7 @@ public class WatchDog implements SmartLifecycle {
         }
     }
 
-    /**
-     * Journalise un silence sans conséquence (robot immobile), une seule fois par épisode.
-     */
+    /** Journalise un silence sans conséquence (robot immobile), une seule fois par épisode. */
     private void signalerUneFois(List<SanteOrgane> muets, String description, long delaiMillis) {
         if (enregistrerNouveauxMuets(muets)) {
             logger.warn("WATCHDOG : {} sans signe de vie depuis plus de {} ms — rien ne bouge, moteurs laissés en l'état",
@@ -150,8 +142,8 @@ public class WatchDog implements SmartLifecycle {
      * Parcours <b>sans court-circuit</b>, volontairement : un {@code anyMatch(muetsDejaSignales::add)}
      * s'arrête au premier ajout réussi et laisse les organes suivants hors du registre. Au tour
      * suivant, c'est l'un d'eux qui paraît nouveau, et la ligne censée n'apparaître qu'une fois par
-     * épisode est réémise autant de fois qu'il y a d'organes muets. Constaté sur le robot le
-     * 2026-08-08 : deux lignes identiques à 500 ms d'intervalle pour « Cou, Yeux ».
+     * épisode est réémise autant de fois qu'il y a d'organes muets. Constaté sur le robot :
+     * deux lignes identiques à 500 ms d'intervalle pour « Cou, Yeux ».
      */
     boolean enregistrerNouveauxMuets(List<SanteOrgane> muets) {
         boolean nouveau = false;

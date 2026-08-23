@@ -1,11 +1,7 @@
 /**
- * Chemin relatif, et non une URL absolue : en développement le proxy Vite renvoie
- * `/api` sur le robot (cf. `vite.config.ts`), et en production Spring sert le front
- * lui-même — dans les deux cas c'est la bonne machine.
- *
- * Une base bâtie sur `VITE_API_URL` avec `http://localhost:8080` en repli visait la
- * tablette elle-même dès que la variable manquait — et elle manque, `.env` ne
- * définit que `VITE_WS_URL`. Toutes les requêtes échouaient sur « Failed to fetch ».
+ * Chemin relatif, et non une URL absolue : en développement le proxy Vite renvoie `/api` sur le
+ * robot (cf. `vite.config.ts`), en production Spring sert le front lui-même. Une base bâtie sur
+ * une variable d'environnement viserait la tablette elle-même dès que la variable manque.
  */
 const BASE = '/api/personnes'
 

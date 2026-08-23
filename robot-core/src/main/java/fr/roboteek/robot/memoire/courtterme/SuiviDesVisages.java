@@ -15,28 +15,23 @@ import java.util.function.Function;
  * Ce que le robot retient des visages <b>d'une image à l'autre</b> : lequel est le même qu'avant,
  * et quelle identité reste valable.
  * <p>
- * Mémoire court terme, et non perception : le calcul appartient aux services de vision (YuNet
- * détecte, SFace compare), l'acquisition à l'organe. Ici on ne fait que se souvenir — assez pour
- * enjamber les trous de détection et pour s'éviter des reconnaissances inutiles.
+ * Mémoire et non perception : le calcul appartient aux services de vision (YuNet détecte, SFace
+ * compare), l'acquisition à l'organe. Ici on ne fait que se souvenir — assez pour enjamber les
+ * trous de détection et s'éviter des reconnaissances inutiles.
  * <p>
- * <b>L'image n'entre jamais ici.</b> SFace en a besoin, mais le {@code Mat} est unique et réécrit
- * à chaque lecture de la webcam : le faire circuler obligerait à le cloner. L'organe passe donc
- * une fonction de reconnaissance qui, elle, tient l'image ; ce qu'on manipule ici se limite à des
- * boîtes englobantes et à des identités.
+ * L'organe passe une fonction de reconnaissance qui, elle, tient l'image ; ce qu'on manipule ici
+ * se limite à des boîtes englobantes et à des identités.
  */
 @Component
 public class SuiviDesVisages {
 
     /**
-     * Rayon de suivi, <b>exprimé en largeurs du visage détecté</b> : sous cette distance de
-     * centroïde, un visage est considéré comme le même qu'à la frame précédente et on réutilise
-     * son nom sans relancer SFace (alignCrop + feature + comparaison à toute la base coûtent
-     * ~68 ms par visage, voir fr.roboteek.robot.poc.FaceRecognitionPoc).
+     * Rayon de suivi, <b>en largeurs du visage détecté</b> : sous cette distance de centroïde, un
+     * visage est tenu pour le même qu'à la frame précédente et garde son nom sans relancer SFace
+     * (~68 ms par visage).
      * <p>
-     * Relatif et non absolu, parce que c'est la seule échelle qui ait un sens : un visage proche
-     * occupe 200 px et se déplace de plusieurs dizaines de pixels d'une frame à l'autre, un
-     * visage lointain en occupe 40 et bouge d'autant moins. Les valeurs absolues essayées avant
-     * (40 px, puis 80) étaient trop serrées dans un cas et trop larges dans l'autre.
+     * Relatif et non absolu : un visage proche occupe 200 px et se déplace de plusieurs dizaines
+     * de pixels d'une frame à l'autre, un visage lointain en occupe 40 et bouge d'autant moins.
      */
     private static final double RAYON_SUIVI_EN_LARGEURS_VISAGE = 0.7;
 
@@ -50,15 +45,13 @@ public class SuiviDesVisages {
      * Durée pendant laquelle les visages du dernier cycle restent une référence de <b>position</b>
      * valable, même si la détection n'a rien vu entre-temps.
      * <p>
-     * <b>C'est ce qui permet d'enjamber les trous de détection</b>, mesurés de 100 à 250 ms sur le
-     * robot. Sans elle, la mémoire du suivi était perdue à chaque clignotement, la personne
-     * redevenait un visage tout neuf, et une présence d'inconnu se constituait en parallèle de
-     * quelqu'un pourtant reconnu — assez pour déclencher une présentation. Constaté le 2026-08-12
-     * sur Einstein, reconnu puis abordé.
+     * <b>C'est ce qui permet d'enjamber les trous de détection</b>, de 100 à 250 ms sur le robot.
+     * Sans elle, la personne redevient un visage tout neuf à chaque clignotement, et une présence
+     * d'inconnu se constitue en parallèle de quelqu'un pourtant reconnu — assez pour déclencher
+     * une présentation.
      * <p>
-     * Elle ne dit rien de la <b>fraîcheur</b> des identités portées par ces visages : c'est
-     * {@link #DUREE_REUTILISATION_IDENTITE_MS} qui s'en charge, et confondre les deux était le
-     * défaut de la première version.
+     * Ne dit rien de la <b>fraîcheur</b> des identités : c'est
+     * {@link #DUREE_REUTILISATION_IDENTITE_MS} qui s'en charge. Ne pas confondre les deux.
      */
     private static final long REMANENCE_POSITIONS_MS = 1500;
 
@@ -66,25 +59,21 @@ public class SuiviDesVisages {
      * Durée pendant laquelle une identité trouvée par SFace peut être réutilisée telle quelle,
      * sans relancer la reconnaissance.
      * <p>
-     * <b>C'est ce qui empêche le suivi de devenir un verrou.</b> L'identité héritée conservant la
-     * date de sa dernière confirmation par SFace — et non celle de sa recopie —, elle périme
-     * forcément, et le visage repasse par la reconnaissance. Sans cette péremption, une étiquette
-     * posée une fois se recopiait de cycle en cycle sans plus jamais être vérifiée : le
-     * 2026-08-15 sur le robot, un visage ayant hérité du nom d'une photo voisine le gardait tant
-     * que la personne restait dans le champ. Retirer la photo n'y changeait rien ; il fallait
-     * sortir du champ et revenir.
+     * <b>C'est ce qui empêche le suivi de devenir un verrou.</b> L'identité héritée garde la date
+     * de sa dernière confirmation par SFace, et non celle de sa recopie : elle périme donc, et le
+     * visage repasse par la reconnaissance. Sans quoi une étiquette posée une fois se recopie
+     * indéfiniment — un visage ayant hérité du nom d'une photo voisine le gardait tant que la
+     * personne restait dans le champ, retirer la photo n'y changeant rien.
      */
     private static final long DUREE_REUTILISATION_IDENTITE_MS = 1000;
 
     /**
      * Durée au-delà de laquelle une identité que SFace ne confirme plus est abandonnée.
      * <p>
-     * Entre la péremption ci-dessus et cette échéance, le visage garde son nom bien que la
-     * reconnaissance échoue : c'est délibéré, et c'est ce qui évite d'aborder quelqu'un de connu.
-     * SFace oscille autour de son seuil et rend régulièrement « personne » sur un visage
-     * parfaitement identifié la seconde d'avant ; rétrograder en inconnu au premier échec était
-     * le défaut corrigé le 2026-08-12. Passé ce délai en revanche, l'obstination n'a plus de
-     * sens : ce n'est probablement plus la même personne.
+     * Entre la péremption ci-dessus et cette échéance, le visage garde son nom malgré l'échec de
+     * la reconnaissance, et c'est ce qui évite d'aborder quelqu'un de connu : SFace oscille autour
+     * de son seuil et rend régulièrement « personne » sur un visage identifié la seconde d'avant.
+     * Passé ce délai, l'obstination n'a plus de sens.
      */
     private static final long DUREE_MAX_IDENTITE_NON_CONFIRMEE_MS = 3000;
 
@@ -156,16 +145,13 @@ public class SuiviDesVisages {
     }
 
     /**
-     * Donne son identité à un visage détecté, en trois temps.
+     * Donne son identité à un visage détecté, en trois temps : l'identité du cycle précédent si
+     * elle est encore fraîche (l'économie de SFace, et toute la raison d'être du suivi), sinon la
+     * reconnaissance qui a le dernier mot, sinon le nom précédent conservé un temps — un échec
+     * isolé de SFace est la règle, pas l'exception.
      * <p>
-     * D'abord l'identité du cycle précédent si elle est encore fraîche — c'est l'économie de
-     * SFace, et la seule raison d'être du suivi. Sinon la reconnaissance, qui a le dernier mot :
-     * c'est elle, et elle seule, qui pose ou corrige un nom. Et si elle ne rend rien, le nom
-     * précédent est conservé un temps plutôt que rétrogradé en inconnu, parce qu'un échec isolé
-     * de SFace est la règle et non l'exception.
-     * <p>
-     * Le point qui compte : une identité héritée <b>garde la date de sa dernière confirmation</b>.
-     * C'est ce qui la fait périmer, donc revérifier, au lieu de se recopier indéfiniment.
+     * Une identité héritée <b>garde la date de sa dernière confirmation</b> : c'est ce qui la fait
+     * périmer, donc revérifier, au lieu de se recopier indéfiniment.
      */
     static VisageSuivi identifier(RecognizedFace boite, VisageSuivi visagePrecedentProche,
                                   long maintenant, java.util.function.Supplier<Personne> reconnaissance) {

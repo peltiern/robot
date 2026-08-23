@@ -25,10 +25,8 @@ import java.util.Locale;
 /**
  * Conversation avec l'IA (Claude via Spring AI).
  * <p>
- * Remplace l'ancien {@code OpenAIConversation} (langchain4j) : le modèle est configuré
- * dans {@code application.properties} ({@code spring.ai.anthropic.*}, clé d'API lue dans
- * le {@code .env}), la mémoire de conversation persiste en base via
- * {@link ConversationRepository}.
+ * Le modèle est réglé dans {@code application.properties} ({@code spring.ai.anthropic.*}, clé
+ * d'API lue dans le {@code .env}) ; le fil de chacun persiste via {@link ConversationRepository}.
  */
 @Component
 public class ConversationIA {
@@ -123,7 +121,7 @@ public class ConversationIA {
      * Paie d'avance le démarrage à froid du client d'IA, dès que le robot est prêt.
      * <p>
      * <b>Le premier appel de chaque séance coûte dix secondes</b>, les suivants une seule —
-     * chronométré deux fois sur le robot le 2026-08-15 : 10,0 s puis 1,1 s, 11,0 s puis 1,1 s.
+     * chronométré deux fois sur le robot : 10,0 s puis 1,1 s, 11,0 s puis 1,1 s.
      * Client HTTP, poignée de main TLS, premières classes chargées. Tant que le robot ne parlait
      * qu'en réponse, ce coût passait inaperçu ; depuis qu'il engage la conversation lui-même
      * (retrouvailles, accueil), il tombe en plein dessus et laisse la personne devant un robot
@@ -190,7 +188,7 @@ public class ConversationIA {
      * quelqu'un vu il y a dix minutes et quelqu'un vu il y a trois semaines.
      * <p>
      * <b>Une durée précise, et non une tranche.</b> « Moins d'une heure » pour vingt minutes
-     * d'absence s'est fait rendre le 2026-08-15 par « content de te revoir après cette petite
+     * d'absence s'est fait rendre « content de te revoir après cette petite
      * heure », puis « tu as fait quoi pendant cette heure sans moi ». Le modèle prend au mot ce
      * qu'on lui donne : autant lui donner le chiffre.
      */

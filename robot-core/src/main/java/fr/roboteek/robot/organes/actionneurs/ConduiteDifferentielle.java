@@ -25,7 +25,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 /**
  * Conduite différentielle (chenilles) du robot.
  * <p>
- * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle} en phase
+ * Cycle de vie géré par {@link SmartLifecycle} en phase
  * {@link RobotLifecyclePhases#ACTIONNEURS_AVEC_MOTEUR}. Les moteurs ne sont créés
  * et engagés qu'au {@code start()} — pas à la construction du bean — pour respecter
  * l'ordre des phases (moteurs derniers démarrés, premiers arrêtés).
@@ -33,29 +33,19 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 @Component
 public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifecycle {
 
-    /**
-     * Moteur pour la roue gauche.
-     */
+    /** Moteur pour la roue gauche. */
     private PhidgetDCMotor moteurGauche;
 
-    /**
-     * Moteur pour la roue droite.
-     */
+    /** Moteur pour la roue droite. */
     private PhidgetDCMotor moteurDroit;
 
-    /**
-     * Phidgets configuration.
-     */
+    /** Phidgets configuration. */
     private PhidgetsConfig phidgetsConfig;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(ConduiteDifferentielle.class);
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     /**
@@ -82,9 +72,7 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
     private final ChenilleSurveillee chenilleDroite =
             new ChenilleSurveillee("chenille-droite", "Chenille droite", this::isRunning);
 
-    /**
-     * Constructeur.
-     */
+    /** Constructeur. */
     public ConduiteDifferentielle() {
         super();
         phidgetsConfig = phidgetsConfig();
@@ -194,9 +182,7 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
         moteurDroit.close();
     }
 
-    /**
-     * Arrête les moteurs.
-     */
+    /** Arrête les moteurs. */
     private void reset() {
         moteurGauche.stop();
         moteurDroit.stop();

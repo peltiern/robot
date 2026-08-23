@@ -35,9 +35,7 @@ import static fr.roboteek.robot.configuration.Configurations.piperSpeechSynthesi
  * Organe permettant de synthétiser un texte (fournisseur cloud ou local, cf.
  * {@link SpeechProviderConfig}) et en appliquant des effets avec SOX.
  * <p>
- * Migré en bean Spring : cycle de vie géré par {@link SmartLifecycle},
- * évènements reçus via {@link EventListener} (relayés depuis le bus Guava par le pont
- * tant que la migration n'est pas terminée).
+ * Cycle de vie géré par {@link SmartLifecycle}, évènements reçus via {@link EventListener}.
  */
 @Component
 public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
@@ -47,19 +45,13 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
     private SpeechSynthesizerService speechSynthesizerService;
     private String fichierSyntheseVocale;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(OrganeParole.class);
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
-    /**
-     * Constructeur.
-     */
+    /** Constructeur. */
     public OrganeParole() {
         super();
         googleConfig = googleSpeechSynthesisConfig();

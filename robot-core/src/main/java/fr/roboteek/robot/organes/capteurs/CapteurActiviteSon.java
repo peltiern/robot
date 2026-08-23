@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
  * Capteur d'activité sonore basé sur le micro-array ReSpeaker (détection de voix
  * et direction d'arrivée du son).
  * <p>
- * Migré en bean Spring mais <b>désactivé par défaut</b> : cet organe n'était pas
- * instancié par l'ancien démarrage ({@code Robot}). Pour l'activer :
+ * <b>Désactivé par défaut.</b> Pour l'activer :
  * {@code robot.capteurs.activite-son.enabled=true}.
  */
 @Component

@@ -28,34 +28,22 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
     private static final Logger logger = LoggerFactory.getLogger(PhidgetsServoMotor.class);
 
-    /**
-     * Moteur Phidget associé.
-     */
+    /** Moteur Phidget associé. */
     private RCServo rcServo;
 
-    /**
-     * Position initiale du moteur.
-     */
+    /** Position initiale du moteur. */
     private double positionInitiale;
 
-    /**
-     * Position minimale du moteur.
-     */
+    /** Position minimale du moteur. */
     private double positionMin;
 
-    /**
-     * Position maximale du moteur.
-     */
+    /** Position maximale du moteur. */
     private double positionMax;
 
-    /**
-     * Vitesse par défaut.
-     */
+    /** Vitesse par défaut. */
     private double vitesseParDefaut;
 
-    /**
-     * Accélération par défaut.
-     */
+    /** Accélération par défaut. */
     private double accelerationParDefaut;
 
     /**
@@ -67,9 +55,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
      */
     private Double positionEngagement;
 
-    /**
-     * Flag indiquant que la position est atteinte.
-     */
+    /** Flag indiquant que la position est atteinte. */
     private AtomicBoolean positionAtteinte = new AtomicBoolean(true);
 
     /** Index du moteur sur le contrôleur, conservé pour désigner le servo dans les journaux. */
@@ -200,7 +186,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         double demande = getPositionReelle() + angle;
         double cible = Math.clamp(demande, positionMin, positionMax);
         // Sans ces lignes, un servo collé à sa butée est indiscernable d'un servo qui obéit mal :
-        // l'appelant redemande, rien ne bouge, et rien ne le dit. Vu le 2026-08-12 sur le cou,
+        // l'appelant redemande, rien ne bouge, et rien ne le dit. Vu sur le cou,
         // vingt consignes de suite dans le vide, prises pour un défaut de réglage.
         // Journalisé aux CHANGEMENTS d'état seulement : un axe qui reste en butée écrirait sinon
         // une ligne par consigne, soit une par seconde pour le regard.

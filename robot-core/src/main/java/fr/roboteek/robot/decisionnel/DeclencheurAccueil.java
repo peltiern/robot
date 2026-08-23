@@ -78,8 +78,8 @@ public class DeclencheurAccueil {
      * <p>
      * La rencontre a été consommée en pure perte : le registre de présence tient la venue pour
      * tranchée alors que personne n'a été abordé. Sans cet aveu, la personne restant devant la
-     * caméra, aucune nouvelle venue ne commence et le robot ne lui dira jamais rien. Constaté sur
-     * le robot le 2026-08-15 pour un accueil, le 2026-08-16 pour des retrouvailles.
+     * caméra, aucune nouvelle venue ne commence et le robot ne lui dira jamais rien. Constaté sur le
+     * robot, pour un accueil comme pour des retrouvailles.
      * <p>
      * Rendu ici et non dans le registre : c'est le déclencheur qui a fait la demande, et lui seul
      * sait qui elle visait.

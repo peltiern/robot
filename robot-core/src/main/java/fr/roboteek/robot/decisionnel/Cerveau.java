@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * Cerveau du robot nécessaire à la prise de décisions.
  * <p>
- * Migré en bean Spring : cycle de vie (thread des activités) géré par {@link SmartLifecycle}
+ * Cycle de vie (thread des activités) géré par {@link SmartLifecycle}
  * en phase {@link RobotLifecyclePhases#CERVEAU} — dernier démarré, premier arrêté.
  * Le cerveau est purement évènementiel : il ne référence aucun organe directement.
  *
@@ -44,22 +44,18 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      * restitue que ce que contient son lexique. « Akinator » n'y est pas — dit au robot, il en
      * ressort « inhalateur » ou « akhenaton ».
      * <p>
-     * <b>Les mots-clés d'Akinator ont été retirés le 2026-08-15</b>, et l'activité n'est donc plus
-     * atteignable. Elle est cassée depuis la mise à jour d'akiwrapper, qui échoue au démarrage sur
-     * {@code 'fa' is not a recognized language} : le cerveau se rattrapait et retombait sur la
-     * conversation, mais le robot promettait une devinette qu'il ne savait pas jouer. Remettre
-     * « devinette » et « devinettes » ici le jour où la bibliothèque sera réparée.
+     * <b>Akinator n'a plus de mot-clé</b> : akiwrapper échoue au démarrage sur
+     * {@code 'fa' is not a recognized language}, et le robot promettait une devinette qu'il ne
+     * savait pas jouer. Y remettre « devinette » le jour où la bibliothèque sera réparée.
      * <p>
      * La conversation y figure, et c'est la porte de sortie : sans elle, une activité lancée à la
-     * voix ne se quitterait qu'en éteignant le robot, « au revoir » l'arrêtant pour de bon.
+     * voix ne se quitterait qu'en éteignant le robot.
      */
     private static final Map<String, String> ACTIVITES_PAR_MOT_CLE = Map.of(
             "conversation", ConversationActivity.class.getSimpleName(),
             "discussion", ConversationActivity.class.getSimpleName());
 
-    /**
-     * Contexte du robot.
-     */
+    /** Contexte du robot. */
     // TODO Voir pour placer le contexte au niveau du robot
 //    private Contexte contexte;
 
@@ -71,9 +67,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private volatile AbstractActivity currentActivity;
 
-    /**
-     * Activité de conversation (activité par défaut).
-     */
+    /** Activité de conversation (activité par défaut). */
     private final ConversationActivity conversationActivity;
 
     /**
@@ -82,14 +76,10 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private final Map<String, AbstractActivity> activitesParIdentifiant;
 
-    /**
-     * Activité réclamée, en attente que la boucle reprenne la main. {@code null} si aucune.
-     */
+    /** Activité réclamée, en attente que la boucle reprenne la main. {@code null} si aucune. */
     private final AtomicReference<AbstractActivity> activiteDemandee = new AtomicReference<>();
 
-    /**
-     * Décide des demandes de changement d'activité (priorité, temporisation, arrêt d'urgence).
-     */
+    /** Décide des demandes de changement d'activité (priorité, temporisation, arrêt d'urgence). */
     private final ArbitrageActivites arbitrageActivites;
 
     /**
@@ -101,14 +91,10 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      */
     private final MemoireCourtTerme memoireCourtTerme;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(Cerveau.class);
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     public Cerveau(ConversationActivity conversationActivity, List<AbstractActivity> activites,
@@ -214,15 +200,13 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
     /**
      * Intercepte les demandes de changement d'activité.
      * <p>
-     * Le changement n'a pas lieu ici : la boucle du cerveau est bloquée dans le {@code run()}
-     * de l'activité courante. On dépose la demande, puis on désactive l'activité en cours pour
-     * qu'elle rende la main — c'est ensuite le thread de la boucle, seul propriétaire du
-     * changement, qui bascule. Le listener reste donc court : il s'exécute sur le thread de
-     * l'émetteur (la boucle de capture vidéo, par exemple), qu'il ne doit pas retenir.
+     * Le changement n'a pas lieu ici : la boucle du cerveau est bloquée dans le {@code run()} de
+     * l'activité courante. On dépose la demande et on désactive l'activité en cours pour qu'elle
+     * rende la main — c'est le thread de la boucle, seul propriétaire du changement, qui bascule.
+     * Ce traitement s'exécute sur le thread de l'émetteur (la boucle de capture vidéo, par
+     * exemple) et doit donc rester court.
      * <p>
-     * La demande n'est pas honorée d'office : {@link ArbitrageActivites} tranche d'abord.
-     *
-     * @param demandeActiviteEvent demande de changement d'activité
+     * {@link ArbitrageActivites} tranche d'abord : la demande n'est pas honorée d'office.
      */
     @EventListener
     public void handleDemandeActiviteEvent(DemandeActiviteEvent demandeActiviteEvent) {
@@ -306,9 +290,7 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
         }
     }
 
-    /**
-     * Réduit une phrase entendue à sa forme comparable aux mots-clés d'activité.
-     */
+    /** Réduit une phrase entendue à sa forme comparable aux mots-clés d'activité. */
     private static String motCle(String texteReconnu) {
         return texteReconnu.trim().toLowerCase(Locale.FRENCH);
     }

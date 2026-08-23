@@ -74,9 +74,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
      */
     private static final int NB_BLOCS_BUFFER_LIGNE = 8;
 
-    /**
-     * ?.
-     */
+    /** ?. */
     private static final int overlap = 0;
 
     /**
@@ -97,78 +95,50 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
      */
     private volatile boolean misEnPause = false;
 
-    /**
-     * Destination STOMP du flux audio (voir {@code WebSocketBrokerConfig}).
-     */
+    /** Destination STOMP du flux audio (voir {@code WebSocketBrokerConfig}). */
     private static final String DESTINATION_AUDIO = "/audio";
 
-    /**
-     * Registre des abonnements WebSocket : sert à n'encoder le WAV que si un client l'écoute.
-     */
+    /** Registre des abonnements WebSocket : sert à n'encoder le WAV que si un client l'écoute. */
     @Autowired(required = false)
     private RegistreAbonnesWebsocket registreAbonnesWebsocket;
 
-    /**
-     * Indique si un client est abonné au flux audio.
-     */
+    /** Indique si un client est abonné au flux audio. */
     private boolean diffusionAudioEcoutee() {
         return registreAbonnesWebsocket != null
                 && registreAbonnesWebsocket.aAuMoinsUnAbonne(DESTINATION_AUDIO);
     }
 
-    /**
-     * Dispatcher audio (permet d'arrêter proprement l'acquisition).
-     */
+    /** Dispatcher audio (permet d'arrêter proprement l'acquisition). */
     private AudioDispatcher dispatcher;
 
-    /**
-     * Format audio.
-     */
+    /** Format audio. */
     private AudioFormat format;
 
-    /**
-     * Timestamp précédent (permet de connaître le temps depuis le dernier bloc "parlé").
-     */
+    /** Timestamp précédent (permet de connaître le temps depuis le dernier bloc "parlé"). */
     private double timestampDernierBlocParle = 0;
 
-    /**
-     * Chemin du fichier WAV.
-     */
+    /** Chemin du fichier WAV. */
     private String cheminFichierWav;
 
-    /**
-     * Buffer permettant de stocker le signal audio précédent.
-     */
+    /** Buffer permettant de stocker le signal audio précédent. */
     private byte[] bufferNMoins1;
 
-    /**
-     * Buffer permettant de stocker le signal audio précédent.
-     */
+    /** Buffer permettant de stocker le signal audio précédent. */
     private byte[] bufferNMoins2;
 
-    /**
-     * Buffer permettant de stocker le signal audio précédent.
-     */
+    /** Buffer permettant de stocker le signal audio précédent. */
     private byte[] bufferNMoins3;
 
-    /**
-     * Buffer permettant de stocker le signal audio précédent.
-     */
+    /** Buffer permettant de stocker le signal audio précédent. */
     private byte[] bufferNMoins4;
 
-    /**
-     * Buffer permettant de stocker le signal audio précédent.
-     */
+    /** Buffer permettant de stocker le signal audio précédent. */
     private byte[] bufferNMoins5;
 
-    /**
-     * Buffer permettant de stocker une phase de reconnaissance.
-     */
+    /** Buffer permettant de stocker une phase de reconnaissance. */
     private byte[] contenuParle;
 
-    /**
-     * Configuration.
-     */
+    /** Configuration. */
     private RobotConfig robotConfig;
 
 

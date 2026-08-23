@@ -14,14 +14,10 @@ public class ConversationEvent extends RobotEvent {
 
     public static final String EVENT_TYPE = "conversation";
 
-    /**
-     * Texte.
-     */
+    /** Texte. */
     private String texte;
 
-    /**
-     * Vrai si c'est le robot qui parle, faux si c'est quelqu'un devant lui.
-     */
+    /** Vrai si c'est le robot qui parle, faux si c'est quelqu'un devant lui. */
     private boolean duRobot;
 
     /**

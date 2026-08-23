@@ -33,25 +33,24 @@ import java.util.concurrent.TimeUnit;
  * visage.
  * <p>
  * Activité au sens strict — un script séquentiel et <b>exclusif</b>, qui monopolise la bouche et
- * l'oreille du robot, bloque dans son {@code run()} et rend la main à la conversation en sortant.
+ * l'oreille, bloque dans son {@code run()} et rend la main à la conversation en sortant.
  * Déclenchée par {@code DeclencheurAccueil} sur une rencontre d'inconnu, jamais par elle-même.
  * <p>
- * Quatre partis pris, tous dictés par des échecs prévisibles :
+ * Quatre partis pris :
  * <ul>
- *   <li><b>Salutations tirées au sort, sans IA</b> : une seconde de latence se voit sur un
- *       bonjour, et le naturel vient de la variété, pas de l'invention ;</li>
+ *   <li><b>salutations tirées au sort, sans IA</b> : une seconde de latence se voit sur un
+ *       bonjour, et le naturel vient de la variété ;</li>
  *   <li><b>prénom extrait par l'IA</b> ({@link ExtractionPrenomIA}), parce que personne ne répond
  *       « Marie » tout court ;</li>
- *   <li><b>confirmation vocale systématique</b> : le petit modèle Vosk massacre les prénoms rares,
- *       et <b>on n'écrit jamais dans la base des visages sans l'accord de la personne</b> ;</li>
- *   <li><b>attente bornée</b> : deux relances puis abandon poli. Une activité qui attend sans
+ *   <li><b>confirmation vocale systématique</b> : Vosk massacre les prénoms rares, et on n'écrit
+ *       jamais dans la base des visages sans l'accord de la personne ;</li>
+ *   <li><b>attente bornée</b> : deux relances puis abandon poli — une activité qui attend sans
  *       limite bloque le cerveau, et le robot devient sourd à tout le reste.</li>
  * </ul>
  * <p>
- * La personne est créée avant l'apprentissage de son visage — les empreintes la référencent en
- * base et ne peuvent pas la précéder — mais <b>effacée si le visage n'est pas appris</b>. Le
- * résultat est le même qu'avant : rien ne subsiste de quelqu'un que le robot ne saurait pas
- * reconnaître, et qu'il aborderait à nouveau comme un inconnu à la rencontre suivante.
+ * La personne est créée avant l'apprentissage de son visage (les empreintes la référencent et ne
+ * peuvent pas la précéder) mais <b>effacée si le visage n'est pas appris</b> : rien ne subsiste
+ * de quelqu'un que le robot ne saurait pas reconnaître.
  */
 @Component
 public class PresentationActivity extends AbstractActivity {
@@ -73,8 +72,8 @@ public class PresentationActivity extends AbstractActivity {
      * <p>
      * Dix secondes et non trente : la phrase la plus longue en fait quatre, et ce délai est
      * intégralement subi à chaque question le jour où la parole ne répond plus. Vu sur le robot
-     * le 2026-08-12, après un plantage de la synthèse : la rencontre a duré une minute et quart,
-     * cerveau bloqué, pour trois questions sans réponse.
+     * après un plantage de la synthèse : la rencontre a duré une minute et quart, cerveau bloqué,
+     * pour trois questions sans réponse.
      */
     private static final long DELAI_MAX_PAROLE_MS = 10000;
 
@@ -256,9 +255,7 @@ public class PresentationActivity extends AbstractActivity {
         return stopActivity;
     }
 
-    /**
-     * Demande à l'organe de vision d'apprendre le visage et attend son verdict.
-     */
+    /** Demande à l'organe de vision d'apprendre le visage et attend son verdict. */
     private boolean apprendreLeVisage(String idPersonne) {
         enrolementsTermines.clear();
         applicationEventPublisher.publishEvent(new DemandeEnrolementEvent(idPersonne));

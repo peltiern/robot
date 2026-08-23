@@ -18,7 +18,7 @@ import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
 /**
  * Contrôleur de manette Logitech : transforme les entrées manette en évènements du robot.
  * <p>
- * Migré en bean Spring : démarrage géré par {@link SmartLifecycle} en phase CAPTEURS
+ * Démarrage géré par {@link SmartLifecycle} en phase CAPTEURS
  * (c'est une entrée de commandes). Backend {@link Input4jGamepadManager} (input4j, mode
  * XInput) ; l'arrêt stoppe la boucle de polling et ferme input4j.
  */
@@ -27,9 +27,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
 
     private final Input4jGamepadManager gamepadManager;
 
-    /**
-     * Publication des évènements du système nerveux.
-     */
+    /** Publication des évènements du système nerveux. */
     private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
@@ -38,14 +36,10 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
      */
     private final ArretUrgence arretUrgence;
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(RobotLogitechController.class);
 
-    /**
-     * Flag de démarrage (cycle de vie Spring).
-     */
+    /** Flag de démarrage (cycle de vie Spring). */
     private volatile boolean running = false;
 
     /**
@@ -392,9 +386,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         applicationEventPublisher.publishEvent(mouvementCouEvent);
     }
 
-    /**
-     * Publie un mouvement continu de l'oeil droit (contrôle direct arrière droit, sans Y).
-     */
+    /** Publie un mouvement continu de l'oeil droit (contrôle direct arrière droit, sans Y). */
     private void publierMouvementOeilDroit(MouvementYeuxEvent.MOUVEMENTS_OEIL mouvement) {
         MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
         mouvementYeuxEvent.setAccelerationOeilDroit(2000D);
@@ -404,9 +396,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         applicationEventPublisher.publishEvent(mouvementYeuxEvent);
     }
 
-    /**
-     * Publie un mouvement continu de l'oeil gauche (contrôle direct arrière gauche, sans Y).
-     */
+    /** Publie un mouvement continu de l'oeil gauche (contrôle direct arrière gauche, sans Y). */
     private void publierMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL mouvement) {
         MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
         mouvementYeuxEvent.setAccelerationOeilGauche(2000D);
@@ -430,9 +420,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
         return mouvementCouEvent;
     }
 
-    /**
-     * Stoppe les deux yeux (fin d'un roulis).
-     */
+    /** Stoppe les deux yeux (fin d'un roulis). */
     private void publierArretYeux() {
         MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
         mouvementYeuxEvent.setMouvementOeilGauche(MouvementYeuxEvent.MOUVEMENTS_OEIL.STOPPER);

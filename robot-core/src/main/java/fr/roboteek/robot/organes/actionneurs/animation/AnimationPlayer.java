@@ -25,20 +25,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Lecteur d'animations : déroule les étapes d'une animation dans son propre thread
  * en publiant les évènements de mouvements et de sons correspondants.
  * <p>
- * Migré en bean Spring : cycle de vie (thread de la boucle) géré par {@link SmartLifecycle},
+ * Cycle de vie (thread de la boucle) géré par {@link SmartLifecycle},
  * évènements reçus via {@link EventListener}.
  */
 @Component
 public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLifecycle, OrganeSurveille {
 
-    /**
-     * Logger.
-     */
+    /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(AnimationPlayer.class);
 
-    /**
-     * Flag de démarrage de l'organe (cycle de vie Spring).
-     */
+    /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
     /**
@@ -47,9 +43,7 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
      */
     private volatile boolean automaticMode = false;
 
-    /**
-     * Liste des étapes d'animation à jouer.
-     */
+    /** Liste des étapes d'animation à jouer. */
     private ConcurrentLinkedQueue<AnimationStep> animationSteps = new ConcurrentLinkedQueue<>();
 
     /**

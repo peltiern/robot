@@ -1,19 +1,11 @@
 package fr.roboteek.robot.systemenerveux.event;
 
 /**
- * Évènement d'arrêt d'urgence des moteurs.
+ * Évènement d'arrêt d'urgence des moteurs, porteur des deux bascules : {@code actif = true} coupe
+ * les moteurs et fait refuser tout ordre de mouvement, {@code actif = false} réarme — sans rien
+ * remettre en marche, les ordres sont simplement acceptés à nouveau.
  * <p>
- * Deux états, portés par le même évènement pour que tout le monde suive la même bascule :
- * <ul>
- *     <li>{@code actif = true} : <b>déclenchement</b>. Chaque organe à moteur coupe ses moteurs
- *     immédiatement, puis refuse tout ordre de mouvement.</li>
- *     <li>{@code actif = false} : <b>réarmement</b>. Rien ne bouge pour autant — les ordres sont
- *     simplement acceptés à nouveau.</li>
- * </ul>
  * À ne pas confondre avec {@link StopEvent}, qui éteint l'application entière.
- * <p>
- * Diffusé aux clients Websocket sur {@code /events/arret-urgence} comme tout
- * {@link RobotEvent} : l'interface suit l'état sans avoir à interroger le robot.
  *
  * @see fr.roboteek.robot.securite.ArretUrgence
  */
