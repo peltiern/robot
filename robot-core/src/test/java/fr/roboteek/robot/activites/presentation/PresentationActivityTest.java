@@ -72,6 +72,9 @@ class PresentationActivityTest {
 
     private final List<String> enrolementsDemandes = new CopyOnWriteArrayList<>();
 
+    /** Ce que le robot avait dit au moment où il a demandé la prise de visage. */
+    private final List<String> phrasesDitesALaDemande = new CopyOnWriteArrayList<>();
+
     /**
      * La personne telle qu'elle était en base <b>au moment où</b> son visage a été demandé.
      * Les empreintes la référencent : si elle n'y est pas encore, la base refuse de les écrire.
@@ -97,6 +100,7 @@ class PresentationActivityTest {
                 repondreSiProgramme(parole.getTexte());
             } else if (evenement instanceof DemandeEnrolementEvent demande) {
                 enrolementsDemandes.add(demande.getIdPersonne());
+                phrasesDitesALaDemande.addAll(phrasesDites);
                 Personne enBase = personneRepository.parId(demande.getIdPersonne());
                 if (enBase != null) {
                     personnesEnBaseALaDemande.add(enBase);
@@ -107,6 +111,32 @@ class PresentationActivityTest {
         };
         ReflectionTestUtils.setField(activite, "applicationEventPublisher", publieur);
         activite.activer();
+    }
+
+    /**
+     * Mesuré sur le robot : un enrôlement a échoué sur 43 prises d'affilée vues à plus de 78° de
+     * lacet — la personne avait confirmé son prénom puis s'était retournée. Elle n'avait aucune
+     * raison de savoir qu'il fallait regarder le robot, il apprenait en silence.
+     * <p>
+     * Ce que ce test garde n'est donc pas la phrase, c'est <b>son moment</b> : dite, et terminée,
+     * avant que la prise ne commence. Dite après, elle ne servirait à rien.
+     */
+    @Test
+    @Timeout(10)
+    void leRobotDemandeQuOnLeRegardeAvantDApprendreLeVisage() {
+        // Les deux formulations : la salutation est tirée au hasard, et deux d'entre elles
+        // demandent « quel est ton prénom ». Sans ça, le test ne passe que trois fois sur quatre.
+        repondreApres("comment tu t'appelles", "marie");
+        repondreApres("quel est ton prénom", "marie");
+        repondreApres("c'est bien ça", "oui");
+        when(extractionPrenomIA.extraire("marie")).thenReturn("Marie");
+
+        activite.run();
+
+        assertFalse(phrasesDitesALaDemande.isEmpty(), "aucune phrase avant la prise de visage");
+        String derniere = phrasesDitesALaDemande.getLast();
+        assertTrue(PresentationActivity.DEMANDES_DE_REGARD.contains(derniere),
+                "la dernière phrase avant la prise devrait demander de regarder, c'était : " + derniere);
     }
 
     @Test

@@ -46,21 +46,6 @@ public class ApprentissageParPhoto {
      */
     private static final float SCORE_MINIMAL = 0.9f;
 
-    /**
-     * Netteté minimale du visage, en variance du laplacien (voir {@link VisageDansLImage#nettete}).
-     * <p>
-     * Mesuré sur les photos d'exemple du dépôt, visage ramené à 192 px : les originaux donnent
-     * 222, 537, 1146 et 3423 ; les mêmes franchement floutés donnent 3, 8, 15 et 52. Cent laisse
-     * donc plus du double de marge sous la plus médiocre des vraies photos, et près du double
-     * au-dessus de la pire des floues.
-     * <p>
-     * <b>Ce seuil sépare l'inexploitable de l'exploitable, pas le bon du parfait</b> : une photo
-     * légèrement floue mais très détaillée passera. Le viser plus haut recalerait des photos
-     * honnêtes — et refuser ce que quelqu'un vient d'envoyer coûte plus cher que d'accepter une
-     * empreinte moyenne, que d'autres photos viendront compléter.
-     */
-    private static final double NETTETE_MINIMALE = 100;
-
     private final VisageConnuRepository visageConnuRepository;
 
     public ApprentissageParPhoto(VisageConnuRepository visageConnuRepository) {
@@ -94,13 +79,11 @@ public class ApprentissageParPhoto {
             if (visage.score() < SCORE_MINIMAL) {
                 throw new PhotoInexploitable("le visage n'est pas assez net pour être sûr que c'en est un");
             }
-            // Une empreinte tirée d'un visage flou n'est pas seulement inutile : la reconnaissance
-            // retient la meilleure similarité parmi toutes les empreintes connues, et celle-là
-            // peut dépasser le seuil face à quelqu'un d'AUTRE. Le robot appellerait alors Sandra
-            // « Nicolas ». Mieux vaut pas d'empreinte du tout.
-            double nettete = VisageDansLImage.nettete(image, visage);
-            if (nettete < NETTETE_MINIMALE) {
-                throw new PhotoInexploitable("photo trop floue pour apprendre ce visage");
+            // La même porte qu'à la caméra, avec un message pour celui qui a envoyé la photo.
+            switch (VisageDansLImage.qualite(image, visage)) {
+                case TROP_FLOU -> throw new PhotoInexploitable("photo trop floue pour apprendre ce visage");
+                case TROP_DE_PROFIL -> throw new PhotoInexploitable("visage trop de profil, il en faut une prise de face");
+                case EXPLOITABLE -> { }
             }
             return new Empreinte(reconnaissance().extraireEmbedding(image, visage),
                     VisageDansLImage.portraitJpeg(image, visage));

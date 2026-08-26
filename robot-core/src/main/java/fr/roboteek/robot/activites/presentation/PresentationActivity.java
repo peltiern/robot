@@ -89,6 +89,19 @@ public class PresentationActivity extends AbstractActivity {
             "Salut ! Moi c'est Wall-E. Et toi, comment tu t'appelles ?",
             "Oh ! Quelqu'un que je ne connais pas. Quel est ton prénom ?");
 
+    /**
+     * Dit juste avant d'apprendre le visage, et attendu jusqu'au bout.
+     * <p>
+     * <b>Mesuré sur le robot</b> : un enrôlement a échoué sur 43 prises d'affilée vues à plus de
+     * 78° de lacet — la personne avait répondu « oui » puis s'était retournée vers son écran. Le
+     * robot apprenait en silence, il n'y avait aucune raison qu'elle sache qu'il fallait le
+     * regarder. Le dire coûte une phrase et se termine avant que la prise commence.
+     */
+    static final List<String> DEMANDES_DE_REGARD = List.of(
+            "Super ! Regarde-moi bien en face, je mémorise ton visage.",
+            "Parfait ! Tourne-toi vers moi une seconde, que je retienne ta tête.",
+            "Génial ! Regarde-moi droit dans les yeux, j'enregistre.");
+
     private static final List<String> RELANCES = List.of(
             "Je n'ai pas bien entendu. Comment tu t'appelles ?",
             "Tu peux répéter ton prénom ?",
@@ -255,8 +268,15 @@ public class PresentationActivity extends AbstractActivity {
         return stopActivity;
     }
 
-    /** Demande à l'organe de vision d'apprendre le visage et attend son verdict. */
+    /**
+     * Fait regarder la personne, demande à l'organe de vision d'apprendre le visage, et attend son
+     * verdict.
+     * <p>
+     * La phrase est <b>attendue jusqu'à sa fin</b> avant de lancer la prise : c'est tout l'intérêt
+     * — la personne se tourne pendant qu'il parle, et le relevé commence sur quelqu'un qui regarde.
+     */
     private boolean apprendreLeVisage(String idPersonne) {
+        direEtAttendreLaFin(auHasard(DEMANDES_DE_REGARD));
         enrolementsTermines.clear();
         applicationEventPublisher.publishEvent(new DemandeEnrolementEvent(idPersonne));
         EnrolementTermineEvent resultat = attendre(enrolementsTermines, DELAI_MAX_ENROLEMENT_MS);

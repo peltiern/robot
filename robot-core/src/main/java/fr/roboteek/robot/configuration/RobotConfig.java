@@ -100,6 +100,48 @@ public interface RobotConfig extends Config {
     int qualiteJpegFluxVideo();
 
     /**
+     * Netteté minimale exigée d'un visage pour en tirer une empreinte, en variance du laplacien
+     * (voir {@code VisageDansLImage.nettete}).
+     * <p>
+     * <b>Le même seuil pour la photo importée et pour la caméra</b>, et c'est voulu : une empreinte
+     * bâclée ne gêne pas que la personne concernée — la reconnaissance retient la meilleure
+     * similarité parmi toutes les empreintes connues, et celle-là peut dépasser le seuil face à
+     * quelqu'un d'<b>autre</b>. La mesure est ramenée à 192 px des deux côtés, justement pour que
+     * la même valeur veuille dire la même chose sur une photo de téléphone et sur la webcam.
+     * <p>
+     * Mesuré sur les photos d'exemple du dépôt : originaux à 222, 537, 1146 et 3423 ; les mêmes
+     * franchement floutés à 3, 8, 15 et 52. Cent sépare les deux paquets avec une marge confortable
+     * de part et d'autre. <b>Ce seuil sépare l'inexploitable de l'exploitable, pas le bon du
+     * parfait</b> : le monter recalerait des prises honnêtes, et refuser ce que quelqu'un vient
+     * d'envoyer coûte plus cher que d'accepter une empreinte moyenne, que d'autres viendront
+     * compléter.
+     */
+    @Key("robot.capteurs.vision.visage.nettete.minimale")
+    @DefaultValue("100")
+    double netteteMinimaleDuVisage();
+
+    /**
+     * Décalage maximal du nez par rapport au milieu des yeux, en écarts d'yeux, au-delà duquel on
+     * tient le visage pour trop de profil (voir {@code VisageDetecte.asymetrieDuNez}).
+     * <p>
+     * SFace est entraîné sur des visages à peu près de face : de profil, l'empreinte s'éloigne de
+     * celle qu'on a enrôlée au point de tomber parfois plus près de quelqu'un d'autre. Passé ce
+     * seuil, le robot ne cherche plus qui c'est et n'enrôle plus — il rend « quelqu'un » au lieu
+     * d'un nom. Ça ne le fait <b>pas</b> mieux reconnaître de profil : ça remplace une mauvaise
+     * réponse par pas de réponse.
+     * <p>
+     * Calibrage : sur les photos d'exemple du dépôt, des visages de face donnent 0,008 à 0,104,
+     * roulis compris (le nez est projeté sur l'axe des yeux, une tête penchée ne compte donc pas
+     * pour un profil). Géométriquement, le décalage vaut environ 0,32·tan(lacet) — 0,35 correspond
+     * donc à peu près à 45°, soit trois fois la pire mesure de face. Volontairement large : la
+     * reconnaissance tient très bien le trois-quarts, et une porte trop sévère rendrait le robot
+     * amnésique dès qu'on ne le regarde pas droit dans les yeux.
+     */
+    @Key("robot.capteurs.vision.visage.asymetrie.maximale")
+    @DefaultValue("0.35")
+    double asymetrieMaximaleDuNez();
+
+    /**
      * Durée de présence continue, en secondes, avant de considérer que quelqu'un est vraiment là.
      * <p>
      * Exprimée en durée et non en nombre de cycles : la cadence de la reconnaissance varie avec

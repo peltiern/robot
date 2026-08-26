@@ -15,6 +15,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
+
 /**
  * Reconnaissance de visages via SFace (OpenCV), CPU pur — compare l'embedding du
  * visage détecté à ceux des visages connus ({@link VisageConnuRepository}).
@@ -38,6 +40,13 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
     private static final String NOM_MODELE = "face_recognition_sface_2021dec.onnx";
     private static final double SEUIL_COSINE = 0.363;
 
+    /**
+     * Un refus de profil journalisé sur cent. La reconnaissance tourne quelques fois par seconde :
+     * tout dire noierait le journal, ne rien dire laisse croire que SFace a cherché et n'a pas
+     * trouvé, alors qu'il n'a même pas été appelé.
+     */
+    private static final int PERIODE_JOURNAL_PROFIL = 100;
+
     private static OpenCvServiceReconnaissanceVisage instance;
 
     private final FaceRecognizerSF reconnaisseur;
@@ -45,6 +54,9 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
 
     /** Voir {@link #empreintesConnues()}. */
     private EmpreintesConnues empreintesConnues;
+
+    /** Visages écartés pour cause de profil depuis le démarrage. Voir {@link #PERIODE_JOURNAL_PROFIL}. */
+    private int visagesEcartesDeProfil;
 
     /** Permet d'injecter un modèle et une base isolés (utilisé par les tests). */
     public OpenCvServiceReconnaissanceVisage(String cheminModele, VisageConnuRepository visageConnuRepository) {
@@ -65,8 +77,22 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
         return instance;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Un visage trop de profil est rendu inconnu <b>sans passer par SFace</b> : l'empreinte y
+     * serait de toute façon trop éloignée de celle enrôlée, et son plus proche voisin est alors
+     * aussi bien quelqu'un d'autre — c'est ainsi que Nicolas, de profil, se faisait appeler Julia.
+     * Le refus est donc gratuit, il économise même les ~68 ms de l'empreinte, et le suivi encaisse
+     * l'absence d'identité : il garde la dernière connue quelques secondes.
+     */
     @Override
     public synchronized String identifierPersonne(Mat image, VisageDetecte visage) {
+        double asymetrie = visage.asymetrieDuNez();
+        if (asymetrie > robotConfig().asymetrieMaximaleDuNez()) {
+            journaliserLeRefusDeProfil(asymetrie);
+            return null;
+        }
         EmpreintesConnues connues = empreintesConnues();
         Mat embedding = calculerEmbedding(image, visage);
         try {
@@ -82,6 +108,20 @@ public class OpenCvServiceReconnaissanceVisage implements ServiceReconnaissanceV
             return meilleurIdPersonne;
         } finally {
             embedding.release();
+        }
+    }
+
+    /**
+     * Le premier refus, puis un sur cent. Assez pour voir la porte se fermer et à quel point elle
+     * est loin du seuil, sans que le journal ne raconte chaque image.
+     */
+    private void journaliserLeRefusDeProfil(double asymetrie) {
+        visagesEcartesDeProfil++;
+        if (visagesEcartesDeProfil % PERIODE_JOURNAL_PROFIL == 1) {
+            logger.info("Visage écarté sans chercher qui c'est : trop de profil (asymétrie {} pour un maximum de {}) — {} depuis le démarrage",
+                    String.format("%.2f", asymetrie),
+                    String.format("%.2f", robotConfig().asymetrieMaximaleDuNez()),
+                    visagesEcartesDeProfil);
         }
     }
 

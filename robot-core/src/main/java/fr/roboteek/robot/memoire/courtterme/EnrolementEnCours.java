@@ -167,7 +167,9 @@ public class EnrolementEnCours {
                         enrolement.idPersonne(), e.getMessage(), e);
             }
         } else {
-            logger.warn("Enrôlement de la personne {} abandonné : aucun visage vu à temps", enrolement.idPersonne());
+            // « Rien d'exploitable » et non « aucun visage » : l'organe de vision écarte aussi les
+            // prises trop floues ou trop de profil, et c'est lui qui dit lesquelles, juste après.
+            logger.warn("Enrôlement de la personne {} abandonné : rien d'exploitable à temps", enrolement.idPersonne());
         }
         applicationEventPublisher.publishEvent(new EnrolementTermineEvent(
                 enrolement.idPersonne(), reussi ? enrolement.prises().size() : 0, reussi));

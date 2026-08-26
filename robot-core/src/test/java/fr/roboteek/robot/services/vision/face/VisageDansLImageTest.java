@@ -4,6 +4,7 @@ import nu.pattern.OpenCV;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -85,8 +86,9 @@ class VisageDansLImageTest {
     class Nettete {
 
         /**
-         * Le seuil retenu à l'import ({@code ApprentissageParPhoto}). Recopié plutôt qu'importé :
-         * ce test doit échouer si quelqu'un le déplace sans revenir mesurer ce que ça change.
+         * La valeur par défaut de {@code robot.capteurs.vision.visage.nettete.minimale}. Recopiée
+         * plutôt qu'importée : ce test doit échouer si quelqu'un la change sans revenir mesurer ce
+         * que ça donne.
          */
         private static final double SEUIL_RETENU = 100;
 
@@ -145,6 +147,67 @@ class VisageDansLImageTest {
         private static VisageDetecte toutLeCadre(Mat image) {
             return visage(0, 0, image.width(), image.height());
         }
+    }
+
+    @Nested
+    class PorteDeQualite {
+
+        @Test
+        void unVisageNetEtDeFaceEstExploitable() {
+            assertEquals(VisageDansLImage.Qualite.EXPLOITABLE,
+                    VisageDansLImage.qualite(imageTexturee(640, 480), deFace(300, 200, 80)));
+        }
+
+        @Test
+        void unVisageFlouEstRefuse() {
+            assertEquals(VisageDansLImage.Qualite.TROP_FLOU,
+                    VisageDansLImage.qualite(imageUnie(640, 480), deFace(300, 200, 80)));
+        }
+
+        @Test
+        void unVisageDeProfilEstRefuse() {
+            assertEquals(VisageDansLImage.Qualite.TROP_DE_PROFIL,
+                    VisageDansLImage.qualite(imageTexturee(640, 480), deProfil(300, 200, 80)));
+        }
+
+        /**
+         * Le profil est jugé en premier, et c'est voulu : il ne coûte qu'un calcul sur des points
+         * déjà rendus par la détection, là où la netteté repasse sur l'image.
+         */
+        @Test
+        void leProfilEstJugeAvantLeFlou() {
+            assertEquals(VisageDansLImage.Qualite.TROP_DE_PROFIL,
+                    VisageDansLImage.qualite(imageUnie(640, 480), deProfil(300, 200, 80)));
+        }
+    }
+
+    /** Une image de bruit : des contours partout, donc franchement « nette » au laplacien. */
+    private static Mat imageTexturee(int largeur, int hauteur) {
+        Mat image = new Mat(hauteur, largeur, CvType.CV_8UC3);
+        Core.randu(image, 0, 255);
+        return image;
+    }
+
+    private static VisageDetecte deFace(int x, int y, int cote) {
+        return avecPoints(x, y, cote, 0);
+    }
+
+    /** Nez décalé d'un demi-écart d'yeux : bien au-delà du 0,35 par défaut. */
+    private static VisageDetecte deProfil(int x, int y, int cote) {
+        return avecPoints(x, y, cote, 0.5 * (cote / 3.0));
+    }
+
+    /** Yeux au tiers supérieur, écartés du tiers du visage, nez au centre plus {@code decalage}. */
+    private static VisageDetecte avecPoints(int x, int y, int cote, double decalage) {
+        float[] ligne = new float[15];
+        ligne[0] = x; ligne[1] = y; ligne[2] = cote; ligne[3] = cote;
+        ligne[4] = (float) (x + cote / 3.0); ligne[5] = y + cote / 3f;
+        ligne[6] = (float) (x + 2 * cote / 3.0); ligne[7] = y + cote / 3f;
+        ligne[8] = (float) (x + cote / 2.0 + decalage); ligne[9] = y + cote / 2f;
+        ligne[10] = x + cote / 3f; ligne[11] = y + 2 * cote / 3f;
+        ligne[12] = x + 2 * cote / 3f; ligne[13] = y + 2 * cote / 3f;
+        ligne[14] = 0.99f;
+        return new VisageDetecte(x, y, cote, cote, 0.99f, ligne);
     }
 
     private static Mat imageUnie(int largeur, int hauteur) {

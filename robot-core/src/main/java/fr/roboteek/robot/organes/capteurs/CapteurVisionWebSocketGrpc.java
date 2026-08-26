@@ -20,6 +20,7 @@ import fr.roboteek.robot.services.vision.face.VisageDansLImage;
 import fr.roboteek.robot.services.vision.face.VisageDetecte;
 import fr.roboteek.robot.web.websocket.RegistreAbonnesWebsocket;
 import fr.roboteek.robot.systemenerveux.event.DemandeEnrolementEvent;
+import fr.roboteek.robot.systemenerveux.event.EnrolementTermineEvent;
 import fr.roboteek.robot.systemenerveux.event.VideoEvent;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
@@ -126,6 +127,16 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private String derniereCompositionVisagesTracee = null;
 
     private ObjectDetectionResponse objectDetectionResponse;
+
+    /**
+     * Ce que l'enrôlement en cours a vu passer, ou {@code null} hors enrôlement.
+     * <p>
+     * Volatile, et remplacé plutôt que remis à zéro : il est créé et relu depuis le thread de
+     * l'activité qui demande l'apprentissage, alors que seule la boucle vidéo l'incrémente.
+     * Publier une nouvelle instance suffit à ce que la boucle voie des compteurs neufs ; une
+     * lecture légèrement en retard ne coûterait qu'une ligne de journal imprécise.
+     */
+    private volatile ComptesDePrises comptesDePrises;
 
     /** Configuration. */
     private RobotConfig robotConfig;
@@ -388,7 +399,26 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
             return;
         }
         String idPersonne = demandeEnrolementEvent.getIdPersonne();
+        comptesDePrises = new ComptesDePrises();
         memoireCourtTerme.demarrerUnEnrolement(idPersonne, prises -> retenir(idPersonne, prises));
+    }
+
+    /**
+     * Dit ce que l'apprentissage a vu passer, en une ligne.
+     * <p>
+     * <b>Au niveau INFO, et c'est délibéré</b> : quand un enrôlement échoue, la seule question qui
+     * se pose est « le robot n'a vu personne, ou il a vu et refusé ? » — et si c'est la seconde,
+     * de combien les seuils ont manqué. Mettre ça en DEBUG obligerait à reconstruire l'image
+     * Docker pour le savoir, alors que les seuils, eux, se règlent à chaud. Une ligne par
+     * enrôlement, c'est-à-dire quelques-unes par jour.
+     */
+    @EventListener
+    public void handleEnrolementTermineEvent(EnrolementTermineEvent enrolementTermineEvent) {
+        ComptesDePrises comptes = comptesDePrises;
+        comptesDePrises = null;
+        if (comptes != null) {
+            logger.info("Enrôlement de {} : {}", enrolementTermineEvent.getIdPersonne(), comptes.bilan(robotConfig));
+        }
     }
 
     /**
@@ -412,15 +442,52 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
 
     /**
      * Empreinte et portrait du visage auquel le robot parle — le plus gros, donc le plus proche —,
-     * ou {@code null} s'il n'y a personne. C'est le seul endroit où l'image sert à l'enrôlement, et
-     * elle ne va pas plus loin : il n'en sort que 128 flottants et un JPEG.
+     * ou {@code null} s'il n'y a personne, ou si ce qu'on voit de lui ne vaut pas la peine d'être
+     * appris. C'est le seul endroit où l'image sert à l'enrôlement, et elle ne va pas plus loin :
+     * il n'en sort que 128 flottants et un JPEG.
+     * <p>
+     * Rendre {@code null} ne coûte rien à l'enrôlement en cours : il réessaie à l'image suivante,
+     * jusqu'à son échéance.
      */
     private PriseDeVisage priseDuVisageLePlusProche(List<VisageDetecte> visagesDetectes) {
+        ComptesDePrises comptes = comptesDePrises;
+        if (visagesDetectes.isEmpty()) {
+            if (comptes != null) {
+                comptes.sansVisage++;
+            }
+            return null;
+        }
         return visagesDetectes.stream()
                 .max(Comparator.comparingLong(visage -> (long) visage.width() * visage.height()))
+                .filter(this::meriteDEtreAppris)
                 .map(visage -> new PriseDeVisage(serviceReconnaissanceVisage.extraireEmbedding(image, visage),
                         VisageDansLImage.portraitJpeg(image, visage)))
                 .orElse(null);
+    }
+
+    /**
+     * Ce qu'on voit de ce visage vaut-il d'entrer en mémoire longue ?
+     * <p>
+     * Le comptage est ici et non dans la porte elle-même : c'est le seul chemin où un refus est
+     * muet pour l'utilisateur — la photo importée, elle, répond dans l'interface. Quand un
+     * enrôlement échoue devant la caméra, ce décompte est la seule façon de savoir si les seuils
+     * sont bien réglés pour cette webcam-là.
+     */
+    private boolean meriteDEtreAppris(VisageDetecte visage) {
+        VisageDansLImage.Qualite qualite = VisageDansLImage.qualite(image, visage);
+        ComptesDePrises comptes = comptesDePrises;
+        if (comptes == null) {
+            return qualite.exploitable();
+        }
+        if (qualite.exploitable()) {
+            comptes.retenue();
+            return true;
+        }
+        // Les mesures, et pas seulement le verdict : ce qui manque pour régler un seuil, c'est de
+        // combien la meilleure prise l'a raté. La netteté est remesurée — une milliseconde, et
+        // seulement sur ce qu'on refuse.
+        comptes.refus(qualite, visage.asymetrieDuNez(), VisageDansLImage.nettete(image, visage));
+        return false;
     }
 
     /**
@@ -590,5 +657,53 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     @Override
     public boolean enService() {
         return running;
+    }
+
+    /**
+     * Ce qu'un enrôlement a vu passer, et de combien les refus ont raté les seuils.
+     * <p>
+     * Les extrêmes plutôt que les moyennes : pour savoir si un seuil est trop sévère, ce qui
+     * compte est la <b>meilleure</b> prise que le robot ait eue sous les yeux — s'il a vu une
+     * netteté de 92 pour un seuil à 100, la réponse tient dans ces deux nombres. Une moyenne, elle,
+     * serait tirée vers le bas par les images où la personne était de dos.
+     * <p>
+     * Champs simples et non atomiques : seule la boucle vidéo les incrémente. La lecture finale
+     * vient d'un autre thread et peut la précéder d'un cycle — on y perd au pire une prise dans un
+     * décompte de journal.
+     */
+    private static final class ComptesDePrises {
+
+        private int retenues;
+        private int sansVisage;
+        private int tropFlou;
+        private int tropDeProfil;
+        private double meilleureAsymetrie = Double.MAX_VALUE;
+        private double meilleureNettete;
+
+        private void retenue() {
+            retenues++;
+        }
+
+        private void refus(VisageDansLImage.Qualite qualite, double asymetrie, double nettete) {
+            switch (qualite) {
+                case TROP_FLOU -> tropFlou++;
+                case TROP_DE_PROFIL -> tropDeProfil++;
+                case EXPLOITABLE -> throw new IllegalArgumentException("une prise exploitable n'est pas un refus");
+            }
+            meilleureAsymetrie = Math.min(meilleureAsymetrie, asymetrie);
+            meilleureNettete = Math.max(meilleureNettete, nettete);
+        }
+
+        private String bilan(RobotConfig reglages) {
+            int ecartees = tropFlou + tropDeProfil;
+            String bilan = "%d prise(s) retenue(s), %d écartée(s) (%d de profil, %d floue(s)), %d image(s) sans visage"
+                    .formatted(retenues, ecartees, tropDeProfil, tropFlou, sansVisage);
+            if (ecartees == 0) {
+                return bilan;
+            }
+            return bilan + " ; au mieux : asymétrie %.2f (max %.2f), netteté %d (min %d)".formatted(
+                    meilleureAsymetrie, reglages.asymetrieMaximaleDuNez(),
+                    Math.round(meilleureNettete), Math.round(reglages.netteteMinimaleDuVisage()));
+        }
     }
 }

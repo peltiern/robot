@@ -11,8 +11,11 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
+
 /**
- * Ce qu'on tire d'un visage détecté dans l'image où il se trouve : son portrait, et sa netteté.
+ * Ce qu'on tire d'un visage détecté dans l'image où il se trouve : son portrait, sa netteté, et
+ * s'il vaut la peine d'être appris.
  * <p>
  * Les deux ensemble, parce qu'ils doivent regarder <b>exactement la même zone</b> : jugés sur des
  * cadrages différents, on mesurerait la qualité d'une image et on en enregistrerait une autre. Le
@@ -51,6 +54,40 @@ public final class VisageDansLImage {
     private static final int COTE_DE_MESURE = 192;
 
     private VisageDansLImage() {
+    }
+
+    /**
+     * Ce visage-là peut-il donner une empreinte qu'on gardera ?
+     * <p>
+     * <b>Une seule porte pour les deux chemins d'apprentissage</b> — la photo importée et la
+     * caméra. Elles se sont longtemps ignorées : la photo refusait déjà le flou, la caméra
+     * acceptait toute prise et en faisait cinq en moins de deux secondes, cinq quasi-copies de la
+     * même pose. Une mauvaise prise donnait donc cinq mauvaises empreintes, et une empreinte
+     * bâclée ne gêne pas que la personne concernée : la reconnaissance retient la meilleure
+     * similarité parmi toutes les empreintes connues, et celle-là peut dépasser le seuil face à
+     * quelqu'un d'<b>autre</b>. Mieux vaut pas d'empreinte du tout.
+     * <p>
+     * Les deux questions dans cet ordre, du moins cher au plus cher : l'asymétrie n'est qu'un
+     * calcul sur les points déjà rendus par la détection, la netteté repasse sur l'image, et
+     * l'empreinte qui suivra coûte ~68 ms.
+     */
+    public static Qualite qualite(Mat image, VisageDetecte visage) {
+        if (visage.asymetrieDuNez() > robotConfig().asymetrieMaximaleDuNez()) {
+            return Qualite.TROP_DE_PROFIL;
+        }
+        if (nettete(image, visage) < robotConfig().netteteMinimaleDuVisage()) {
+            return Qualite.TROP_FLOU;
+        }
+        return Qualite.EXPLOITABLE;
+    }
+
+    /** Verdict de {@link #qualite}, à charge de l'appelant de le dire comme il l'entend. */
+    public enum Qualite {
+        EXPLOITABLE, TROP_FLOU, TROP_DE_PROFIL;
+
+        public boolean exploitable() {
+            return this == EXPLOITABLE;
+        }
     }
 
     /**
