@@ -227,6 +227,59 @@ class LecteurAnimationTest {
             assertTrue(lecteur.enLecture());
         }
 
+        /**
+         * Le curseur de l'éditeur produit autant d'instants que la souris d'évènements — bien plus
+         * que les 55 écritures par seconde du contrôleur. On ne compte pas sur le client pour se
+         * brider : rien ne l'y oblige.
+         */
+        @Test
+        void leCurseurEstEcreteALaCadenceDuLecteur() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            Animation animation = new Animation("Brouillon", 4000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(4000, 40))), List.of());
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+
+            for (int i = 0; i < 20; i++) {
+                lecteur.positionner(animation, i * 100L);
+            }
+            int apresLaRafale = recus.cou.size();
+            Thread.sleep(150);
+            lecteur.positionner(animation, 3000);
+
+            assertEquals(1, apresLaRafale, "vingt envois d'affilée ne doivent produire qu'une écriture");
+            assertEquals(2, recus.cou.size(), "le curseur reprend une fois la cadence écoulée");
+        }
+
+        /**
+         * Un tirage de curseur n'a pas de fin annoncée : sans fenêtre, le regard reprendrait la
+         * main entre deux envois et se battrait avec l'éditeur.
+         */
+        @Test
+        void leCurseurEffaceLeRegardCommeUneLecture() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+
+            lecteur.positionner(new Animation("Brouillon", 4000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(4000, 40))), List.of()), 2000);
+
+            assertTrue(lecteur.enLecture(), "le regard doit s'effacer aussi pendant un tirage de curseur");
+        }
+
+        /** Tirer le curseur pendant une lecture, c'est en reprendre la main. */
+        @Test
+        void leCurseurInterromptLaLectureEnCours() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            Animation animation = new Animation("Longue", 60000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(60000, 40))), List.of());
+            lecteur.jouer(animation);
+
+            lecteur.positionner(animation, 3000);
+
+            assertTrue(lecteur.animationEnCours().isEmpty(), "la lecture ne doit plus écrire par-dessus");
+        }
+
         /** Une animation arrêtée en urgence est perdue : la reprendre après réarmement ferait repartir la tête seule. */
         @Test
         void lArretDUrgenceAbandonneLAnimation() {

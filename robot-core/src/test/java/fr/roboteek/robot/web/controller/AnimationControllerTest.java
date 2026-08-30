@@ -1,19 +1,16 @@
 package fr.roboteek.robot.web.controller;
 
 import fr.roboteek.robot.organes.actionneurs.animation.BibliothequeDesAnimations;
-import fr.roboteek.robot.organes.actionneurs.animation.LecteurAnimation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.ImageCle;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Piste;
-import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
-import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
-import fr.roboteek.robot.web.controller.dto.Lecture;
-import org.junit.jupiter.api.AfterEach;
+import fr.roboteek.robot.organes.actionneurs.animation.modele.SonDeclenche;
+import fr.roboteek.robot.organes.actionneurs.RobotSound;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -24,39 +21,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/** La bibliothèque vue par HTTP : lire, créer, remplacer, supprimer. Rien qui joue. */
 class AnimationControllerTest {
 
     @TempDir
     Path dossier;
 
-    private AnnotationConfigApplicationContext contexte;
+    private BibliothequeDesAnimations bibliotheque;
 
     private AnimationController controleur;
 
-    private LecteurAnimation lecteur;
-
     @BeforeEach
     void setUp() {
-        contexte = new AnnotationConfigApplicationContext(RobotEventsConfig.class, LecteurAnimation.class);
-        lecteur = contexte.getBean(LecteurAnimation.class);
-        controleur = new AnimationController(new BibliothequeDesAnimations(dossier), lecteur);
+        bibliotheque = new BibliothequeDesAnimations(dossier);
+        controleur = new AnimationController(bibliotheque);
     }
 
-    @AfterEach
-    void tearDown() {
-        contexte.close();
-    }
-
-    private void deposer(String nom) {
-        new BibliothequeDesAnimations(dossier).enregistrer(new Animation(nom, 2000, List.of(
+    private static Animation animation(String nom) {
+        return new Animation(nom, 2000, List.of(
                 new Piste(Axe.COU_GAUCHE_DROITE, 40, 200,
-                        List.of(new ImageCle(0, 0), new ImageCle(2000, 20)))), List.of()));
+                        List.of(new ImageCle(0, 0), new ImageCle(2000, 20)))), List.of());
     }
 
     @Test
     void lesNomsViennentDeLaBibliotheque() {
-        deposer("Salut");
-        deposer("Colere");
+        bibliotheque.enregistrer(animation("Salut"));
+        bibliotheque.enregistrer(animation("Colere"));
 
         assertEquals(List.of("Colere", "Salut"), controleur.noms());
     }
@@ -64,61 +54,75 @@ class AnimationControllerTest {
     @Test
     void uneAnimationInconnueNExistePas() {
         assertEquals(HttpStatus.NOT_FOUND, controleur.animation("Fantome").getStatusCode());
-        assertEquals(HttpStatus.NOT_FOUND, controleur.jouer("Fantome").getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controleur.supprimer("Fantome").getStatusCode());
     }
 
-    @Test
-    void uneAnimationConnueEstLancee() {
-        deposer("Salut");
+    @Nested
+    class Ecriture {
 
-        ResponseEntity<Lecture> reponse = controleur.jouer("Salut");
+        @Test
+        void creerRefuseDEcraserCeQuiExiste() {
+            controleur.creer(animation("Salut"));
 
-        assertEquals(HttpStatus.OK, reponse.getStatusCode());
-        assertTrue(reponse.getBody().lancee());
-        assertTrue(lecteur.enLecture());
-    }
+            assertEquals(HttpStatus.CONFLICT, controleur.creer(animation("Salut")).getStatusCode());
+        }
 
-    /**
-     * Une transition trop rapide pour le servo n'empêche pas de jouer — le mouvement sera
-     * simplement en retard sur la courbe. Mais elle doit être dite, sinon on cherche la panne
-     * dans le lecteur.
-     */
-    @Test
-    void uneTransitionInfaisableEstJoueeMaisSignalee() {
-        new BibliothequeDesAnimations(dossier).enregistrer(new Animation("Trop vite", 200, List.of(
-                new Piste(Axe.COU_GAUCHE_DROITE, 40, 200,
-                        List.of(new ImageCle(0, -40), new ImageCle(200, 40)))), List.of()));
+        /**
+         * Le nom de l'URL fait foi : c'est ce qui permet d'enregistrer sous un autre nom sans que
+         * l'éditeur ait à modifier son brouillon, et ça reste vrai après un renommage de fichier.
+         */
+        @Test
+        void leNomDeLUrlLEmporteSurCeluiDuCorps() {
+            controleur.remplacer("Coucou", animation("Salut"));
 
-        ResponseEntity<Lecture> reponse = controleur.jouer("Trop vite");
+            assertEquals(List.of("Coucou"), controleur.noms());
+            assertEquals("Coucou", bibliotheque.charger("Coucou").orElseThrow().nom());
+        }
 
-        assertEquals(HttpStatus.OK, reponse.getStatusCode());
-        assertTrue(reponse.getBody().lancee(), "Un avertissement n'est pas un refus");
-        assertFalse(reponse.getBody().avertissements().isEmpty(), "80° en 200 ms doit être signalé");
-    }
+        /**
+         * Une transition trop rapide pour le servo n'empêche pas d'enregistrer — un brouillon est
+         * légitime — mais elle doit être dite, sinon l'écart entre la courbe et le mouvement reste
+         * inexplicable.
+         */
+        @Test
+        void uneTransitionInfaisableEstEnregistreeMaisSignalee() {
+            Animation tropVite = new Animation("Trop vite", 200, List.of(
+                    new Piste(Axe.COU_GAUCHE_DROITE, 40, 200,
+                            List.of(new ImageCle(0, -40), new ImageCle(200, 40)))), List.of());
 
-    /**
-     * Un refus doit se voir : sans ça, l'appelant croit que la tête va bouger et attend un
-     * mouvement qui ne viendra jamais. 409 et non 500 — le robot va bien, il refuse.
-     */
-    @Test
-    void unArretDUrgenceArmeFaitRefuserLaLecture() {
-        deposer("Salut");
-        contexte.publishEvent(new ArretUrgenceEvent(true, "test"));
+            ResponseEntity<List<String>> reponse = controleur.remplacer("Trop vite", tropVite);
 
-        ResponseEntity<Lecture> reponse = controleur.jouer("Salut");
+            assertEquals(HttpStatus.OK, reponse.getStatusCode());
+            assertTrue(bibliotheque.existe("Trop vite"), "un brouillon s'enregistre quand même");
+            assertFalse(reponse.getBody().isEmpty(), "80° en 200 ms doit être signalé");
+        }
 
-        assertEquals(HttpStatus.CONFLICT, reponse.getStatusCode());
-        assertFalse(reponse.getBody().lancee());
-        assertFalse(lecteur.enLecture());
-    }
+        @Test
+        void uneAnimationJouableNAvertitDeRien() {
+            assertEquals(List.of(), controleur.remplacer("Salut", animation("Salut")).getBody());
+        }
 
-    @Test
-    void stopperLibereLeLecteur() {
-        deposer("Salut");
-        controleur.jouer("Salut");
+        /**
+         * L'éditeur ne connaît pas encore les sons : il relit une animation, la renvoie, et les
+         * effacerait sans que personne ne l'ait demandé.
+         */
+        @Test
+        void enregistrerSansSonNEffacePasCeuxQuiExistent() {
+            bibliotheque.enregistrer(new Animation("Salut", 2000, animation("Salut").pistes(),
+                    List.of(new SonDeclenche(500, RobotSound.values()[0]))));
 
-        controleur.stopper();
+            controleur.remplacer("Salut", animation("Salut"));
 
-        assertFalse(lecteur.enLecture());
+            assertEquals(1, bibliotheque.charger("Salut").orElseThrow().sons().size(),
+                    "la piste son doit survivre à un enregistrement qui l'ignore");
+        }
+
+        @Test
+        void supprimerDitSiIlYAvaitQuelqueChose() {
+            controleur.creer(animation("Salut"));
+
+            assertEquals(HttpStatus.NO_CONTENT, controleur.supprimer("Salut").getStatusCode());
+            assertEquals(List.of(), controleur.noms());
+        }
     }
 }
