@@ -7,6 +7,7 @@ import fr.roboteek.robot.organes.actionneurs.animation.modele.Piste;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
+import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.util.HorlogeReglable;
 import org.junit.jupiter.api.AfterEach;
@@ -190,6 +191,40 @@ class LecteurAnimationTest {
             assertEquals(VITESSE, cou.getVitessePanoramique());
             assertEquals(MouvementCouEvent.POSITION_NEUTRE, cou.getPositionInclinaison(),
                     "Un axe non animé doit rester neutre, sinon le cou le déplacerait");
+        }
+
+        /**
+         * La manette l'emporte, et elle interrompt : reprendre l'animation là où elle en était
+         * partirait d'une posture que la manette a changée entre-temps, et le reste du geste
+         * n'aurait plus de sens.
+         */
+        @Test
+        void unOrdreDeManetteInterromptLAnimation() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            lecteur.jouer(new Animation("Longue", 60000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(60000, 40))), List.of()));
+
+            MouvementCouEvent ordre = new MouvementCouEvent();
+            ordre.setOrigine(OrigineMouvement.MANETTE);
+            contexte.publishEvent(ordre);
+
+            assertFalse(lecteur.enLecture());
+        }
+
+        /** Le lecteur publie sur le même bus : ses propres ordres ne doivent pas l'interrompre. */
+        @Test
+        void lesOrdresDuLecteurNeLInterrompentPas() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            lecteur.jouer(new Animation("Longue", 60000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(60000, 40))), List.of()));
+
+            MouvementCouEvent sien = new MouvementCouEvent();
+            sien.setOrigine(OrigineMouvement.ANIMATION);
+            contexte.publishEvent(sien);
+
+            assertTrue(lecteur.enLecture());
         }
 
         /** Une animation arrêtée en urgence est perdue : la reprendre après réarmement ferait repartir la tête seule. */

@@ -19,6 +19,13 @@ public enum OrigineMouvement {
     /** Le robot tourne la tête vers un visage de lui-même. */
     REGARD,
 
-    /** Tout le reste : animations, HUD, réflexes. Valeur par défaut. */
+    /**
+     * Une animation se déroule. Le regard doit s'effacer entièrement le temps qu'elle dure, et
+     * pas seulement céder le pas : il commande le cou en <b>angle relatif</b>, calculé à partir
+     * d'une position que l'animation rend périmée (voir {@code Regard}).
+     */
+    ANIMATION,
+
+    /** Tout le reste : HUD, réflexes. Valeur par défaut. */
     AUTRE
 }

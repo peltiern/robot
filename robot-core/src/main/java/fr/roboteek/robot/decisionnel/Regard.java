@@ -2,6 +2,7 @@ package fr.roboteek.robot.decisionnel;
 
 import jakarta.annotation.PostConstruct;
 import fr.roboteek.robot.configuration.RobotConfig;
+import fr.roboteek.robot.organes.actionneurs.animation.AnimationEnCours;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
@@ -68,6 +69,8 @@ public class Regard {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private final AnimationEnCours animationEnCours;
+
     private final Clock horloge;
 
     /** Instant de la dernière correction, qui porte la temporisation. {@code null} si aucune. */
@@ -76,19 +79,23 @@ public class Regard {
     /** Instant du dernier ordre de cou venu de la manette. {@code null} si personne n'a conduit. */
     private Instant dernierOrdreManette;
 
+    /** Ce que le journal a déjà annoncé, pour ne dire la mise en retrait qu'aux changements. */
+    private boolean animationAvaitLaMain;
+
     /**
      * {@code @Autowired} obligatoire ici : cette classe a deux constructeurs, et Spring n'en
      * choisit aucun d'office — il se rabat alors sur un constructeur vide, qui n'existe pas, et
      * le contexte entier échoue au démarrage (voir {@code CablageDesBeansTest}).
      */
     @Autowired
-    public Regard(ApplicationEventPublisher applicationEventPublisher) {
-        this(applicationEventPublisher, Clock.systemDefaultZone());
+    public Regard(ApplicationEventPublisher applicationEventPublisher, AnimationEnCours animationEnCours) {
+        this(applicationEventPublisher, animationEnCours, Clock.systemDefaultZone());
     }
 
     /** Permet aux tests de maîtriser le temps, dont dépend la temporisation. */
-    Regard(ApplicationEventPublisher applicationEventPublisher, Clock horloge) {
+    Regard(ApplicationEventPublisher applicationEventPublisher, AnimationEnCours animationEnCours, Clock horloge) {
         this.applicationEventPublisher = applicationEventPublisher;
+        this.animationEnCours = animationEnCours;
         this.horloge = horloge;
     }
 
@@ -124,6 +131,9 @@ public class Regard {
         RobotConfig reglages = robotConfig();
         if (!reglages.regardEnabled()
                 || visagePercuEvent.getLargeurImage() <= 0 || visagePercuEvent.getHauteurImage() <= 0) {
+            return;
+        }
+        if (animationALaMain()) {
             return;
         }
         Instant maintenant = horloge.instant();
@@ -209,6 +219,33 @@ public class Regard {
             logger.info("Regard : la manette prend la main sur le cou, suivi de visage suspendu");
         }
         dernierOrdreManette = maintenant;
+    }
+
+    /**
+     * Vrai pendant qu'une animation se déroule : le regard s'efface entièrement.
+     * <p>
+     * Ce n'est pas une politesse, c'est une correction. Le regard commande le cou en <b>angle
+     * relatif</b>, et {@code PhidgetsServoMotor.rotate} calcule {@code getPositionReelle() +
+     * angle}. Or la position d'un servo RC ne se rafraîchit qu'à l'<b>atteinte d'une cible</b>, et
+     * une animation en envoie une nouvelle toutes les 100 ms — la cible n'est donc presque jamais
+     * atteinte, le regard part d'une position périmée, son erreur s'accumule à chaque correction
+     * et le cou dérive jusqu'à la butée. Constaté le 2026-08-30 : {@code consigne 162.3 bornée à
+     * 155.0}, puis une tête restée collée à sa butée à l'arrêt du robot.
+     * <p>
+     * Interrogation directe du lecteur, et non une fenêtre de temps comme pour la manette : une
+     * animation peut n'agiter que les yeux pendant plusieurs secondes, sans publier un seul ordre
+     * de cou, et le regard reprendrait la main au milieu du geste. Et non plus un couple
+     * d'évènements début/fin : une fin perdue suspendrait le suivi pour toujours.
+     */
+    private boolean animationALaMain() {
+        boolean enCours = animationEnCours.enLecture();
+        if (enCours != animationAvaitLaMain) {
+            animationAvaitLaMain = enCours;
+            logger.info(enCours
+                    ? "Regard : une animation prend la main sur le cou, suivi de visage suspendu"
+                    : "Regard : animation terminée, suivi de visage repris");
+        }
+        return enCours;
     }
 
     /** Vrai tant que le dernier ordre de la manette est assez récent pour lui garder la main. */

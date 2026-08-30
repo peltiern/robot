@@ -51,7 +51,8 @@ import java.util.Map;
  * activités : il génère des {@code AnimationStep}, pas des {@link Animation} du nouveau modèle.
  */
 @Component
-public class LecteurAnimation extends AbstractOrganeWithThread implements SmartLifecycle, OrganeSurveille {
+public class LecteurAnimation extends AbstractOrganeWithThread
+        implements SmartLifecycle, OrganeSurveille, AnimationEnCours {
 
     private static final Logger logger = LoggerFactory.getLogger(LecteurAnimation.class);
 
@@ -137,6 +138,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread implements SmartL
     }
 
     /** Une animation est en cours de déroulement. */
+    @Override
     public boolean enLecture() {
         return lecture != null;
     }
@@ -183,6 +185,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread implements SmartL
         long avant = System.nanoTime();
         publier(enCours.animation, consignes(enCours, instant), instant);
         long dureeMs = (System.nanoTime() - avant) / 1_000_000L;
+        enCours.tours++;
         if (dureeMs > budgetMs) {
             enCours.toursTropLongs++;
         }
@@ -226,7 +229,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread implements SmartL
         }
 
         MouvementCouEvent cou = new MouvementCouEvent();
-        cou.setOrigine(OrigineMouvement.AUTRE);
+        cou.setOrigine(OrigineMouvement.ANIMATION);
         boolean couConcerne = false;
         MouvementYeuxEvent yeux = new MouvementYeuxEvent();
         boolean yeuxConcernes = false;
@@ -281,12 +284,22 @@ public class LecteurAnimation extends AbstractOrganeWithThread implements SmartL
         }
     }
 
+    /**
+     * Le compte des tours trop longs est journalisé avec son dénominateur, et ce n'est pas de la
+     * coquetterie : <b>un</b> tour sur quarante et <b>trente</b> sur quarante n'appellent pas la
+     * même réaction, et le message ne le disait pas.
+     * <p>
+     * Un tour isolé sur la <b>première</b> animation jouée après le démarrage est normal et n'a
+     * rien d'une contention : c'est la compilation à la volée du code d'échantillonnage. Observé
+     * les deux fois le 2026-08-30, toujours sur la première animation, jamais sur les suivantes —
+     * y compris quand celles-ci menaient cinq axes de front au lieu de trois.
+     */
     private void terminer(Lecture enCours) {
         lecture = null;
         if (enCours.toursTropLongs > 0) {
-            logger.warn("Animation « {} » terminée, mais {} tour(s) ont dépassé leur budget : "
+            logger.warn("Animation « {} » terminée, mais {} tour(s) sur {} ont dépassé leur budget : "
                             + "trop d'axes en mouvement pour la cadence, ou un autre organe écrit en même temps",
-                    enCours.animation.nom(), enCours.toursTropLongs);
+                    enCours.animation.nom(), enCours.toursTropLongs, enCours.tours);
         } else {
             logger.info("Animation « {} » terminée", enCours.animation.nom());
         }
@@ -307,6 +320,24 @@ public class LecteurAnimation extends AbstractOrganeWithThread implements SmartL
             }
         }
         return imagesCles.getLast();
+    }
+
+    /**
+     * La manette l'emporte : un ordre de cou venu d'un humain interrompt l'animation.
+     * <p>
+     * Interrompre plutôt que céder le pas — l'animation est déjà écrite, la reprendre là où elle
+     * en était partirait d'une posture que la manette a changée entre-temps, et le reste du geste
+     * n'aurait plus de sens. Le filtre sur l'origine est aussi ce qui empêche le lecteur de
+     * s'interrompre lui-même : il publie sur ce même bus.
+     */
+    @EventListener
+    public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
+        if (mouvementCouEvent.getOrigine() != OrigineMouvement.MANETTE || lecture == null) {
+            return;
+        }
+        Lecture enCours = lecture;
+        lecture = null;
+        logger.info("Animation « {} » interrompue : la manette prend la main", enCours.animation.nom());
     }
 
     /**
@@ -404,6 +435,8 @@ public class LecteurAnimation extends AbstractOrganeWithThread implements SmartL
 
         /** Dernière consigne envoyée à chaque axe, pour ne pas réécrire ce qui n'a pas bougé. */
         private final Map<Axe, Double> dernieresConsignes = new EnumMap<>(Axe.class);
+
+        private int tours;
 
         private int toursTropLongs;
 

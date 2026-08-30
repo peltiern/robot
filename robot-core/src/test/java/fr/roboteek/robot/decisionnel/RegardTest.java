@@ -1,5 +1,6 @@
 package fr.roboteek.robot.decisionnel;
 
+
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
@@ -47,6 +48,9 @@ class RegardTest {
     private List<MouvementCouEvent> mouvements;
     private Regard regard;
 
+    /** Ce que le lecteur d'animation répondrait ; le test le pose à la main. */
+    private boolean animationEnCours;
+
     @BeforeEach
     void setUp() {
         horloge = new HorlogeReglable(Instant.parse("2026-08-12T16:00:00Z"));
@@ -60,7 +64,8 @@ class RegardTest {
                 regard.handleMouvementCouEvent(mouvement);
             }
         };
-        regard = new Regard(publieur, horloge);
+        animationEnCours = false;
+        regard = new Regard(publieur, () -> animationEnCours, horloge);
     }
 
     @Test
@@ -257,6 +262,33 @@ class RegardTest {
         MouvementCouEvent ordre = new MouvementCouEvent();
         ordre.setOrigine(OrigineMouvement.MANETTE);
         regard.handleMouvementCouEvent(ordre);
+    }
+
+    /**
+     * Le regard commande le cou en <b>angle relatif</b>, à partir d'une position que l'animation
+     * rend périmée : une nouvelle consigne toutes les 100 ms, donc une cible presque jamais
+     * atteinte, donc un {@code getPosition()} qui ne se rafraîchit pas. Les corrections
+     * s'accumulaient et le cou dérivait jusqu'à la butée — tête restée collée à 155° le
+     * 2026-08-30. Il ne s'agit donc pas de céder le pas, mais de ne rien envoyer du tout.
+     */
+    @Test
+    void uneAnimationSuspendEntierementLeSuiviDeVisage() {
+        animationEnCours = true;
+
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 60));
+
+        assertTrue(mouvements.isEmpty(), "aucun ordre de cou ne doit partir pendant une animation");
+    }
+
+    @Test
+    void leSuiviRepartDesQueLAnimationEstFinie() {
+        animationEnCours = true;
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 60));
+
+        animationEnCours = false;
+        percevoir(visageCentreEn(LARGEUR_IMAGE - 60));
+
+        assertEquals(1, mouvements.size(), "le suivi doit reprendre sans attendre de temporisation");
     }
 
     private void percevoir(VisagePercu... visages) {
