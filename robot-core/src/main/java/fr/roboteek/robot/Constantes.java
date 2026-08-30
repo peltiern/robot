@@ -78,4 +78,11 @@ public class Constantes {
      */
     public static final String DOSSIER_MEMOIRE_CONVERSATIONS = DOSSIER_MEMOIRE + File.separator + "conversations";
 
+    /**
+     * Chemin vers le dossier des animations. Volontairement hors de {@link #DOSSIER_MEMOIRE} :
+     * une animation est écrite à la main dans l'éditeur, elle se lit, se relit et se recopie
+     * d'un robot à l'autre — ce n'est pas un souvenir du robot.
+     */
+    public static final String DOSSIER_ANIMATIONS = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "animations";
+
 }
