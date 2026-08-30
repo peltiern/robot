@@ -4,16 +4,23 @@ import { Toolbar }         from './components/Toolbar'
 import { Timeline }        from './components/Timeline'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { LibraryPanel }    from './components/LibraryPanel'
-import { toAnimation }     from './utils/convert'
+import { toAnimation, versEtapesEditeur } from './utils/convert'
 import { animationApi }    from '../../shared/api/animationApi'
 import type { Animation }  from '../../shared/types/animation'
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import styles from './AnimationPage.module.css'
 
+/**
+ * Période minimale entre deux envois du curseur, en millisecondes. Calée sur la cadence du
+ * lecteur : plus vite ne servirait à rien, le robot écrête de toute façon.
+ */
+const PERIODE_CURSEUR_MS = 100
+
 export function AnimationPage() {
   const store      = useAnimationStore()
   const ws         = useWebSocketStore()
   const rafRef     = useRef<number | null>(null)
+  const dernierCurseurRef = useRef<number>(0)
 
   // Charger les définitions de tracks depuis le backend au montage
   useEffect(() => { store.loadTracksFromBackend() }, [])
@@ -22,6 +29,7 @@ export function AnimationPage() {
   const [exportJson, setExportJson]   = useState('')
   const [importJson, setImportJson]   = useState('')
   const [statusMsg, setStatusMsg]     = useState('')
+  const [avertissements, setAvertissements] = useState<string[]>([])
   const [libraryKey, setLibraryKey]   = useState(0)
 
   // ── Boucle de lecture (RAF) ────────────────────────────────────────────────
@@ -35,6 +43,9 @@ export function AnimationPage() {
       if (looping) {
         originRef.current = performance.now()
         setPlayhead(0)
+        // Relancer aussi le robot : sa lecture, elle, ne boucle pas. Sans ça la timeline
+        // repartait indéfiniment pendant que la tête ne bougeait plus qu'une fois.
+        animationApi.jouerBrouillon(animationPourLeRobot()).catch(() => {})
       } else {
         setPlayhead(totalMs)
         setPlaying(false)
@@ -51,21 +62,24 @@ export function AnimationPage() {
     originRef.current = performance.now() - (playhead >= totalMs ? 0 : playhead)
     store.setPlaying(true)
     rafRef.current = requestAnimationFrame(tick)
-    // Envoyer au robot (tracks désactivées exclues)
-    ws.playAnimation(buildAnimationForRobot())
+    // Envoyer au robot (pistes désactivées exclues), en brouillon : l'animation en cours
+    // d'écriture n'a aucune raison d'être enregistrée pour être essayée.
+    animationApi.jouerBrouillon(animationPourLeRobot())
+      .then(lecture => afficherAvertissements(lecture.avertissements))
+      .catch(() => setStatusMsg('Le robot a refusé de jouer'))
   }
 
   function pause() {
     store.setPlaying(false)
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    ws.stopAnimation()
+    animationApi.arreter().catch(() => {})
   }
 
   function stop() {
     store.setPlaying(false)
     store.setPlayhead(0)
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    ws.stopAnimation()
+    animationApi.arreter().catch(() => {})
   }
 
   useEffect(() => {
@@ -74,11 +88,17 @@ export function AnimationPage() {
     }
   }, [store.playing])
 
-  // Scrubbing vers le robot quand le playhead bouge sans lecture
+  // Curseur : la tête suit la timeline quand on la tire, hors lecture.
+  //
+  // Bridé ici EN PLUS de l'écrêtage du lecteur, pour deux raisons distinctes : le robot se
+  // protège de tout client, et l'éditeur évite d'inonder le websocket d'un message par pixel
+  // de souris — l'animation entière voyage à chaque envoi.
   useEffect(() => {
-    if (!store.playing && ws.connected) {
-      ws.scrubAnimation(buildAnimationForRobot(), store.playhead)
-    }
+    if (store.playing || !ws.connected) return
+    const maintenant = performance.now()
+    if (maintenant - dernierCurseurRef.current < PERIODE_CURSEUR_MS) return
+    dernierCurseurRef.current = maintenant
+    ws.deplacerCurseur(animationPourLeRobot(), store.playhead)
   }, [store.playhead])
 
   // ── Raccourcis clavier ─────────────────────────────────────────────────────
@@ -123,9 +143,16 @@ export function AnimationPage() {
     return toAnimation(store.animationName, store.totalMs, store.tracks)
   }
 
-  /** Seulement les tracks actives — pour le play/scrub vers le robot */
-  function buildAnimationForRobot() {
-    return toAnimation(store.animationName, store.totalMs, store.tracks.filter(t => t.enabled))
+  /**
+   * Seulement les pistes actives — ce qui part au robot, pour la lecture comme pour le curseur.
+   *
+   * Lu par getState() et non depuis `store` : cette fonction est appelée depuis la boucle
+   * d'animation, dont la clôture date du premier rendu. Passer par le rendu y renverrait
+   * indéfiniment la première version de la timeline.
+   */
+  function animationPourLeRobot() {
+    const { animationName, totalMs, tracks } = useAnimationStore.getState()
+    return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled))
   }
 
   // ── Import / Export ────────────────────────────────────────────────────────
@@ -146,33 +173,23 @@ export function AnimationPage() {
       const data = JSON.parse(importJson)
       if (!data?.tracks) { alert('Format invalide : propriété "tracks" manquante.'); return }
       // Reconvertir Animation → EditorTrack
-      const steps = buildStepsFromAnimation(data)
-      store.loadPreset(steps, data.totalDuration ?? store.totalMs)
-      if (data.name) store.setAnimationName(data.name)
+      store.loadPreset(versEtapesEditeur(data), data.dureeTotale ?? store.totalMs)
+      if (data.nom) store.setAnimationName(data.nom)
       setModal(null)
     } catch (e: any) {
       alert('JSON invalide : ' + e.message)
     }
   }
 
-  function buildStepsFromAnimation(data: any) {
-    // Regrouper toutes les keyframes par temps
-    const byTime = new Map<number, any>()
-    ;(data.tracks ?? []).forEach((tr: any) => {
-      ;(tr.keyframes ?? []).forEach((kf: any) => {
-        if (!byTime.has(kf.time)) byTime.set(kf.time, {})
-        byTime.get(kf.time)![tr.id] = kf.value
-      })
-    })
-    return [...byTime.entries()].sort((a, b) => a[0] - b[0]).map(([t, vals]) => ({ t, vals }))
-  }
-
   async function saveToServer() {
     try {
       const anim = buildAnimation()
-      const res = await animationApi.update(anim.name, anim)
-      const warnCount = res.warnings.length
-      setStatusMsg(warnCount > 0 ? `Sauvegardé avec ${warnCount} avertissement(s)` : 'Sauvegardé ✓')
+      const avertissements = await animationApi.enregistrer(anim.nom, anim)
+      setAvertissements(avertissements)
+      store.marquerEnregistre()
+      setStatusMsg(avertissements.length > 0
+        ? `Sauvegardé avec ${avertissements.length} avertissement(s)`
+        : 'Sauvegardé ✓')
       setTimeout(() => setStatusMsg(''), 3000)
       setLibraryKey(k => k + 1)
     } catch {
@@ -181,9 +198,18 @@ export function AnimationPage() {
   }
 
   function handleLoadFromLibrary(anim: Animation) {
-    const steps = buildStepsFromAnimation(anim)
-    store.loadPreset(steps, anim.totalDuration ?? store.totalMs)
-    store.setAnimationName(anim.name)
+    store.loadPreset(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs)
+    store.setAnimationName(anim.nom)
+    setAvertissements([])
+  }
+
+  /**
+   * Les avertissements du vérificateur : ce que le robot ne saura pas suivre. Ils n'empêchent
+   * ni d'enregistrer ni de jouer — le mouvement sera simplement en retard sur la courbe — mais
+   * sans eux l'écart entre ce que la timeline montre et ce que la tête fait reste inexplicable.
+   */
+  function afficherAvertissements(nouveaux: string[]) {
+    setAvertissements(nouveaux)
   }
 
   return (
@@ -198,6 +224,16 @@ export function AnimationPage() {
         <Timeline />
         <PropertiesPanel />
       </div>
+
+      {avertissements.length > 0 && (
+        <div className={styles.avertissements}>
+          <strong>Le robot ne suivra pas exactement :</strong>
+          <ul>
+            {avertissements.map((a, i) => <li key={i}>{a}</li>)}
+          </ul>
+          <button className={styles.btn} onClick={() => setAvertissements([])}>Masquer</button>
+        </div>
+      )}
 
       <footer className={styles.footer}>
         <span className={ws.connected ? styles.dotOn : styles.dotOff} />

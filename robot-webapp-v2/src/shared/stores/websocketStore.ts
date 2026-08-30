@@ -11,10 +11,10 @@ interface WebSocketState {
   connect: () => void
   disconnect: () => void
 
-  // Animation
-  playAnimation: (animation: Animation) => void
-  stopAnimation: () => void
-  scrubAnimation: (animation: Animation, time: number) => void
+  // Animation : seul le curseur passe par le websocket. Jouer et arrêter sont des ressources
+  // REST (voir animationApi) — un ordre isolé qui attend une réponse n'a rien à faire ici.
+  // Le curseur, lui, est un flot d'instants sans réponse dont seul le dernier compte.
+  deplacerCurseur: (animation: Animation, instant: number) => void
 
   // Dialogue : fait dire un texte au robot (ParoleEvent → /app/robotevents)
   speak: (texte: string) => void
@@ -67,21 +67,10 @@ export const useWebSocketStore = create<WebSocketState>((set, get) => ({
     set({ connected: false, client: null })
   },
 
-  playAnimation(animation) {
+  deplacerCurseur(animation, instant) {
     get().client?.publish({
-      destination: '/app/animation/play',
-      body: JSON.stringify({ animation }),
-    })
-  },
-
-  stopAnimation() {
-    get().client?.publish({ destination: '/app/animation/stop', body: '' })
-  },
-
-  scrubAnimation(animation, time) {
-    get().client?.publish({
-      destination: '/app/animation/scrub',
-      body: JSON.stringify({ animation, time }),
+      destination: '/app/animation/curseur',
+      body: JSON.stringify({ animation, instant }),
     })
   },
 

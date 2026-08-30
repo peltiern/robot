@@ -3,8 +3,7 @@ import { trackVal } from '../utils/catmullRom'
 import styles from './PropertiesPanel.module.css'
 
 export function PropertiesPanel() {
-  const { tracks, playhead, selectedKf, globalVelocity, globalAcceleration,
-          setGlobalParam, moveKf, deleteKf, clearSel } = useAnimationStore()
+  const { tracks, playhead, selectedKf, moveKf, deleteKf, clearSel } = useAnimationStore()
 
   // Positions interpolées pour l'aperçu SVG
   const pos = Object.fromEntries(
@@ -70,31 +69,10 @@ export function PropertiesPanel() {
         </svg>
       </div>
 
-      {/* Vitesse / Accel globales */}
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Vitesse / Accélération</div>
-        <div className={styles.speedGrid}>
-          {([['eyes', 'Yeux'], ['neck', 'Cou']] as const).map(([g, label]) => (
-            <div key={g} className={styles.speedGroup}>
-              <div className={styles.speedLabel}>{label}</div>
-              <div className={styles.speedRow}>
-                <label>Vit.</label>
-                <input type="number" className={styles.numInput}
-                  value={globalVelocity[g]}
-                  min={10} max={1000}
-                  onChange={e => setGlobalParam(g, 'velocity', +e.target.value)} />
-              </div>
-              <div className={styles.speedRow}>
-                <label>Acc.</label>
-                <input type="number" className={styles.numInput}
-                  value={globalAcceleration[g]}
-                  min={10} max={1000}
-                  onChange={e => setGlobalParam(g, 'acceleration', +e.target.value)} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Pas de réglage de vitesse ici : elles viennent du robot.
+          Vitesse et accélération sont des propriétés du servo, lues dans robot.properties et
+          servies par /api/axes-animables. Deux champs « Yeux » et « Cou » ne savaient de toute
+          façon pas représenter les trois axes du cou, qui travaillent à 40, 10 et 100 °/s. */}
 
       {/* Keyframe sélectionnée */}
       <div className={`${styles.section} ${styles.flex1}`}>
