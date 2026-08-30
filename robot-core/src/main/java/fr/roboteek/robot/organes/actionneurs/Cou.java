@@ -340,7 +340,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
      * @param mouvementCouEvent évènement de mouvements
      */
     @EventListener
-    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
+    @Async(RobotEventsConfig.COU_EVENT_EXECUTOR)
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
         if (!running || arretUrgence) {
             return;

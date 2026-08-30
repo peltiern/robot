@@ -8,15 +8,13 @@ import com.phidget22.ErrorEvent;
 import com.phidget22.ErrorListener;
 import com.phidget22.PhidgetException;
 import com.phidget22.RCServo;
-import com.phidget22.RCServoPositionChangeEvent;
-import com.phidget22.RCServoPositionChangeListener;
 import com.phidget22.RCServoTargetPositionReachedEvent;
 import com.phidget22.RCServoTargetPositionReachedListener;
-import com.phidget22.RCServoVelocityChangeEvent;
-import com.phidget22.RCServoVelocityChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -24,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Java Developer
  */
-public class PhidgetsServoMotor implements AttachListener, DetachListener, RCServoPositionChangeListener, RCServoTargetPositionReachedListener, ErrorListener, RCServoVelocityChangeListener {
+public class PhidgetsServoMotor implements AttachListener, DetachListener, RCServoTargetPositionReachedListener, ErrorListener {
 
     private static final Logger logger = LoggerFactory.getLogger(PhidgetsServoMotor.class);
 
@@ -57,6 +55,38 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
     /** Flag indiquant que la position est atteinte. */
     private AtomicBoolean positionAtteinte = new AtomicBoolean(true);
+
+    /**
+     * Attente d'arrivée en position pour les consignes synchrones. Remplace la boucle d'attente
+     * active qui occupait un coeur entier <b>et</b> gardait le verrou de l'objet : {@link #stop()}
+     * ne pouvait alors pas passer, ce qui aurait bloqué un arrêt d'urgence derrière un mouvement
+     * en cours. Armé à chaque consigne, ouvert à l'arrivée ou à l'arrêt.
+     */
+    private volatile CountDownLatch arriveeEnPosition = new CountDownLatch(0);
+
+    /**
+     * Dernière limite de vitesse effectivement écrite sur le contrôleur, {@code null} quand on
+     * ignore ce qu'il a en mémoire (avant l'attache, après un {@link #stop()} ou un détachement).
+     * <p>
+     * Sert à ne pas réécrire une valeur inchangée : chaque écriture est un aller-retour USB, et
+     * une consigne de position en coûtait trois (accélération, vitesse, position). À la cadence
+     * d'une animation — cinq axes, plusieurs dizaines de consignes par seconde — c'est le débit du
+     * hub qu'on dépense pour rien, et la consigne de position arrive d'autant plus tard.
+     */
+    private volatile Double vitesseEcrite;
+
+    /** Dernière accélération écrite sur le contrôleur (voir {@link #vitesseEcrite}). */
+    private volatile Double accelerationEcrite;
+
+    /**
+     * Bornes de vitesse et d'accélération du servo, lues sur le contrôleur à l'attache et non
+     * devinées : une consigne hors bornes fait lever le Phidget et le mouvement est perdu.
+     * Nulles tant que le servo n'est pas attaché — on n'écrête alors rien.
+     */
+    private volatile Double vitesseMinMoteur;
+    private volatile Double vitesseMaxMoteur;
+    private volatile Double accelerationMinMoteur;
+    private volatile Double accelerationMaxMoteur;
 
     /** Index du moteur sur le contrôleur, conservé pour désigner le servo dans les journaux. */
     private int index;
@@ -93,9 +123,13 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
             rcServo.addAttachListener(this);
             rcServo.addDetachListener(this);
             rcServo.addErrorListener(this);
-            rcServo.addPositionChangeListener(this);
+            // Ni PositionChange ni VelocityChange : le contrôleur les émet en continu sur chaque
+            // canal et personne ne les consommait. On a cru un moment qu'ils grevaient le débit
+            // d'écriture ; le banc du 2026-08-30 dit non — 90,56 ms par tour sans eux contre 90,54
+            // avec. C'est donc du code mort qu'on retire, rien de plus : ne pas se réinscrire en
+            // espérant y gagner quoi que ce soit. getPositionReelle() n'en pâtit pas, elle lit le
+            // cache de la bibliothèque, que les paquets du contrôleur alimentent écouteur ou pas.
             rcServo.addTargetPositionReachedListener(this);
-            rcServo.addVelocityChangeListener(this);
 
             // Configuration
             rcServo.setDeviceSerialNumber(561050);
@@ -126,24 +160,102 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         }
     }
 
-    public synchronized void setPositionCible(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
+    public void setPositionCible(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
+        CountDownLatch attente = envoyerConsigne(position, vitesse, acceleration);
+        // Attente HORS du verrou : la tenir à l'intérieur empêcherait stop() de passer.
+        if (waitForPosition && attente != null) {
+            try {
+                if (!attente.await(10, TimeUnit.SECONDS)) {
+                    logger.warn("Servo {} : position {} toujours pas atteinte au bout de 10 s", index, arrondi(position));
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /**
+     * Écrit la consigne sur le contrôleur et rend le verrou qui s'ouvrira à l'arrivée.
+     * <p>
+     * Fixer accélération ET vitesse AVANT la consigne de position. Un {@link #stop()} précédent a
+     * laissé la limite de vitesse à 0 sur le contrôleur. Si on envoie la consigne de position tant
+     * que la vitesse vaut 0, le servo peut ne pas démarrer — le rattrapage de vitesse après coup
+     * est dépendant du firmware — d'où un oeil qui, de façon intermittente, « ne repart pas » après
+     * avoir été stoppé (ex. bouger l'oeil gauche seul puis lancer un roulis). C'est {@code stop()}
+     * qui oublie la vitesse écrite, pour que celle-ci soit toujours rétablie ici.
+     */
+    private synchronized CountDownLatch envoyerConsigne(double position, Double vitesse, Double acceleration) {
         try {
             positionAtteinte.set(false);
-            // Fixer accélération ET vitesse AVANT la consigne de position. Un stop() précédent a pu
-            // laisser la limite de vitesse à 0 (stop() fait setVelocityLimit(0) sans jamais la
-            // restaurer). Si on envoie la consigne de position tant que la vitesse vaut 0, le servo
-            // peut ne pas démarrer — le rattrapage de vitesse après coup est dépendant du firmware —
-            // d'où un oeil qui, de façon intermittente, « ne repart pas » après avoir été stoppé
-            // (ex. bouger l'oeil gauche seul puis lancer un roulis). En réglant la vitesse d'abord,
-            // la consigne de position part toujours avec une limite de vitesse non nulle.
-            setAcceleration(acceleration);
-            setVitesse(vitesse);
+            arriveeEnPosition = new CountDownLatch(1);
+            ecrireAcceleration(acceleration != null ? acceleration : accelerationParDefaut);
+            ecrireVitesse(vitesse != null ? vitesse : vitesseParDefaut);
             rcServo.setTargetPosition(position);
-            while (waitForPosition && !positionAtteinte.get()) ;
+            return arriveeEnPosition;
         } catch (PhidgetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Servo {} : consigne de position {} refusée", index, arrondi(position), e);
+            return null;
         }
+    }
+
+    /**
+     * Consigne de position seule, sans toucher à la vitesse ni à l'accélération.
+     * <p>
+     * Destinée au flux d'échantillons d'une trajectoire, où vitesse et accélération sont réglées
+     * une fois au départ. Ce n'est pas une micro-optimisation : le banc du 2026-08-29 a mesuré
+     * <b>15 à 18 ms par écriture</b> sur ce hub, quel que soit l'axe et quel que soit le nombre
+     * d'axes menés de front — le contrôleur ne draine qu'une soixantaine d'écritures par seconde,
+     * toutes origines confondues. Supprimer l'écriture de vitesse fait donc passer un flux de
+     * consignes du simple au double (155 ms à 90 ms pour cinq axes).
+     * <p>
+     * Ne pas chercher à contourner ce plafond par les consignes asynchrones : au-delà de 64
+     * commandes en attente, la bibliothèque Phidget <b>jette silencieusement</b> les suivantes
+     * (« Command queue is full; dropping entry »). Essayé le 2026-08-29 à 30 Hz sur cinq axes,
+     * 600 consignes de position perdues sur 1500 — le servo finit ailleurs qu'où on le croit.
+     */
+    public synchronized void setPositionCible(double position) {
+        try {
+            positionAtteinte.set(false);
+            rcServo.setTargetPosition(position);
+        } catch (PhidgetException e) {
+            logger.error("Servo {} : consigne de position {} refusée", index, arrondi(position), e);
+        }
+    }
+
+    /**
+     * Écrit la limite de vitesse, et seulement si elle change (voir {@link #vitesseEcrite}).
+     * La valeur est écrêtée aux bornes du servo : au-delà, le Phidget lève et le mouvement est
+     * perdu, alors qu'aller aussi vite que possible est ce qu'on voulait.
+     */
+    private void ecrireVitesse(double vitesse) throws PhidgetException {
+        double valeur = borner(vitesse, vitesseMinMoteur, vitesseMaxMoteur);
+        if (vitesseEcrite != null && vitesseEcrite == valeur) {
+            return;
+        }
+        rcServo.setVelocityLimit(valeur);
+        vitesseEcrite = valeur;
+    }
+
+    /** Écrit l'accélération, et seulement si elle change (voir {@link #ecrireVitesse}). */
+    private void ecrireAcceleration(double acceleration) throws PhidgetException {
+        double valeur = borner(acceleration, accelerationMinMoteur, accelerationMaxMoteur);
+        if (accelerationEcrite != null && accelerationEcrite == valeur) {
+            return;
+        }
+        rcServo.setAcceleration(valeur);
+        accelerationEcrite = valeur;
+    }
+
+    /** Écrête une consigne aux bornes du servo, quand celles-ci sont connues. */
+    private static double borner(double valeur, Double min, Double max) {
+        double borne = valeur;
+        if (min != null) {
+            borne = Math.max(borne, min);
+        }
+        if (max != null) {
+            borne = Math.min(borne, max);
+        }
+        return borne;
     }
 
     /**
@@ -216,12 +328,14 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     public void stop() {
         try {
             rcServo.setVelocityLimit(0);
-            // TODO A voir si nécessaire
-            //rcServo.setTargetPosition(rcServo.getPosition());
+            // La limite de vitesse reste à 0 sur le contrôleur : on oublie ce qu'on croyait y avoir
+            // écrit pour que la prochaine consigne la rétablisse, au lieu de la juger inchangée et
+            // de laisser le servo immobile (voir envoyerConsigne).
+            vitesseEcrite = null;
             positionAtteinte.set(true);
+            arriveeEnPosition.countDown();
         } catch (PhidgetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Servo {} : arrêt refusé", index, e);
         }
     }
 
@@ -297,78 +411,72 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         }
     }
 
-    public void setVitesse(Double vitesse) {
+    public synchronized void setVitesse(Double vitesse) {
         try {
-            if (vitesse != null) {
-                rcServo.setVelocityLimit(vitesse.doubleValue());
-            } else {
-                rcServo.setVelocityLimit(vitesseParDefaut);
-            }
+            ecrireVitesse(vitesse != null ? vitesse : vitesseParDefaut);
         } catch (PhidgetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Servo {} : vitesse {} refusée", index, vitesse, e);
         }
     }
 
-    private void setAcceleration(Double acceleration) {
-        try {
-            if (acceleration != null) {
-                rcServo.setAcceleration(acceleration.doubleValue());
-            } else {
-                rcServo.setAcceleration(accelerationParDefaut);
-            }
-        } catch (PhidgetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+    /** Vitesse maximale acceptée par le servo, ou {@code null} tant qu'il n'est pas attaché. */
+    public Double getVitesseMaxMoteur() {
+        return vitesseMaxMoteur;
+    }
+
+    /** Accélération maximale acceptée par le servo, ou {@code null} tant qu'il n'est pas attaché. */
+    public Double getAccelerationMaxMoteur() {
+        return accelerationMaxMoteur;
     }
 
     @Override
-    public void onAttach(AttachEvent attachEvent) {
-        // Une fois que le moteur est attaché, on l'active
+    public synchronized void onAttach(AttachEvent attachEvent) {
+        // Synchronisé comme les consignes : l'attache arrive sur un thread Phidget et amorce la
+        // mémoire des valeurs écrites, qu'une consigne concurrente fausserait. Sans risque de
+        // blocage, l'attente d'arrivée en position se faisant hors du verrou.
         try {
             if (attachEvent.getSource().equals(rcServo)) {
-                rcServo.setAcceleration(accelerationParDefaut);
+                lireBornesDuServo();
+                ecrireAcceleration(accelerationParDefaut);
                 // Engagement à la position physique probable pour éviter un saut à pleine
                 // vitesse matérielle (la rampe ne s'applique qu'entre deux consignes,
                 // jamais sur le rattrapage initial de la position réelle, inconnue)
                 rcServo.setTargetPosition(positionEngagement != null ? positionEngagement : positionInitiale);
-                rcServo.setVelocityLimit(vitesseParDefaut);
+                ecrireVitesse(vitesseParDefaut);
                 rcServo.setEngaged(true);
                 logger.debug("Servo {} attaché", rcServo.getChannel());
             }
         } catch (PhidgetException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("Servo {} : attachement incomplet", index, e);
         }
 
+    }
+
+    /**
+     * Relève les bornes de vitesse et d'accélération du servo. Journalisées parce qu'elles
+     * décident de ce qu'une animation peut demander, et qu'elles ne se devinent pas depuis la
+     * configuration : celle-ci ne porte que les vitesses <b>de travail</b>, pas les maximums du
+     * matériel.
+     */
+    private void lireBornesDuServo() {
+        try {
+            vitesseMinMoteur = rcServo.getMinVelocityLimit();
+            vitesseMaxMoteur = rcServo.getMaxVelocityLimit();
+            accelerationMinMoteur = rcServo.getMinAcceleration();
+            accelerationMaxMoteur = rcServo.getMaxAcceleration();
+            logger.info("Servo {} : vitesse {} à {} °/s, accélération {} à {} °/s²",
+                    index, vitesseMinMoteur, vitesseMaxMoteur, accelerationMinMoteur, accelerationMaxMoteur);
+        } catch (PhidgetException e) {
+            logger.warn("Servo {} : bornes illisibles, les consignes ne seront pas écrêtées", index, e);
+        }
     }
 
     @Override
     public void onTargetPositionReached(RCServoTargetPositionReachedEvent event) {
         if (event.getSource().equals(rcServo)) {
-            //try {
             positionAtteinte.set(true);
-//			} catch (PhidgetException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+            arriveeEnPosition.countDown();
         }
-        ;
-    }
-
-    @Override
-    public void onPositionChange(RCServoPositionChangeEvent event) {
-        if (event.getSource().equals(rcServo)) {
-//			// Envoi d'un évènement à l'ensemble des écouteurs
-//			if (listeEcouteursChangementPosition != null && !listeEcouteursChangementPosition.isEmpty()) {
-//				final MotorPositionChangeEvent evenement = new MotorPositionChangeEvent(this, event.getPosition());
-//				for (MotorPositionChangeListener ecouteur : listeEcouteursChangementPosition) {
-//					ecouteur.onPositionchanged(evenement);
-//				}
-//			}
-        }
-
     }
 
     @Override
@@ -379,38 +487,13 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     @Override
     public void onDetach(DetachEvent event) {
         if (event.getSource().equals(rcServo)) {
-            try {
-                logger.debug("Servo {} détaché", rcServo.getChannel());
-            } catch (PhidgetException e) {
-                logger.error("Erreur lors du détachement du servo", e);
-            }
+            // Le contrôleur a perdu son état : ce qu'on croyait y avoir écrit ne vaut plus rien,
+            // et tout serait à réécrire au rattachement.
+            vitesseEcrite = null;
+            accelerationEcrite = null;
+            arriveeEnPosition.countDown();
+            logger.debug("Servo {} détaché", index);
         }
 
-    }
-
-    public static void main(String[] args) {
-        final PhidgetsServoMotor moteurG = new PhidgetsServoMotor(0, 90, 50, 150, 100, 2000);
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        moteurG.setSpeedRampingState(true);
-        moteurG.setPositionCible(130, null, null, true);
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        moteurG.setSpeedRampingState(true);
-        moteurG.setPositionCible(60, null, null, true);
-        System.exit(0);
-    }
-
-    @Override
-    public void onVelocityChange(RCServoVelocityChangeEvent event) {
-        // Événement à haute fréquence : aucun log (évite d'inonder la sortie)
     }
 }

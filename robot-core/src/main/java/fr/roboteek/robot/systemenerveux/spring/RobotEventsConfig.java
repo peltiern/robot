@@ -41,6 +41,18 @@ public class RobotEventsConfig implements AsyncConfigurer {
      */
     public static final String YEUX_EVENT_EXECUTOR = "yeuxEventExecutor";
 
+    /**
+     * Nom de l'executor MONO-THREAD dédié aux commandes du cou, pour la même raison que celui des
+     * yeux : trois axes sur le même contrôleur, des consignes qui doivent partir dans l'ordre de
+     * publication.
+     * <p>
+     * Sur le pool partagé, deux {@code MouvementCouEvent} consécutifs pouvaient être pris par deux
+     * threads et s'exécuter dans le désordre. Anodin tant que le cou ne recevait qu'un ordre de
+     * temps en temps ; certain dès qu'une animation envoie une trajectoire échantillonnée — la tête
+     * reviendrait alors en arrière d'un échantillon sur l'autre.
+     */
+    public static final String COU_EVENT_EXECUTOR = "couEventExecutor";
+
     private static final Logger logger = LoggerFactory.getLogger(RobotEventsConfig.class);
 
     /**
@@ -71,6 +83,21 @@ public class RobotEventsConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(1);
         executor.setQueueCapacity(200);
         executor.setThreadNamePrefix("yeux-event-");
+        return executor;
+    }
+
+    /**
+     * Executor MONO-THREAD (FIFO) dédié aux commandes du cou (voir {@link #COU_EVENT_EXECUTOR}).
+     * File plus profonde que celle des yeux : le cou porte trois axes, et une animation lui envoie
+     * une trajectoire échantillonnée, pas des ordres isolés.
+     */
+    @Bean(name = COU_EVENT_EXECUTOR)
+    public ThreadPoolTaskExecutor couEventExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("cou-event-");
         return executor;
     }
 
