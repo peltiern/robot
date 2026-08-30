@@ -195,6 +195,13 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             // continuerait sinon à écrire par-dessus, et les deux se disputeraient les axes.
             stopper();
         }
+        // Une ligne par tirage, et non par position : le curseur en envoie dix par seconde, mais
+        // ce qu'on veut savoir en lisant le journal, c'est qu'un tirage a bien atteint le robot.
+        // Sans elle, un curseur qui ne fait rien bouger — parce que la timeline est plate, par
+        // exemple — est indiscernable d'un curseur qui n'arrive pas.
+        if (maintenant - dernierCurseur > FENETRE_CURSEUR_MS) {
+            logger.info("Curseur : « {} » suivie à la main", animation.nom());
+        }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
         dernierCurseur = maintenant;
 

@@ -24,7 +24,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const list = await animationApi.listNames()
+      const list = await animationApi.noms()
       setNames([...list].sort((a, b) => a.localeCompare(b, 'fr')))
     } catch {
       setError('Backend non disponible')
@@ -55,16 +55,27 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
 
   function requestLoad(name: string) {
     if (busy || pendingDelete || pendingNew) return
+    // La question ne se pose que s'il y a quelque chose à perdre. La poser à chaque clic — y
+    // compris juste après avoir chargé une animation qu'on n'a pas touchée — faisait passer le
+    // chargement pour cassé : on cliquait, un panneau s'ouvrait, et rien ne semblait se passer.
+    if (!store.modifie) {
+      chargerAnimation(name, false)
+      return
+    }
     setPendingLoad(name)
   }
 
   async function confirmLoad(saveFirst: boolean) {
     const name = pendingLoad!
     setPendingLoad(null)
+    await chargerAnimation(name, saveFirst)
+  }
+
+  async function chargerAnimation(name: string, saveFirst: boolean) {
     setBusy(name)
     try {
       if (saveFirst) await onSave()
-      const anim = await animationApi.get(name)
+      const anim = await animationApi.charger(name)
       onLoadAnimation(anim)
     } catch {
       setError(`Impossible de charger "${name}"`)
@@ -78,7 +89,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
     if (busy || pendingDelete || pendingLoad) return
     setBusy(name + ':play')
     try {
-      await animationApi.play(name)
+      await animationApi.jouer(name)
     } catch {
       setError(`Impossible de jouer "${name}"`)
     } finally {
@@ -98,7 +109,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
     setBusy(name + ':del')
     try {
       if (saveFirst) await onSave()
-      await animationApi.delete(name)
+      await animationApi.supprimer(name)
       if (store.animationName === name) doNew()
       await refresh()
     } catch {

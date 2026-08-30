@@ -1,52 +1,62 @@
-// Miroir exact du modèle Java Animation / Track / Keyframe
+// Le contrat JSON du robot, à la lettre.
+//
+// Ces noms ne sont pas un choix de style : ce sont ceux des records Java et des fichiers
+// enregistrés dans $ROBOT_HOME/animations. En changer un ici rend illisibles les animations
+// déjà écrites — le backend relirait le champ manquant à null, sans une erreur.
+//
+// Le modèle interne de l'éditeur (EditorTrack, EditorKeyframe) garde ses propres noms ; la
+// frontière entre les deux est convert.ts, et elle est volontairement au même endroit que la
+// conversion, pour qu'on voie d'un coup d'oeil ce qui part sur le fil.
 
-export type TrackId =
+export type Axe =
   | 'OEIL_GAUCHE'
   | 'OEIL_DROIT'
   | 'COU_GAUCHE_DROITE'
   | 'COU_HAUT_BAS'
   | 'COU_MONTER_DESCENDRE'
 
-export interface Keyframe {
-  time: number         // ms absolu depuis le début de l'animation
-  value: number        // degrés
-  velocity?: number    // null = utilise Track.defaultVelocity
+export interface ImageCle {
+  instant: number          // ms depuis le début de l'animation
+  valeur: number           // degrés, dans le repère relatif (0 = posture de travail)
+  vitesse?: number         // absent = celle de la piste
   acceleration?: number
 }
 
-export interface Track {
-  id: TrackId
-  defaultVelocity: number
-  defaultAcceleration: number
-  keyframes: Keyframe[]
+export interface Piste {
+  axe: Axe
+  vitesseParDefaut: number
+  accelerationParDefaut: number
+  imagesCles: ImageCle[]
 }
 
 export interface Animation {
-  name: string
-  totalDuration: number  // ms
-  tracks: Track[]
+  nom: string
+  dureeTotale: number      // ms ; indépendante de la dernière image-clé, une animation peut
+                           // finir sur une pause
+  pistes: Piste[]
+  sons: unknown[]          // emplacement réservé ; l'éditeur ne les connaît pas encore et les
+                           // renvoie tels quels — le backend les conserve de toute façon
 }
 
-export interface ValidationWarning {
-  trackId: TrackId
-  timeFrom: number
-  timeTo: number
-  message: string
+/** Ce que le robot répond quand il lance une animation. */
+export interface AnimationEnCours {
+  nom: string
+  avertissements: string[]
 }
 
-export interface SaveResponse {
-  animation: Animation
-  warnings: ValidationWarning[]
+/**
+ * Un axe animable, tel que le robot le décrit — butées et vitesses de travail comprises.
+ *
+ * Rien de tout ça n'est codé en dur côté éditeur : les butées viennent de robot.properties, et
+ * celles qui étaient écrites ici étaient fausses (l'inclinaison annoncée −25→50 quand le servo
+ * ne fait que −8→7). Une timeline qui laisse dessiner ce que la mécanique refuse est pire
+ * qu'inutile.
+ */
+export interface AxeAnimable {
+  id: Axe
+  libelle: string
+  positionMin: number
+  positionMax: number
+  vitesseParDefaut: number
+  accelerationParDefaut: number
 }
-
-// Plages physiques par track (en degrés relatifs)
-export const TRACK_RANGES: Record<TrackId, { min: number; max: number; label: string; color: string }> = {
-  OEIL_GAUCHE:         { min: -24, max: 20,  label: 'Œil Gauche',         color: '#4fc3f7' },
-  OEIL_DROIT:          { min: -24, max: 20,  label: 'Œil Droit',          color: '#81c784' },
-  COU_GAUCHE_DROITE:   { min: -65, max: 65,  label: 'Cou Gauche/Droite',  color: '#ffb74d' },
-  COU_HAUT_BAS:        { min: -25, max: 50,  label: 'Cou Haut/Bas',       color: '#f06292' },
-  COU_MONTER_DESCENDRE:{ min: -30, max: 30,  label: 'Cou Monter/Descendre', color: '#ce93d8' },
-}
-
-export const DEFAULT_VELOCITY = 250
-export const DEFAULT_ACCELERATION = 200

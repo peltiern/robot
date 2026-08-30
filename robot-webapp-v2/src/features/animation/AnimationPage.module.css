@@ -103,3 +103,19 @@
   transition: background 0.12s;
 }
 .btn:hover { background: #2d333b; border-color: #58a6ff66; }
+
+/* Bandeau des avertissements du vérificateur : ce que le robot ne saura pas suivre. */
+.avertissements {
+  padding: 8px 12px;
+  background: #4a3410;
+  border-top: 1px solid #7a5510;
+  color: #ffd08a;
+  font-size: 12px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.avertissements ul {
+  margin: 4px 0 6px;
+  padding-left: 18px;
+}
