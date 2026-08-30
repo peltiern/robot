@@ -1,0 +1,80 @@
+{
+  "nom": "Salut",
+  "dureeTotale": 4000,
+  "pistes": [
+    {
+      "axe": "COU_GAUCHE_DROITE",
+      "vitesseParDefaut": 40.0,
+      "accelerationParDefaut": 200.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1000,
+          "valeur": -18.0
+        },
+        {
+          "instant": 2200,
+          "valeur": 18.0
+        },
+        {
+          "instant": 3200,
+          "valeur": -10.0
+        },
+        {
+          "instant": 4000,
+          "valeur": 0.0
+        }
+      ]
+    },
+    {
+      "axe": "OEIL_GAUCHE",
+      "vitesseParDefaut": 40.0,
+      "accelerationParDefaut": 60.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1100,
+          "valeur": 14.0
+        },
+        {
+          "instant": 2600,
+          "valeur": 14.0
+        },
+        {
+          "instant": 3700,
+          "valeur": 0.0
+        }
+      ]
+    },
+    {
+      "axe": "OEIL_DROIT",
+      "vitesseParDefaut": 40.0,
+      "accelerationParDefaut": 60.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1100,
+          "valeur": 14.0
+        },
+        {
+          "instant": 2600,
+          "valeur": 14.0
+        },
+        {
+          "instant": 3700,
+          "valeur": 0.0
+        }
+      ]
+    }
+  ],
+  "sons": []
+}

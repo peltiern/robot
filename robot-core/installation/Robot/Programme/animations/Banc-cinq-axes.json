@@ -1,0 +1,142 @@
+{
+  "nom": "Banc-cinq-axes",
+  "dureeTotale": 6000,
+  "pistes": [
+    {
+      "axe": "COU_GAUCHE_DROITE",
+      "vitesseParDefaut": 40.0,
+      "accelerationParDefaut": 200.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1500,
+          "valeur": 30.0
+        },
+        {
+          "instant": 3000,
+          "valeur": 0.0
+        },
+        {
+          "instant": 4500,
+          "valeur": -30.0
+        },
+        {
+          "instant": 6000,
+          "valeur": 0.0
+        }
+      ]
+    },
+    {
+      "axe": "COU_HAUT_BAS",
+      "vitesseParDefaut": 10.0,
+      "accelerationParDefaut": 200.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1500,
+          "valeur": 5.0
+        },
+        {
+          "instant": 3000,
+          "valeur": 0.0
+        },
+        {
+          "instant": 4500,
+          "valeur": -5.0
+        },
+        {
+          "instant": 6000,
+          "valeur": 0.0
+        }
+      ]
+    },
+    {
+      "axe": "COU_MONTER_DESCENDRE",
+      "vitesseParDefaut": 100.0,
+      "accelerationParDefaut": 200.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1500,
+          "valeur": 12.0
+        },
+        {
+          "instant": 3000,
+          "valeur": 0.0
+        },
+        {
+          "instant": 4500,
+          "valeur": 12.0
+        },
+        {
+          "instant": 6000,
+          "valeur": 0.0
+        }
+      ]
+    },
+    {
+      "axe": "OEIL_GAUCHE",
+      "vitesseParDefaut": 40.0,
+      "accelerationParDefaut": 60.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1500,
+          "valeur": 15.0
+        },
+        {
+          "instant": 3000,
+          "valeur": -2.0
+        },
+        {
+          "instant": 4500,
+          "valeur": 15.0
+        },
+        {
+          "instant": 6000,
+          "valeur": 0.0
+        }
+      ]
+    },
+    {
+      "axe": "OEIL_DROIT",
+      "vitesseParDefaut": 40.0,
+      "accelerationParDefaut": 60.0,
+      "imagesCles": [
+        {
+          "instant": 0,
+          "valeur": 0.0
+        },
+        {
+          "instant": 1500,
+          "valeur": -2.0
+        },
+        {
+          "instant": 3000,
+          "valeur": 15.0
+        },
+        {
+          "instant": 4500,
+          "valeur": -2.0
+        },
+        {
+          "instant": 6000,
+          "valeur": 0.0
+        }
+      ]
+    }
+  ],
+  "sons": []
+}
