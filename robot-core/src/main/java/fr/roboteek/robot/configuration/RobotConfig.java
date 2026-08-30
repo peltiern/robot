@@ -345,4 +345,39 @@ public interface RobotConfig extends Config {
     @Key("robot.regard.inclinaison.sens.inverse")
     @DefaultValue("false")
     boolean regardInclinaisonSensInverse();
+
+    /**
+     * Cadence d'échantillonnage d'une animation, en hertz.
+     * <p>
+     * Dix, parce que le contrôleur ne peut pas suivre plus vite : le banc du 2026-08-29 a mesuré
+     * <b>5 ms par canal écrit plus 12 ms par écriture</b>. Cinq axes en mouvement coûtent donc
+     * environ 85 ms par tour, pour un budget de 100. Monter à 30 Hz demanderait deux fois et demie
+     * le débit du hub, et le lecteur passerait son temps en retard sur lui-même.
+     * <p>
+     * Cette lenteur est un atout, pas un pis-aller : avec 100 ms entre deux échantillons, la rampe
+     * du contrôleur a le temps de <b>remplir l'intervalle</b> au lieu d'être interrompue avant
+     * d'avoir commencé. C'est elle qui lisse le mouvement entre deux consignes.
+     * <p>
+     * Baisser si des animations bougent beaucoup d'axes à la fois et traînent ; monter n'a de sens
+     * que sur une animation à un ou deux axes.
+     */
+    @Key("robot.animation.cadence.hertz")
+    @DefaultValue("10")
+    double animationCadenceHertz();
+
+    /**
+     * Écart, en degrés, en deçà duquel un axe n'est pas réécrit d'un échantillon à l'autre.
+     * <p>
+     * C'est le vrai levier du lecteur, bien plus que la cadence : le banc a montré qu'un canal
+     * <b>engagé mais non écrit ne coûte rien</b>. Un axe immobile — et une animation en bouge
+     * rarement plus de deux ou trois à la fois — est donc gratuit, ce qui laisse le budget aux
+     * axes qui travaillent vraiment.
+     * <p>
+     * Trois dixièmes de degré, sous ce qu'un servo RC sait résoudre : ce qu'on économise ainsi,
+     * le robot ne pouvait de toute façon pas le montrer. Monter le seuil ferait des paliers
+     * visibles sur les mouvements lents.
+     */
+    @Key("robot.animation.seuil.degres")
+    @DefaultValue("0.3")
+    double animationSeuilDegres();
 }
