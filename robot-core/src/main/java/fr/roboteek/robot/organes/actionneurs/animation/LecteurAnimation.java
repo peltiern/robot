@@ -24,6 +24,7 @@ import java.time.Clock;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Déroule une animation en <b>régime trajectoire</b> : la courbe est calculée en Java et envoyée
@@ -62,6 +63,16 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     /** Durée d'un tour à vide, quand aucune animation ne se joue : rien à calculer, on somnole. */
     private static final long PAUSE_AU_REPOS_MS = 100;
 
+    /**
+     * Durée pendant laquelle un déplacement au curseur continue de compter comme « une animation
+     * se joue ».
+     * <p>
+     * Un tirage de curseur n'a pas de fin : l'éditeur envoie des instants tant que la souris
+     * bouge, et s'arrête sans rien dire. Sans cette fenêtre, le regard reprendrait la main entre
+     * deux envois et se battrait avec l'éditeur — la même divergence que pendant une lecture.
+     */
+    private static final long FENETRE_CURSEUR_MS = 1000;
+
     private final Clock horloge;
 
     /**
@@ -72,6 +83,12 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
     /** L'animation en cours, ou {@code null}. Écrite par les listeners, lue par la boucle. */
     private volatile Lecture lecture;
+
+    /** Instant du dernier déplacement au curseur, pour la fenêtre {@link #FENETRE_CURSEUR_MS}. */
+    private volatile long dernierCurseur;
+
+    /** Ce que le curseur a envoyé en dernier, pour ne pas réécrire un axe qui n'a pas bougé. */
+    private final Map<Axe, Double> dernieresConsignesCurseur = new EnumMap<>(Axe.class);
 
     private volatile boolean running = false;
 
@@ -118,6 +135,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             return false;
         }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
+        dernieresConsignesCurseur.clear();
         lecture = new Lecture(animation, horloge.millis());
         logger.info("Animation « {} » lancée ({} ms, {} piste(s))",
                 animation.nom(), animation.dureeTotale(), animation.pistes().size());
@@ -137,10 +155,55 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
     }
 
-    /** Une animation est en cours de déroulement. */
+    /** L'animation en train d'être déroulée, si le robot en joue une. */
+    public Optional<Animation> animationEnCours() {
+        Lecture enCours = lecture;
+        return enCours == null ? Optional.empty() : Optional.of(enCours.animation);
+    }
+
+    /**
+     * Une animation occupe les moteurs : lecture en cours, ou curseur de l'éditeur tiré à
+     * l'instant. Ce que {@code Regard} interroge pour savoir s'il doit s'effacer.
+     */
     @Override
     public boolean enLecture() {
-        return lecture != null;
+        return lecture != null || horloge.millis() - dernierCurseur < FENETRE_CURSEUR_MS;
+    }
+
+    /**
+     * Place les axes à un instant donné de l'animation, sans rien dérouler : ce que fait
+     * l'éditeur quand on tire le curseur de la timeline.
+     * <p>
+     * Écrêté au même budget que la lecture. L'éditeur envoie autant d'instants que la souris
+     * produit d'évènements — bien plus que les 55 écritures par seconde du contrôleur — et rien
+     * n'oblige un client à se brider. Le refus est silencieux : un curseur tiré vite doit sauter
+     * des positions intermédiaires, pas remplir une file.
+     *
+     * @return faux si le lecteur ne l'a pas prise, pour la même raison que {@link #jouer}
+     */
+    public boolean positionner(Animation animation, long instant) {
+        if (!running || arretUrgence || animation == null) {
+            return false;
+        }
+        long maintenant = horloge.millis();
+        double cadence = Configurations.robotConfig().animationCadenceHertz();
+        if (maintenant - dernierCurseur < 1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI)) {
+            return true;
+        }
+        if (lecture != null) {
+            // Tirer le curseur pendant une lecture, c'est en reprendre la main : la lecture
+            // continuerait sinon à écrire par-dessus, et les deux se disputeraient les axes.
+            stopper();
+        }
+        limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
+        dernierCurseur = maintenant;
+
+        Lecture ponctuelle = new Lecture(animation, 0);
+        ponctuelle.dernieresConsignes.putAll(dernieresConsignesCurseur);
+        Map<Axe, Double> consignes = consignes(ponctuelle, instant);
+        dernieresConsignesCurseur.putAll(ponctuelle.dernieresConsignes);
+        publier(animation, consignes, instant);
+        return true;
     }
 
     @Override
