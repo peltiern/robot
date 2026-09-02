@@ -53,8 +53,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /**
      * Conversion angle de tête ↔ position moteur, une par axe.
      * <p>
-     * Les trois sont décroissantes — {@code init - position}, formule qui était recopiée neuf
-     * fois dans cette classe, trois fois à l'aller et six fois au retour.
+     * L'inclinaison et le monter/descendre sont décroissants — {@code init - position}, formule
+     * qui était recopiée neuf fois dans cette classe, trois fois à l'aller et six fois au retour.
+     * Le panoramique, lui, est croissant : voir {@code initialiser()}.
      * <p>
      * Rapport de 1 pour l'instant, et ce n'est pas le vrai : le panoramique passe par un couple
      * de pignons et l'inclinaison par une boîte Stingray-2. La fiche des servos et le RCC1000
@@ -131,7 +132,12 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // Les transmissions se figent ici, en même temps que les moteurs : relire la position
         // initiale à chaque conversion, comme avant, la laissait diverger des butées du moteur,
         // elles fixées une seule fois. Un étalonnage à chaud ne s'appliquait donc qu'à moitié.
-        transmissionPanoramique = Transmission.affine(phidgetsConfig.neckLeftRightMotorInitialPosition(), -1);
+        // Panoramique en +1 quand les deux autres sont en -1 : le servo est monté dans l'autre
+        // sens, et c'est mesuré, pas supposé. Essai du 2026-09-02 : curseur du HUD à gauche,
+        // donc consigne -60, donc moteur 155 — et la tête part à DROITE. Le repère logique
+        // valait « positif = à gauche », à l'envers de tout curseur horizontal, et personne ne
+        // l'avait vu parce que le regard n'emprunte pas cette porte-là (il passe par rotate()).
+        transmissionPanoramique = Transmission.affine(phidgetsConfig.neckLeftRightMotorInitialPosition(), +1);
         transmissionInclinaison = Transmission.affine(phidgetsConfig.neckTiltMotorInitialPosition(), -1);
         transmissionMonterDescendre = Transmission.affine(phidgetsConfig.neckUpDownMotorInitialPosition(), -1);
 
@@ -208,7 +214,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /**
      * Tourne la tête sur le plan "Gauche / Droite" d'un certain angle.
      *
-     * @param angle angle en degrés (négatif : à droite, positif : à gauche)
+     * @param angle angle en degrés (négatif : à gauche, positif : à droite)
      */
     public void tournerTeteGaucheDroite(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
         // Une consigne d'angle ou de position laisse le servo ARRÊTÉ sur sa cible : le mouvement
@@ -219,22 +225,22 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // recentre le stick. Le watchdog n'y perd rien, enMouvement() couvre déjà les consignes
         // de position par la variation constatée.
         mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
-        // ATTENTION, convention opposée à positionnerTeteGaucheDroite : rotate() ajoute à la
-        // position MOTEUR, alors que positionner() inverse le signe. Un angle positif ne fait
-        // donc pas tourner la tête du même côté selon la porte qu'on emprunte. Les deux marchent
-        // parce que personne ne les compare : le regard, seul appelant de rotate(), a eu son
-        // sens étalonné sur le robot (robot.regard.panoramique.sens.inverse), et ce réglage
-        // absorbe l'écart sans le nommer — exactement comme commande.par.degre.vu absorbe le
-        // rapport de transmission. Faire passer ce delta par la transmission redresserait le
-        // signe, mais changerait le mouvement : ça se fait avec le vrai rapport et une
-        // validation sur le robot, pas ici. Idem tournerTeteHautBas et monterDescendreTete.
+        // rotate() ajoute à la position MOTEUR sans passer par la transmission. Sur cet axe ce
+        // n'est plus un piège depuis que le panoramique est croissant : les deux portes vont
+        // enfin du même côté. Sur tournerTeteHautBas et monterDescendreTete, si : leur
+        // transmission est décroissante, donc un angle positif n'y fait pas tourner la tête du
+        // même côté selon la porte empruntée. Ça ne se voit pas parce que le regard, seul
+        // appelant de rotate(), a eu son sens étalonné sur le robot
+        // (robot.regard.inclinaison.sens.inverse) et absorbe l'écart sans le nommer — comme
+        // commande.par.degre.vu absorbe le rapport de transmission. Redresser ces deux-là
+        // change le mouvement : ça se fait avec leur vrai rapport et une validation, pas ici.
         moteurPanoramique.rotate(angle, vitesse, acceleration, waitForPosition);
     }
 
     /**
-     * Positionne la tête sur le plan "Gauche / Droite" à une position précise (0 : à gauche, 180 : à droite).
+     * Positionne la tête sur le plan "Gauche / Droite", en degrés relatifs au repos.
      *
-     * @param position position en degrés (0 : à gauche, 180 : à droite)
+     * @param position position en degrés (0 : de face, négatif : à gauche, positif : à droite)
      */
     public void positionnerTeteGaucheDroite(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
         double positionMoteur = transmissionPanoramique.versMoteur(position);
@@ -541,7 +547,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
 
     /**
      * Position panoramique courante dans le repère « logique » exposé aux clients
-     * (position = init − position moteur, cf. {@link #positionnerTeteGaucheDroite}), ou
+     * (position = position moteur − init, cf. {@link #positionnerTeteGaucheDroite}), ou
      * {@code null} si l'organe n'est pas démarré (les moteurs ne sont créés qu'au {@code start()}).
      */
     public Double getPositionPanoramiqueCourante() {

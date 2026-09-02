@@ -42,12 +42,40 @@ class TransmissionTest {
         }
 
         @Test
-        void lesTroisAxesDuCouSontDecroissants() {
-            // Cou : positionMoteur = init - position, init = 95 / 67 / 140
-            assertEquals(35, Transmission.affine(95, -1).versMoteur(60), PRES);
-            assertEquals(155, Transmission.affine(95, -1).versMoteur(-60), PRES);
+        void inclinaisonEtMonterDescendreSontDecroissants() {
+            // Cou : positionMoteur = init - position, init = 67 / 140
             assertEquals(60, Transmission.affine(67, -1).versMoteur(7), PRES);
             assertEquals(90, Transmission.affine(140, -1).versMoteur(50), PRES);
+        }
+
+        /**
+         * Le panoramique est le seul axe croissant du cou : son servo est monté dans l'autre
+         * sens. Relevé sur le robot le 2026-09-02 — moteur 155 met la tête à droite — après que
+         * le curseur du HUD est parti du mauvais côté pendant des mois, le repère logique
+         * valant alors « positif = à gauche ».
+         */
+        @Test
+        void lePanoramiqueEstCroissant() {
+            Transmission panoramique = Transmission.affine(95, +1);
+
+            assertEquals(155, panoramique.versMoteur(60), PRES);
+            assertEquals(35, panoramique.versMoteur(-60), PRES);
+            assertEquals(60, panoramique.depuisMoteur(155), PRES);
+        }
+
+        /**
+         * Les bornes envoyées au front par {@code OrganeController} sont encore calculées à la
+         * main en {@code init - butée}, avec le signe de l'ancien repère. Elles restent justes
+         * pour le panoramique par pure symétrie des butées autour de 95 — 35 et 155 sont à ±60.
+         * Ce test est là pour que la chance cesse d'être silencieuse : s'il tombe, c'est que les
+         * butées ont bougé et que ces bornes mentent au curseur.
+         */
+        @Test
+        void lesBornesDuPanoramiqueSontSymetriques() {
+            Transmission panoramique = Transmission.affine(95, +1);
+
+            assertEquals(95 - 155, panoramique.depuisMoteur(35), PRES);
+            assertEquals(95 - 35, panoramique.depuisMoteur(155), PRES);
         }
 
         /**
