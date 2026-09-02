@@ -2,6 +2,7 @@ package fr.roboteek.robot.organes.actionneurs;
 
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.actionneurs.transmission.Transmission;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
@@ -45,6 +46,23 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
     /** Moteur Haut / Bas. */
     private PhidgetsServoMotor moteurOeilDroit;
+
+    /**
+     * Conversion angle d'œil ↔ position moteur, une par œil.
+     * <p>
+     * Les deux ne sont pas les mêmes et ne le seront jamais : les servos sont montés en
+     * miroir, donc une position relative qui monte l'œil gauche fait <b>descendre</b> le
+     * moteur, et l'inverse à droite. C'était écrit à la main dans quatre méthodes privées.
+     * <p>
+     * Rapport de 1 pour l'instant : ce n'est pas la vraie loi de l'œil, qui passe par un
+     * quadrilatère articulé et varie de 1,25 à 3,70 le long de la course
+     * ({@code robot-core/3d/mesures/MESURES.md}). La brancher est un chantier à part, qui
+     * change l'unité des animations enregistrées ; ici on ne fait que déménager la conversion
+     * existante, sans rien changer au mouvement.
+     */
+    private Transmission transmissionOeilGauche;
+
+    private Transmission transmissionOeilDroit;
 
     /** Phidgets Configuration. */
     private PhidgetsConfig phidgetsConfig;
@@ -102,6 +120,13 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
     @Override
     public void initialiser() {
+        // Les transmissions se figent ici, au même instant que les butées qu'on en déduit :
+        // relire la position zéro à chaque conversion, comme avant, la laissait diverger des
+        // bornes du moteur, elles calculées une seule fois. Un étalonnage à chaud du zéro ne
+        // s'appliquait donc qu'à moitié.
+        transmissionOeilGauche = Transmission.affine(phidgetsConfig.eyeLeftMotorPositionZero(), -1);
+        transmissionOeilDroit = Transmission.affine(phidgetsConfig.eyeRightMotorPositionZero(), +1);
+
         // Création des moteurs au démarrage de la phase (et non à la construction du bean).
         // Chaque servo est engagé à sa position de repos — sa position physique probable,
         // laissée par le dernier arrêt — pour éviter le saut à pleine vitesse à l'engagement ;
@@ -109,20 +134,20 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         moteurOeilGauche = new PhidgetsServoMotor(
                 phidgetsConfig.eyeLeftMotorIndex(),
                 phidgetsConfig.eyeLeftMotorPositionZero(),
-                toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMax()),
-                toPositionAbsolueOeilGauche(phidgetsConfig.eyeMotorRelativePositionMin()),
+                transmissionOeilGauche.versMoteur(phidgetsConfig.eyeMotorRelativePositionMax()),
+                transmissionOeilGauche.versMoteur(phidgetsConfig.eyeMotorRelativePositionMin()),
                 phidgetsConfig.eyeLeftMotorSpeed(),
                 phidgetsConfig.eyeLeftMotorAcceleration(),
-                toPositionAbsolueOeilGauche(positionReposRelative())
+                transmissionOeilGauche.versMoteur(positionReposRelative())
         );
         moteurOeilDroit = new PhidgetsServoMotor(
                 phidgetsConfig.eyeRightMotorIndex(),
                 phidgetsConfig.eyeRightMotorPositionZero(),
-                toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMax()),
-                toPositionAbsolueOeilDroit(phidgetsConfig.eyeMotorRelativePositionMin()),
+                transmissionOeilDroit.versMoteur(phidgetsConfig.eyeMotorRelativePositionMax()),
+                transmissionOeilDroit.versMoteur(phidgetsConfig.eyeMotorRelativePositionMin()),
                 phidgetsConfig.eyeRightMotorSpeed(),
                 phidgetsConfig.eyeRightMotorAcceleration(),
-                toPositionAbsolueOeilDroit(positionReposRelative())
+                transmissionOeilDroit.versMoteur(positionReposRelative())
         );
 
         moteurOeilGauche.setSpeedRampingState(true);
@@ -160,6 +185,11 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * @param angle angle en degrés (négatif : vers le bas, positif : vers le haut)
      */
     public void tournerOeilGauche(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
+        // Le signe est celui de transmissionOeilGauche, appliqué à la main : rotate() travaille
+        // en degrés moteur, et convertir un déplacement n'est pas convertir une position — il
+        // faudrait lire la position courante, l'ajouter en degrés d'œil, puis reconvertir. Sans
+        // objet tant que le rapport vaut 1 ; indispensable le jour où la loi du quadrilatère
+        // arrive, son rapport variant de 1,25 à 3,70 le long de la course.
         moteurOeilGauche.rotate(-angle, vitesse, acceleration, waitForPosition);
     }
 
@@ -170,7 +200,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      */
     public void positionnerOeilGauche(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
         if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
-            double positionMoteur = toPositionAbsolueOeilGauche(positionRelative);
+            double positionMoteur = transmissionOeilGauche.versMoteur(positionRelative);
             moteurOeilGauche.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -213,7 +243,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      */
     public void positionnerOeilDroit(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
         if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
-            double positionMoteur = toPositionAbsolueOeilDroit(positionRelative);
+            double positionMoteur = transmissionOeilDroit.versMoteur(positionRelative);
             moteurOeilDroit.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
         }
     }
@@ -250,8 +280,8 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
         // Position relative RÉELLE courante des deux yeux (bornée à la plage utile pour absorber
         // le bruit capteur). Aucun état figé : le roulis s'applique par-dessus la position du moment.
-        double positionGauche = clamp(toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle()), min, max);
-        double positionDroit = clamp(toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle()), min, max);
+        double positionGauche = clamp(transmissionOeilGauche.depuisMoteur(moteurOeilGauche.getPositionReelle()), min, max);
+        double positionDroit = clamp(transmissionOeilDroit.depuisMoteur(moteurOeilDroit.getPositionReelle()), min, max);
 
         // Sens de chaque oeil (opposés) : ANTI_HORAIRE (angle < 0) => gauche monte (+), droit descend (-).
         double sensGauche = angleRoulisDemande < 0 ? +1 : -1;
@@ -354,8 +384,8 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         // Position relative réglable dans robot.properties (clé eyes.motor.relative.position.rest,
         // négatif = baissés) ; à défaut, la position zéro est visée (comportement historique).
         double reposRelatif = positionReposRelative();
-        double reposOeilGauche = toPositionAbsolueOeilGauche(reposRelatif);
-        double reposOeilDroit = toPositionAbsolueOeilDroit(reposRelatif);
+        double reposOeilGauche = transmissionOeilGauche.versMoteur(reposRelatif);
+        double reposOeilDroit = transmissionOeilDroit.versMoteur(reposRelatif);
         logger.info("Positions au moment de l'arrêt : gauche={} droit={} — cible de repos relative : {}",
                 moteurOeilGauche.getPositionReelle(), moteurOeilDroit.getPositionReelle(), reposRelatif);
         moteurOeilGauche.setPositionCible(reposOeilGauche, null, null, false);
@@ -415,43 +445,6 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     }
 
     /**
-     * Calcule la position absolue de l'oeil gauche à partir d'une position relative.
-     *
-     * @param positionRelative la position relative
-     */
-    private double toPositionAbsolueOeilGauche(double positionRelative) {
-        return phidgetsConfig.eyeLeftMotorPositionZero() - positionRelative;
-    }
-
-    /**
-     * Calcule la position relative de l'oeil gauche à partir d'une position absolue.
-     *
-     * @param positionAbsolue la position absolue
-     */
-    private double toPositionRelativeOeilGauche(double positionAbsolue) {
-        return phidgetsConfig.eyeLeftMotorPositionZero() - positionAbsolue;
-    }
-
-    /**
-     * Calcule la position absolue de l'oeil droit à partir d'une position relative.
-     *
-     * @param positionRelative la position relative
-     */
-    private double toPositionAbsolueOeilDroit(double positionRelative) {
-        return phidgetsConfig.eyeRightMotorPositionZero() + positionRelative;
-    }
-
-    /**
-     * Calcule la position relative de l'oeil droit à partir d'une position absolue.
-     * Inverse de {@link #toPositionAbsolueOeilDroit} (absolue = zéro + relative).
-     *
-     * @param positionAbsolue la position absolue
-     */
-    private double toPositionRelativeOeilDroit(double positionAbsolue) {
-        return positionAbsolue - phidgetsConfig.eyeRightMotorPositionZero();
-    }
-
-    /**
      * Position relative courante de l'œil gauche (0 = horizontal, cf. {@link #positionnerOeilGauche}),
      * ou {@code null} si l'organe n'est pas démarré (les moteurs ne sont créés qu'au {@code start()}).
      */
@@ -460,7 +453,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
             return null;
         }
         Double reelle = moteurOeilGauche.getPositionReelleOuNull();
-        return reelle == null ? null : toPositionRelativeOeilGauche(reelle);
+        return reelle == null ? null : transmissionOeilGauche.depuisMoteur(reelle);
     }
 
     /** Position relative courante de l'œil droit, ou {@code null} si l'organe n'est pas démarré. */
@@ -469,7 +462,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
             return null;
         }
         Double reelle = moteurOeilDroit.getPositionReelleOuNull();
-        return reelle == null ? null : toPositionRelativeOeilDroit(reelle);
+        return reelle == null ? null : transmissionOeilDroit.depuisMoteur(reelle);
     }
 
     /**
@@ -528,8 +521,8 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         if (!running) {
             return;
         }
-        double positionRelativeOeilGauche = toPositionRelativeOeilGauche(moteurOeilGauche.getPositionReelle());
-        double positionRelativeOeilDroit = toPositionRelativeOeilDroit(moteurOeilDroit.getPositionReelle());
+        double positionRelativeOeilGauche = transmissionOeilGauche.depuisMoteur(moteurOeilGauche.getPositionReelle());
+        double positionRelativeOeilDroit = transmissionOeilDroit.depuisMoteur(moteurOeilDroit.getPositionReelle());
         logger.debug("YEUX\tgauche = {}\tdroit = {}", positionRelativeOeilGauche, positionRelativeOeilDroit);
     }
 
