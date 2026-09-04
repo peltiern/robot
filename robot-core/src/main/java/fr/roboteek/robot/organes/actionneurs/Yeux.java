@@ -3,6 +3,7 @@ package fr.roboteek.robot.organes.actionneurs;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.transmission.Transmission;
+import fr.roboteek.robot.organes.actionneurs.transmission.TransmissionOeil;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
@@ -54,11 +55,13 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * miroir, donc une position relative qui monte l'œil gauche fait <b>descendre</b> le
      * moteur, et l'inverse à droite. C'était écrit à la main dans quatre méthodes privées.
      * <p>
-     * Rapport de 1 pour l'instant : ce n'est pas la vraie loi de l'œil, qui passe par un
-     * quadrilatère articulé et varie de 1,25 à 3,70 le long de la course
-     * ({@code robot-core/3d/mesures/MESURES.md}). La brancher est un chantier à part, qui
-     * change l'unité des animations enregistrées ; ici on ne fait que déménager la conversion
-     * existante, sans rien changer au mouvement.
+     * Ce n'est pas une affine : la tringlerie est un quadrilatère articulé, dont le rapport va de
+     * 1,25° d'œil par degré de servo au neutre à 3,70° en bout de course
+     * ({@code robot-core/3d/mesures/MESURES.md}). Les positions qui traversent cette classe et
+     * l'évènement {@link MouvementYeuxEvent} sont donc des <b>degrés d'œil</b>, plus des unités
+     * moteur — l'échelle a été confirmée sur le robot le 2026-09-03 en mesurant le roulis de
+     * l'image : la caméra est solidaire d'une coque, 20 unités l'ont fait tourner de 30,8°, la
+     * loi en prédisait 31,06.
      */
     private Transmission transmissionOeilGauche;
 
@@ -76,6 +79,14 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
     /** Tolérance (en degrés) pour considérer une position servo atteinte. */
     private static final double TOLERANCE_POSITION = 1.0;
+
+    /**
+     * Gain de la tringlerie à l'œil au repos, pour les vitesses qu'on ne peut pas rattacher à un
+     * angle visé : les valeurs par défaut écrites sur le servo à l'attache, et les mouvements
+     * continus de la manette, qui n'ont pas de cible. Le rapport variant de 1,25 à 3,70 le long de
+     * la course, c'est une approximation — assumée, cf. {@link #enUnitesMoteur}.
+     */
+    private static final double GAIN_AU_NEUTRE = 1 / 1.2517;
 
     /**
      * Marge (en degrés) dont la position de repos peut dépasser les butées logicielles de
@@ -124,8 +135,11 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         // relire la position zéro à chaque conversion, comme avant, la laissait diverger des
         // bornes du moteur, elles calculées une seule fois. Un étalonnage à chaud du zéro ne
         // s'appliquait donc qu'à moitié.
-        transmissionOeilGauche = Transmission.affine(phidgetsConfig.eyeLeftMotorPositionZero(), -1);
-        transmissionOeilDroit = Transmission.affine(phidgetsConfig.eyeRightMotorPositionZero(), +1);
+        // Les deux servos sont montés en MIROIR : une même commande d'organe les fait tourner en
+        // sens inverse, et c'est le seul écart entre les deux yeux — la loi de la tringlerie, elle,
+        // est la même des deux côtés. Le signe est donc porté ici et nulle part ailleurs.
+        transmissionOeilGauche = new TransmissionOeil(phidgetsConfig.eyeLeftMotorPositionZero(), -1);
+        transmissionOeilDroit = new TransmissionOeil(phidgetsConfig.eyeRightMotorPositionZero(), +1);
 
         // Création des moteurs au démarrage de la phase (et non à la construction du bean).
         // Chaque servo est engagé à sa position de repos — sa position physique probable,
@@ -134,19 +148,19 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         moteurOeilGauche = new PhidgetsServoMotor(
                 phidgetsConfig.eyeLeftMotorIndex(),
                 phidgetsConfig.eyeLeftMotorPositionZero(),
-                transmissionOeilGauche.versMoteur(phidgetsConfig.eyeMotorRelativePositionMax()),
-                transmissionOeilGauche.versMoteur(phidgetsConfig.eyeMotorRelativePositionMin()),
-                phidgetsConfig.eyeLeftMotorSpeed(),
-                phidgetsConfig.eyeLeftMotorAcceleration(),
+                transmissionOeilGauche.versMoteur(phidgetsConfig.eyePositionMax()),
+                transmissionOeilGauche.versMoteur(phidgetsConfig.eyePositionMin()),
+                phidgetsConfig.eyeLeftSpeed() * GAIN_AU_NEUTRE,
+                phidgetsConfig.eyeLeftAcceleration() * GAIN_AU_NEUTRE,
                 transmissionOeilGauche.versMoteur(positionReposRelative())
         );
         moteurOeilDroit = new PhidgetsServoMotor(
                 phidgetsConfig.eyeRightMotorIndex(),
                 phidgetsConfig.eyeRightMotorPositionZero(),
-                transmissionOeilDroit.versMoteur(phidgetsConfig.eyeMotorRelativePositionMax()),
-                transmissionOeilDroit.versMoteur(phidgetsConfig.eyeMotorRelativePositionMin()),
-                phidgetsConfig.eyeRightMotorSpeed(),
-                phidgetsConfig.eyeRightMotorAcceleration(),
+                transmissionOeilDroit.versMoteur(phidgetsConfig.eyePositionMax()),
+                transmissionOeilDroit.versMoteur(phidgetsConfig.eyePositionMin()),
+                phidgetsConfig.eyeRightSpeed() * GAIN_AU_NEUTRE,
+                phidgetsConfig.eyeRightAcceleration() * GAIN_AU_NEUTRE,
                 transmissionOeilDroit.versMoteur(positionReposRelative())
         );
 
@@ -167,7 +181,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     public void tournerOeilGaucheVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
-            moteurOeilGauche.backward(vitesse, acceleration, waitForPosition);
+            moteurOeilGauche.backward(enUnitesMoteur(vitesse), enUnitesMoteur(acceleration), waitForPosition);
         }
     }
 
@@ -175,7 +189,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     public void tournerOeilGaucheVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilGaucheEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
-            moteurOeilGauche.forward(vitesse, acceleration, waitForPosition);
+            moteurOeilGauche.forward(enUnitesMoteur(vitesse), enUnitesMoteur(acceleration), waitForPosition);
         }
     }
 
@@ -185,12 +199,12 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * @param angle angle en degrés (négatif : vers le bas, positif : vers le haut)
      */
     public void tournerOeilGauche(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
-        // Le signe est celui de transmissionOeilGauche, appliqué à la main : rotate() travaille
-        // en degrés moteur, et convertir un déplacement n'est pas convertir une position — il
-        // faudrait lire la position courante, l'ajouter en degrés d'œil, puis reconvertir. Sans
-        // objet tant que le rapport vaut 1 ; indispensable le jour où la loi du quadrilatère
-        // arrive, son rapport variant de 1,25 à 3,70 le long de la course.
-        moteurOeilGauche.rotate(-angle, vitesse, acceleration, waitForPosition);
+        // Un déplacement ne se convertit pas comme une position : le rapport de la tringlerie
+        // varie, donc deux degrés d'œil ne valent pas le même nombre de degrés de servo selon
+        // l'endroit de la course. D'où l'aller-retour par l'angle courant, plutôt qu'un rotate()
+        // qui ajouterait un delta d'organe à une position moteur.
+        double courant = transmissionOeilGauche.depuisMoteur(moteurOeilGauche.getPositionReelle());
+        positionnerOeilGauche(courant + angle, vitesse, acceleration, waitForPosition);
     }
 
     /**
@@ -199,9 +213,10 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
      */
     public void positionnerOeilGauche(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
-        if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
+        if (positionRelative >= phidgetsConfig.eyePositionMin() && positionRelative <= phidgetsConfig.eyePositionMax()) {
             double positionMoteur = transmissionOeilGauche.versMoteur(positionRelative);
-            moteurOeilGauche.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+            moteurOeilGauche.setPositionCible(positionMoteur,
+                    enUnitesMoteur(vitesse), enUnitesMoteur(acceleration), waitForPosition);
         }
     }
 
@@ -215,7 +230,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     public void tournerOeilDroitVersBas(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_BAS) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_BAS;
-            moteurOeilDroit.forward(vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.forward(enUnitesMoteur(vitesse), enUnitesMoteur(acceleration), waitForPosition);
         }
     }
 
@@ -223,7 +238,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     public void tournerOeilDroitVersHaut(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsOeilDroitEnCours != MOUVEMENTS_OEIL.TOURNER_HAUT) {
             mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.TOURNER_HAUT;
-            moteurOeilDroit.backward(vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.backward(enUnitesMoteur(vitesse), enUnitesMoteur(acceleration), waitForPosition);
         }
     }
 
@@ -233,7 +248,9 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * @param angle angle en degrés (négatif : en bas, positif : en haut)
      */
     public void tournerOeilDroit(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
-        moteurOeilDroit.rotate(-angle, vitesse, acceleration, waitForPosition);
+        // Cf. tournerOeilGauche : un delta d'organe n'est pas un delta moteur.
+        double courant = transmissionOeilDroit.depuisMoteur(moteurOeilDroit.getPositionReelle());
+        positionnerOeilDroit(courant + angle, vitesse, acceleration, waitForPosition);
     }
 
     /**
@@ -242,9 +259,10 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * @param positionRelative position en degrés (0 : horizontal, min bas : -45, max haut : 15)
      */
     public void positionnerOeilDroit(double positionRelative, Double vitesse, Double acceleration, boolean waitForPosition) {
-        if (positionRelative >= phidgetsConfig.eyeMotorRelativePositionMin() && positionRelative <= phidgetsConfig.eyeMotorRelativePositionMax()) {
+        if (positionRelative >= phidgetsConfig.eyePositionMin() && positionRelative <= phidgetsConfig.eyePositionMax()) {
             double positionMoteur = transmissionOeilDroit.versMoteur(positionRelative);
-            moteurOeilDroit.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+            moteurOeilDroit.setPositionCible(positionMoteur,
+                    enUnitesMoteur(vitesse), enUnitesMoteur(acceleration), waitForPosition);
         }
     }
 
@@ -275,8 +293,8 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * @param angleRoulisDemande amplitude signée du cran (degrés) : &lt;0 ANTI_HORAIRE, &gt;0 HORAIRE
      */
     public void setPositionRoulis(double angleRoulisDemande, Double vitesse, Double acceleration, boolean waitForPosition) {
-        final double min = phidgetsConfig.eyeMotorRelativePositionMin();
-        final double max = phidgetsConfig.eyeMotorRelativePositionMax();
+        final double min = phidgetsConfig.eyePositionMin();
+        final double max = phidgetsConfig.eyePositionMax();
 
         // Position relative RÉELLE courante des deux yeux (bornée à la plage utile pour absorber
         // le bruit capteur). Aucun état figé : le roulis s'applique par-dessus la position du moment.
@@ -305,6 +323,33 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     /** Borne une valeur dans l'intervalle [min, max]. */
     private static double clamp(double valeur, double min, double max) {
         return Math.max(min, Math.min(max, valeur));
+    }
+
+    /**
+     * Traduit une vitesse ou une accélération d'œil en unités moteur, au gain du neutre.
+     * <p>
+     * Nécessaire depuis que les positions sont en degrés d'œil : le contrôleur écrête les
+     * consignes de vitesse contre des bornes lues sur le servo, qui sont en unités moteur.
+     * <p>
+     * <b>Un gain fixe, et non celui de l'angle visé.</b> Échantillonner le gain à la cible
+     * paraissait plus juste — c'est ce que faisait la première version — et ça a rendu les
+     * animations saccadées, essai du 2026-09-04. Deux raisons, qui se cumulent :
+     * <ul>
+     *   <li>{@code LecteurAnimation} renvoie vitesse et accélération <b>à chaque tour</b>, en
+     *   comptant sur le dédoublonnage de {@link PhidgetsServoMotor}, qui compare à l'égalité
+     *   stricte. Un gain qui suit la cible change à chaque échantillon : le dédoublonnage ne joue
+     *   plus, et ce sont quatre écritures USB de plus par tour — environ 48 ms sur un budget de
+     *   100, au débit mesuré au banc ;</li>
+     *   <li>l'accélération tombait de 60 à 29 °/s² en haut de course, là où le rapport est le plus
+     *   fort. Le servo ne suivait plus l'échantillonnage à 10 Hz, traînait, puis rattrapait.</li>
+     * </ul>
+     * L'approximation est donc plus grossière qu'avant, et c'est délibéré : la vitesse n'a jamais
+     * été un contrat ici, seulement un confort, et pendant une animation ce n'est pas elle qui
+     * façonne le mouvement mais la cadence des consignes. Une vitesse vraiment constante d'œil
+     * demanderait de reparamétrer la trajectoire, pas de bricoler une limite.
+     */
+    private static Double enUnitesMoteur(Double valeur) {
+        return valeur == null ? null : valeur * GAIN_AU_NEUTRE;
     }
 
 
@@ -432,10 +477,10 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * se fait en relatif car les bornes absolues des deux yeux sont inversées.
      */
     private double positionReposRelative() {
-        Double reposConfigure = phidgetsConfig.eyeMotorRelativeRestPosition();
+        Double reposConfigure = phidgetsConfig.eyeRestPosition();
         double repos = reposConfigure != null ? reposConfigure : 0;
-        return Math.max(phidgetsConfig.eyeMotorRelativePositionMin() - MARGE_REPOS,
-                Math.min(phidgetsConfig.eyeMotorRelativePositionMax() + MARGE_REPOS, repos));
+        return Math.max(phidgetsConfig.eyePositionMin() - MARGE_REPOS,
+                Math.min(phidgetsConfig.eyePositionMax() + MARGE_REPOS, repos));
     }
 
     /** Remet les yeux à leur position par défaut. */

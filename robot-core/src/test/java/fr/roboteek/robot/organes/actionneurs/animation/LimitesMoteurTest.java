@@ -17,12 +17,12 @@ class LimitesMoteurTest {
     /** Réglages réels du robot, pour que le test dise quelque chose du vrai matériel. */
     private static PhidgetsConfig configurationDuRobot() {
         PhidgetsConfig configuration = mock(PhidgetsConfig.class);
-        when(configuration.eyeLeftMotorSpeed()).thenReturn(40d);
-        when(configuration.eyeLeftMotorAcceleration()).thenReturn(60d);
-        when(configuration.eyeRightMotorSpeed()).thenReturn(40d);
-        when(configuration.eyeRightMotorAcceleration()).thenReturn(60d);
-        when(configuration.eyeMotorRelativePositionMin()).thenReturn(-5d);
-        when(configuration.eyeMotorRelativePositionMax()).thenReturn(20d);
+        when(configuration.eyeLeftSpeed()).thenReturn(40d);
+        when(configuration.eyeLeftAcceleration()).thenReturn(60d);
+        when(configuration.eyeRightSpeed()).thenReturn(40d);
+        when(configuration.eyeRightAcceleration()).thenReturn(60d);
+        when(configuration.eyePositionMin()).thenReturn(-5d);
+        when(configuration.eyePositionMax()).thenReturn(20d);
         when(configuration.neckLeftRightMotorSpeed()).thenReturn(40d);
         when(configuration.neckLeftRightMotorAcceleration()).thenReturn(200d);
         when(configuration.neckLeftRightMotorInitialPosition()).thenReturn(95d);

@@ -102,8 +102,8 @@ public class AnimationStep {
     public AnimationStep(long delay, double positionOeilGauche, double positionOeilDroit, double positionCouGaucheDroite, double positionCouHautBas, RobotSound sound) {
 
         this(delay,
-                positionOeilGauche, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
-                positionOeilDroit, phidgetsConfig().eyeRightMotorSpeed(), phidgetsConfig().eyeRightMotorAcceleration(),
+                positionOeilGauche, phidgetsConfig().eyeLeftSpeed(), phidgetsConfig().eyeLeftAcceleration(),
+                positionOeilDroit, phidgetsConfig().eyeRightSpeed(), phidgetsConfig().eyeRightAcceleration(),
                 positionCouGaucheDroite, phidgetsConfig().neckLeftRightMotorSpeed(), phidgetsConfig().neckLeftRightMotorAcceleration(),
                 positionCouHautBas, phidgetsConfig().neckTiltMotorSpeed(), phidgetsConfig().neckTiltMotorAcceleration(),
                 sound);
@@ -114,7 +114,7 @@ public class AnimationStep {
      */
     public AnimationStep(long delay, double angleRoulis, double positionCouGaucheDroite, double positionCouHautBas, RobotSound sound) {
         this(delay,
-                angleRoulis, phidgetsConfig().eyeLeftMotorSpeed(), phidgetsConfig().eyeLeftMotorAcceleration(),
+                angleRoulis, phidgetsConfig().eyeLeftSpeed(), phidgetsConfig().eyeLeftAcceleration(),
                 positionCouGaucheDroite, phidgetsConfig().neckLeftRightMotorSpeed(), phidgetsConfig().neckLeftRightMotorAcceleration(),
                 positionCouHautBas, phidgetsConfig().neckTiltMotorSpeed(), phidgetsConfig().neckTiltMotorAcceleration(),
                 sound);
@@ -132,8 +132,8 @@ public class AnimationStep {
         PhidgetsConfig phidgetsConfig = ConfigCache.getOrCreate(PhidgetsConfig.class);
         this.delay = delay;
         this.angleRoulis = MouvementCouEvent.ANGLE_NEUTRE;
-        this.vitesseRoulis = phidgetsConfig().eyeLeftMotorSpeed();
-        this.accelerationRoulis = phidgetsConfig().eyeLeftMotorAcceleration();
+        this.vitesseRoulis = phidgetsConfig().eyeLeftSpeed();
+        this.accelerationRoulis = phidgetsConfig().eyeLeftAcceleration();
         this.positionOeilGauche = positionOeilGauche;
         this.vitesseOeilGauche = vitesseOeilGauche;
         this.accelerationOeilGauche = accelerationOeilGauche;

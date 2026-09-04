@@ -31,8 +31,8 @@
     },
     {
       "axe": "OEIL_GAUCHE",
-      "vitesseParDefaut": 40.0,
-      "accelerationParDefaut": 60.0,
+      "vitesseParDefaut": 50.0,
+      "accelerationParDefaut": 75.0,
       "imagesCles": [
         {
           "instant": 0,
@@ -40,11 +40,11 @@
         },
         {
           "instant": 1100,
-          "valeur": 14.0
+          "valeur": 19.38
         },
         {
           "instant": 2600,
-          "valeur": 14.0
+          "valeur": 19.38
         },
         {
           "instant": 3700,
@@ -54,8 +54,8 @@
     },
     {
       "axe": "OEIL_DROIT",
-      "vitesseParDefaut": 40.0,
-      "accelerationParDefaut": 60.0,
+      "vitesseParDefaut": 50.0,
+      "accelerationParDefaut": 75.0,
       "imagesCles": [
         {
           "instant": 0,
@@ -63,11 +63,11 @@
         },
         {
           "instant": 1100,
-          "valeur": 14.0
+          "valeur": 19.38
         },
         {
           "instant": 2600,
-          "valeur": 14.0
+          "valeur": 19.38
         },
         {
           "instant": 3700,
@@ -76,5 +76,6 @@
       ]
     }
   ],
-  "sons": []
+  "sons": [],
+  "version": 1
 }

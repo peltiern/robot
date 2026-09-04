@@ -375,8 +375,8 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
      * demandé, les deux yeux bougeant de la même amplitude en sens opposés.
      */
     private void publierRoulis(MouvementCouEvent.MOUVEMENTS_ROULIS sens) {
-        double amplitudeMax = phidgetsConfig().eyeMotorRelativePositionMax()
-                - phidgetsConfig().eyeMotorRelativePositionMin();
+        double amplitudeMax = phidgetsConfig().eyePositionMax()
+                - phidgetsConfig().eyePositionMin();
         MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
         mouvementCouEvent.setMouvementRoulis(sens);
         mouvementCouEvent.setAccelerationRoulis(2000D);

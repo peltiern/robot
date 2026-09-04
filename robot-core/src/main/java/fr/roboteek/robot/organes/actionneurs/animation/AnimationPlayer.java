@@ -164,7 +164,7 @@ public class AnimationPlayer extends AbstractOrganeWithThread implements SmartLi
         double positionOeilGauche = MouvementYeuxEvent.POSITION_NEUTRE;
         double positionOeilDroit = MouvementYeuxEvent.POSITION_NEUTRE;
         if (moveYeux % 3 == 0) {
-            double positionOeil = RandomUtils.nextDouble(Configurations.phidgetsConfig().eyeMotorRelativePositionMin(), 0);
+            double positionOeil = RandomUtils.nextDouble(Configurations.phidgetsConfig().eyePositionMin(), 0);
             boolean moveYeuxSymetrique = RandomUtils.nextBoolean();
             if (moveYeuxSymetrique) {
                 positionOeilGauche = positionOeil;
