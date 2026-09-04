@@ -198,6 +198,44 @@ class LecteurAnimationTest {
          * partirait d'une posture que la manette a changée entre-temps, et le reste du geste
          * n'aurait plus de sens.
          */
+        /**
+         * Le compteur qui manquait. Celui qui existait chronométrait la publication de
+         * l'évènement, c'est-à-dire un dépôt sur un exécuteur asynchrone : il n'a jamais vu une
+         * seule écriture USB, et il s'est tu pendant que les animations saccadaient le 2026-09-04.
+         */
+        @Test
+        void unRobotQuiNeSuitPasLaCadenceEstSignale() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            lecteur.attenteDesOrganes(() -> 2);
+
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(uneAnimation(), System.currentTimeMillis());
+            lecteur.avancerSiBesoin(lecture);
+
+            assertEquals(1, lecture.toursEnRetard, "une file non vide veut dire que le robot traîne");
+        }
+
+        /**
+         * Et l'inverse, qui compte autant : mesurer <b>après</b> avoir publié compterait
+         * l'échantillon qu'on vient de poser et crierait au loup à chaque tour.
+         */
+        @Test
+        void unRobotQuiSuitNeDeclencheRien() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            lecteur.attenteDesOrganes(() -> 0);
+
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(uneAnimation(), System.currentTimeMillis());
+            lecteur.avancerSiBesoin(lecture);
+
+            assertEquals(0, lecture.toursEnRetard);
+        }
+
+        private static Animation uneAnimation() {
+            return new Animation("Essai", 1500, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(1500, 25))), List.of());
+        }
+
         @Test
         void unOrdreDeManetteInterromptLAnimation() {
             LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
