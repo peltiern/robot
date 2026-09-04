@@ -34,7 +34,6 @@
         <sqlite-jdbc.version>3.53.2.1</sqlite-jdbc.version>
         <input4j.version>1.3.0</input4j.version>
         <oshi.version>7.4.0</oshi.version>
-        <akiwrapper.version>1.6.1</akiwrapper.version>
         <feign.version>13.13</feign.version>
         <vosk.version>0.3.45</vosk.version>
         <jna.version>5.7.0</jna.version>
@@ -256,12 +255,6 @@
             <groupId>org.aeonbits.owner</groupId>
             <artifactId>owner</artifactId>
             <version>${owner.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eu.zajc</groupId>
-            <artifactId>akiwrapper</artifactId>
-            <version>${akiwrapper.version}</version>
         </dependency>
 
         <!-- Manette : input4j (FFM, sans natifs à embarquer), remplace jinput. -->

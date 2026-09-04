@@ -1,9 +1,7 @@
 package fr.roboteek.robot.activites;
 
-import fr.roboteek.robot.organes.actionneurs.animation.Animation;
 import fr.roboteek.robot.systemenerveux.event.DemandeActiviteEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
-import fr.roboteek.robot.systemenerveux.event.PlayAnimationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -145,10 +143,5 @@ public abstract class AbstractActivity {
         applicationEventPublisher.publishEvent(paroleEvent);
     }
 
-    public void playAnimation(Animation animation) {
-        PlayAnimationEvent playAnimationEvent = new PlayAnimationEvent();
-        playAnimationEvent.setAnimation(animation);
-        applicationEventPublisher.publishEvent(playAnimationEvent);
-    }
 
 }

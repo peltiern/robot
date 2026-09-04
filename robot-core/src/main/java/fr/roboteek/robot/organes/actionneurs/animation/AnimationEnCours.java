@@ -8,7 +8,7 @@ package fr.roboteek.robot.organes.actionneurs.animation;
  * actionneur pour une question de trois mots, et rendrait la mise en retrait impossible à
  * éprouver sans faire tourner un vrai lecteur avec son thread.
  * <p>
- * Le jour où l'ancien {@code AnimationPlayer} disparaîtra, il n'y aura qu'une implémentation ;
+ * Il n'y a qu'une implémentation depuis la disparition de l'ancien lecteur ;
  * d'ici là, rien n'empêche de lui faire porter la même réponse.
  */
 @FunctionalInterface

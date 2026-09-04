@@ -1,0 +1,6 @@
+# Le modèle Onshape exporté : 130 Mo, il n'a rien à faire dans le dépôt.
+*.stl
+# Cache du relevé (nuage de points + segmentation), refait en 40 s.
+mesures/.cache.npz
+mesures/*.png
+__pycache__/
