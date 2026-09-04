@@ -12,10 +12,13 @@ import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementYeuxEvent;
 import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
+import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -24,6 +27,7 @@ import java.time.Clock;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntSupplier;
 import java.util.Optional;
 
 /**
@@ -93,6 +97,40 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     private volatile boolean running = false;
 
     private volatile boolean arretUrgence = false;
+
+    /**
+     * Ce que les organes n'ont pas encore consommé, au moment d'envoyer l'échantillon suivant.
+     * <p>
+     * <b>C'est la seule mesure honnête du « le robot suit-il ? »</b>, et elle a manqué longtemps.
+     * Le compteur de {@link Lecture#toursTropLongs} chronomètre {@code publier()}, qui ne fait que
+     * poster sur un exécuteur asynchrone : les écritures USB partent ailleurs, et il ne les a
+     * jamais vues. Le 2026-09-04, une conversion de vitesse mal placée a ajouté quatre écritures
+     * par tour et rendu les animations saccadées — le compteur, lui, n'a rien signalé.
+     * <p>
+     * Les exécuteurs des yeux et du cou sont <b>mono-thread</b> : une file non vide au moment
+     * d'envoyer signifie que l'échantillon précédent n'a même pas commencé à être traité. C'est
+     * conservateur — un organe encore en train d'écrire ne s'y voit pas — mais sans ambiguïté.
+     * <p>
+     * Passe par un {@link IntSupplier} et non par les exécuteurs directement : le lecteur n'a rien
+     * à savoir du câblage Spring, et les tests peuvent simuler un robot à la traîne.
+     */
+    private IntSupplier attenteDesOrganes = () -> 0;
+
+    /**
+     * Branche la mesure sur les vraies files. {@code required = false} : les tests montent cette
+     * classe sans contexte Spring, et un lecteur sans mesure de retard reste un lecteur correct.
+     */
+    @Autowired(required = false)
+    void surveillerLesFiles(@Qualifier(RobotEventsConfig.YEUX_EVENT_EXECUTOR) ThreadPoolTaskExecutor yeux,
+                            @Qualifier(RobotEventsConfig.COU_EVENT_EXECUTOR) ThreadPoolTaskExecutor cou) {
+        this.attenteDesOrganes = () -> yeux.getThreadPoolExecutor().getQueue().size()
+                + cou.getThreadPoolExecutor().getQueue().size();
+    }
+
+    /** Pose la mesure de retard à la main, pour les tests. */
+    void attenteDesOrganes(IntSupplier attente) {
+        this.attenteDesOrganes = attente;
+    }
 
     /**
      * {@code @Autowired} obligatoire : cette classe a deux constructeurs, et Spring n'en choisit
@@ -236,9 +274,12 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     /**
      * Fait avancer la lecture d'un échantillon et rend le budget du tour, en millisecondes.
      *
+     * Visible dans le paquet pour que les tests déroulent un tour sans lancer le thread, comme
+     * {@link #consignes} et {@link #limites}.
+     *
      * @return la période à respecter avant le tour suivant
      */
-    private long avancerSiBesoin(Lecture enCours) {
+    long avancerSiBesoin(Lecture enCours) {
         if (enCours == null || arretUrgence) {
             return PAUSE_AU_REPOS_MS;
         }
@@ -250,6 +291,12 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         if (instant > enCours.animation.dureeTotale()) {
             terminer(enCours);
             return budgetMs;
+        }
+
+        // Avant de publier, et non après : la question est « l'échantillon précédent a-t-il été
+        // consommé ? ». Mesurer après compterait celui qu'on vient tout juste de poser.
+        if (attenteDesOrganes.getAsInt() > 0) {
+            enCours.toursEnRetard++;
         }
 
         long avant = System.nanoTime();
@@ -366,9 +413,16 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      */
     private void terminer(Lecture enCours) {
         lecture = null;
-        if (enCours.toursTropLongs > 0) {
-            logger.warn("Animation « {} » terminée, mais {} tour(s) sur {} ont dépassé leur budget : "
-                            + "trop d'axes en mouvement pour la cadence, ou un autre organe écrit en même temps",
+        if (enCours.toursEnRetard > 0) {
+            logger.warn("Animation « {} » terminée, mais {} tour(s) sur {} sont partis avant que les "
+                            + "organes aient consommé le précédent : le robot ne suit pas la cadence",
+                    enCours.animation.nom(), enCours.toursEnRetard, enCours.tours);
+        } else if (enCours.toursTropLongs > 0) {
+            // Bien moins grave : c'est l'échantillonnage lui-même qui a traîné, pas l'écriture.
+            // Un tour isolé sur la première animation après le démarrage, c'est la compilation à
+            // la volée — observé trois fois, jamais sur les suivantes.
+            logger.info("Animation « {} » terminée ; {} tour(s) sur {} ont mis plus longtemps que "
+                            + "le budget à être échantillonnés",
                     enCours.animation.nom(), enCours.toursTropLongs, enCours.tours);
         } else {
             logger.info("Animation « {} » terminée", enCours.animation.nom());
@@ -508,7 +562,14 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
         private int tours;
 
+        /** Tours dont l'échantillonnage a dépassé le budget. Ne dit rien des écritures USB. */
         private int toursTropLongs;
+
+        /**
+         * Tours partis alors que les organes n'avaient pas consommé le précédent. Visible dans le
+         * paquet : c'est ce que les tests vérifient, faute de pouvoir lire un journal.
+         */
+        int toursEnRetard;
 
         Lecture(Animation animation, long instantDebut) {
             this.animation = animation;
