@@ -44,12 +44,12 @@ public record LimitesMoteur(double vitesseMax, double accelerationMax, double po
         Map<Axe, LimitesMoteur> limites = new EnumMap<>(Axe.class);
 
         limites.put(Axe.OEIL_GAUCHE, new LimitesMoteur(
-                configuration.eyeLeftMotorSpeed(), configuration.eyeLeftMotorAcceleration(),
-                configuration.eyeMotorRelativePositionMin(), configuration.eyeMotorRelativePositionMax()));
+                configuration.eyeLeftSpeed(), configuration.eyeLeftAcceleration(),
+                configuration.eyePositionMin(), configuration.eyePositionMax()));
 
         limites.put(Axe.OEIL_DROIT, new LimitesMoteur(
-                configuration.eyeRightMotorSpeed(), configuration.eyeRightMotorAcceleration(),
-                configuration.eyeMotorRelativePositionMin(), configuration.eyeMotorRelativePositionMax()));
+                configuration.eyeRightSpeed(), configuration.eyeRightAcceleration(),
+                configuration.eyePositionMin(), configuration.eyePositionMax()));
 
         limites.put(Axe.COU_GAUCHE_DROITE, depuisPositionsMoteur(
                 configuration.neckLeftRightMotorSpeed(), configuration.neckLeftRightMotorAcceleration(),

@@ -27,15 +27,38 @@ class AnimationsLivreesTest {
 
     private static final Path DOSSIER = Path.of("installation/Robot/Programme/animations");
 
-    /** Butées et vitesses de travail du robot, telles que {@code robot.properties} les règle. */
+    /**
+     * Butées et vitesses de travail du robot, telles que {@code robot.properties} les règle.
+     * <p>
+     * Recopiées à la main plutôt que lues : la configuration se trouve à trois endroits — le
+     * dépôt, le poste, le Jetson — et un test qui suivrait celle du poste passerait ou tomberait
+     * selon la machine. Ces valeurs doivent donc être tenues à jour avec le fichier du dépôt.
+     * <p>
+     * Celles des yeux sont en <b>degrés d'œil</b> depuis le 2026-09-03 (cf. {@code TransmissionOeil}).
+     */
     private static Map<Axe, LimitesMoteur> limitesDuRobot() {
         Map<Axe, LimitesMoteur> limites = new EnumMap<>(Axe.class);
         limites.put(Axe.COU_GAUCHE_DROITE, new LimitesMoteur(40, 200, -60, 60));
         limites.put(Axe.COU_HAUT_BAS, new LimitesMoteur(10, 200, -8, 7));
         limites.put(Axe.COU_MONTER_DESCENDRE, new LimitesMoteur(100, 200, -10, 60));
-        limites.put(Axe.OEIL_GAUCHE, new LimitesMoteur(40, 60, -5, 20));
-        limites.put(Axe.OEIL_DROIT, new LimitesMoteur(40, 60, -5, 20));
+        limites.put(Axe.OEIL_GAUCHE, new LimitesMoteur(50, 75, -6.14, 31.06));
+        limites.put(Axe.OEIL_DROIT, new LimitesMoteur(50, 75, -6.14, 31.06));
         return limites;
+    }
+
+    /**
+     * Une animation sans version est refusée : avant la version 1, les pistes des yeux portaient
+     * des unités moteur, et la tringlerie n'étant pas linéaire, les rejouer telles quelles
+     * décalerait le geste d'un tiers sans qu'aucune trace ne l'explique.
+     */
+    @Test
+    void lesAnimationsLivreesDisentDansQuelleUniteEllesSontEcrites() {
+        BibliothequeDesAnimations bibliotheque = new BibliothequeDesAnimations(DOSSIER);
+
+        for (String nom : bibliotheque.noms()) {
+            assertTrue(bibliotheque.charger(nom).orElseThrow().versionLisible(),
+                    nom + " : sans version, l'animation serait refusée au chargement");
+        }
     }
 
     @Test

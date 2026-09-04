@@ -2,6 +2,8 @@ package fr.roboteek.robot.util.phidgets;
 
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
+import fr.roboteek.robot.organes.actionneurs.transmission.Transmission;
+import fr.roboteek.robot.organes.actionneurs.transmission.TransmissionOeil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -391,19 +393,22 @@ public final class BancDebitServo {
                 repos(configuration::neckUpDownMotorRestPosition, configuration::neckUpDownMotorInitialPosition),
                 configuration::neckUpDownMotorMinPosition, configuration::neckUpDownMotorMaxPosition);
 
-        // Les yeux sont réglés en relatif, et les deux servos sont montés en miroir : la conversion
-        // est celle de Yeux, inversée d'un oeil à l'autre. Leur position de départ est le zéro.
-        double relativeMin = configuration.eyeMotorRelativePositionMin();
-        double relativeMax = configuration.eyeMotorRelativePositionMax();
-        DoubleSupplier reposRelatif = repos(configuration::eyeMotorRelativeRestPosition, () -> 0);
+        // Les yeux se règlent en degrés d'oeil, et la tringlerie n'est pas linéaire : la conversion
+        // passe par TransmissionOeil, comme dans Yeux. Les deux servos sont montés en miroir, d'où
+        // les deux transmissions de sens opposés. Position de départ : le zéro.
+        double angleMin = configuration.eyePositionMin();
+        double angleMax = configuration.eyePositionMax();
+        DoubleSupplier reposAngle = repos(configuration::eyeRestPosition, () -> 0);
         double zeroGauche = configuration.eyeLeftMotorPositionZero();
+        Transmission oeilGauche = new TransmissionOeil(zeroGauche, -1);
         ajouter(axes, "oeil-gauche", configuration::eyeLeftMotorIndex, -1,
-                () -> zeroGauche, () -> zeroGauche - reposRelatif.getAsDouble(),
-                () -> zeroGauche - relativeMax, () -> zeroGauche - relativeMin);
+                () -> zeroGauche, () -> oeilGauche.versMoteur(reposAngle.getAsDouble()),
+                () -> oeilGauche.versMoteur(angleMax), () -> oeilGauche.versMoteur(angleMin));
         double zeroDroit = configuration.eyeRightMotorPositionZero();
+        Transmission oeilDroit = new TransmissionOeil(zeroDroit, +1);
         ajouter(axes, "oeil-droit", configuration::eyeRightMotorIndex, +1,
-                () -> zeroDroit, () -> zeroDroit + reposRelatif.getAsDouble(),
-                () -> zeroDroit + relativeMin, () -> zeroDroit + relativeMax);
+                () -> zeroDroit, () -> oeilDroit.versMoteur(reposAngle.getAsDouble()),
+                () -> oeilDroit.versMoteur(angleMin), () -> oeilDroit.versMoteur(angleMax));
         return axes;
     }
 

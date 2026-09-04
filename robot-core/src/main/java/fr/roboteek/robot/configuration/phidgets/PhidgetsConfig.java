@@ -108,13 +108,13 @@ public interface PhidgetsConfig extends Config {
     @DefaultValue("92")
     double eyeLeftMotorPositionZero();
 
-    @Key("phidgets.eyes.motor.left.speed")
-    @DefaultValue("40")
-    double eyeLeftMotorSpeed();
+    @Key("phidgets.eyes.left.speed")
+    @DefaultValue("50")
+    double eyeLeftSpeed();
 
-    @Key("phidgets.eyes.motor.left.acceleration")
-    @DefaultValue("60")
-    double eyeLeftMotorAcceleration();
+    @Key("phidgets.eyes.left.acceleration")
+    @DefaultValue("75")
+    double eyeLeftAcceleration();
 
     @Key("phidgets.eyes.motor.right.index")
     @DefaultValue("3")
@@ -124,21 +124,23 @@ public interface PhidgetsConfig extends Config {
     @DefaultValue("86")
     double eyeRightMotorPositionZero();
 
-    @Key("phidgets.eyes.motor.right.speed")
-    @DefaultValue("40")
-    double eyeRightMotorSpeed();
+    @Key("phidgets.eyes.right.speed")
+    @DefaultValue("50")
+    double eyeRightSpeed();
 
-    @Key("phidgets.eyes.motor.right.acceleration")
-    @DefaultValue("60")
-    double eyeRightMotorAcceleration();
+    @Key("phidgets.eyes.right.acceleration")
+    @DefaultValue("75")
+    double eyeRightAcceleration();
 
-    @Key("phidgets.eyes.motor.relative.position.min")
-    @DefaultValue("-24")
-    double eyeMotorRelativePositionMin();
+    // Butées et vitesses des yeux : en DEGRÉS D'ŒIL, pas en unités moteur. La tringlerie
+    // n'est pas linéaire (1,25 à 3,70), la conversion vit dans TransmissionOeil.
+    @Key("phidgets.eyes.position.min")
+    @DefaultValue("-6.14")
+    double eyePositionMin();
 
-    @Key("phidgets.eyes.motor.relative.position.max")
-    @DefaultValue("20")
-    double eyeMotorRelativePositionMax();
+    @Key("phidgets.eyes.position.max")
+    @DefaultValue("31.06")
+    double eyePositionMax();
 
     // Positions de repos, rejointes AVANT le désengagement des servos à l'arrêt du robot
     // pour éviter que la tête et les yeux ne tombent d'un coup (position mécaniquement
@@ -155,6 +157,6 @@ public interface PhidgetsConfig extends Config {
     @Key("phidgets.neck.motor.up_down.position.rest")
     Double neckUpDownMotorRestPosition();
 
-    @Key("phidgets.eyes.motor.relative.position.rest")
-    Double eyeMotorRelativeRestPosition();
+    @Key("phidgets.eyes.position.rest")
+    Double eyeRestPosition();
 }

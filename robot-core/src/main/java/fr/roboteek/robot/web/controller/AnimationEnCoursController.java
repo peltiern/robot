@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -65,6 +66,16 @@ public class AnimationEnCoursController {
     public ResponseEntity<AnimationEnCours> lancer(@RequestBody DemandeLecture demande) {
         Optional<Animation> animation = aJouer(demande);
         if (animation.isEmpty()) {
+            // Un fichier présent mais refusé n'est pas une animation « inconnue » : répondre 404
+            // envoie chercher une faute d'URL alors que la raison est dans le fichier. L'essai du
+            // 2026-09-04 s'est perdu là-dessus — les animations du robot étaient d'une version
+            // antérieure, et le front n'annonçait qu'un « 404 Not Found ».
+            if (demande.nom() != null && bibliotheque.existe(demande.nom())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(new AnimationEnCours(demande.nom(), List.of(
+                                "Fichier illisible ou écrit dans une version antérieure du format."
+                                        + " Le journal du robot dit laquelle.")));
+            }
             return ResponseEntity.notFound().build();
         }
         if (!lecteur.jouer(animation.get())) {

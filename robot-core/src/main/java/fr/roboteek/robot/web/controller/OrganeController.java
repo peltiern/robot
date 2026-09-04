@@ -129,8 +129,8 @@ public class OrganeController {
     }
 
     private Organe organeYeux(Map<String, SanteOrgane> sante) {
-        double min = phidgetsConfig.eyeMotorRelativePositionMin();
-        double max = phidgetsConfig.eyeMotorRelativePositionMax();
+        double min = phidgetsConfig.eyePositionMin();
+        double max = phidgetsConfig.eyePositionMax();
         return new Organe("yeux", "Yeux", TypeOrgane.ACTIONNEUR, List.of(
                 new Articulation("oeilGauche", "Œil gauche", UNITE_DEGRE, min, max,
                         Orientation.VERTICAL, yeux.getPositionOeilGaucheCourante()),

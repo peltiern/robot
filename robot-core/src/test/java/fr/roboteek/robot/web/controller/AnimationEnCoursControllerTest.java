@@ -91,6 +91,24 @@ class AnimationEnCoursControllerTest {
         assertEquals(List.of(), bibliotheque.noms(), "un essai ne doit rien laisser sur le disque");
     }
 
+    /**
+     * Un fichier présent mais refusé n'est pas « inconnu ». Répondre 404 envoie chercher une faute
+     * d'URL alors que la raison est dans le fichier — c'est ce qui a perdu un essai le 2026-09-04,
+     * les animations du robot étant d'une version antérieure du format.
+     */
+    @Test
+    void uneAnimationIllisibleSeDistingueDUneAnimationAbsente() throws Exception {
+        java.nio.file.Files.writeString(dossier.resolve("Ancienne.json"),
+                """
+                {"nom":"Ancienne","dureeTotale":1000,"pistes":[],"sons":[]}
+                """);
+
+        ResponseEntity<AnimationEnCours> reponse = controleur.lancer(new DemandeLecture("Ancienne", null));
+
+        assertEquals(HttpStatus.CONFLICT, reponse.getStatusCode(), "le fichier existe, il est refusé");
+        assertFalse(reponse.getBody().avertissements().isEmpty(), "le refus doit dire pourquoi");
+    }
+
     @Test
     void unNomInconnuNExistePas() {
         assertEquals(HttpStatus.NOT_FOUND,

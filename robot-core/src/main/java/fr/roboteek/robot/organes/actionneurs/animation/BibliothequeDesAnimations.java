@@ -95,7 +95,17 @@ public class BibliothequeDesAnimations {
             return Optional.empty();
         }
         try {
-            return Optional.of(json.readValue(fichier.toFile(), Animation.class).avecNom(nom));
+            Animation animation = json.readValue(fichier.toFile(), Animation.class).avecNom(nom);
+            if (!animation.versionLisible()) {
+                // Refus bruyant plutôt que lecture de travers : avant la version 1, les pistes des
+                // yeux portaient des unités moteur, et la tringlerie n'étant pas linéaire, les
+                // rejouer telles quelles décalerait le geste sans que rien ne le dise.
+                logger.error("Animation « {} » en version {} : écrite dans une autre unité que la {}, "
+                                + "elle est ignorée plutôt que jouée de travers",
+                        nom, animation.version(), Animation.VERSION_COURANTE);
+                return Optional.empty();
+            }
+            return Optional.of(animation);
         } catch (JacksonException e) {
             logger.error("Animation « {} » illisible, fichier ignoré", nom, e);
             return Optional.empty();
