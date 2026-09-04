@@ -48,8 +48,8 @@ import java.util.Optional;
  *       en change, la nouvelle valeur part sans qu'on ait à s'en occuper.</li>
  * </ul>
  * <p>
- * Le mode aléatoire reste porté par l'ancien {@code AnimationPlayer} jusqu'à la migration des
- * activités : il génère des {@code AnimationStep}, pas des {@link Animation} du nouveau modèle.
+ * Le mode aléatoire a disparu avec l'ancien lecteur : il ne sera pas porté sur ce modèle
+ * (décision du 2026-08-30).
  */
 @Component
 public class LecteurAnimation extends AbstractOrganeWithThread

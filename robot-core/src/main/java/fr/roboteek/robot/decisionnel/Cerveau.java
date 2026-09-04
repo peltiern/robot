@@ -41,12 +41,8 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      * Activité à réclamer quand la phrase entendue se résume à l'un de ces mots.
      * <p>
      * Des mots <b>français courants</b>, et plusieurs par activité : le petit modèle Vosk ne
-     * restitue que ce que contient son lexique. « Akinator » n'y est pas — dit au robot, il en
-     * ressort « inhalateur » ou « akhenaton ».
-     * <p>
-     * <b>Akinator n'a plus de mot-clé</b> : akiwrapper échoue au démarrage sur
-     * {@code 'fa' is not a recognized language}, et le robot promettait une devinette qu'il ne
-     * savait pas jouer. Y remettre « devinette » le jour où la bibliothèque sera réparée.
+     * restitue que ce que contient son lexique. Un nom propre n'y est pas — « Akinator », du temps
+     * où cette activité existait, en ressortait « inhalateur » ou « akhenaton ».
      * <p>
      * La conversation y figure, et c'est la porte de sortie : sans elle, une activité lancée à la
      * voix ne se quitterait qu'en éteignant le robot.
@@ -267,8 +263,8 @@ public class Cerveau extends AbstractOrganeWithThread implements SmartLifecycle 
      * Commence une nouvelle activité.
      * <p>
      * Une activité qui ne parvient pas à s'initialiser rend la main à la conversation. Sans ce
-     * repli, la boucle tournerait indéfiniment à vide sur une activité jamais prête (Akinator
-     * sans réseau, par exemple) : le robot resterait allumé, muet, et sans rien pour l'en sortir.
+     * repli, la boucle tournerait indéfiniment à vide sur une activité jamais prête : le robot
+     * resterait allumé, muet, et sans rien pour l'en sortir.
      *
      * @param activity la nouvelle activité
      */
