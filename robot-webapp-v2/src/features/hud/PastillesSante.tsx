@@ -18,7 +18,7 @@ const ICONES: Record<string, { icone: NomIcone; miroir?: boolean }> = {
   manette: { icone: 'manette' },
   vision: { icone: 'camera' },
   micro: { icone: 'micro' },
-  animation: { icone: 'anim' },
+  'lecteur-animation': { icone: 'anim' },
   materiel: { icone: 'jauge' },
 }
 
