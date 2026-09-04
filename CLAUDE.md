@@ -93,6 +93,12 @@ dépend d'un modèle ONNX s'ignore proprement avec `assumeTrue`.
   Jamais de correctif sur une supposition.
 - **Commit après validation** : rien n'est commité avant que la fonctionnalité ait été essayée sur le
   robot. Commits locaux, sans push, messages courts en français.
+- **Tenir la feuille de route à jour** : dès qu'un sujet est terminé — donc au moment du commit — la
+  feuille de route est mise à jour dans le même élan, sans attendre qu'on le demande. On y écrit
+  l'état réel, vérifié sur le dépôt et non recopié de la note précédente, et on y garde aussi ce qui
+  n'a pas marché : défaut diagnostiqué et laissé tel quel, décision reportée, piste abandonnée. Elle
+  vit hors du dépôt, dans la mémoire de session ; laissée à l'abandon un mois, elle a annoncé comme
+  « à faire » du code déjà livré et validé.
 - Préférer le réglage au code, et la solution simple à la solution complète.
 
 ## Maven
