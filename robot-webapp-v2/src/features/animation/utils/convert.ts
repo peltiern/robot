@@ -1,4 +1,4 @@
-import type { Animation, Axe, Piste } from '../../../shared/types/animation'
+import { VERSION_ANIMATION, type Animation, type Axe, type Piste } from '../../../shared/types/animation'
 import type { EditorTrack } from '../store/animationStore'
 
 /**
@@ -27,7 +27,7 @@ export function toAnimation(
     }))
   // sons : l'éditeur ne les connaît pas encore. Le backend conserve ceux de la version
   // enregistrée quand la liste arrive vide, donc les envoyer ainsi n'efface rien.
-  return { nom, dureeTotale, pistes, sons: [] }
+  return { nom, dureeTotale, pistes, sons: [], version: VERSION_ANIMATION }
 }
 
 /**

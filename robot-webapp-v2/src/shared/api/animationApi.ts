@@ -8,12 +8,31 @@ import type { Animation, AnimationEnCours } from '../types/animation'
 const BIBLIOTHEQUE = '/api/animations'
 const EN_COURS = '/api/animation-en-cours'
 
+/**
+ * Le message d'erreur, en préférant celui du robot au code HTTP.
+ *
+ * Un « 404 Not Found » nu envoie chercher une faute d'URL. Le robot, lui, sait pourquoi il
+ * refuse — un fichier d'animation écrit dans une version antérieure du format, par exemple — et
+ * le dit dans les avertissements de sa réponse. Un essai s'est perdu là-dessus le 2026-09-04.
+ */
+async function raison(reponse: Response): Promise<string> {
+  try {
+    const corps = await reponse.json()
+    if (Array.isArray(corps?.avertissements) && corps.avertissements.length > 0) {
+      return corps.avertissements.join(' ')
+    }
+  } catch {
+    // Corps absent ou illisible : le code HTTP est tout ce qu'on a.
+  }
+  return `${reponse.status} ${reponse.statusText}`
+}
+
 async function requete<T>(url: string, init?: RequestInit): Promise<T> {
   const reponse = await fetch(url, {
     headers: { 'Content-Type': 'application/json' },
     ...init,
   })
-  if (!reponse.ok) throw new Error(`${reponse.status} ${reponse.statusText}`)
+  if (!reponse.ok) throw new Error(await raison(reponse))
   if (reponse.status === 204) return undefined as T
   return reponse.json()
 }
