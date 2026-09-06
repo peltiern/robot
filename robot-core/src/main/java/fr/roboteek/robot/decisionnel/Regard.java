@@ -152,8 +152,14 @@ public class Regard {
         // pixels-par-degré est donc la même horizontalement et verticalement. C'est ce qui évite
         // d'avoir à déclarer — et à mesurer — un second champ de vision pour la hauteur.
         double focalePixels = focalePixels(visagePercuEvent.getLargeurImage(), reglages.champHorizontalCameraDegres());
-        double ecartPanoramique = ecartAngulaire(centreX(cible) - visagePercuEvent.getLargeurImage() / 2.0, focalePixels);
-        double ecartInclinaison = ecartAngulaire(centreY(cible) - visagePercuEvent.getHauteurImage() / 2.0, focalePixels);
+        // L'écart se compte depuis l'AXE OPTIQUE, pas depuis le milieu de l'image. Les deux ne
+        // coïncident pas — le capteur n'est pas parfaitement centré derrière l'objectif — et prendre
+        // le milieu ajoutait ici un biais constant de 4,2 degrés vers le haut, qui poussait
+        // l'inclinaison dans sa butée. Voir centreOptiqueYRelatif.
+        double axeX = visagePercuEvent.getLargeurImage() * reglages.centreOptiqueXRelatif();
+        double axeY = visagePercuEvent.getHauteurImage() * reglages.centreOptiqueYRelatif();
+        double ecartPanoramique = ecartAngulaire(centreX(cible) - axeX, focalePixels);
+        double ecartInclinaison = ecartAngulaire(centreY(cible) - axeY, focalePixels);
 
         double zoneMorte = reglages.zoneMorteRegardDegres();
         boolean corrigerPanoramique = Math.abs(ecartPanoramique) >= zoneMorte;

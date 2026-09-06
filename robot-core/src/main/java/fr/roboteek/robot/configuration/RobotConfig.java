@@ -257,6 +257,32 @@ public interface RobotConfig extends Config {
     double champHorizontalCameraDegres();
 
     /**
+     * Où tombe l'axe optique dans l'image, en fraction de sa largeur et de sa hauteur.
+     * <p>
+     * <b>Ce n'est pas forcément le milieu</b>, et le supposer coûte un biais permanent. Le capteur
+     * n'est pas parfaitement centré derrière l'objectif : cinq calculs indépendants sur la caméra
+     * du robot, deux implémentations, ont placé le point principal à {@code (331,5 ; 206,1)} sur
+     * une image de 640×480 — soit 34 pixels au-dessus du milieu, 4,2 degrés.
+     * <p>
+     * Ce biais-là ne se voit pas : le robot cadre simplement les visages un peu bas et regarde
+     * au-dessus des têtes. Mais il <b>pousse l'inclinaison vers sa butée haute en permanence</b>,
+     * où elle s'installe — c'est ce qu'on lisait dans les journaux du 2026-09-06, quatre entrées en
+     * butée en deux minutes, et 4,2 degrés de course perdus pour rien.
+     * <p>
+     * En <b>fraction</b> et non en pixels : {@code Regard} ne suppose nulle part une résolution, il
+     * travaille avec la largeur que lui donne la vision. Un jour où la webcam changera de mode, ces
+     * valeurs resteront justes. Défaut 0,5 : le milieu de l'image, c'est-à-dire le comportement
+     * d'avant la mesure, pour un robot dont la caméra n'a pas été étalonnée.
+     */
+    @Key("robot.regard.camera.centre.x.relatif")
+    @DefaultValue("0.5")
+    double centreOptiqueXRelatif();
+
+    @Key("robot.regard.camera.centre.y.relatif")
+    @DefaultValue("0.5")
+    double centreOptiqueYRelatif();
+
+    /**
      * Écart angulaire en deçà duquel le robot considère qu'il regarde déjà la personne.
      * <p>
      * Sans cette zone morte, la moindre imprécision de la boîte englobante — qui respire d'une
