@@ -13,7 +13,9 @@ package fr.roboteek.robot.web.controller.dto;
  * @param champHorizontalDegres  de quoi retrouver la focale en pixels, donc le rayon à dessiner
  * @param centreXRelatif         axe optique en fraction de la largeur, comme dans {@code Regard}
  * @param centreYRelatif         axe optique en fraction de la hauteur
+ * @param deportDegres           de combien le panoramique vise à côté de l'axe, la webcam n'étant
+ *                               que dans un des deux yeux
  */
 public record ReglagesRegard(boolean actif, double zoneMorteDegres, double champHorizontalDegres,
-                             double centreXRelatif, double centreYRelatif) {
+                             double centreXRelatif, double centreYRelatif, double deportDegres) {
 }

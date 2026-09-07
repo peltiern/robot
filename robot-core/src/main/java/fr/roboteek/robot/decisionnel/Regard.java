@@ -111,11 +111,13 @@ public class Regard {
     void annoncerReglages() {
         RobotConfig reglages = robotConfig();
         logger.info("Regard : {}, {} / {} unité(s) de cou par degré vu (panoramique / inclinaison), "
-                        + "zone morte {} degrés, une correction toutes les {} s, "
+                        + "zone morte {} degrés, déport caméra {} degrés, "
+                        + "une correction toutes les {} s, "
                         + "manette prioritaire {} s après son dernier ordre",
                 reglages.regardEnabled() ? "actif" : "inactif",
                 reglages.commandePanoramiqueParDegreVu(), reglages.commandeInclinaisonParDegreVu(),
-                reglages.zoneMorteRegardDegres(), reglages.temporisationRegardSecondes(),
+                reglages.zoneMorteRegardDegres(), reglages.deportCameraDegres(),
+                reglages.temporisationRegardSecondes(),
                 reglages.prioriteManetteSecondes());
     }
 
@@ -158,7 +160,12 @@ public class Regard {
         // l'inclinaison dans sa butée. Voir centreOptiqueYRelatif.
         double axeX = visagePercuEvent.getLargeurImage() * reglages.centreOptiqueXRelatif();
         double axeY = visagePercuEvent.getHauteurImage() * reglages.centreOptiqueYRelatif();
-        double ecartPanoramique = ecartAngulaire(centreX(cible) - axeX, focalePixels);
+        // Le panoramique ne vise pas l'axe optique mais un point décalé : la webcam n'est que dans
+        // un des deux yeux, et centrer le visage sur l'image laisse la tête tournée à côté. Voir
+        // deportCameraDegres. L'inclinaison n'est pas concernée, les deux yeux sont à la même
+        // hauteur.
+        double ecartPanoramique = ecartAngulaire(centreX(cible) - axeX, focalePixels)
+                - reglages.deportCameraDegres();
         double ecartInclinaison = ecartAngulaire(centreY(cible) - axeY, focalePixels);
 
         double zoneMorte = reglages.zoneMorteRegardDegres();
