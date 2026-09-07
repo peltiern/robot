@@ -5,6 +5,7 @@ import { useVideoStore } from '../../shared/stores/videoStore'
 import { useArretUrgenceStore } from '../../shared/stores/arretUrgenceStore'
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import type { DetectedBox } from '../../shared/types/events'
+import { regardApi, demiCoteZoneMorte, type ReglagesRegard } from '../../shared/api/regardApi'
 import { PanneauPosture } from './PanneauPosture'
 import { BarreEcoute } from './BarreEcoute'
 import styles from './pilotage.module.css'
@@ -27,6 +28,22 @@ export function PilotagePage() {
 
   const visages = trame?.faces ?? []
   const objets = trame?.objects ?? []
+
+  // Réglages relus au montage : ces clés sont rechargées à chaud sur le robot, mais une page de
+  // pilotage se rouvre bien plus souvent qu'on ne les édite. L'échec ne remonte pas au HUD — sans
+  // le repère la vue reste utilisable, et une alerte de plus sur un écran déjà chargé n'aiderait
+  // pas — mais il est dit dans la console : un repère absent sans raison affichée est
+  // indiscernable d'un robot qui aurait le suivi éteint, et on cherche alors du mauvais côté.
+  const [regard, poserRegard] = useState<ReglagesRegard | null>(null)
+  useEffect(() => {
+    regardApi
+      .reglages()
+      .then(poserRegard)
+      .catch((erreur) => {
+        console.warn('Réglages du regard indisponibles, zone morte non dessinée :', erreur)
+        poserRegard(null)
+      })
+  }, [])
 
   const scene = useRef<HTMLElement>(null)
   const place = useTaille(scene)
@@ -58,6 +75,7 @@ export function PilotagePage() {
               {objets.map((boite, i) => (
                 <Boite key={`o${i}`} boite={boite} naturel={naturel} objet />
               ))}
+              {regard?.actif && <ZoneMorte reglages={regard} naturel={naturel} />}
             </div>
           )}
         </div>
@@ -163,6 +181,45 @@ function dimensionsContenues(source: Taille, place: Taille): Taille {
  * les ramène en pourcentages du cadre, qui épouse l'image affichée — l'alignement
  * tient donc quelle que soit la taille de l'écran.
  */
+/**
+ * La zone morte du regard, dessinée là où le robot la place réellement.
+ *
+ * Un visage dont le centre tombe dedans est considéré « déjà regardé » : aucune consigne ne part.
+ * C'est ce qui explique qu'un robot qui vise visiblement à côté puisse ne rien corriger, et sans ce
+ * repère on n'a que l'impression — on ne peut pas dire si la tête court après quelqu'un ou si elle
+ * a décidé d'avoir fini.
+ *
+ * **Un carré, centré sur l'axe optique.** Les deux choix viennent du code de `Regard`, pas de
+ * l'esthétique : il compte ses écarts depuis le point principal mesuré à l'étalonnage (et non
+ * depuis le milieu de l'image, dont il s'écarte d'une trentaine de pixels vers le haut), et il
+ * juge les deux axes séparément — la région où il ne commande rien est donc l'intersection de deux
+ * bandes, un carré. Dessiner un disque centré sur l'image montrerait un repère faux à l'endroit
+ * précis où l'on vient chercher la vérité.
+ */
+function ZoneMorte({
+  reglages,
+  naturel,
+}: {
+  reglages: ReglagesRegard
+  naturel: { w: number; h: number }
+}) {
+  const demiCote = demiCoteZoneMorte(reglages, naturel.w)
+  return (
+    <div
+      className={styles.zoneMorte}
+      style={{
+        left: `${(reglages.centreXRelatif - demiCote / naturel.w) * 100}%`,
+        top: `${(reglages.centreYRelatif - demiCote / naturel.h) * 100}%`,
+        width: `${((2 * demiCote) / naturel.w) * 100}%`,
+        height: `${((2 * demiCote) / naturel.h) * 100}%`,
+      }}
+      title={`Zone morte du regard : ${reglages.zoneMorteDegres}° autour de l'axe optique`}
+    >
+      <span className={styles.zoneMorteNom}>{reglages.zoneMorteDegres}°</span>
+    </div>
+  )
+}
+
 function Boite({
   boite,
   naturel,
