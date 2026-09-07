@@ -5,6 +5,7 @@ export type ReglagesRegard = {
   champHorizontalDegres: number
   centreXRelatif: number
   centreYRelatif: number
+  deportDegres: number
 }
 
 // Chemin relatif : c'est le proxy Vite qui pointe sur le robot (cf. animationApi).
@@ -36,4 +37,16 @@ export const regardApi = {
 export function demiCoteZoneMorte(reglages: ReglagesRegard, largeurImage: number): number {
   const focale = largeurImage / 2 / Math.tan((reglages.champHorizontalDegres * Math.PI) / 360)
   return focale * Math.tan((reglages.zoneMorteDegres * Math.PI) / 180)
+}
+
+/**
+ * Où le panoramique vise réellement, en fraction de la largeur.
+ *
+ * Ce n'est pas l'axe optique : la webcam n'étant que dans un des deux yeux, `Regard` vise quelques
+ * degrés à côté pour que le robot présente sa figure. Le repère doit se déplacer avec, sinon il
+ * désigne un centre que plus personne ne vise.
+ */
+export function centreViseXRelatif(reglages: ReglagesRegard, largeurImage: number): number {
+  const focale = largeurImage / 2 / Math.tan((reglages.champHorizontalDegres * Math.PI) / 360)
+  return reglages.centreXRelatif + (focale * Math.tan((reglages.deportDegres * Math.PI) / 180)) / largeurImage
 }

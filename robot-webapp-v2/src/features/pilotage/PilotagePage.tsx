@@ -5,7 +5,12 @@ import { useVideoStore } from '../../shared/stores/videoStore'
 import { useArretUrgenceStore } from '../../shared/stores/arretUrgenceStore'
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import type { DetectedBox } from '../../shared/types/events'
-import { regardApi, demiCoteZoneMorte, type ReglagesRegard } from '../../shared/api/regardApi'
+import {
+  regardApi,
+  demiCoteZoneMorte,
+  centreViseXRelatif,
+  type ReglagesRegard,
+} from '../../shared/api/regardApi'
 import { PanneauPosture } from './PanneauPosture'
 import { BarreEcoute } from './BarreEcoute'
 import styles from './pilotage.module.css'
@@ -189,12 +194,12 @@ function dimensionsContenues(source: Taille, place: Taille): Taille {
  * repère on n'a que l'impression — on ne peut pas dire si la tête court après quelqu'un ou si elle
  * a décidé d'avoir fini.
  *
- * **Un carré, centré sur l'axe optique.** Les deux choix viennent du code de `Regard`, pas de
- * l'esthétique : il compte ses écarts depuis le point principal mesuré à l'étalonnage (et non
- * depuis le milieu de l'image, dont il s'écarte d'une trentaine de pixels vers le haut), et il
- * juge les deux axes séparément — la région où il ne commande rien est donc l'intersection de deux
- * bandes, un carré. Dessiner un disque centré sur l'image montrerait un repère faux à l'endroit
- * précis où l'on vient chercher la vérité.
+ * **Un carré, centré là où le robot vise vraiment.** Les choix viennent du code de `Regard`, pas
+ * de l'esthétique : il compte ses écarts depuis le point principal mesuré à l'étalonnage (et non
+ * depuis le milieu de l'image, dont il s'écarte d'une trentaine de pixels vers le haut), il décale
+ * encore le panoramique du déport de la webcam, et il juge les deux axes séparément — la région où
+ * il ne commande rien est donc l'intersection de deux bandes, un carré. Dessiner un disque centré
+ * sur l'image montrerait un repère faux à l'endroit précis où l'on vient chercher la vérité.
  */
 function ZoneMorte({
   reglages,
@@ -204,11 +209,12 @@ function ZoneMorte({
   naturel: { w: number; h: number }
 }) {
   const demiCote = demiCoteZoneMorte(reglages, naturel.w)
+  const centreX = centreViseXRelatif(reglages, naturel.w)
   return (
     <div
       className={styles.zoneMorte}
       style={{
-        left: `${(reglages.centreXRelatif - demiCote / naturel.w) * 100}%`,
+        left: `${(centreX - demiCote / naturel.w) * 100}%`,
         top: `${(reglages.centreYRelatif - demiCote / naturel.h) * 100}%`,
         width: `${((2 * demiCote) / naturel.w) * 100}%`,
         height: `${((2 * demiCote) / naturel.h) * 100}%`,

@@ -30,6 +30,7 @@ public class RegardController {
                 configuration.zoneMorteRegardDegres(),
                 configuration.champHorizontalCameraDegres(),
                 configuration.centreOptiqueXRelatif(),
-                configuration.centreOptiqueYRelatif());
+                configuration.centreOptiqueYRelatif(),
+                configuration.deportCameraDegres());
     }
 }

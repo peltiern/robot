@@ -283,6 +283,31 @@ public interface RobotConfig extends Config {
     double centreOptiqueYRelatif();
 
     /**
+     * De combien de degrés viser à côté de l'axe optique, en panoramique, pour que le robot
+     * présente sa figure et non son œil gauche.
+     * <p>
+     * <b>La webcam n'est que dans un des deux yeux</b>, déportée d'environ 66 mm du plan de
+     * symétrie de la tête. Centrer le visage sur l'image revient donc à l'aligner sur cet œil-là :
+     * la tête reste tournée de quelques degrés à côté, et le robot fixe d'un œil au lieu de faire
+     * face. C'est de la <b>parallaxe</b> — l'angle vaut {@code atan(66 mm / distance)}, soit 7,5°
+     * à 0,5 m, 3,8° à 1 m, 1,9° à 2 m.
+     * <p>
+     * <b>Pourquoi une constante et non un calcul.</b> Avec la valeur juste à un mètre, le résidu
+     * ne dépasse pas 3,7° entre 0,5 m et 3 m — il reste donc sous la zone morte, et le robot ne
+     * le corrigerait pas même s'il le connaissait. Estimer la distance par la taille du visage
+     * aurait supposé une largeur de visage, qui varie de 15 % d'une personne à l'autre : on aurait
+     * payé du code pour un raffinement inférieur à son propre bruit. Ça ne décroche qu'en deçà de
+     * 0,5 m, où l'on ne converse plus.
+     * <p>
+     * <b>Le signe se règle à l'essai</b>, et c'est voulu : il dépend de l'œil qui porte la caméra
+     * et d'un éventuel retournement du flux. Si le robot s'écarte davantage, prendre l'opposé.
+     * Défaut 0 : viser l'axe optique, c'est-à-dire le comportement d'avant.
+     */
+    @Key("robot.regard.camera.deport.degres")
+    @DefaultValue("0.0")
+    double deportCameraDegres();
+
+    /**
      * Écart angulaire en deçà duquel le robot considère qu'il regarde déjà la personne.
      * <p>
      * Sans cette zone morte, la moindre imprécision de la boîte englobante — qui respire d'une
