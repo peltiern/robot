@@ -133,26 +133,33 @@ public class OrganeController {
         double max = phidgetsConfig.eyePositionMax();
         return new Organe("yeux", "Yeux", TypeOrgane.ACTIONNEUR, List.of(
                 new Articulation("oeilGauche", "Œil gauche", UNITE_DEGRE, min, max,
-                        Orientation.VERTICAL, yeux.getPositionOeilGaucheCourante()),
+                        Orientation.VERTICAL, yeux.getPositionOeilGaucheCourante(),
+                        yeux.getAngleInitialOeilGauche()),
                 new Articulation("oeilDroit", "Œil droit", UNITE_DEGRE, min, max,
-                        Orientation.VERTICAL, yeux.getPositionOeilDroitCourante())
+                        Orientation.VERTICAL, yeux.getPositionOeilDroitCourante(),
+                        yeux.getAngleInitialOeilDroit())
         ), List.of(), toSante(sante.get("yeux")));
     }
 
+    /**
+     * Les trois axes du cou ont pour position initiale <b>0</b>, et ce n'est pas un hasard : leur
+     * transmission a pour zéro la position de départ configurée. Les yeux, eux, ont un zéro
+     * physique — la coque de niveau — distinct de leur posture de démarrage.
+     */
     private Organe organeCou(Map<String, SanteOrgane> sante) {
         return new Organe("cou", "Cou", TypeOrgane.ACTIONNEUR, List.of(
                 new Articulation("pan", "Panoramique (gauche / droite)", UNITE_DEGRE,
                         phidgetsConfig.neckLeftRightMotorInitialPosition() - phidgetsConfig.neckLeftRightMotorMaxPosition(),
                         phidgetsConfig.neckLeftRightMotorInitialPosition() - phidgetsConfig.neckLeftRightMotorMinPosition(),
-                        Orientation.HORIZONTAL, cou.getPositionPanoramiqueCourante()),
+                        Orientation.HORIZONTAL, cou.getPositionPanoramiqueCourante(), 0.0),
                 new Articulation("tilt", "Inclinaison (haut / bas)", UNITE_DEGRE,
                         phidgetsConfig.neckTiltMotorInitialPosition() - phidgetsConfig.neckTiltMotorMaxPosition(),
                         phidgetsConfig.neckTiltMotorInitialPosition() - phidgetsConfig.neckTiltMotorMinPosition(),
-                        Orientation.VERTICAL, cou.getPositionInclinaisonCourante()),
+                        Orientation.VERTICAL, cou.getPositionInclinaisonCourante(), 0.0),
                 new Articulation("upDown", "Monter / descendre", UNITE_DEGRE,
                         phidgetsConfig.neckUpDownMotorInitialPosition() - phidgetsConfig.neckUpDownMotorMaxPosition(),
                         phidgetsConfig.neckUpDownMotorInitialPosition() - phidgetsConfig.neckUpDownMotorMinPosition(),
-                        Orientation.VERTICAL, cou.getPositionMonterDescendreCourante())
+                        Orientation.VERTICAL, cou.getPositionMonterDescendreCourante(), 0.0)
         ), List.of(), toSante(sante.get("cou")));
     }
 

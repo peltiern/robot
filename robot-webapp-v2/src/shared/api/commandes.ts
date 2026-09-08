@@ -29,7 +29,8 @@ export function evenementsRecentrage(organes: Organe[]): Record<string, unknown>
     .map((organe) => {
       const pilotables = organe.articulations.filter((a) => estPilotable(a.id))
       const evenement: Record<string, unknown> = { eventType: COMMANDE[pilotables[0].id].event }
-      for (const articulation of pilotables) evenement[COMMANDE[articulation.id].field] = 0
+      for (const articulation of pilotables)
+        evenement[COMMANDE[articulation.id].field] = articulation.positionInitiale ?? 0
       return evenement
     })
 }

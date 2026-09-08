@@ -34,15 +34,16 @@ class AnimationsLivreesTest {
      * dépôt, le poste, le Jetson — et un test qui suivrait celle du poste passerait ou tomberait
      * selon la machine. Ces valeurs doivent donc être tenues à jour avec le fichier du dépôt.
      * <p>
-     * Celles des yeux sont en <b>degrés d'œil</b> depuis le 2026-09-03 (cf. {@code TransmissionOeil}).
+     * Celles des yeux sont en <b>degrés d'œil</b> depuis le 2026-09-03 (cf. {@code TransmissionOeil}),
+     * et comptées depuis la coque de niveau, positif vers le haut, depuis le 2026-09-07.
      */
     private static Map<Axe, LimitesMoteur> limitesDuRobot() {
         Map<Axe, LimitesMoteur> limites = new EnumMap<>(Axe.class);
         limites.put(Axe.COU_GAUCHE_DROITE, new LimitesMoteur(40, 200, -60, 60));
         limites.put(Axe.COU_HAUT_BAS, new LimitesMoteur(10, 200, -8, 7));
         limites.put(Axe.COU_MONTER_DESCENDRE, new LimitesMoteur(100, 200, -10, 60));
-        limites.put(Axe.OEIL_GAUCHE, new LimitesMoteur(50, 75, -6.14, 31.06));
-        limites.put(Axe.OEIL_DROIT, new LimitesMoteur(50, 75, -6.14, 31.06));
+        limites.put(Axe.OEIL_GAUCHE, new LimitesMoteur(79, 119, -33, 5.5));
+        limites.put(Axe.OEIL_DROIT, new LimitesMoteur(79, 119, -33, 5.5));
         return limites;
     }
 

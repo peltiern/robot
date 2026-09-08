@@ -80,7 +80,7 @@ class TransmissionOeilTest {
         void leContactDesCoquesNEstPasUneLimiteDeLaLoi() {
             double auRepos = TransmissionOeil.oeilDepuisServo(-7);
 
-            assertTrue(auRepos > TransmissionOeil.oeilDepuisServo(TransmissionOeil.SERVO_CONTACT_DES_COQUES_BAS),
+            assertTrue(auRepos > TransmissionOeil.oeilDepuisServo(TransmissionOeil.SERVO_MINI_AU_CONTACT),
                     "le repos doit pouvoir dépasser le contact des coques");
             assertEquals(-7, TransmissionOeil.servoDepuisOeil(auRepos), 1e-6);
         }
@@ -92,7 +92,7 @@ class TransmissionOeilTest {
         /** La dichotomie doit vraiment inverser la forme close, sur toute la course. */
         @Test
         void lesDeuxSensSontReciproques() {
-            for (double servo = TransmissionOeil.SERVO_CONTACT_DES_COQUES_BAS; servo <= TransmissionOeil.SERVO_CONTACT_DES_COQUES_HAUT; servo += 0.1) {
+            for (double servo = TransmissionOeil.SERVO_MINI_AU_CONTACT; servo <= TransmissionOeil.SERVO_MAXI_AU_CONTACT; servo += 0.1) {
                 double angleServo = servo;
                 double oeil = TransmissionOeil.oeilDepuisServo(angleServo);
 
@@ -104,7 +104,7 @@ class TransmissionOeilTest {
         @Test
         void laLoiEstStrictementDecroissante() {
             double precedent = Double.MAX_VALUE;
-            for (double servo = TransmissionOeil.SERVO_CONTACT_DES_COQUES_BAS; servo <= TransmissionOeil.SERVO_CONTACT_DES_COQUES_HAUT; servo += 0.05) {
+            for (double servo = TransmissionOeil.SERVO_MINI_AU_CONTACT; servo <= TransmissionOeil.SERVO_MAXI_AU_CONTACT; servo += 0.05) {
                 double angleServo = servo;
                 double oeil = TransmissionOeil.oeilDepuisServo(angleServo);
                 assertTrue(oeil < precedent, () -> "non monotone à " + angleServo + "° de servo");
@@ -143,17 +143,34 @@ class TransmissionOeilTest {
         }
 
         /**
-         * Le sens de l'angle d'organe : il croît avec la commande relative, à l'inverse du repère
-         * du relevé. C'est ce qui garde aux curseurs verticaux du HUD le sens qu'ils ont
-         * aujourd'hui.
+         * <b>Le positif rapproche les coques</b>, et c'est le côté court : 6,87° avant le contact,
+         * contre 35 de l'autre. Le sens inverse a tenu du 2026-09-04 au 07 et posait les butées du
+         * mauvais côté du mécanisme — la butée haute configurée tombait 14° dans le contact, les
+         * servos forçaient l'un contre l'autre à chaque animation. Ce test est là pour que ça ne
+         * puisse plus arriver en silence.
          */
         @Test
-        void langleCroitDansLeSensDeLaCommande() {
-            Transmission gauche = new TransmissionOeil(98, -1);
+        void lePositifRapprocheLesCoques() {
+            assertTrue(TransmissionOeil.oeilDepuisServo(TransmissionOeil.SERVO_MINI_AU_CONTACT) > 0,
+                    "le contact des coques doit être du côté positif");
+            assertTrue(TransmissionOeil.oeilDepuisServo(TransmissionOeil.SERVO_MAXI_AU_CONTACT) < -30,
+                    "les 35° de course longue doivent être du côté négatif");
+        }
 
-            assertTrue(gauche.depuisMoteur(98 - 20) > gauche.depuisMoteur(98 - 0));
-            assertEquals(31.06, gauche.depuisMoteur(98 - 20), 0.01);
-            assertEquals(-6.14, gauche.depuisMoteur(98 + 5), 0.01);
+        /**
+         * Le zéro moteur et l'échelle, mesurés sur le robot le 2026-09-07 : les deux coques amenées
+         * au contact, puis la tringlerie amenée à son point mort. Une unité Phidgets ne vaut pas un
+         * degré de servo — le contrôleur ignore quel servo il pilote.
+         */
+        @Test
+        void leZeroEtLEchelleSontCeuxMesuresSurLeRobot() {
+            Transmission gauche = new TransmissionOeil(91.06, +1.583);
+
+            assertEquals(6.87, gauche.depuisMoteur(87.52), 0.05, "contact des coques");
+            assertEquals(TransmissionOeil.oeilDepuisServo(TransmissionOeil.SERVO_POINT_MORT),
+                    gauche.depuisMoteur(105.17), 1e-9,
+                    "à 105,17 la tringlerie est à son point mort — c'est là que l'œil bute");
+            assertEquals(0, gauche.depuisMoteur(91.06), 1e-9, "coque de niveau au zéro");
         }
 
         /**
@@ -165,7 +182,7 @@ class TransmissionOeilTest {
             Transmission oeilGauche = new TransmissionOeil(98, -1);
 
             assertEquals(1 / 1.252, oeilGauche.gain(0), 0.005);
-            assertTrue(oeilGauche.gain(31) < oeilGauche.gain(0) / 2,
+            assertTrue(oeilGauche.gain(-31) < oeilGauche.gain(0) / 2,
                     "en bout de course, un degré d'œil coûte trois fois moins de servo");
         }
     }
