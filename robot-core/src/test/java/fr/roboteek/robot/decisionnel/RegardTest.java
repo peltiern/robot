@@ -35,8 +35,8 @@ class RegardTest {
     private static final double ECART_BORD_DROIT = 30.0;
 
     /** Échelles du cou : une unité de commande vaut un degré vu en panoramique, trois en inclinaison. */
-    private static final double DEGRE_VU_EN_COMMANDE = 1.0;
-    private static final double DEGRE_VU_EN_COMMANDE_INCLINAISON = 0.3;
+    private static final double DEGRE_VU_EN_COMMANDE = 0.9;
+    private static final double DEGRE_VU_EN_COMMANDE_INCLINAISON = 0.9;
 
     /**
      * Écart angulaire d'un visage collé au bord bas de l'image : l'image est moins haute que

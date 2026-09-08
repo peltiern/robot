@@ -18,8 +18,10 @@ public enum Axe {
     COU_GAUCHE_DROITE("Cou gauche / droite"),
 
     /**
-     * Inclinaison de la tête. Course très courte (une quinzaine de degrés) et lente : c'est le
-     * moins expressif des axes, l'amplitude verticale est dans {@link #COU_MONTER_DESCENDRE}.
+     * Inclinaison de la tête. Course de <b>75°</b>, et non « une quinzaine » comme cette
+     * documentation l'a affirmé jusqu'au 2026-09-08 : les quinze étaient des unités de position
+     * moteur, et le Stingray-2 en fait 4,97 degrés chacune. C'est au contraire l'axe le plus
+     * démultiplié du robot.
      */
     COU_HAUT_BAS("Cou haut / bas"),
 

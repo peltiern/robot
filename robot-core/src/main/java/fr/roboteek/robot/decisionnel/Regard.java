@@ -64,6 +64,12 @@ public class Regard {
      * <p>
      * Volontairement basse : ce qui ressemble à une zone insensible du servo est en général un
      * cou arrivé en butée, et monter le seuil pour cette raison-là serait une erreur.
+     * <p>
+     * <b>Un degré de TÊTE depuis le 2026-09-08</b>, et non plus une unité de position moteur. Le
+     * seuil a donc silencieusement baissé — il valait 1,6° de tête au panoramique et 5,0° à
+     * l'inclinaison, au point que celle-ci ne corrigeait rien sous 5° d'écart vu alors que sa zone
+     * morte s'arrête à 4. C'était un second seuil, invisible, plus haut que celui qu'on croyait
+     * régler.
      */
     private static final double COMMANDE_MINIMALE = 1.0;
 
@@ -110,7 +116,7 @@ public class Regard {
     @PostConstruct
     void annoncerReglages() {
         RobotConfig reglages = robotConfig();
-        logger.info("Regard : {}, {} / {} unité(s) de cou par degré vu (panoramique / inclinaison), "
+        logger.info("Regard : {}, {} / {} degré(s) de tête par degré vu (panoramique / inclinaison), "
                         + "zone morte {} degrés, déport caméra {} degrés, "
                         + "une correction toutes les {} s, "
                         + "manette prioritaire {} s après son dernier ordre",

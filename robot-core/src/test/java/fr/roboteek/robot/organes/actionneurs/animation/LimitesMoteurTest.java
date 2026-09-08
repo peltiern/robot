@@ -42,21 +42,28 @@ class LimitesMoteurTest {
     }
 
     /**
-     * Le repère logique est inversé par rapport au moteur : le maximum moteur donne le minimum
-     * relatif. Se tromper de sens ferait accepter des animations qui vont taper la butée opposée.
+     * Les butées moteur passent par la <b>transmission de l'axe</b>, et le rapport n'est pas 1.
+     * <p>
+     * Elles étaient converties à la main par {@code init - positionMoteur}, ce qui supposait un
+     * rapport unitaire et un signe négatif partout. Résultat : la timeline laissait dessiner des
+     * courbes en unités moteur pendant que le robot les jouait en degrés, et l'inclinaison passait
+     * pour « à peine 15° de course » alors qu'elle en fait 75. Se tromper de sens ou d'échelle fait
+     * accepter des animations qui vont taper la butée opposée.
      */
     @Test
-    void lesButeesMoteurDeviennentDesButeesRelatives() {
+    void lesButeesMoteurPassentParLaTransmission() {
         Map<Axe, LimitesMoteur> limites = LimitesMoteur.parAxe(configurationDuRobot());
 
-        // Panoramique : init 95, moteur [35 ; 155] → relatif [95-155 ; 95-35]
-        assertEquals(-60, limites.get(Axe.COU_GAUCHE_DROITE).positionMin());
-        assertEquals(60, limites.get(Axe.COU_GAUCHE_DROITE).positionMax());
-        // Inclinaison : à peine 15° de course, l'axe le moins expressif du robot
-        assertEquals(-8, limites.get(Axe.COU_HAUT_BAS).positionMin());
-        assertEquals(7, limites.get(Axe.COU_HAUT_BAS).positionMax());
-        assertEquals(-10, limites.get(Axe.COU_MONTER_DESCENDRE).positionMin());
-        assertEquals(60, limites.get(Axe.COU_MONTER_DESCENDRE).positionMax());
+        // Panoramique : init 95, moteur [35 ; 155], rapport +1,583 → ±95° de tête
+        assertEquals(-95.0, limites.get(Axe.COU_GAUCHE_DROITE).positionMin(), 0.05);
+        assertEquals(95.0, limites.get(Axe.COU_GAUCHE_DROITE).positionMax(), 0.05);
+        // Inclinaison : init 67, moteur [60 ; 75], rapport -4,97 → le maximum moteur donne le
+        // minimum d'axe, et la course fait 75° et non 15
+        assertEquals(-39.8, limites.get(Axe.COU_HAUT_BAS).positionMin(), 0.05);
+        assertEquals(34.8, limites.get(Axe.COU_HAUT_BAS).positionMax(), 0.05);
+        // Monter/descendre : rapport laissé à -1, faute d'avoir jamais été mesuré
+        assertEquals(-10, limites.get(Axe.COU_MONTER_DESCENDRE).positionMin(), 0.05);
+        assertEquals(60, limites.get(Axe.COU_MONTER_DESCENDRE).positionMax(), 0.05);
     }
 
     /** Les yeux sont déjà exprimés en relatif dans la configuration : rien à convertir. */
