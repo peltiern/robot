@@ -49,18 +49,21 @@ public final class TransmissionOeil implements Transmission {
      * <p>
      * <b>Cette classe ne les applique pas</b>, et c'est délibéré : ce sont des limites de
      * politique, pas de géométrie. Leur place est dans {@code robot.properties}, avec les autres
-     * butées. La position de <b>repos</b> est d'ailleurs volontairement au-delà — c'est l'appui
-     * mécanique stable sur lequel les yeux se posent à l'arrêt — et une transmission qui écrêterait
-     * ici l'empêcherait d'être atteinte.
+     * butées.
+     * <p>
+     * Le contact vaut pour la <b>somme</b> des deux angles : les deux coques partagent un arbre et
+     * se rencontrent quand {@code angleGauche + angleDroit} atteint 13,74°. Un œil seul, l'autre de
+     * niveau, va donc jusqu'à 13,74. C'est ce qui a servi à étalonner le zéro le 2026-09-07, et
+     * c'est le seul repère dur du mécanisme — aucun instrument n'est nécessaire pour le trouver.
      */
-    public static final double SERVO_CONTACT_DES_COQUES_BAS = -5.599;
-    public static final double SERVO_CONTACT_DES_COQUES_HAUT = 21.301;
+    public static final double SERVO_MINI_AU_CONTACT = -5.599;
+    public static final double SERVO_MAXI_AU_CONTACT = 21.301;
 
     /**
      * Position du bras où le quadrilatère n'a plus de solution : la bielle et le bras y sont
      * alignés, et le mécanisme n'a plus aucune autorité. C'est la <b>seule</b> limite que cette
      * classe fasse respecter, parce qu'au-delà il n'y a pas d'angle d'œil à rendre.
-     * {@link #SERVO_CONTACT_DES_COQUES_HAUT} tombe juste avant — la géométrie protège le
+     * {@link #SERVO_MAXI_AU_CONTACT} tombe juste avant — la géométrie protège le
      * mécanisme, ce n'est probablement pas un hasard.
      */
     public static final double SERVO_POINT_MORT = 22.331;
@@ -77,36 +80,41 @@ public final class TransmissionOeil implements Transmission {
     /**
      * @param zeroMoteur           position moteur où l'œil est à 0
      * @param degresServoParUniteMoteur degrés de servo <b>mécaniques</b> pour une unité de position
-     *                             moteur, signé. Porte deux choses à la fois : les deux servos sont
-     *                             montés en miroir, et le sens du repère mécanique du relevé
-     *                             (servo positif = bord extérieur vers le bas) reste à confronter
-     *                             au robot.
+     *                             moteur, signé. Porte deux choses à la fois : le <b>signe</b>, les
+     *                             deux servos étant montés en miroir, et l'<b>échelle</b>, qui ne
+     *                             vaut pas 1 — une unité de position Phidgets fait 1,26° de servo
+     *                             réel, cf. {@code PhidgetsServoMotor.DEGRES_SERVO_PAR_UNITE}.
+     *                             Cité par son nom et non par un {@code @link} : cette classe est
+     *                             de la géométrie pure et ne connaît aucun matériel.
      */
     public TransmissionOeil(double zeroMoteur, double degresServoParUniteMoteur) {
         this.versLeServo = Transmission.affine(zeroMoteur, degresServoParUniteMoteur);
     }
 
     /**
-     * <b>Le signe de l'angle d'organe</b> est l'opposé de celui du relevé.
+     * <b>L'angle d'organe est celui du relevé</b>, sans négation : positif = bord extérieur vers le
+     * haut, les deux coques se rapprochant l'une de l'autre.
      * <p>
-     * Le relevé compte positif le bord extérieur vers le haut ; ici l'angle croît dans le sens où
-     * la commande relative croissait déjà — celui qui, à +20, donne au robot l'air alerte. Ce n'est
-     * pas de la coquetterie : les curseurs du HUD sont verticaux et lisent leurs bornes dans la
-     * configuration. Garder le signe du relevé les retournerait, et c'est exactement le défaut
-     * qu'on vient de corriger sur le panoramique.
+     * Il y avait ici une négation, posée le 2026-09-04 pour que les curseurs du HUD ne soient pas
+     * retournés. Elle mettait les 35° de course longue du côté positif, là où la mécanique n'en
+     * offre que 6,87 — le javadoc de l'époque notait déjà que « le robot donne l'impression
+     * inverse » sans en tirer les conséquences. Le 2026-09-07, Nicolas a amené les deux yeux au
+     * contact : ils se touchent en montant la commande, pas en la baissant. La négation était donc
+     * fausse, et les butées se trouvaient posées du mauvais côté du mécanisme — d'où un maximum
+     * configuré 14° au-delà du contact, contre lequel les servos forçaient à chaque animation.
      * <p>
-     * Reste un point non résolu, sans conséquence sur le code : la géométrie place les 35° de
-     * course du côté que le relevé nomme « bord extérieur vers le bas », alors que le robot donne
-     * l'impression inverse. Aucune ligne ne dépend de ce mot — seulement les commentaires.
+     * Le sens perçu ne change pas pour autant : une commande positive relevait déjà le bord
+     * extérieur avant la correction, et le fait toujours. Ce qui change, c'est que la
+     * non-linéarité 1,25 → 3,70 n'est plus appliquée en miroir.
      */
     @Override
     public double versMoteur(double angleOrgane) {
-        return versLeServo.versMoteur(servoDepuisOeil(-angleOrgane));
+        return versLeServo.versMoteur(servoDepuisOeil(angleOrgane));
     }
 
     @Override
     public double depuisMoteur(double positionMoteur) {
-        return -oeilDepuisServo(versLeServo.depuisMoteur(positionMoteur));
+        return oeilDepuisServo(versLeServo.depuisMoteur(positionMoteur));
     }
 
     /**

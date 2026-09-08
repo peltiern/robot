@@ -59,9 +59,15 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * 1,25° d'œil par degré de servo au neutre à 3,70° en bout de course
      * ({@code robot-core/3d/mesures/MESURES.md}). Les positions qui traversent cette classe et
      * l'évènement {@link MouvementYeuxEvent} sont donc des <b>degrés d'œil</b>, plus des unités
-     * moteur — l'échelle a été confirmée sur le robot le 2026-09-03 en mesurant le roulis de
-     * l'image : la caméra est solidaire d'une coque, 20 unités l'ont fait tourner de 30,8°, la
-     * loi en prédisait 31,06.
+     * moteur.
+     * <p>
+     * <b>Attention à ce que la mesure du 2026-09-03 prouvait vraiment.</b> Le roulis de l'image
+     * avait été mesuré — la caméra est solidaire d'une coque — et 20 unités l'avaient fait tourner
+     * de 30,8° là où la loi d'alors en prédisait 31,06. On y a lu une confirmation de l'échelle ;
+     * c'en était une de la <b>forme</b> de la loi, à cet endroit de la course seulement. La loi
+     * corrigée prédit 30,84° pour le même essai, donc encore mieux : les deux erreurs de signe et
+     * d'échelle se compensaient presque exactement au voisinage du neutre, et c'est précisément ce
+     * qui les a rendues invisibles un mois durant.
      */
     private Transmission transmissionOeilGauche;
 
@@ -86,7 +92,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
      * continus de la manette, qui n'ont pas de cible. Le rapport variant de 1,25 à 3,70 le long de
      * la course, c'est une approximation — assumée, cf. {@link #enUnitesMoteur}.
      */
-    private static final double GAIN_AU_NEUTRE = 1 / 1.2517;
+    private static final double GAIN_AU_NEUTRE = 1 / (1.2517 * PhidgetsServoMotor.DEGRES_SERVO_PAR_UNITE);
 
     /**
      * Marge (en degrés) dont la position de repos peut dépasser les butées logicielles de
@@ -138,8 +144,15 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         // Les deux servos sont montés en MIROIR : une même commande d'organe les fait tourner en
         // sens inverse, et c'est le seul écart entre les deux yeux — la loi de la tringlerie, elle,
         // est la même des deux côtés. Le signe est donc porté ici et nulle part ailleurs.
-        transmissionOeilGauche = new TransmissionOeil(phidgetsConfig.eyeLeftMotorPositionZero(), -1);
-        transmissionOeilDroit = new TransmissionOeil(phidgetsConfig.eyeRightMotorPositionZero(), +1);
+        // Le zéro n'est PAS la position de départ : c'est celle où le dessus de la coque est de
+        // niveau, et elle se mesure. Les deux ont porté le même nom jusqu'au 2026-09-07, et le
+        // signe comme l'échelle étaient faux en plus — une unité Phidgets vaut 1,583° de servo et
+        // non 1 — d'où une butée haute posée 14° au-delà du contact des coques, contre lequel les
+        // servos forçaient à chaque animation.
+        transmissionOeilGauche = new TransmissionOeil(
+                phidgetsConfig.eyeLeftMotorZeroPosition(), +PhidgetsServoMotor.DEGRES_SERVO_PAR_UNITE);
+        transmissionOeilDroit = new TransmissionOeil(
+                phidgetsConfig.eyeRightMotorZeroPosition(), -PhidgetsServoMotor.DEGRES_SERVO_PAR_UNITE);
 
         // Création des moteurs au démarrage de la phase (et non à la construction du bean).
         // Chaque servo est engagé à sa position de repos — sa position physique probable,
@@ -147,7 +160,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         // le retour à la position zéro se fait ensuite en rampe douce (reset()).
         moteurOeilGauche = new PhidgetsServoMotor(
                 phidgetsConfig.eyeLeftMotorIndex(),
-                phidgetsConfig.eyeLeftMotorPositionZero(),
+                phidgetsConfig.eyeLeftMotorInitialPosition(),
                 transmissionOeilGauche.versMoteur(phidgetsConfig.eyePositionMax()),
                 transmissionOeilGauche.versMoteur(phidgetsConfig.eyePositionMin()),
                 phidgetsConfig.eyeLeftSpeed() * GAIN_AU_NEUTRE,
@@ -156,7 +169,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         );
         moteurOeilDroit = new PhidgetsServoMotor(
                 phidgetsConfig.eyeRightMotorIndex(),
-                phidgetsConfig.eyeRightMotorPositionZero(),
+                phidgetsConfig.eyeRightMotorInitialPosition(),
                 transmissionOeilDroit.versMoteur(phidgetsConfig.eyePositionMax()),
                 transmissionOeilDroit.versMoteur(phidgetsConfig.eyePositionMin()),
                 phidgetsConfig.eyeRightSpeed() * GAIN_AU_NEUTRE,
@@ -485,8 +498,30 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
     /** Remet les yeux à leur position par défaut. */
     private void reset() {
-        moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorPositionZero(), null, null, false);
-        moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorPositionZero(), null, null, false);
+        moteurOeilDroit.setPositionCible(phidgetsConfig.eyeRightMotorInitialPosition(), null, null, false);
+        moteurOeilGauche.setPositionCible(phidgetsConfig.eyeLeftMotorInitialPosition(), null, null, false);
+    }
+
+    /**
+     * Angle d'œil de la position de <b>démarrage</b>, celle que {@link #reset()} rejoint.
+     * <p>
+     * Ce n'est pas zéro, et c'est tout l'objet de la séparation {@code .init} / {@code .zero} : le
+     * zéro est la coque de niveau, une mesure, tandis que le démarrage est une posture choisie —
+     * yeux légèrement baissés. Le HUD en a besoin pour que son bouton « recentrer » ramène le robot
+     * là où il démarre, et non à un angle qu'il ne prend jamais.
+     * <p>
+     * {@code null} tant que l'organe n'est pas démarré : la transmission n'est figée qu'à
+     * {@code initialiser()}.
+     */
+    public Double getAngleInitialOeilGauche() {
+        return transmissionOeilGauche == null ? null
+                : transmissionOeilGauche.depuisMoteur(phidgetsConfig.eyeLeftMotorInitialPosition());
+    }
+
+    /** Angle d'œil de la position de démarrage de l'œil droit (cf. {@link #getAngleInitialOeilGauche}). */
+    public Double getAngleInitialOeilDroit() {
+        return transmissionOeilDroit == null ? null
+                : transmissionOeilDroit.depuisMoteur(phidgetsConfig.eyeRightMotorInitialPosition());
     }
 
     /**

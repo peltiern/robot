@@ -30,11 +30,16 @@ public record Animation(String nom, long dureeTotale, List<Piste> pistes, List<S
      * <p>
      * Une animation sans version est donc de l'ancien monde et doit être <b>refusée bruyamment</b>
      * plutôt que jouée de travers : jouée telle quelle, elle bougerait les yeux d'un tiers de trop
-     * sans qu'aucune trace ne l'explique. Le champ ne sert à rien aujourd'hui, où les deux seules
-     * animations existantes ont été converties à la main ; il servira au prochain changement
-     * d'unité, et c'est exactement pour ça qu'on l'écrit maintenant.
+     * sans qu'aucune trace ne l'explique.
+     * <p>
+     * La <b>2</b> dit que l'origine et le signe des degrés d'œil ont changé, le 2026-09-07 : le
+     * zéro est désormais la coque de niveau et non la position de démarrage, et le positif relève
+     * le bord extérieur. Une piste de la version 1 rejouée telle quelle viserait 10° trop haut et
+     * du mauvais côté, donc dans le contact des coques. Le champ avait été écrit en prévision d'un
+     * changement d'unité ; c'est un changement de repère qui est arrivé, et il coûte tout aussi
+     * cher à confondre.
      */
-    public static final int VERSION_COURANTE = 1;
+    public static final int VERSION_COURANTE = 2;
 
     public Animation {
         pistes = pistes == null ? List.of() : List.copyOf(pistes);

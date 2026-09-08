@@ -26,6 +26,38 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
 
     private static final Logger logger = LoggerFactory.getLogger(PhidgetsServoMotor.class);
 
+    /**
+     * Degrés de rotation <b>réels</b> du servo pour une unité de position Phidgets.
+     * <p>
+     * <b>Une unité n'est pas un degré</b>, et rien dans l'API ne le dit. Le contrôleur ne connaît
+     * pas le servo qu'il pilote : il convertit linéairement la « position » en largeur
+     * d'impulsion, et c'est le servo qui décide de ce que cette impulsion vaut en degrés. Les
+     * bornes par défaut du RCC1000 supposent un servo 180° ; les <b>goBilda 2000 série double
+     * mode</b> montés sur ce robot tournent nettement plus. On lit donc 1 sur le curseur du HUD
+     * et le servo tourne de 1,58°.
+     * <p>
+     * Le compte : le RCC1000 étale 550-2450 µs sur 0-180, soit <b>10,56 µs par unité</b> ; le
+     * goBILDA fait 300° sur 500-2500 µs, soit 0,150 °/µs. Produit : 1,583.
+     * <p>
+     * <b>Trois mesures indépendantes le confirment.</b> Le panoramique, relevé par corrélation de
+     * phase le 2026-09-06 : 1,56. Le panoramique encore, jugé à l'œil le 2026-09-08 : curseur à 60,
+     * visage tourné de 90°, soit 1,50. Et les yeux, par leurs deux butées dures — les coques au
+     * contact d'un côté, le point mort de la tringlerie de l'autre — qui donnent 1,582.
+     * <p>
+     * <b>L'erreur à ne pas refaire</b>, payée le 2026-09-07 : j'avais ajusté cette échelle sur un
+     * « blocage » rapporté au curseur, alors que le servo forçait déjà depuis plusieurs degrés et
+     * que le chiffre donné était celui où l'on avait cessé de tirer. Résultat, 1,2626 — faux de
+     * 25 %, et cohérent avec tout le reste parce que le zéro s'était ajusté en compensation.
+     * Un ancrage doit être un point où la <b>mécanique</b> s'arrête, pas où l'opérateur s'arrête.
+     * <p>
+     * <b>Seuls les yeux s'en servent aujourd'hui.</b> Les trois axes du cou comptent encore en
+     * unités Phidgets de bout en bout — butées, vitesses et gains du regard ont tous été réglés
+     * dans cette unité-là, donc ils sont cohérents entre eux. Leur conversion est le « temps 3 »
+     * du chantier transmission, et elle oblige à reprendre {@code robot.regard.*.commande.par.degre.vu}
+     * en même temps.
+     */
+    public static final double DEGRES_SERVO_PAR_UNITE = 1.583;
+
     /** Moteur Phidget associé. */
     private RCServo rcServo;
 

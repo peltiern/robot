@@ -13,6 +13,12 @@ export interface Articulation {
   max: number
   orientation: Orientation
   position: number | null
+  /**
+   * Position que l'axe rejoint au démarrage du robot. **Pas forcément zéro** : les yeux
+   * démarrent sous le niveau, leur zéro étant la coque de niveau et non leur posture de départ.
+   * C'est ce que vise « recentrer ».
+   */
+  positionInitiale: number | null
 }
 
 /** Mesure exposée par un capteur : échelle réelle + dernière valeur connue. */

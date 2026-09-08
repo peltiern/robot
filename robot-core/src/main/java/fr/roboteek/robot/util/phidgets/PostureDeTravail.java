@@ -164,15 +164,15 @@ public final class PostureDeTravail implements AutoCloseable {
         double angleMin = configuration.eyePositionMin();
         double angleMax = configuration.eyePositionMax();
         DoubleSupplier reposAngle = repos(configuration::eyeRestPosition, () -> 0);
-        double zeroGauche = configuration.eyeLeftMotorPositionZero();
-        Transmission oeilGauche = new TransmissionOeil(zeroGauche, -1);
+        double departGauche = configuration.eyeLeftMotorInitialPosition();
+        Transmission oeilGauche = new TransmissionOeil(configuration.eyeLeftMotorZeroPosition(), -1);
         ajouter(axes, "oeil-gauche", configuration::eyeLeftMotorIndex,
-                () -> zeroGauche, () -> oeilGauche.versMoteur(reposAngle.getAsDouble()),
+                () -> departGauche, () -> oeilGauche.versMoteur(reposAngle.getAsDouble()),
                 () -> oeilGauche.versMoteur(angleMax), () -> oeilGauche.versMoteur(angleMin));
-        double zeroDroit = configuration.eyeRightMotorPositionZero();
-        Transmission oeilDroit = new TransmissionOeil(zeroDroit, +1);
+        double departDroit = configuration.eyeRightMotorInitialPosition();
+        Transmission oeilDroit = new TransmissionOeil(configuration.eyeRightMotorZeroPosition(), +1);
         ajouter(axes, "oeil-droit", configuration::eyeRightMotorIndex,
-                () -> zeroDroit, () -> oeilDroit.versMoteur(reposAngle.getAsDouble()),
+                () -> departDroit, () -> oeilDroit.versMoteur(reposAngle.getAsDouble()),
                 () -> oeilDroit.versMoteur(angleMin), () -> oeilDroit.versMoteur(angleMax));
         return axes;
     }

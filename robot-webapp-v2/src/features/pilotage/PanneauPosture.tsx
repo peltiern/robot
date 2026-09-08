@@ -148,7 +148,7 @@ export function PanneauPosture() {
     setPositions((p) => {
       const suivantes = { ...p }
       for (const articulation of articulations) {
-        suivantes[articulation.id] = 0
+        suivantes[articulation.id] = articulation.positionInitiale ?? 0
         dernierPilotage.current[articulation.id] = maintenant
       }
       return suivantes
@@ -207,7 +207,7 @@ export function PanneauPosture() {
 
       {pilotable && articulations.length > 0 && (
         <button className={styles.recentrer} onClick={recentrer}>
-          RECENTRER À 0°
+          POSTURE DE DÉPART
         </button>
       )}
     </div>

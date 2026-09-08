@@ -104,42 +104,68 @@ public interface PhidgetsConfig extends Config {
     @DefaultValue("2")
     int eyeLeftMotorIndex();
 
+    // Deux positions moteur par œil, et il ne faut pas les confondre — elles ont porté le même
+    // nom jusqu'au 2026-09-07, et c'est ce qui a fait croire que le zéro des yeux était réglé.
+    //
+    //   .init  où le servo est amené au démarrage (reset()) et engagé par les outils hors ligne.
+    //          Une POLITIQUE : c'est la posture de travail du robot, rien de plus.
+    //   .zero  où le dessus de la coque est parallèle au plan de référence de la tête.
+    //          Une MESURE : c'est l'origine des degrés d'œil de TransmissionOeil, donc celle des
+    //          butées, de la position de repos et des animations.
+    //
+    // Les deux valeurs diffèrent d'un œil à l'autre : les servos sont montés en miroir et leurs
+    // cannelures ne tombent pas au même endroit. Le zéro se mesure, il ne se déduit pas de l'autre.
+    //
+    // Les deux ne valent pas la même chose : le robot démarre les yeux 10° sous le niveau, un
+    // regard un peu baissé demandé par Nicolas le 2026-09-08. C'est exactement ce que la séparation
+    // permet — changer la posture de départ sans toucher à l'étalonnage, et inversement.
+
+    @Key("phidgets.eyes.motor.left.position.init")
+    @DefaultValue("95.90")
+    double eyeLeftMotorInitialPosition();
+
     @Key("phidgets.eyes.motor.left.position.zero")
-    @DefaultValue("92")
-    double eyeLeftMotorPositionZero();
+    @DefaultValue("91.06")
+    double eyeLeftMotorZeroPosition();
 
     @Key("phidgets.eyes.left.speed")
-    @DefaultValue("50")
+    @DefaultValue("79")
     double eyeLeftSpeed();
 
     @Key("phidgets.eyes.left.acceleration")
-    @DefaultValue("75")
+    @DefaultValue("119")
     double eyeLeftAcceleration();
 
     @Key("phidgets.eyes.motor.right.index")
     @DefaultValue("3")
     int eyeRightMotorIndex();
 
+    @Key("phidgets.eyes.motor.right.position.init")
+    @DefaultValue("97.10")
+    double eyeRightMotorInitialPosition();
+
     @Key("phidgets.eyes.motor.right.position.zero")
-    @DefaultValue("86")
-    double eyeRightMotorPositionZero();
+    @DefaultValue("101.94")
+    double eyeRightMotorZeroPosition();
 
     @Key("phidgets.eyes.right.speed")
-    @DefaultValue("50")
+    @DefaultValue("79")
     double eyeRightSpeed();
 
     @Key("phidgets.eyes.right.acceleration")
-    @DefaultValue("75")
+    @DefaultValue("119")
     double eyeRightAcceleration();
 
-    // Butées et vitesses des yeux : en DEGRÉS D'ŒIL, pas en unités moteur. La tringlerie
-    // n'est pas linéaire (1,25 à 3,70), la conversion vit dans TransmissionOeil.
+    // Butées des yeux : en DEGRÉS D'ŒIL, pas en unités moteur, et POSITIF = bord extérieur
+    // vers le haut, donc les deux coques se rapprochent. Elles ne sont plus réglées à la main
+    // mais déduites de la mécanique : contact des coques quand la somme des deux angles atteint
+    // 13,74, point mort de la tringlerie à -42,19. Voir le bloc « Eyes » de robot.properties.
     @Key("phidgets.eyes.position.min")
-    @DefaultValue("-6.14")
+    @DefaultValue("-33")
     double eyePositionMin();
 
     @Key("phidgets.eyes.position.max")
-    @DefaultValue("31.06")
+    @DefaultValue("5.5")
     double eyePositionMax();
 
     // Positions de repos, rejointes AVANT le désengagement des servos à l'arrêt du robot
