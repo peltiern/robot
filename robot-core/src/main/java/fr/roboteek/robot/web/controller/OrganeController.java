@@ -5,6 +5,7 @@ import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.capteurs.CapteurMateriel;
 import fr.roboteek.robot.organes.actionneurs.Cou;
+import fr.roboteek.robot.organes.actionneurs.PlageAngulaire;
 import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.securite.RegistreSante;
 import fr.roboteek.robot.securite.SanteOrgane;
@@ -142,23 +143,27 @@ public class OrganeController {
     }
 
     /**
-     * Les trois axes du cou ont pour position initiale <b>0</b>, et ce n'est pas un hasard : leur
-     * transmission a pour zéro la position de départ configurée. Les yeux, eux, ont un zéro
+     * Les bornes viennent de l'organe et non de la configuration : elles y étaient converties à la
+     * main (« position initiale moins position moteur »), ce qui supposait un rapport de 1 et un
+     * signe négatif. Les deux sont faux depuis le 2026-09-08.
+     * <p>
+     * Les trois axes ont en revanche pour position initiale <b>0</b>, et ce n'est pas un hasard :
+     * leur transmission a pour zéro la position de départ configurée. Les yeux, eux, ont un zéro
      * physique — la coque de niveau — distinct de leur posture de démarrage.
      */
     private Organe organeCou(Map<String, SanteOrgane> sante) {
+        PlageAngulaire pan = cou.plagePanoramique();
+        PlageAngulaire tilt = cou.plageInclinaison();
+        PlageAngulaire monterDescendre = cou.plageMonterDescendre();
         return new Organe("cou", "Cou", TypeOrgane.ACTIONNEUR, List.of(
                 new Articulation("pan", "Panoramique (gauche / droite)", UNITE_DEGRE,
-                        phidgetsConfig.neckLeftRightMotorInitialPosition() - phidgetsConfig.neckLeftRightMotorMaxPosition(),
-                        phidgetsConfig.neckLeftRightMotorInitialPosition() - phidgetsConfig.neckLeftRightMotorMinPosition(),
+                        pan.min(), pan.max(),
                         Orientation.HORIZONTAL, cou.getPositionPanoramiqueCourante(), 0.0),
                 new Articulation("tilt", "Inclinaison (haut / bas)", UNITE_DEGRE,
-                        phidgetsConfig.neckTiltMotorInitialPosition() - phidgetsConfig.neckTiltMotorMaxPosition(),
-                        phidgetsConfig.neckTiltMotorInitialPosition() - phidgetsConfig.neckTiltMotorMinPosition(),
+                        tilt.min(), tilt.max(),
                         Orientation.VERTICAL, cou.getPositionInclinaisonCourante(), 0.0),
                 new Articulation("upDown", "Monter / descendre", UNITE_DEGRE,
-                        phidgetsConfig.neckUpDownMotorInitialPosition() - phidgetsConfig.neckUpDownMotorMaxPosition(),
-                        phidgetsConfig.neckUpDownMotorInitialPosition() - phidgetsConfig.neckUpDownMotorMinPosition(),
+                        monterDescendre.min(), monterDescendre.max(),
                         Orientation.VERTICAL, cou.getPositionMonterDescendreCourante(), 0.0)
         ), List.of(), toSante(sante.get("cou")));
     }

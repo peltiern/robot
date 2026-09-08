@@ -4,8 +4,8 @@
   "pistes": [
     {
       "axe": "COU_GAUCHE_DROITE",
-      "vitesseParDefaut": 40.0,
-      "accelerationParDefaut": 200.0,
+      "vitesseParDefaut": 63.0,
+      "accelerationParDefaut": 317.0,
       "imagesCles": [
         {
           "instant": 0,
@@ -13,7 +13,7 @@
         },
         {
           "instant": 1500,
-          "valeur": 30.0
+          "valeur": 47.49
         },
         {
           "instant": 3000,
@@ -21,7 +21,7 @@
         },
         {
           "instant": 4500,
-          "valeur": -30.0
+          "valeur": -47.49
         },
         {
           "instant": 6000,
@@ -31,8 +31,8 @@
     },
     {
       "axe": "COU_HAUT_BAS",
-      "vitesseParDefaut": 10.0,
-      "accelerationParDefaut": 200.0,
+      "vitesseParDefaut": 50.0,
+      "accelerationParDefaut": 994.0,
       "imagesCles": [
         {
           "instant": 0,
@@ -40,7 +40,7 @@
         },
         {
           "instant": 1500,
-          "valeur": 5.0
+          "valeur": 24.85
         },
         {
           "instant": 3000,
@@ -48,7 +48,7 @@
         },
         {
           "instant": 4500,
-          "valeur": -5.0
+          "valeur": -24.85
         },
         {
           "instant": 6000,

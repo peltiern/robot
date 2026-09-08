@@ -1,6 +1,9 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
+import fr.roboteek.robot.organes.actionneurs.Cou;
+import fr.roboteek.robot.organes.actionneurs.PlageAngulaire;
+import fr.roboteek.robot.organes.actionneurs.transmission.Transmission;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,12 +57,14 @@ public record LimitesMoteur(double vitesseMax, double accelerationMax, double po
         limites.put(Axe.COU_GAUCHE_DROITE, depuisPositionsMoteur(
                 configuration.neckLeftRightMotorSpeed(), configuration.neckLeftRightMotorAcceleration(),
                 configuration.neckLeftRightMotorInitialPosition(),
-                configuration.neckLeftRightMotorMinPosition(), configuration.neckLeftRightMotorMaxPosition()));
+                configuration.neckLeftRightMotorMinPosition(), configuration.neckLeftRightMotorMaxPosition(),
+                Cou.RAPPORT_PANORAMIQUE));
 
         limites.put(Axe.COU_HAUT_BAS, depuisPositionsMoteur(
                 configuration.neckTiltMotorSpeed(), configuration.neckTiltMotorAcceleration(),
                 configuration.neckTiltMotorInitialPosition(),
-                configuration.neckTiltMotorMinPosition(), configuration.neckTiltMotorMaxPosition()));
+                configuration.neckTiltMotorMinPosition(), configuration.neckTiltMotorMaxPosition(),
+                Cou.RAPPORT_INCLINAISON));
 
         // Seul axe sans @DefaultValue dans la configuration : sur un robot où il n'est pas réglé,
         // le lire lève. Mieux vaut une animation non contrôlée sur cet axe qu'un démarrage refusé.
@@ -67,7 +72,8 @@ public record LimitesMoteur(double vitesseMax, double accelerationMax, double po
             limites.put(Axe.COU_MONTER_DESCENDRE, depuisPositionsMoteur(
                     configuration.neckUpDownMotorSpeed(), configuration.neckUpDownMotorAcceleration(),
                     configuration.neckUpDownMotorInitialPosition(),
-                    configuration.neckUpDownMotorMinPosition(), configuration.neckUpDownMotorMaxPosition()));
+                    configuration.neckUpDownMotorMinPosition(), configuration.neckUpDownMotorMaxPosition(),
+                    Cou.RAPPORT_MONTER_DESCENDRE));
         } catch (RuntimeException e) {
             logger.warn("Axe {} non configuré : ses animations ne seront pas contrôlées", Axe.COU_MONTER_DESCENDRE);
         }
@@ -76,13 +82,20 @@ public record LimitesMoteur(double vitesseMax, double accelerationMax, double po
     }
 
     /**
-     * Conversion des butées moteur en butées relatives. Le repère logique est inversé par rapport
-     * au moteur ({@code position = init - positionMoteur}, cf. {@code Cou}), donc le maximum
-     * moteur donne le minimum relatif.
+     * Conversion des butées moteur en butées d'axe, par la transmission de l'organe.
+     * <p>
+     * Elle était écrite à la main — {@code init - positionMoteur} — ce qui supposait un rapport de
+     * 1 et un signe négatif sur les trois axes. Les deux sont faux depuis le 2026-09-08 : le
+     * panoramique a un rapport de +1,583 et l'inclinaison de −4,97. Vitesse et accélération, elles,
+     * sont déjà en degrés d'axe dans la configuration — comme les butées des yeux — et traversent
+     * telles quelles.
      */
     private static LimitesMoteur depuisPositionsMoteur(double vitesse, double acceleration,
-                                                       double positionInitiale, double moteurMin, double moteurMax) {
-        return new LimitesMoteur(vitesse, acceleration, positionInitiale - moteurMax, positionInitiale - moteurMin);
+                                                       double positionInitiale, double moteurMin, double moteurMax,
+                                                       double degresParUniteMoteur) {
+        Transmission transmission = Transmission.affine(positionInitiale, degresParUniteMoteur);
+        PlageAngulaire plage = PlageAngulaire.entre(transmission.depuisMoteur(moteurMin), transmission.depuisMoteur(moteurMax));
+        return new LimitesMoteur(vitesse, acceleration, plage.min(), plage.max());
     }
 
     /** Les mêmes butées, avec les vitesse et accélération réellement annoncées par le servo. */

@@ -54,7 +54,11 @@ public class WebsocketController {
             LOGGER.warn("Évènement robot non reconnu reçu sur /robotevents : {}", json);
             return;
         }
-        LOGGER.info("Évènement robot reçu du client : {}", robotEvent);
+        // DEBUG et non INFO : un glissement de curseur en produit douze par seconde et par axe, et
+        // le toString d'un MouvementCouEvent fait vingt champs. Sur le Jetson, où le journal part
+        // dans le pilote json-file de Docker, c'est de l'écriture disque synchrone sur le thread
+        // qui reçoit les ordres.
+        LOGGER.debug("Évènement robot reçu du client : {}", robotEvent);
         applicationEventPublisher.publishEvent(robotEvent);
     }
 }

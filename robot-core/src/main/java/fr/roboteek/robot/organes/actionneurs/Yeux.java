@@ -7,6 +7,7 @@ import fr.roboteek.robot.organes.actionneurs.transmission.TransmissionOeil;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
+import fr.roboteek.robot.systemenerveux.event.PostureDeDepartEvent;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_ROULIS;
@@ -104,8 +105,14 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
     /**
      * Variation minimale (degrés) pour rediffuser la télémétrie de position : filtre
      * l'immobilité sans hacher le mouvement (voir {@link #diffuserTelemetrie()}).
+     * <p>
+     * <b>Un demi-degré, et non 0,2</b>, depuis que ces positions sont des degrés d'axe et non des
+     * unités moteur : le HUD arrondit à l'entier, donc sous la moitié d'un degré rien ne change à
+     * l'écran et le message est envoyé pour rien. Laisser 0,2 revenait à multiplier le débit par
+     * cinq sur l'inclinaison, dont une unité moteur vaut désormais 4,97 degrés — et cette
+     * télémétrie partage le WebSocket avec le flux vidéo.
      */
-    private static final double SEUIL_VARIATION_TELEMETRIE = 0.2;
+    private static final double SEUIL_VARIATION_TELEMETRIE = 0.5;
 
     /** Dernières positions diffusées en télémétrie, pour n'émettre que sur variation réelle. */
     private Map<String, Double> dernieresPositionsDiffusees = Map.of();
@@ -494,6 +501,20 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         double repos = reposConfigure != null ? reposConfigure : 0;
         return Math.max(phidgetsConfig.eyePositionMin() - MARGE_REPOS,
                 Math.min(phidgetsConfig.eyePositionMax() + MARGE_REPOS, repos));
+    }
+
+    /**
+     * Ramène les yeux à la posture de départ, sur demande de n'importe quel client — manette, HUD, ou
+     * une activité. L'appelant dit « rentre », pas « va à telle position » : c'est ici que vit la
+     * connaissance de l'endroit.
+     */
+    @EventListener
+    @Async(RobotEventsConfig.YEUX_EVENT_EXECUTOR)
+    public void handlePostureDeDepartEvent(PostureDeDepartEvent postureDeDepartEvent) {
+        if (!running || arretUrgence) {
+            return;
+        }
+        reset();
     }
 
     /** Remet les yeux à leur position par défaut. */

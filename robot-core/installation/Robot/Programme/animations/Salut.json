@@ -4,8 +4,8 @@
   "pistes": [
     {
       "axe": "COU_GAUCHE_DROITE",
-      "vitesseParDefaut": 40.0,
-      "accelerationParDefaut": 200.0,
+      "vitesseParDefaut": 63.0,
+      "accelerationParDefaut": 317.0,
       "imagesCles": [
         {
           "instant": 0,
@@ -13,15 +13,15 @@
         },
         {
           "instant": 1000,
-          "valeur": -18.0
+          "valeur": -28.49
         },
         {
           "instant": 2200,
-          "valeur": 18.0
+          "valeur": 28.49
         },
         {
           "instant": 3200,
-          "valeur": -10.0
+          "valeur": -15.83
         },
         {
           "instant": 4000,

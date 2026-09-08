@@ -329,7 +329,7 @@ public interface RobotConfig extends Config {
      * le déplacement.
      */
     @Key("robot.regard.panoramique.commande.par.degre.vu")
-    @DefaultValue("1.0")
+    @DefaultValue("0.9")
     double commandePanoramiqueParDegreVu();
 
     /**
@@ -343,7 +343,7 @@ public interface RobotConfig extends Config {
      * sur-corriger fait osciller la tête sans fin.
      */
     @Key("robot.regard.inclinaison.commande.par.degre.vu")
-    @DefaultValue("0.3")
+    @DefaultValue("0.9")
     double commandeInclinaisonParDegreVu();
 
     /**

@@ -6,6 +6,7 @@ import fr.roboteek.robot.organes.actionneurs.transmission.Transmission;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
+import fr.roboteek.robot.systemenerveux.event.PostureDeDepartEvent;
 import fr.roboteek.robot.systemenerveux.event.DisplayPositionEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent.MOUVEMENTS_MONTER_DESCENDRE;
@@ -95,8 +96,14 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /**
      * Variation minimale (degrés) pour rediffuser la télémétrie de position : filtre
      * l'immobilité sans hacher le mouvement (voir {@link #diffuserTelemetrie()}).
+     * <p>
+     * <b>Un demi-degré, et non 0,2</b>, depuis que ces positions sont des degrés d'axe et non des
+     * unités moteur : le HUD arrondit à l'entier, donc sous la moitié d'un degré rien ne change à
+     * l'écran et le message est envoyé pour rien. Laisser 0,2 revenait à multiplier le débit par
+     * cinq sur l'inclinaison, dont une unité moteur vaut désormais 4,97 degrés — et cette
+     * télémétrie partage le WebSocket avec le flux vidéo.
      */
-    private static final double SEUIL_VARIATION_TELEMETRIE = 0.2;
+    private static final double SEUIL_VARIATION_TELEMETRIE = 0.5;
 
     /** Dernières positions diffusées en télémétrie, pour n'émettre que sur variation réelle. */
     private Map<String, Double> dernieresPositionsDiffusees = Map.of();
@@ -127,6 +134,59 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         phidgetsConfig = phidgetsConfig();
     }
 
+    /** Degrés de tête par unité de position moteur, signés. Voir le commentaire d'{@code initialiser()}. */
+    public static final double RAPPORT_PANORAMIQUE = +PhidgetsServoMotor.DEGRES_SERVO_PAR_UNITE;
+
+    public static final double RAPPORT_INCLINAISON = -4.97;
+
+    public static final double RAPPORT_MONTER_DESCENDRE = -1;
+
+    /**
+     * Course autorisée d'un axe, en degrés de tête — les butées de la configuration passées par la
+     * transmission. Sert au HUD, qui n'a pas à refaire la conversion : c'est exactement l'endroit
+     * où sept conversions écrites à la main vivaient encore.
+     */
+    public PlageAngulaire plagePanoramique() {
+        return plage(phidgetsConfig.neckLeftRightMotorInitialPosition(), RAPPORT_PANORAMIQUE,
+                phidgetsConfig.neckLeftRightMotorMinPosition(), phidgetsConfig.neckLeftRightMotorMaxPosition());
+    }
+
+    /** Course de l'inclinaison, en degrés de tête (cf. {@link #plagePanoramique}). */
+    public PlageAngulaire plageInclinaison() {
+        return plage(phidgetsConfig.neckTiltMotorInitialPosition(), RAPPORT_INCLINAISON,
+                phidgetsConfig.neckTiltMotorMinPosition(), phidgetsConfig.neckTiltMotorMaxPosition());
+    }
+
+    /** Course du monter/descendre (cf. {@link #plagePanoramique}). */
+    public PlageAngulaire plageMonterDescendre() {
+        return plage(phidgetsConfig.neckUpDownMotorInitialPosition(), RAPPORT_MONTER_DESCENDRE,
+                phidgetsConfig.neckUpDownMotorMinPosition(), phidgetsConfig.neckUpDownMotorMaxPosition());
+    }
+
+    /**
+     * La conversion se refait ici plutôt que d'emprunter la transmission de l'organe : celle-ci
+     * n'existe qu'après {@code initialiser()}, et le HUD demande les butées dès qu'il se connecte —
+     * y compris pendant les trente secondes de démarrage du robot. Une NullPointerException dans
+     * {@code /api/organes} y aurait laissé le panneau vide sans que rien ne le dise.
+     */
+    private static PlageAngulaire plage(double zeroMoteur, double rapport, double moteurMin, double moteurMax) {
+        Transmission conversion = Transmission.affine(zeroMoteur, rapport);
+        return PlageAngulaire.entre(conversion.depuisMoteur(moteurMin), conversion.depuisMoteur(moteurMax));
+    }
+
+    /**
+     * Vitesse, accélération ou déplacement relatif, converti en unités moteur.
+     * <p>
+     * Le gain est pris <b>au neutre</b> et non à l'angle visé : sur ces trois axes la transmission
+     * est affine, donc c'est la même valeur partout. La méthode existe quand même, pour que le jour
+     * où l'un d'eux gagne une tringlerie le point de conversion soit déjà nommé.
+     * <p>
+     * {@code null} traverse : c'est la façon dont un appelant dit « garde la vitesse en cours ».
+     */
+    private static Double enUnitesMoteur(Double valeur, Transmission transmission) {
+        return valeur == null ? null : valeur * transmission.gain(0);
+    }
+
     @Override
     public void initialiser() {
         // Les transmissions se figent ici, en même temps que les moteurs : relire la position
@@ -137,9 +197,23 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // donc consigne -60, donc moteur 155 — et la tête part à DROITE. Le repère logique
         // valait « positif = à gauche », à l'envers de tout curseur horizontal, et personne ne
         // l'avait vu parce que le regard n'emprunte pas cette porte-là (il passe par rotate()).
-        transmissionPanoramique = Transmission.affine(phidgetsConfig.neckLeftRightMotorInitialPosition(), +1);
-        transmissionInclinaison = Transmission.affine(phidgetsConfig.neckTiltMotorInitialPosition(), -1);
-        transmissionMonterDescendre = Transmission.affine(phidgetsConfig.neckUpDownMotorInitialPosition(), -1);
+        // Les rapports sont ceux des axes, plus 1 : une unité de position Phidgets ne vaut pas un
+        // degré, et chaque axe a en plus sa propre démultiplication. Tout ce qui traverse cette
+        // classe — butées, positions, vitesses, télémétrie — est donc en DEGRÉS DE TÊTE depuis le
+        // 2026-09-08, comme les yeux le sont depuis la veille.
+        // Panoramique : goBILDA 2000 en prise directe. 1,583 tient de deux déterminations
+        // indépendantes — la fiche (10,56 µs par unité × 0,150 °/µs) et les deux butées dures des
+        // yeux, qui portent le même servo. La corrélation de phase du 2026-09-06 donnait 1,56 :
+        // c'est une corde, elle inclut le jeu au changement de sens, pas la pente.
+        // Inclinaison : goBILDA Stingray-2, 900° sur 500-2500 µs. La fiche donne 4,75, la mesure
+        // 4,97 ; on garde la MESURE, seule déterminée deux fois sur le robot et faite sur décor
+        // fixe. C'est elle qui rend le gain de boucle du regard exactement 0,9.
+        // Monter/descendre : jamais mesuré, et pour cause — c'est une translation, la caméra n'y
+        // pivote pas (0,0 px de déplacement, deux fois). Laissé à 1, ses « degrés » restent des
+        // unités moteur et le disent.
+        transmissionPanoramique = Transmission.affine(phidgetsConfig.neckLeftRightMotorInitialPosition(), RAPPORT_PANORAMIQUE);
+        transmissionInclinaison = Transmission.affine(phidgetsConfig.neckTiltMotorInitialPosition(), RAPPORT_INCLINAISON);
+        transmissionMonterDescendre = Transmission.affine(phidgetsConfig.neckUpDownMotorInitialPosition(), RAPPORT_MONTER_DESCENDRE);
 
         // Création des moteurs au démarrage de la phase (et non à la construction du bean).
         // Chaque servo est engagé à sa position de repos — sa position physique probable,
@@ -150,8 +224,8 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
                 phidgetsConfig.neckLeftRightMotorInitialPosition(),
                 phidgetsConfig.neckLeftRightMotorMinPosition(),
                 phidgetsConfig.neckLeftRightMotorMaxPosition(),
-                phidgetsConfig.neckLeftRightMotorSpeed(),
-                phidgetsConfig.neckLeftRightMotorAcceleration(),
+                enUnitesMoteur(phidgetsConfig.neckLeftRightMotorSpeed(), transmissionPanoramique),
+                enUnitesMoteur(phidgetsConfig.neckLeftRightMotorAcceleration(), transmissionPanoramique),
                 positionReposPanoramique()
         );
         moteurInclinaison = new PhidgetsServoMotor(
@@ -159,8 +233,8 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
                 phidgetsConfig.neckTiltMotorInitialPosition(),
                 phidgetsConfig.neckTiltMotorMinPosition(),
                 phidgetsConfig.neckTiltMotorMaxPosition(),
-                phidgetsConfig.neckTiltMotorSpeed(),
-                phidgetsConfig.neckTiltMotorAcceleration(),
+                enUnitesMoteur(phidgetsConfig.neckTiltMotorSpeed(), transmissionInclinaison),
+                enUnitesMoteur(phidgetsConfig.neckTiltMotorAcceleration(), transmissionInclinaison),
                 positionReposInclinaison()
         );
         moteurMonterDescendre = new PhidgetsServoMotor(
@@ -168,8 +242,8 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
                 phidgetsConfig.neckUpDownMotorInitialPosition(),
                 phidgetsConfig.neckUpDownMotorMinPosition(),
                 phidgetsConfig.neckUpDownMotorMaxPosition(),
-                phidgetsConfig.neckUpDownMotorSpeed(),
-                phidgetsConfig.neckUpDownMotorAcceleration(),
+                enUnitesMoteur(phidgetsConfig.neckUpDownMotorSpeed(), transmissionMonterDescendre),
+                enUnitesMoteur(phidgetsConfig.neckUpDownMotorAcceleration(), transmissionMonterDescendre),
                 positionReposMonterDescendre()
         );
 
@@ -195,9 +269,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     public void tournerAGauche(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsPanoramiqueEnCours != MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE) {
             mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE;
-            moteurPanoramique.backward(vitesse, acceleration, waitForPosition);
+            moteurPanoramique.backward(enUnitesMoteur(vitesse, transmissionPanoramique), enUnitesMoteur(acceleration, transmissionPanoramique), waitForPosition);
         } else {
-            moteurPanoramique.setVitesse(vitesse);
+            moteurPanoramique.setVitesse(enUnitesMoteur(vitesse, transmissionPanoramique));
         }
     }
 
@@ -205,9 +279,9 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     public void tournerADroite(Double vitesse, Double acceleration, boolean waitForPosition) {
         if (mouvementsPanoramiqueEnCours != MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE) {
             mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE;
-            moteurPanoramique.forward(vitesse, acceleration, waitForPosition);
+            moteurPanoramique.forward(enUnitesMoteur(vitesse, transmissionPanoramique), enUnitesMoteur(acceleration, transmissionPanoramique), waitForPosition);
         } else {
-            moteurPanoramique.setVitesse(vitesse);
+            moteurPanoramique.setVitesse(enUnitesMoteur(vitesse, transmissionPanoramique));
         }
     }
 
@@ -234,7 +308,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // (robot.regard.inclinaison.sens.inverse) et absorbe l'écart sans le nommer — comme
         // commande.par.degre.vu absorbe le rapport de transmission. Redresser ces deux-là
         // change le mouvement : ça se fait avec leur vrai rapport et une validation, pas ici.
-        moteurPanoramique.rotate(angle, vitesse, acceleration, waitForPosition);
+        moteurPanoramique.rotate(enUnitesMoteur(angle, transmissionPanoramique), enUnitesMoteur(vitesse, transmissionPanoramique), enUnitesMoteur(acceleration, transmissionPanoramique), waitForPosition);
     }
 
     /**
@@ -249,7 +323,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
         // tournerTeteGaucheDroite).
             mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
-            moteurPanoramique.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+            moteurPanoramique.setPositionCible(positionMoteur, enUnitesMoteur(vitesse, transmissionPanoramique), enUnitesMoteur(acceleration, transmissionPanoramique), waitForPosition);
         }
     }
 
@@ -264,10 +338,10 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         if (mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.TOURNER_BAS) {
             logger.debug("BAS");
             mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.TOURNER_BAS;
-            moteurInclinaison.forward(vitesse, acceleration, waitForPosition);
+            moteurInclinaison.forward(enUnitesMoteur(vitesse, transmissionInclinaison), enUnitesMoteur(acceleration, transmissionInclinaison), waitForPosition);
         } else {
             logger.debug("BAS VITESSE");
-            moteurInclinaison.setVitesse(vitesse);
+            moteurInclinaison.setVitesse(enUnitesMoteur(vitesse, transmissionInclinaison));
         }
     }
 
@@ -276,10 +350,10 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         if (mouvementsInclinaisonEnCours != MOUVEMENTS_INCLINAISON.TOURNER_HAUT) {
             logger.debug("HAUT");
             mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.TOURNER_HAUT;
-            moteurInclinaison.backward(vitesse, acceleration, waitForPosition);
+            moteurInclinaison.backward(enUnitesMoteur(vitesse, transmissionInclinaison), enUnitesMoteur(acceleration, transmissionInclinaison), waitForPosition);
         } else {
             logger.debug("HAUT VITESSE");
-            moteurInclinaison.setVitesse(vitesse);
+            moteurInclinaison.setVitesse(enUnitesMoteur(vitesse, transmissionInclinaison));
         }
     }
 
@@ -292,7 +366,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
         // tournerTeteGaucheDroite).
         mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
-        moteurInclinaison.rotate(angle, vitesse, acceleration, waitForPosition);
+        moteurInclinaison.rotate(enUnitesMoteur(angle, transmissionInclinaison), enUnitesMoteur(vitesse, transmissionInclinaison), enUnitesMoteur(acceleration, transmissionInclinaison), waitForPosition);
     }
 
     /**
@@ -307,7 +381,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
         // tournerTeteGaucheDroite).
             mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
-            moteurInclinaison.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+            moteurInclinaison.setPositionCible(positionMoteur, enUnitesMoteur(vitesse, transmissionInclinaison), enUnitesMoteur(acceleration, transmissionInclinaison), waitForPosition);
         }
     }
 
@@ -323,10 +397,10 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         if (mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE) {
             logger.debug("DESCENDRE");
             mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.DESCENDRE;
-            moteurMonterDescendre.forward(vitesse, acceleration, waitForPosition);
+            moteurMonterDescendre.forward(enUnitesMoteur(vitesse, transmissionMonterDescendre), enUnitesMoteur(acceleration, transmissionMonterDescendre), waitForPosition);
         } else {
             logger.debug("DESCENDRE VITESSE");
-            moteurMonterDescendre.setVitesse(vitesse);
+            moteurMonterDescendre.setVitesse(enUnitesMoteur(vitesse, transmissionMonterDescendre));
         }
     }
 
@@ -335,10 +409,10 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         if (mouvementsMonterDescendreEnCours != MOUVEMENTS_MONTER_DESCENDRE.MONTER) {
             logger.debug("MONTER");
             mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.MONTER;
-            moteurMonterDescendre.backward(vitesse, acceleration, waitForPosition);
+            moteurMonterDescendre.backward(enUnitesMoteur(vitesse, transmissionMonterDescendre), enUnitesMoteur(acceleration, transmissionMonterDescendre), waitForPosition);
         } else {
             logger.debug("MONTER VITESSE");
-            moteurMonterDescendre.setVitesse(vitesse);
+            moteurMonterDescendre.setVitesse(enUnitesMoteur(vitesse, transmissionMonterDescendre));
         }
     }
 
@@ -351,7 +425,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
         // tournerTeteGaucheDroite).
         mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
-        moteurMonterDescendre.rotate(angle, vitesse, acceleration, waitForPosition);
+        moteurMonterDescendre.rotate(enUnitesMoteur(angle, transmissionMonterDescendre), enUnitesMoteur(vitesse, transmissionMonterDescendre), enUnitesMoteur(acceleration, transmissionMonterDescendre), waitForPosition);
     }
 
     /**
@@ -366,7 +440,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         // Consigne atteinte, servo arrêté : plus aucun mouvement continu en cours (cf.
         // tournerTeteGaucheDroite).
             mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
-            moteurMonterDescendre.setPositionCible(positionMoteur, vitesse, acceleration, waitForPosition);
+            moteurMonterDescendre.setPositionCible(positionMoteur, enUnitesMoteur(vitesse, transmissionMonterDescendre), enUnitesMoteur(acceleration, transmissionMonterDescendre), waitForPosition);
         }
     }
 
@@ -536,6 +610,20 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /** Indique si le moteur a atteint la position cible, à {@link #TOLERANCE_POSITION} près. */
     private static boolean estAtteinte(PhidgetsServoMotor moteur, double cible) {
         return Math.abs(moteur.getPositionReelle() - cible) < TOLERANCE_POSITION;
+    }
+
+    /**
+     * Ramène la tête à la posture de départ, sur demande de n'importe quel client — manette, HUD, ou
+     * une activité. L'appelant dit « rentre », pas « va à telle position » : c'est ici que vit la
+     * connaissance de l'endroit.
+     */
+    @EventListener
+    @Async(RobotEventsConfig.COU_EVENT_EXECUTOR)
+    public void handlePostureDeDepartEvent(PostureDeDepartEvent postureDeDepartEvent) {
+        if (!running || arretUrgence) {
+            return;
+        }
+        reset();
     }
 
     /** Remet la tête à sa position par défaut. */

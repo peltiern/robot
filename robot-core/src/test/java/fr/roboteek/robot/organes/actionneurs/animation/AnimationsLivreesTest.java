@@ -39,8 +39,8 @@ class AnimationsLivreesTest {
      */
     private static Map<Axe, LimitesMoteur> limitesDuRobot() {
         Map<Axe, LimitesMoteur> limites = new EnumMap<>(Axe.class);
-        limites.put(Axe.COU_GAUCHE_DROITE, new LimitesMoteur(40, 200, -60, 60));
-        limites.put(Axe.COU_HAUT_BAS, new LimitesMoteur(10, 200, -8, 7));
+        limites.put(Axe.COU_GAUCHE_DROITE, new LimitesMoteur(63, 317, -95, 95));
+        limites.put(Axe.COU_HAUT_BAS, new LimitesMoteur(50, 994, -39.8, 34.8));
         limites.put(Axe.COU_MONTER_DESCENDRE, new LimitesMoteur(100, 200, -10, 60));
         limites.put(Axe.OEIL_GAUCHE, new LimitesMoteur(79, 119, -33, 5.5));
         limites.put(Axe.OEIL_DROIT, new LimitesMoteur(79, 119, -33, 5.5));

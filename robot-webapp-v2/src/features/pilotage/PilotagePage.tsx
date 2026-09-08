@@ -34,13 +34,17 @@ export function PilotagePage() {
   const visages = trame?.faces ?? []
   const objets = trame?.objects ?? []
 
-  // Réglages relus au montage : ces clés sont rechargées à chaud sur le robot, mais une page de
-  // pilotage se rouvre bien plus souvent qu'on ne les édite. L'échec ne remonte pas au HUD — sans
-  // le repère la vue reste utilisable, et une alerte de plus sur un écran déjà chargé n'aiderait
-  // pas — mais il est dit dans la console : un repère absent sans raison affichée est
-  // indiscernable d'un robot qui aurait le suivi éteint, et on cherche alors du mauvais côté.
+  // Réglages relus à chaque (re)connexion, et non une seule fois au montage. Une lecture unique
+  // a fait disparaître le repère pour de bon le 2026-09-08 : le HUD était ouvert pendant les
+  // trente secondes de redémarrage du robot, l'appel a échoué, et rien ne le retentait — le carré
+  // ne revenait qu'en rechargeant la page à la main. C'est le même réflexe que pour /api/organes.
+  // L'échec ne remonte pas au HUD — sans le repère la vue reste utilisable, et une alerte de plus
+  // sur un écran déjà chargé n'aiderait pas — mais il est dit dans la console : un repère absent
+  // sans raison affichée est indiscernable d'un robot qui aurait le suivi éteint, et on cherche
+  // alors du mauvais côté.
   const [regard, poserRegard] = useState<ReglagesRegard | null>(null)
   useEffect(() => {
+    if (!connecte) return
     regardApi
       .reglages()
       .then(poserRegard)
@@ -48,7 +52,7 @@ export function PilotagePage() {
         console.warn('Réglages du regard indisponibles, zone morte non dessinée :', erreur)
         poserRegard(null)
       })
-  }, [])
+  }, [connecte])
 
   const scene = useRef<HTMLElement>(null)
   const place = useTaille(scene)

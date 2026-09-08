@@ -244,7 +244,10 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementPanoramique(MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.STOPPER);
             } else {
                 mouvementCouEvent.setMouvementPanoramique(value > 0 ? MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE);
-                mouvementCouEvent.setVitessePanoramique(40D);
+                // Vitesse lue dans la configuration et non écrite ici : ce 40 était une unité
+                // moteur, et le cou compte en degrés de tête depuis le 2026-09-08. Le panoramique
+                // s'est retrouvé une fois et demie trop lent, l'inclinaison cinq fois.
+                mouvementCouEvent.setVitessePanoramique(phidgetsConfig().neckLeftRightMotorSpeed());
             }
             mouvementCouEvent.setSynchrone(false);
             applicationEventPublisher.publishEvent(mouvementCouEvent);
@@ -262,7 +265,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementInclinaison(MouvementCouEvent.MOUVEMENTS_INCLINAISON.STOPPER);
             } else {
                 mouvementCouEvent.setMouvementInclinaison(value > 0 ? MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_BAS : MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_HAUT);
-                mouvementCouEvent.setVitesseInclinaison(10D);
+                mouvementCouEvent.setVitesseInclinaison(phidgetsConfig().neckTiltMotorSpeed());
             }
             mouvementCouEvent.setSynchrone(false);
             applicationEventPublisher.publishEvent(mouvementCouEvent);
@@ -432,27 +435,10 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
     private void processButtonStart(LogitechControllerEvent event) {
         GamepadComponentValue<LogitechComponent> startValue = event.getMapValues().get(LogitechComponent.BUTTON_START);
         if (startValue.getCurrentPressed()) {
-            MouvementCouEvent mouvementCouEvent = ordreDuCouDeLaManette();
-            mouvementCouEvent.setAccelerationInclinaison(80D);
-            mouvementCouEvent.setVitesseInclinaison(40D);
-            mouvementCouEvent.setPositionInclinaison(0);
-            mouvementCouEvent.setAccelerationPanoramique(100D);
-            mouvementCouEvent.setVitessePanoramique(60D);
-            mouvementCouEvent.setPositionPanoramique(0);
-            mouvementCouEvent.setAccelerationMonterDescendre(100D);
-            mouvementCouEvent.setVitesseMonterDescendre(40D);
-            mouvementCouEvent.setPositionMonterDescendre(0);
-            mouvementCouEvent.setSynchrone(false);
-            applicationEventPublisher.publishEvent(mouvementCouEvent);
-            MouvementYeuxEvent mouvementYeuxEvent = new MouvementYeuxEvent();
-            mouvementYeuxEvent.setAccelerationOeilDroit(80D);
-            mouvementYeuxEvent.setVitesseOeilDroit(50D);
-            mouvementYeuxEvent.setPositionOeilDroit(0);
-            mouvementYeuxEvent.setAccelerationOeilGauche(80D);
-            mouvementYeuxEvent.setVitesseOeilGauche(50D);
-            mouvementYeuxEvent.setPositionOeilGauche(0);
-            mouvementYeuxEvent.setSynchrone(false);
-            applicationEventPublisher.publishEvent(mouvementYeuxEvent);
+            // Un seul ordre, et aucune position écrite ici : chaque organe connaît sa posture de
+            // départ et ses vitesses. Les positions zéro et les vitesses codées en dur qui vivaient
+            // là ont cessé d'être justes le jour où le zéro des yeux est devenu la coque de niveau.
+            applicationEventPublisher.publishEvent(new PostureDeDepartEvent());
             MouvementRoueEvent mouvementRoueEvent = new MouvementRoueEvent();
             mouvementRoueEvent.setMouvementRoue(MouvementRoueEvent.MOUVEMENTS_ROUE.STOPPER);
             applicationEventPublisher.publishEvent(mouvementRoueEvent);
