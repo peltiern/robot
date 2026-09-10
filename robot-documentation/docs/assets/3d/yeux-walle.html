@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yeux Wall-E — banc d'animation</title>
+<style>
+  :root{
+    --bg:#101318; --panel:#181c23; --line:#272d37;
+    --ink:#e8eaed; --muted:#8b939e; --amber:#f5b324; --blue:#7fb2d9; --rouge:#e0796b; --radius:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Inter","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+    font-size:14px;line-height:1.45;overflow:hidden}
+  #scene{position:fixed;inset:0}
+  canvas{display:block;touch-action:none}
+  .titre{position:fixed;top:20px;left:24px;z-index:2;pointer-events:none;letter-spacing:-0.02em}
+  .titre h1{margin:0;font-size:19px;font-weight:600}
+  .titre p{margin:2px 0 0;font-size:12.5px;color:var(--muted);max-width:40ch}
+  .panneau{position:fixed;top:0;right:0;bottom:0;width:340px;z-index:3;background:var(--panel);
+    border-left:1px solid var(--line);padding:22px 22px 28px;overflow-y:auto}
+  .bloc{padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .bloc:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+  .bloc h2{margin:0 0 12px;font-size:13px;font-weight:600}
+  .expressions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  button{font:inherit;color:var(--ink);background:#20252e;border:1px solid var(--line);
+    border-radius:var(--radius);padding:8px 10px;cursor:pointer;text-align:left;
+    transition:background .12s ease,border-color .12s ease}
+  button:hover{background:#262c37}
+  button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  button.actif{border-color:var(--amber);background:#2a2617;color:#ffd873}
+  .curseur{margin-bottom:14px}
+  .curseur:last-child{margin-bottom:0}
+  .curseur .ligne{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .curseur label{color:var(--muted);font-size:12.5px}
+  .curseur output{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:12.5px;
+    color:var(--amber);font-variant-numeric:tabular-nums}
+  .curseur output .oeil{color:var(--blue)}
+  .curseur output.butee{color:var(--rouge)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;cursor:grab;margin:0}
+  input[type=range]:active{cursor:grabbing}
+  input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line)}
+  input[type=range]::-moz-range-track{height:2px;background:var(--line)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--amber);margin-top:-6px;border:0}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--amber);border:0}
+  input[type=range]:focus-visible{outline:2px solid var(--amber);outline-offset:4px}
+  .option{display:flex;align-items:center;gap:9px;margin-bottom:9px;color:var(--muted);font-size:12.5px;cursor:pointer}
+  .option:last-child{margin-bottom:0}
+  .option input{accent-color:var(--amber);width:15px;height:15px;margin:0;cursor:pointer}
+  .code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:11.5px;background:#12161c;
+    border:1px solid var(--line);border-radius:var(--radius);padding:10px 11px;color:var(--blue);
+    white-space:pre-wrap;word-break:break-word;margin-bottom:8px}
+  .note{color:var(--muted);font-size:11.5px;margin:8px 0 0}
+  .plein{width:100%;text-align:center}
+  .cotes{font-size:11.5px;color:var(--muted);line-height:1.7}
+  .cotes b{color:var(--ink);font-weight:600;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .aide{position:fixed;left:24px;bottom:18px;z-index:2;color:var(--muted);font-size:12px;pointer-events:none}
+  @media (max-width:820px){
+    .panneau{top:auto;left:0;width:auto;height:52vh;border-left:0;border-top:1px solid var(--line)}
+    .titre{left:16px;top:14px}
+    .aide{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div class="titre">
+  <h1>Yeux Wall-E</h1>
+  <p>Cotes relevées sur « Wall-E Eye.stl ». Les coques pivotent sur l'arbre central&nbsp;;
+     chaque servo les entraîne par une bielle, hors axe.</p>
+</div>
+
+<div class="panneau">
+  <div class="bloc">
+    <h2>Expressions</h2>
+    <div class="expressions" id="expressions"></div>
+  </div>
+  <div class="bloc">
+    <h2>Commande des servos</h2>
+    <div class="curseur">
+      <div class="ligne"><label for="servoG">Servo gauche</label><output id="servoG-val"></output></div>
+      <input type="range" id="servoG" min="-5.6" max="21.3" step="0.1" value="0">
+    </div>
+    <div class="curseur">
+      <div class="ligne"><label for="servoD">Servo droit</label><output id="servoD-val"></output></div>
+      <input type="range" id="servoD" min="-5.6" max="21.3" step="0.1" value="0">
+    </div>
+    <label class="option"><input type="checkbox" id="miroir"> Bouger les deux en miroir</label>
+    <p class="note">En bleu, l'angle réellement pris par la coque. Le rapport n'est pas
+      constant&nbsp;: <b>1,25°</b> d'œil par degré de servo au neutre, <b>3,7°</b> à la butée basse.</p>
+  </div>
+  <div class="bloc">
+    <h2>Tête</h2>
+    <div class="curseur">
+      <div class="ligne"><label for="lacet">Lacet</label><output id="lacet-val">0°</output></div>
+      <input type="range" id="lacet" min="-45" max="45" step="0.5" value="0">
+    </div>
+    <div class="curseur">
+      <div class="ligne"><label for="tangage">Tangage</label><output id="tangage-val">0°</output></div>
+      <input type="range" id="tangage" min="-25" max="25" step="0.5" value="0">
+    </div>
+  </div>
+  <div class="bloc">
+    <h2>Affichage</h2>
+    <label class="option"><input type="checkbox" id="tringlerie" checked> Montrer la tringlerie</label>
+    <label class="option"><input type="checkbox" id="axe"> Montrer l'axe de rotation</label>
+    <label class="option"><input type="checkbox" id="coupe"> Masquer les coques</label>
+    <label class="option"><input type="checkbox" id="vie"> Micro-mouvements continus</label>
+  </div>
+  <div class="bloc">
+    <h2>Pose actuelle</h2>
+    <div class="code" id="code"></div>
+    <button class="plein" id="copier">Copier la pose</button>
+  </div>
+  <div class="bloc">
+    <h2>Cotes relevées</h2>
+    <div class="cotes">
+      Coque <b>149,8 × 113,6 × 125,3</b> mm<br>
+      Jeu entre les deux coques <b>9,52</b> mm<br>
+      Axe de rotation à <b>4,76</b> mm du bord interne, <b>43,5</b> mm sous le dessus<br>
+      Lentille Ø<b>83,18</b> à <b>65,6</b> mm de l'axe<br>
+      Ouverture de la coque Ø<b>93,96</b><br>
+      Axe du servo à <b>87,62</b> mm de l'axe de rotation<br>
+      Bras de servo <b>32,00</b> · bielle <b>84,73</b> · bâti <b>29,07</b> mm
+    </div>
+  </div>
+</div>
+
+<p class="aide">Glisser pour tourner la vue · molette pour zoomer · double-clic pour recadrer</p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* =================================================================
+   Toutes les cotes viennent de « Wall-E Eye.stl » (assemblage réel,
+   moteurs compris), redressé de 0,2666° autour de l'axe de profondeur
+   puis moyenné entre les deux yeux — le STL a été exporté avec les
+   deux coques à 0,78° l'une de l'autre.
+
+   Repère d'un œil : origine sur L'AXE DE ROTATION (l'arbre Ø8 central),
+   x vers l'extérieur, y vers le haut, z vers l'arrière ; l'avant de la
+   coque est à z = -125,30.
+   ================================================================= */
+
+/* contour extérieur de la coque, relevé au 1/10 de mm (86 points) */
+const CONTOUR = [
+  152.3,-6.0, 151.7,-3.8, 149.9,0.6, 148.7,4.2, 142.7,16.8, 138.1,24.7,
+  133.5,30.1, 132.3,30.9, 131.0,32.4, 124.7,36.9, 119.7,39.3, 117.7,40.0,
+  117.3,40.5, 109.5,42.6, 105.5,43.2, 102.1,43.2, 101.6,43.5, 10.7,43.5,
+  10.0,43.2, 4.8,39.8, 4.8,9.1, 6.6,0.7, 9.3,-7.0, 9.2,-7.5,
+  12.6,-15.4, 17.0,-23.7, 19.6,-27.5, 20.4,-29.1, 22.6,-31.9, 23.0,-32.7,
+  23.4,-33.0, 24.0,-34.1, 24.4,-34.4, 26.0,-36.5, 27.0,-37.3, 27.4,-38.1,
+  31.8,-42.3, 33.8,-44.7, 34.6,-45.1, 34.8,-45.5, 40.0,-49.6, 40.2,-50.1,
+  48.6,-55.7, 48.9,-56.1, 55.3,-59.4, 55.7,-59.9, 60.7,-62.0, 62.2,-62.8,
+  62.7,-62.9, 63.6,-63.5, 68.7,-65.3, 69.3,-65.2, 73.7,-66.9, 75.3,-67.1,
+  80.0,-68.3, 85.6,-69.3, 94.2,-70.1, 107.3,-70.1, 109.4,-69.7, 111.1,-69.7,
+  114.8,-68.9, 123.0,-66.5, 124.5,-65.9, 125.7,-65.0, 128.8,-63.9, 130.7,-62.6,
+  132.9,-61.5, 133.4,-60.9, 136.1,-59.1, 139.2,-56.6, 144.9,-50.9, 146.1,-48.8,
+  147.5,-46.9, 149.7,-42.6, 151.1,-38.8, 151.5,-38.1, 151.9,-36.6, 152.3,-35.9,
+  153.5,-31.2, 154.3,-25.7, 154.6,-19.3, 154.3,-18.5, 154.4,-15.4, 153.9,-13.8,
+  153.5,-10.6, 152.5,-6.8
+];
+
+const COQUE = { AVANT:-125.30, ARRIERE:0.0 };   // profondeur de la coque
+const LENT  = { X:65.645, Y:-6.033,            // centre de la lentille
+                OUVERTURE:46.98,               // Ø93,96 percé dans la coque
+                FOND:-111.71 };                // plan de la bague Ø83,18
+
+/* méridien du bloc optique : [rayon, z] */
+const CERCLAGE = [
+  [46.98,-111.71],[41.589,-111.71],[41.589,-105.00],[34.949,-105.00],[34.949,-111.71],
+  [35.00,-111.71],[34.90,-100.02],[34.20,-97.95],[33.80,-96.58],[33.40,-95.54],
+  [33.00,-94.67],[32.60,-93.88],[32.20,-93.20],[31.80,-92.59],[31.00,-91.50],
+  [30.20,-90.54],[29.40,-89.74],[28.60,-89.03],[27.80,-88.38],[27.00,-87.84],
+  [26.20,-87.32],[25.40,-86.91],[24.60,-86.50],[23.80,-86.19],[23.00,-85.88],
+  [22.20,-85.66],[21.40,-85.44],[20.60,-85.29],[19.80,-85.16],[19.00,-85.07],
+  [18.20,-85.03]
+];
+const PUPILLE = [
+  [17.774,-85.03],[17.774,-89.00],[11.658,-89.00],[11.658,-93.00],
+  [7.489,-93.00],[7.489,-93.05],[6.20,-93.12],[3.80,-93.30],[0,-93.40]
+];
+
+/* ---------- la tringlerie, relevée elle aussi ----------------------
+   Quadrilatère O–S–P–D, tout dans le plan de l'œil :
+     O (0,0)              axe de rotation de la coque, sur le bâti
+     D (13,00 ; -26,00)   ancrage de la bielle, sur la platine FIXE
+     S (86,13 ; -16,08)   axe de sortie du servo, PORTÉ PAR LA COQUE
+     P                    rotule bras/bielle, à 32 mm de S
+   Le servo est donc désaxé de 87,62 mm : il ne fait pas tourner l'œil
+   de son propre angle, il pousse une bielle. -------------------- */
+const MECA = {
+  S:[86.132,-16.082], D:[13.000,-26.001],
+  BRAS:32.000, BIELLE:84.728,
+  PSI0:-73.6520,                  // orientation du bras au neutre, repère œil
+  Z_SERVO:66.4, Z_BIELLE:74.5, Z_ANCRAGE:74.5,
+  SERVO_MIN:-5.6, SERVO_MAX:21.3, // butées : les deux coques se touchent
+  OEIL_MAX:6.86, OEIL_MIN:-35.01
+};
+
+const RAD = Math.PI/180, DEG = 180/Math.PI;
+
+/* angle de la coque pour une commande servo (fermeture exacte du quadrilatère) */
+const D_R = Math.hypot(MECA.D[0], MECA.D[1]);
+const D_A = Math.atan2(MECA.D[1], MECA.D[0]);
+function oeilDepuisServo(dpsi){
+  const a = (MECA.PSI0 + dpsi)*RAD;
+  const qx = MECA.S[0] + MECA.BRAS*Math.cos(a);
+  const qy = MECA.S[1] + MECA.BRAS*Math.sin(a);
+  const q = Math.hypot(qx, qy), b = Math.atan2(qy, qx);
+  let k = (q*q + D_R*D_R - MECA.BIELLE*MECA.BIELLE)/(2*q*D_R);
+  k = Math.max(-1, Math.min(1, k));
+  return (D_A - b + Math.acos(k))*DEG;
+}
+/* réciproque, par dichotomie : la loi est strictement décroissante */
+function servoDepuisOeil(phi){
+  let lo = MECA.SERVO_MIN, hi = MECA.SERVO_MAX;
+  if (phi >= oeilDepuisServo(lo)) return lo;
+  if (phi <= oeilDepuisServo(hi)) return hi;
+  for (let i = 0; i < 60; i++){
+    const m = (lo+hi)/2;
+    if (oeilDepuisServo(m) > phi) lo = m; else hi = m;
+  }
+  return (lo+hi)/2;
+}
+
+/* ---------- scène ---------- */
+const conteneur = document.getElementById('scene');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x101318);
+const camera = new THREE.PerspectiveCamera(38, 1, 1, 4000);
+const cible = new THREE.Vector3(0, -12, -55);
+let orbite = { rayon: 560, theta: 0, phi: Math.PI/2 - 0.12 };
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.06;
+conteneur.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xc6ddf0, 0x1b1f26, 0.55));
+const cle = new THREE.DirectionalLight(0xffffff, 0.95); cle.position.set(200, 280, -360); scene.add(cle);
+const remp = new THREE.DirectionalLight(0xa8c4de, 0.32); remp.position.set(-340, -90, -240); scene.add(remp);
+const cont = new THREE.DirectionalLight(0x9fc8ec, 0.45); cont.position.set(40, 150, 380); scene.add(cont);
+const lueur = new THREE.PointLight(0xffffff, 0.5, 1500); lueur.position.set(70, 100, -320); scene.add(lueur);
+
+const M = {
+  coque:    new THREE.MeshStandardMaterial({ color:0x8b8674, roughness:0.55, metalness:0.12 }),
+  cerclage: new THREE.MeshStandardMaterial({ color:0x9c957e, roughness:0.4, metalness:0.35, side:THREE.DoubleSide }),
+  lentille: new THREE.MeshStandardMaterial({ color:0x2a2c30, roughness:0.2, metalness:0.35, side:THREE.DoubleSide }),
+  pupille:  new THREE.MeshStandardMaterial({ color:0x1f52a8, roughness:0.16, metalness:0.5, side:THREE.DoubleSide }),
+  bride:    new THREE.MeshStandardMaterial({ color:0x8db6d2, roughness:0.5, metalness:0.15 }),
+  acier:    new THREE.MeshStandardMaterial({ color:0xb4bac2, roughness:0.3, metalness:0.85 }),
+  servo:    new THREE.MeshStandardMaterial({ color:0x2f333a, roughness:0.6, metalness:0.2 }),
+  bras:     new THREE.MeshStandardMaterial({ color:0xf5b324, roughness:0.35, metalness:0.4 }),
+  bielle:   new THREE.MeshStandardMaterial({ color:0xd8dde3, roughness:0.35, metalness:0.6 })
+};
+
+/* ---------- outils ---------- */
+function contourShape(s){
+  const f = new THREE.Shape();
+  for (let i = 0; i < CONTOUR.length; i += 2){
+    const x = s*CONTOUR[i], y = CONTOUR[i+1];
+    if (i === 0) f.moveTo(x, y); else f.lineTo(x, y);
+  }
+  f.closePath();
+  return f;
+}
+function hublot(r, s){
+  const p = new THREE.Path();
+  p.absarc(s*LENT.X, LENT.Y, r, 0, Math.PI*2, s < 0);
+  return p;
+}
+function revolution(profil, x, y, mat){
+  const g = new THREE.LatheGeometry(profil.map(p => new THREE.Vector2(p[0], -p[1])), 96);
+  g.rotateX(-Math.PI/2);          // l'axe du tour devient l'axe de profondeur
+  const m = new THREE.Mesh(g, mat);
+  m.position.set(x, y, 0);
+  return m;
+}
+function barre(mat, epaisseur){
+  const g = new THREE.CylinderGeometry(epaisseur, epaisseur, 1, 16);
+  g.translate(0, 0.5, 0);         // origine à une extrémité
+  return new THREE.Mesh(g, mat);
+}
+function tendre(mesh, ax, ay, az, bx, by, bz){
+  const a = new THREE.Vector3(ax, ay, az), b = new THREE.Vector3(bx, by, bz);
+  const v = b.clone().sub(a);
+  mesh.position.copy(a);
+  mesh.scale.set(1, v.length(), 1);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), v.clone().normalize());
+}
+
+/* ---------- une coque ---------- */
+function construireCoque(s){
+  const g = new THREE.Group();
+  const lx = s*LENT.X;
+
+  const forme = contourShape(s);
+  forme.holes.push(hublot(LENT.OUVERTURE, s));
+  const mCoque = new THREE.Mesh(new THREE.ExtrudeGeometry(forme, {
+    depth: COQUE.ARRIERE - COQUE.AVANT - 2, bevelEnabled:true,
+    bevelThickness:1, bevelSize:1.2, bevelSegments:2
+  }), M.coque);
+  mCoque.position.z = COQUE.AVANT + 1;
+  g.add(mCoque);
+
+  g.add(revolution(CERCLAGE, lx, LENT.Y, M.cerclage));
+  g.add(revolution(PUPILLE,  lx, LENT.Y, M.pupille));
+
+  // le servo est vissé dans la coque : il tourne avec elle
+  const sx = s*MECA.S[0], sy = MECA.S[1];
+  const corps = new THREE.Mesh(new THREE.BoxGeometry(54.5, 20.6, 39.9), M.servo);
+  corps.position.set(sx - s*9.74, sy + 0.53, MECA.Z_SERVO - 21.95);
+  g.add(corps);
+  const sortie = new THREE.Mesh(new THREE.CylinderGeometry(6.4, 6.4, 8, 24), M.acier);
+  sortie.rotation.x = Math.PI/2; sortie.position.set(sx, sy, MECA.Z_SERVO - 4);
+  g.add(sortie);
+
+  // le bras de sortie, articulé sur l'axe du servo
+  const bras = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.BoxGeometry(MECA.BRAS + 12, 9, 4.5), M.bras);
+  b.position.x = s*(MECA.BRAS/2 - 3);
+  bras.add(b);
+  const moyeu = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, 6, 20), M.bras);
+  moyeu.rotation.x = Math.PI/2; bras.add(moyeu);
+  const rotule = new THREE.Mesh(new THREE.CylinderGeometry(4.7, 4.7, 8, 20), M.acier);
+  rotule.rotation.x = Math.PI/2; rotule.position.set(s*MECA.BRAS, 0, MECA.Z_BIELLE - MECA.Z_SERVO);
+  bras.add(rotule);
+  bras.position.set(sx, sy, MECA.Z_SERVO);
+  g.add(bras);
+  g.userData.bras = bras;
+
+  return g;
+}
+
+/* ---------- assemblage ---------- */
+const tete = new THREE.Group(); scene.add(tete);
+const pivotG = new THREE.Group(), pivotD = new THREE.Group();
+const coqueG = construireCoque(-1), coqueD = construireCoque(1);
+pivotG.add(coqueG); pivotD.add(coqueD);
+tete.add(pivotG); tete.add(pivotD);
+
+/* la platine fixe : elle porte l'arbre central et les deux ancrages de bielle */
+const bride = new THREE.Group();
+const plaque = new THREE.Mesh(new THREE.BoxGeometry(44, 53, 60), M.bride);
+plaque.position.set(0, -15.5, 73); bride.add(plaque);
+const moyeuFixe = new THREE.Mesh(new THREE.CylinderGeometry(16, 16, 60, 40), M.bride);
+moyeuFixe.rotation.x = Math.PI/2; moyeuFixe.position.set(0, 0, 73); bride.add(moyeuFixe);
+const arbre = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 100, 28), M.acier);
+arbre.rotation.x = Math.PI/2; arbre.position.set(0, 0, 92); bride.add(arbre);
+[-1, 1].forEach(s => {
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 40, 16), M.acier);
+  p.rotation.x = Math.PI/2;
+  p.position.set(s*MECA.D[0], MECA.D[1], MECA.Z_ANCRAGE - 15);
+  bride.add(p);
+});
+tete.add(bride);
+
+/* les deux bielles : elles relient un point de la coque à un point du bâti,
+   c'est là que se joue toute la non-linéarité */
+const bielles = [-1, 1].map(s => {
+  const m = barre(M.bielle, 3.2);
+  tete.add(m);
+  return m;
+});
+
+const repere = new THREE.Group();
+const trait = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 460, 8),
+  new THREE.MeshBasicMaterial({ color:0xf5b324 }));
+trait.rotation.x = Math.PI/2; repere.add(trait);
+[-190, 200].forEach(z => {
+  const b = new THREE.Mesh(new THREE.SphereGeometry(3.4, 16, 12), new THREE.MeshBasicMaterial({ color:0xf5b324 }));
+  b.position.z = z; repere.add(b);
+});
+repere.visible = false; tete.add(repere);
+
+/* ---------- pose ---------- */
+const consigne = { g:0, d:0, lacet:0, tangage:0 };
+const actuel   = { g:0, d:0, lacet:0, tangage:0 };
+
+/* les expressions sont écrites en angle de COQUE, converti en commande servo */
+const EXPRESSIONS = {
+  "Neutre":   { g:0,    d:0,    lacet:0,  tangage:0 },
+  "Curieux":  { g:4.5,  d:-9,   lacet:7,  tangage:4 },
+  "Content":  { g:-6,   d:-6,   lacet:0,  tangage:6 },
+  "Triste":   { g:-22,  d:-22,  lacet:0,  tangage:-9 },
+  "Fâché":    { g:6.8,  d:6.8,  lacet:0,  tangage:-6 },
+  "Perplexe": { g:-16,  d:5,    lacet:-6, tangage:2 },
+  "Surpris":  { g:1,    d:1,    lacet:0,  tangage:11 },
+  "Endormi":  { g:-30,  d:-30,  lacet:0,  tangage:-14 }
+};
+
+const sG=document.getElementById('servoG'), sD=document.getElementById('servoD');
+const sL=document.getElementById('lacet'),  sT=document.getElementById('tangage');
+const oG=document.getElementById('servoG-val'), oD=document.getElementById('servoD-val');
+const oL=document.getElementById('lacet-val'),  oT=document.getElementById('tangage-val');
+const miroir=document.getElementById('miroir'), codeBloc=document.getElementById('code');
+const grille=document.getElementById('expressions');
+
+Object.keys(EXPRESSIONS).forEach(nom => {
+  const b = document.createElement('button');
+  b.textContent = nom;
+  b.addEventListener('click', () => {
+    const p = EXPRESSIONS[nom];
+    appliquer(servoDepuisOeil(p.g), servoDepuisOeil(p.d), p.lacet, p.tangage);
+    [...grille.children].forEach(x => x.classList.remove('actif'));
+    b.classList.add('actif');
+  });
+  grille.appendChild(b);
+});
+grille.firstChild.classList.add('actif');
+
+function appliquer(g,d,l,t){
+  consigne.g=g; consigne.d=d; consigne.lacet=l; consigne.tangage=t;
+  sG.value=g; sD.value=d; sL.value=l; sT.value=t;
+  rafraichir();
+}
+function affiche(sortie, servo){
+  const zero = v => Math.abs(v) < 0.05 ? 0 : v;      // évite les « -0,0° »
+  const oeil = zero(oeilDepuisServo(servo));
+  sortie.innerHTML = zero(servo).toFixed(1)+'° <span class="oeil">→ '+oeil.toFixed(1)+'° œil</span>';
+  const proche = servo < MECA.SERVO_MIN + 0.3 || servo > MECA.SERVO_MAX - 0.3;
+  sortie.classList.toggle('butee', proche);
+}
+function rafraichir(){
+  affiche(oG, consigne.g); affiche(oD, consigne.d);
+  oL.textContent = consigne.lacet.toFixed(1)+'°';
+  oT.textContent = consigne.tangage.toFixed(1)+'°';
+  const z = v => (Math.abs(v) < 0.05 ? 0 : v).toFixed(1);
+  codeBloc.textContent =
+    'servo({ gauche: '+z(consigne.g)+', droite: '+z(consigne.d)+
+    ', lacet: '+z(consigne.lacet)+', tangage: '+z(consigne.tangage)+' })\n'+
+    '// coques : '+z(oeilDepuisServo(consigne.g))+'° / '+z(oeilDepuisServo(consigne.d))+'°';
+}
+function libre(){ [...grille.children].forEach(x => x.classList.remove('actif')); }
+
+sG.addEventListener('input', () => {
+  consigne.g = parseFloat(sG.value);
+  if (miroir.checked){ consigne.d = consigne.g; sD.value = sG.value; }
+  libre(); rafraichir();
+});
+sD.addEventListener('input', () => {
+  consigne.d = parseFloat(sD.value);
+  if (miroir.checked){ consigne.g = consigne.d; sG.value = sD.value; }
+  libre(); rafraichir();
+});
+sL.addEventListener('input', () => { consigne.lacet = parseFloat(sL.value); libre(); rafraichir(); });
+sT.addEventListener('input', () => { consigne.tangage = parseFloat(sT.value); libre(); rafraichir(); });
+
+document.getElementById('axe').addEventListener('change', e => repere.visible = e.target.checked);
+const caseTringlerie = document.getElementById('tringlerie');
+const caseCoupe = document.getElementById('coupe');
+caseTringlerie.addEventListener('change', majVisibilite);
+caseCoupe.addEventListener('change', majVisibilite);
+function majVisibilite(){
+  const t = caseTringlerie.checked, c = !caseCoupe.checked;
+  bielles.forEach(b => b.visible = t);
+  bride.visible = t;
+  [coqueG, coqueD].forEach(g => {
+    g.children.forEach(o => {
+      if (o === g.userData.bras) o.visible = t;
+      else if (o.material === M.servo || o.material === M.acier) o.visible = t;
+      else o.visible = c;
+    });
+  });
+}
+
+const caseVie = document.getElementById('vie');
+caseVie.checked = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+document.getElementById('copier').addEventListener('click', e => {
+  const txt = codeBloc.textContent;
+  const fini = () => { e.target.textContent='Copié'; setTimeout(()=>e.target.textContent='Copier la pose',1400); };
+  function secours(){
+    const z=document.createElement('textarea'); z.value=txt; document.body.appendChild(z); z.select();
+    try{ document.execCommand('copy'); fini(); }catch(err){ e.target.textContent='Copie impossible'; }
+    document.body.removeChild(z);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(fini, secours);
+  else secours();
+});
+
+/* ---------- navigation ---------- */
+let glisse=false, dernier={x:0,y:0}, pincement=null;
+const dom = renderer.domElement;
+function majCamera(){
+  const p = Math.max(0.25, Math.min(Math.PI-0.25, orbite.phi));
+  camera.position.set(
+    cible.x + orbite.rayon*Math.sin(p)*Math.sin(orbite.theta),
+    cible.y + orbite.rayon*Math.cos(p),
+    cible.z - orbite.rayon*Math.sin(p)*Math.cos(orbite.theta));
+  camera.lookAt(cible);
+}
+dom.addEventListener('pointerdown', e => { glisse=true; dernier={x:e.clientX,y:e.clientY}; dom.setPointerCapture(e.pointerId); });
+dom.addEventListener('pointermove', e => {
+  if(!glisse) return;
+  orbite.theta += (e.clientX-dernier.x)*0.006;
+  orbite.phi   -= (e.clientY-dernier.y)*0.006;
+  dernier={x:e.clientX,y:e.clientY}; majCamera();
+});
+['pointerup','pointercancel','pointerleave'].forEach(t => dom.addEventListener(t, () => glisse=false));
+dom.addEventListener('wheel', e => {
+  e.preventDefault();
+  orbite.rayon = Math.max(180, Math.min(1600, orbite.rayon*(1+Math.sign(e.deltaY)*0.09)));
+  majCamera();
+}, {passive:false});
+dom.addEventListener('dblclick', () => { orbite={rayon:560,theta:0,phi:Math.PI/2-0.12}; majCamera(); });
+dom.addEventListener('touchmove', e => {
+  if(e.touches.length!==2) return;
+  e.preventDefault();
+  const d = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+  if(pincement) orbite.rayon = Math.max(180, Math.min(1600, orbite.rayon*pincement/d));
+  pincement = d; majCamera();
+}, {passive:false});
+dom.addEventListener('touchend', () => pincement=null);
+
+function dimensionner(){
+  const l=window.innerWidth, h=window.innerHeight;
+  camera.aspect=l/h; camera.updateProjectionMatrix(); renderer.setSize(l,h);
+  const marge = l > 820 ? 340 : 0;
+  cible.x = marge ? -marge*0.30 : 0;
+  cible.y = marge ? -12 : -80;
+  orbite.rayon = l > 820 ? 560 : 680;
+  majCamera();
+}
+window.addEventListener('resize', dimensionner);
+
+/* ---------- boucle ---------- */
+const horloge = new THREE.Clock();
+const tmp = new THREE.Vector3();
+
+/* l'angle de la coque sort du quadrilatère ; le bras, lui, obéit au servo */
+function orienter(s, pivot, coque, servo){
+  pivot.rotation.z = s*oeilDepuisServo(servo)*RAD;
+  coque.userData.bras.rotation.z = s*((MECA.PSI0 + servo)*RAD);
+}
+/* la bielle ne peut être tracée qu'une fois les matrices à jour :
+   elle joint un point de la coque (mobile) à un point du bâti (fixe) */
+function tirerBielle(s, coque, bielle){
+  coque.userData.bras.children[2].getWorldPosition(tmp);
+  tete.worldToLocal(tmp);
+  tendre(bielle, tmp.x, tmp.y, tmp.z, s*MECA.D[0], MECA.D[1], MECA.Z_ANCRAGE);
+}
+
+(function boucle(){
+  requestAnimationFrame(boucle);
+  const t = horloge.getElapsedTime(), k = 0.13;
+  actuel.g += (consigne.g-actuel.g)*k;
+  actuel.d += (consigne.d-actuel.d)*k;
+  actuel.lacet += (consigne.lacet-actuel.lacet)*k;
+  actuel.tangage += (consigne.tangage-actuel.tangage)*k;
+  let vg=0, vd=0, vl=0, vt=0;
+  if (caseVie.checked){
+    vg = Math.sin(t*0.9)*0.8 + Math.sin(t*2.3)*0.25;
+    vd = Math.sin(t*0.9+0.6)*0.8 + Math.sin(t*2.1+1.1)*0.25;
+    vl = Math.sin(t*0.42)*2.4;
+    vt = Math.sin(t*0.55+1.4)*1.4;
+  }
+  const bg = Math.max(MECA.SERVO_MIN, Math.min(MECA.SERVO_MAX, actuel.g+vg));
+  const bd = Math.max(MECA.SERVO_MIN, Math.min(MECA.SERVO_MAX, actuel.d+vd));
+  tete.rotation.y = -(actuel.lacet+vl)*RAD;
+  tete.rotation.x = (actuel.tangage+vt)*RAD;
+  orienter(-1, pivotG, coqueG, bg);
+  orienter( 1, pivotD, coqueD, bd);
+  tete.updateMatrixWorld(true);
+  tirerBielle(-1, coqueG, bielles[0]);
+  tirerBielle( 1, coqueD, bielles[1]);
+  renderer.render(scene, camera);
+})();
+
+majVisibilite();
+dimensionner();
+rafraichir();
+})();
+</script>
+</body>
+</html>
