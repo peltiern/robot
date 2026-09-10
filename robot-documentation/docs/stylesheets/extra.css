@@ -1,0 +1,13 @@
+/*
+ * Ajustements visuels uniquement : tout changement de thème passe par ce
+ * fichier et par la palette dans mkdocs.yml, jamais par les pages Markdown.
+ */
+
+:root {
+  --md-text-font: "Nunito";
+}
+
+.md-typeset h1,
+.md-typeset h2 {
+  font-weight: 700;
+}

@@ -1,0 +1,93 @@
+site_name: Documentation du robot
+site_url: https://doc.roboteek.fr/
+site_description: Le robot Wall-E de Roboteek, expliqué simplement.
+docs_dir: docs
+
+theme:
+  name: material
+  language: fr
+  logo: assets/images/robot.png
+  favicon: assets/images/robot.png
+  palette:
+    # Couleurs et police réglées ici, jamais dans les pages : changer de thème
+    # ne doit jamais obliger à retoucher le contenu.
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: orange
+      toggle:
+        icon: material/weather-night
+        name: Passer en mode sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: orange
+      toggle:
+        icon: material/weather-sunny
+        name: Passer en mode clair
+  font:
+    text: Nunito
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
+  - https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js
+
+plugins:
+  - search
+  - print-site:
+      add_to_navigation: true
+      print_page_title: 'Version imprimable / PDF'
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - footnotes
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+
+nav:
+  - Présentation: index.md
+  - Matériel: materiel/index.md
+  - Architecture logicielle: architecture/index.md
+  - Fonctionnalités: fonctionnalites/index.md
+  - Application HUD: hud/index.md
+  - API:
+      - Vue d'ensemble: api/index.md
+  - Annexes techniques:
+      - annexes/index.md
+      - Installation: annexes/installation.md
+      - Docker: annexes/docker.md
+      - Conception: annexes/conception.md
+      - Remerciements: annexes/remerciements.md
