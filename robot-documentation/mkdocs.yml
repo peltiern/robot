@@ -49,6 +49,7 @@ extra_javascript:
 
 plugins:
   - search
+  - glightbox
   - print-site:
       add_to_navigation: true
       print_page_title: 'Version imprimable / PDF'
