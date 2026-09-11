@@ -129,6 +129,33 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
     private ObjectDetectionResponse objectDetectionResponse;
 
     /**
+     * Où passe le temps d'un tour de boucle, résumé en DEBUG toutes les
+     * {@link #PERIODE_BILAN_CADENCE_MS} ms.
+     * <p>
+     * <b>Posé le 2026-09-11 parce que personne ne savait à quelle cadence tourne la vision.</b> Le
+     * « 8 images par seconde » des commentaires n'est que le débit de la vidéo envoyée au HUD ; la
+     * boucle, elle, va aussi vite que son étape la plus lente. Et le regard oscillait parce qu'une
+     * image sur deux lui arrivait plus vieille que sa correction précédente — sans que rien ne dise
+     * de combien.
+     * <p>
+     * La lecture webcam est le chiffre qui tranche. Une lecture qui <b>attend</b> (une trentaine de
+     * ms à 30 images/s) rend une image fraîche. Une lecture <b>instantanée</b> rend une image déjà
+     * en file : la boucle est plus lente que la caméra, et l'image a autant de tours de retard qu'il
+     * y en a dans le tampon.
+     * <p>
+     * Ce qu'elle a répondu : 25 tours par seconde, au rythme de la caméra, et une image qui a 100 à
+     * 250 ms quand le regard la lit. La vision n'était pas le goulot, c'était la temporisation du
+     * regard, plus courte que le trajet de la tête. Gardée en DEBUG pour le jour où la détection
+     * d'objets sera branchée : c'est elle qui remettra un appel coûteux dans chaque tour.
+     */
+    private static final long PERIODE_BILAN_CADENCE_MS = 10_000;
+    private final Cumul tourDeBoucle = new Cumul();
+    private final Cumul lectureWebcam = new Cumul();
+    private final Cumul visages = new Cumul();
+    private final Cumul detectionObjets = new Cumul();
+    private long debutBilanCadenceMs = System.currentTimeMillis();
+
+    /**
      * Ce que l'enrôlement en cours a vu passer, ou {@code null} hors enrôlement.
      * <p>
      * Volatile, et remplacé plutôt que remis à zéro : il est créé et relu depuis le thread de
@@ -245,19 +272,39 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
             return;
         }
         while (!stopperThread && capture.isOpened()) {
+            long debutTour = System.nanoTime();
             if (!capture.read(image)) {
                 break;
             }
+            lectureWebcam.ajouter(System.nanoTime() - debutTour);
             traiterImageEnCours();
+            tourDeBoucle.ajouter(System.nanoTime() - debutTour);
             // Signe de vie : une image a été lue et traitée. Une webcam qui se tait fige la boucle
             // sur read(), sans que rien d'autre ne le signale.
             battement();
+            dresserLeBilanDeCadence();
         }
     }
 
     @Override
     public void arreter() {
         stopperThread = true;
+        // Le release appartient au thread de capture, et il faut donc l'attendre. Le faire ici
+        // pendant que read() est en cours fait lever OpenCV — « Unknown array type in function
+        // cvarrToMat » — à chaque arrêt du robot : le descripteur est refermé sous les pieds d'une
+        // lecture en vol. Sans conséquence, le robot s'arrêtait proprement juste après, mais une
+        // trace d'exception dans un journal d'arrêt propre finit par être ignorée le jour où elle
+        // dit quelque chose.
+        // L'attente coûte au plus un tour de boucle — pas une image à 8 par seconde : ce débit-là
+        // n'est que celui de la vidéo envoyée au HUD, et un tour comprend aussi la reconnaissance
+        // et l'appel au serveur de détection. La seconde de patience est un garde-fou pour la
+        // webcam qui se tait : au-delà on relâche quand même, parce qu'un arrêt bloqué serait pire
+        // qu'une exception.
+        try {
+            thread.join(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         if (capture != null) {
             capture.release();
         }
@@ -301,6 +348,9 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                     // Webcam trouvée
                     capture = candidate;
                     logger.info("Webcam trouvée : {}", lienSymbolique);
+                    // Ce que le pilote annonce, pas ce qu'il fait : -1 ou 0 veut dire « non exposé ».
+                    logger.info("Webcam : {} images/s annoncées, tampon de {} image(s)",
+                            capture.get(Videoio.CAP_PROP_FPS), capture.get(Videoio.CAP_PROP_BUFFERSIZE));
                     break;
                 }
                 candidate.release();
@@ -324,6 +374,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
         // FREQUENCE_RECONNAISSANCE_VISAGE), et désactivée si les modèles n'ont pas
         // pu être chargés au démarrage (dégradation gracieuse, comme pour la vidéo/objets).
         if (serviceDetectionVisage != null && indexFrame % FREQUENCE_RECONNAISSANCE_VISAGE == 0) {
+            long debutVisages = System.nanoTime();
             try {
                 List<VisageDetecte> visagesDetectes = serviceDetectionVisage.detecter(image);
                 // Le suivi est une mémoire court terme, pas une affaire de capteur : on lui passe
@@ -339,11 +390,14 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                     logger.warn("Reconnaissance de visages indisponible (le flux vidéo continue) : {}", e.getMessage());
                 }
             }
+            // Le regard compris : il écoute les visages perçus sur ce thread-ci, en synchrone.
+            visages.ajouter(System.nanoTime() - debutVisages);
         }
 
 ////        if (indexFrame % 3 == 0 || objectDetectionResponse == null) {
         // Détection optionnelle : elle ne doit jamais interrompre le flux vidéo
         // (serveur Python absent = null ; erreur = warn limité, puis on continue).
+        long debutDetection = System.nanoTime();
         try {
             objectDetectionResponse = visionArtificiellePythonGrpc.detectObjects(ba);
         } catch (RuntimeException e) {
@@ -352,6 +406,7 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
                 logger.warn("Détection indisponible (le flux vidéo continue) : {}", e.getMessage());
             }
         }
+        detectionObjets.ajouter(System.nanoTime() - debutDetection);
 ////        }
 //        if (objectDetectionResponse != null && !objectDetectionResponse.isObjectFound()) {
 //            objectDetectionResponse = null;
@@ -704,6 +759,49 @@ public class CapteurVisionWebSocketGrpc extends AbstractOrganeWithThread impleme
             return bilan + " ; au mieux : asymétrie %.2f (max %.2f), netteté %d (min %d)".formatted(
                     meilleureAsymetrie, reglages.asymetrieMaximaleDuNez(),
                     Math.round(meilleureNettete), Math.round(reglages.netteteMinimaleDuVisage()));
+        }
+    }
+
+    private void dresserLeBilanDeCadence() {
+        long maintenant = System.currentTimeMillis();
+        long ecoule = maintenant - debutBilanCadenceMs;
+        if (ecoule < PERIODE_BILAN_CADENCE_MS) {
+            return;
+        }
+        logger.debug("Vision : {} tours en {} s — tour {} ; lecture webcam {} ; visages {} ; détection d'objets {}",
+                tourDeBoucle.nombre, Math.round(ecoule / 1000d),
+                tourDeBoucle.resumer(), lectureWebcam.resumer(), visages.resumer(), detectionObjets.resumer());
+        tourDeBoucle.remettreAZero();
+        lectureWebcam.remettreAZero();
+        visages.remettreAZero();
+        detectionObjets.remettreAZero();
+        debutBilanCadenceMs = maintenant;
+    }
+
+    /** Durées cumulées d'une étape de la boucle, le temps d'un bilan. Seul le thread de capture y touche. */
+    private static final class Cumul {
+
+        private int nombre;
+        private long totalNanos;
+        private long maxNanos;
+
+        void ajouter(long dureeNanos) {
+            nombre++;
+            totalNanos += dureeNanos;
+            maxNanos = Math.max(maxNanos, dureeNanos);
+        }
+
+        String resumer() {
+            if (nombre == 0) {
+                return "jamais";
+            }
+            return String.format("moyenne %.0f ms, max %.0f ms (%d)", totalNanos / 1e6 / nombre, maxNanos / 1e6, nombre);
+        }
+
+        void remettreAZero() {
+            nombre = 0;
+            totalNanos = 0;
+            maxNanos = 0;
         }
     }
 }
