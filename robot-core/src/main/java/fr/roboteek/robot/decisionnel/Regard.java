@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.actionneurs.animation.AnimationEnCours;
 import fr.roboteek.robot.systemenerveux.event.MouvementCouEvent;
+import fr.roboteek.robot.systemenerveux.event.TelemetrieOrganeEvent;
 import fr.roboteek.robot.systemenerveux.event.OrigineMouvement;
 import fr.roboteek.robot.systemenerveux.event.VisagePercu;
 import fr.roboteek.robot.systemenerveux.event.VisagePercuEvent;
@@ -210,12 +211,47 @@ public class Regard {
         // le robot passerait son temps à faire l'aller-retour entre deux personnes — un défaut
         // qu'aucun réglage d'échelle ne corrigerait, et qui ressemble à s'y méprendre à un
         // dépassement.
-        logger.info("Regard : {} à {} / {} degrés (panoramique / inclinaison), commande de {} / {}, {} visage(s) dans le champ",
+        logger.info("Regard : {} à {} / {} degrés (panoramique / inclinaison), commande de {} / {}, "
+                        + "cou à {} / {}, {} visage(s) dans le champ",
                 cible.estConnu() ? cible.prenom() : "quelqu'un",
                 arrondi(ecartPanoramique), arrondi(ecartInclinaison),
                 arrondi(commandePanoramique), arrondi(commandeInclinaison),
+                arrondi(positionPanoramique), arrondi(positionInclinaison),
                 visagePercuEvent.getVisages().size());
         tournerLaTete(commandePanoramique, commandeInclinaison, reglages);
+    }
+
+    /**
+     * Où le cou se trouvait quand la correction est partie, en degrés de tête.
+     * <p>
+     * <b>Cette ligne existe parce qu'elle a manqué.</b> Le journal disait l'écart vu et la consigne
+     * envoyée, jamais la position atteinte — impossible d'y distinguer une tête qui n'a pas bougé
+     * d'une tête qui a bougé pendant que la personne se déplaçait. Le 2026-09-08, un écart qui
+     * grandit après une correction de 11° n'a pas pu être expliqué faute de ce chiffre, et la même
+     * lacune avait déjà fait tirer un rapport de transmission faux d'un journal de suivi de visage
+     * en août.
+     * <p>
+     * Lue sur le bus et non demandée à {@code Cou} : le regard décide, il n'interroge pas les
+     * organes. {@code NaN} tant qu'aucune télémétrie n'est arrivée, ce que le journal montre tel
+     * quel plutôt que de faire croire à un zéro.
+     */
+    private volatile double positionPanoramique = Double.NaN;
+
+    private volatile double positionInclinaison = Double.NaN;
+
+    @EventListener
+    public void handleTelemetrieOrganeEvent(TelemetrieOrganeEvent telemetrieOrganeEvent) {
+        if (!"cou".equals(telemetrieOrganeEvent.getOrganeId())) {
+            return;
+        }
+        Double pan = telemetrieOrganeEvent.getValeurs().get("pan");
+        Double tilt = telemetrieOrganeEvent.getValeurs().get("tilt");
+        if (pan != null) {
+            positionPanoramique = pan;
+        }
+        if (tilt != null) {
+            positionInclinaison = tilt;
+        }
     }
 
     /**
