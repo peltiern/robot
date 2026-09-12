@@ -46,6 +46,7 @@ export type NomIcone =
   | 'disquette'
   | 'corbeille'
   | 'sablier'
+  | 'aimant'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -248,6 +249,15 @@ const TRACES: Record<NomIcone, ReactNode> = {
       <path d="M4 6.6h16M9.4 6.6V4.4h5.2v2.2" />
       <path d="m6 6.6 1 12.6a1.6 1.6 0 0 0 1.6 1.4h6.8a1.6 1.6 0 0 0 1.6-1.4l1-12.6" />
       <path d="M10 10.6v6M14 10.6v6" />
+    </>
+  ),
+  // Aimant en fer à cheval couché, pôles vers la droite, et les ondes qui sortent de l'entrefer :
+  // ce qui attire, plus que l'objet. Le magnétisme des images-clés dans l'éditeur.
+  aimant: (
+    <>
+      <path d="M15 5.5H9a6.5 6.5 0 0 0 0 13h6v-4H9a2.5 2.5 0 0 1 0-5h6z" />
+      <path d="M11.5 5.5v4M11.5 14.5v4" />
+      <path d="M17.7 9.8a3.5 3.5 0 0 1 0 4.4M20 7.8a6.5 6.5 0 0 1 0 8.4" />
     </>
   ),
   sablier: (

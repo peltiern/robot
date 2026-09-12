@@ -49,11 +49,12 @@ export function versEtapesEditeur(animation: Animation) {
     .map(([t, vals]) => ({ t, vals }))
 }
 
-/** Formate un temps en ms → "s:cs" (ex: 1500 → "1:50") */
+/**
+ * Temps du curseur en secondes : « 1,50 s », et non « 1:50 », qui se lisait comme une minute cinquante.
+ * Toujours deux décimales, pour que le compteur ne change pas de largeur pendant la lecture.
+ */
 export function fmtMs(ms: number): string {
-  const s = Math.floor(ms / 1000)
-  const cs = Math.floor((ms % 1000) / 10)
-  return `${s}:${String(cs).padStart(2, '0')}`
+  return (ms / 1000).toFixed(2).replace('.', ',') + ' s'
 }
 
 export function uid() { return Math.random().toString(36).slice(2, 9) }

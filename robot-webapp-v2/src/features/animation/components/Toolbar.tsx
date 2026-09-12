@@ -19,7 +19,7 @@ export function Toolbar({ onPlay, onPause, onStop, onSave, onChangerDestination,
   const {
     playing, looping, playhead, totalMs, animationName, surRobot, modifie,
     setPlaying, toggleLoop, setTotalMs, setAnimationName,
-    zoomerAutourDuCurseur, toutVoir, past, future, undo, redo,
+    zoomerAutourDuCurseur, toutVoir, aimant, basculerAimant, past, future, undo, redo,
   } = useAnimationStore()
 
   return (
@@ -83,6 +83,14 @@ export function Toolbar({ onPlay, onPause, onStop, onSave, onChangerDestination,
       <button className={styles.iconBtn} onClick={() => zoomerAutourDuCurseur(1 / 1.3)} title="Dézoomer (Ctrl+Molette)"><Icone nom="moins" taille={TAILLE} /></button>
       <button className={styles.iconBtn} onClick={() => zoomerAutourDuCurseur(1.3)} title="Zoomer autour du curseur (Ctrl+Molette)"><Icone nom="plus" taille={TAILLE} /></button>
       <button className={styles.iconBtn} onClick={toutVoir} title="Voir toute l'animation"><Icone nom="toutVoir" taille={TAILLE} /></button>
+
+      <div className={styles.sep} />
+
+      <button
+        className={`${styles.iconBtn} ${aimant ? styles.active : ''}`}
+        onClick={basculerAimant}
+        title="Aimant : colle aux instants des autres pistes, aux valeurs de la même piste, au zéro et aux graduations (Alt pour s'en passer le temps d'un geste)"
+      ><Icone nom="aimant" taille={TAILLE} /></button>
 
       <div className={styles.spacer} />
 

@@ -6,6 +6,7 @@ import styles from './Timeline.module.css'
 const TH = 88    // track height px
 const RH = 26    // ruler height px
 const KR = 7     // keyframe diamond half-size
+const PAD = 10   // marge haute et basse d'une piste, px
 
 // ── Helpers coordonnées ──────────────────────────────────────────────────────
 
@@ -16,18 +17,70 @@ function xToT(x: number, pxPerMs: number, scrollX: number) {
   return (x + scrollX) / pxPerMs
 }
 function vToY(v: number, tr: EditorTrack, ti: number) {
-  const PAD = 10, h = TH - 2 * PAD
+  const h = TH - 2 * PAD
   return ti * TH + PAD + (tr.max - v) / (tr.max - tr.min) * h
 }
 function yToV(y: number, tr: EditorTrack, ti: number) {
-  const PAD = 10, h = TH - 2 * PAD
+  const h = TH - 2 * PAD
   return tr.max - (y - ti * TH - PAD) / h * (tr.max - tr.min)
 }
 function tiAtY(y: number) { return Math.floor(y / TH) }
 
+/**
+ * Pas des graduations, en ms, selon le zoom. Partagé par la règle et par les repères verticaux des
+ * pistes : s'ils le calculaient chacun de leur côté, les lignes finiraient à côté des graduations.
+ */
+function pasDeLaRegle(pxPerMs: number) {
+  return pxPerMs < 0.05 ? 2000 : pxPerMs < 0.12 ? 1000 : pxPerMs < 0.3 ? 500 : 250
+}
+
+// ── Aimant ───────────────────────────────────────────────────────────────────
+
+/** En pixels et non en unités : la sensation est la même à tous les zooms, et le doigt s'y retrouve. */
+const SEUIL_AIMANT_PX = 8
+
+/** Où l'image-clé déplacée s'est collée ; null sur un axe resté libre. */
+interface Guides { t: number | null; v: number | null; ti: number }
+
+/**
+ * Colle l'image-clé en cours de déplacement aux repères proches.
+ *
+ * L'instant se colle à celui d'une image-clé d'une AUTRE piste — deux images-clés au même instant sur
+ * une même piste n'ont pas de sens — et, à défaut, à une graduation. La valeur se colle à celle d'une
+ * autre image-clé de SA piste — les autres pistes n'ont ni la même unité ni les mêmes butées — et, à
+ * défaut, au zéro, la posture de repos. Les images-clés passent avant : ce sont elles qu'on aligne.
+ */
+function aimanter(tracks: EditorTrack[], ti: number, kfId: string, t: number, v: number, pxPerMs: number) {
+  const piste = tracks[ti]
+  const seuilMs = SEUIL_AIMANT_PX / pxPerMs
+  const seuilDegres = SEUIL_AIMANT_PX * (piste.max - piste.min) / (TH - 2 * PAD)
+  const instants = tracks.flatMap((autre, i) => i === ti ? [] : autre.kfs.map(k => k.t))
+  const pas = pasDeLaRegle(pxPerMs)
+  const guideT = plusProche(t, instants, seuilMs) ?? plusProche(t, [Math.round(t / pas) * pas], seuilMs)
+  const valeurs = piste.kfs.filter(k => k.id !== kfId).map(k => k.v)
+  const zero = piste.min <= 0 && piste.max >= 0 ? [0] : []
+  const guideV = plusProche(v, valeurs, seuilDegres) ?? plusProche(v, zero, seuilDegres)
+  return { t: guideT ?? t, v: guideV ?? v, guideT, guideV }
+}
+
+function plusProche(valeur: number, cibles: number[], seuil: number): number | null {
+  let retenue: number | null = null
+  for (const cible of cibles) {
+    const ecart = Math.abs(cible - valeur)
+    if (ecart <= seuil && (retenue === null || ecart < Math.abs(retenue - valeur))) retenue = cible
+  }
+  return retenue
+}
+
 // Les butées du cou sortent d'une transmission (−39,8 = (75 − 67) × −4,97) et arrivent du robot avec
 // toutes leurs décimales : « 52.980199999999996° » dans l'étiquette d'une piste.
 function auDixieme(v: number) { return Math.round(v * 10) / 10 }
+
+// « 0,25 s » et non « 0:25 », qui se lisait comme vingt-cinq secondes. Pas plus de décimales que le
+// pas de la règle n'en demande : « 1 s », « 1,5 s », « 1,25 s ».
+function enSecondes(ms: number) {
+  return (ms / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' s'
+}
 
 // ── Rendu canvas ─────────────────────────────────────────────────────────────
 
@@ -38,8 +91,12 @@ function renderTimeline(
   playhead: number, totalMs: number,
   pxPerMs: number, scrollX: number,
   selectedKf: { trackId: string; kfId: string } | null,
+  guides: Guides | null,
+  couleurGuide: string,
 ) {
   ctx.clearRect(0, 0, W, H)
+  const pas = pasDeLaRegle(pxPerMs)
+  const tPremierRepere = Math.floor(xToT(0, pxPerMs, scrollX) / pas) * pas
 
   tracks.forEach((tr, ti) => {
     const y0 = ti * TH
@@ -51,6 +108,17 @@ function renderTimeline(
     // Fond alterné
     ctx.fillStyle = ti % 2 === 0 ? '#161b22' : '#0d1117'
     ctx.fillRect(0, y0, W, TH)
+
+    // Repères verticaux sous les graduations : sans eux, aligner une image-clé sur celle d'une autre
+    // piste se faisait à l'œil. Plus marqués aux secondes rondes, pour qu'on les compte sans la règle.
+    ctx.lineWidth = 1
+    for (let t = tPremierRepere; t <= totalMs; t += pas) {
+      const x = tToX(t, pxPerMs, scrollX)
+      if (x < 0 || x > W) continue
+      const xNet = Math.round(x) + 0.5   // sur un demi-pixel, un trait d'un pixel ne bave pas sur deux
+      ctx.strokeStyle = t % 1000 === 0 ? '#2c343e' : '#1f252d'
+      ctx.beginPath(); ctx.moveTo(xNet, y0); ctx.lineTo(xNet, y0 + TH); ctx.stroke()
+    }
 
     // Ligne zéro
     const zy = vToY(0, tr, ti)
@@ -102,6 +170,23 @@ function renderTimeline(
     ctx.stroke()
   })
 
+  // Guides de l'aimant, par-dessus les courbes : ils disent à quoi l'image-clé vient de se coller.
+  if (guides) {
+    ctx.save()
+    ctx.strokeStyle = couleurGuide
+    ctx.lineWidth = 1
+    ctx.setLineDash([5, 4])
+    if (guides.t !== null) {
+      const x = Math.round(tToX(guides.t, pxPerMs, scrollX)) + 0.5
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke()
+    }
+    if (guides.v !== null) {
+      const y = Math.round(vToY(guides.v, tracks[guides.ti], guides.ti)) + 0.5
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
+    }
+    ctx.restore()
+  }
+
   // Playhead
   const px = tToX(playhead, pxPerMs, scrollX)
   ctx.strokeStyle = '#fff'
@@ -124,7 +209,7 @@ function renderRuler(
   ctx.fillStyle = '#161b22'
   ctx.fillRect(0, 0, W, RH)
 
-  const step = pxPerMs < 0.05 ? 2000 : pxPerMs < 0.12 ? 1000 : pxPerMs < 0.3 ? 500 : 250
+  const step = pasDeLaRegle(pxPerMs)
   const tStart = Math.floor(xToT(0, pxPerMs, scrollX) / step) * step
 
   ctx.strokeStyle = '#30363d'
@@ -136,9 +221,7 @@ function renderRuler(
     const x = tToX(t, pxPerMs, scrollX)
     if (x < 0 || x > W) continue
     ctx.beginPath(); ctx.moveTo(x, RH - 6); ctx.lineTo(x, RH); ctx.stroke()
-    const s = Math.floor(t / 1000)
-    const cs = Math.floor((t % 1000) / 10)
-    ctx.fillText(`${s}:${String(cs).padStart(2, '0')}`, x + 3, RH - 8)
+    ctx.fillText(enSecondes(t), x + 3, RH - 8)
   }
 }
 
@@ -151,6 +234,7 @@ export function Timeline() {
   const wrapRef = useRef<HTMLDivElement>(null)
   const rulWrapRef = useRef<HTMLDivElement>(null)
   const barreRef = useRef<HTMLDivElement>(null)
+  const guidesRef = useRef<Guides | null>(null)
   const dpr = window.devicePixelRatio || 1
 
   // État drag local (ref pour ne pas trigger de re-render)
@@ -194,7 +278,9 @@ export function Timeline() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     rctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    renderTimeline(ctx, tl.clientWidth, tl.clientHeight, tracks, playhead, totalMs, pxPerMs, scrollX, selectedKf)
+    const couleurGuide = getComputedStyle(tl).getPropertyValue('--accent').trim() || '#f4a72c'
+    renderTimeline(ctx, tl.clientWidth, tl.clientHeight, tracks, playhead, totalMs, pxPerMs, scrollX, selectedKf,
+      guidesRef.current, couleurGuide)
     renderRuler(rctx, rul.clientWidth, totalMs, pxPerMs, scrollX)
   }
 
@@ -317,15 +403,33 @@ export function Timeline() {
 
     if (drag.current.type === 'kf') {
       const { trackId, kfId, startX, startY, origT, origV } = drag.current as any
-      const tr = tracks.find(t => t.id === trackId)!
-      const PAD = 10, h = TH - 2 * PAD
-      const newT = Math.max(0, Math.min(origT + (x - startX) / pxPerMs, totalMs))
-      const newV = Math.max(tr.min, Math.min(tr.max, origV - (y - startY) * (tr.max - tr.min) / h))
+      const ti = tracks.findIndex(t => t.id === trackId)
+      const tr = tracks[ti]
+      const h = TH - 2 * PAD
+      let newT = Math.max(0, Math.min(origT + (x - startX) / pxPerMs, totalMs))
+      let newV = Math.max(tr.min, Math.min(tr.max, origV - (y - startY) * (tr.max - tr.min) / h))
+      // Alt inverse l'aimant le temps d'un geste : aller le couper dans la barre pour un seul
+      // placement serait plus pénible que de le subir.
+      if (useAnimationStore.getState().aimant !== e.altKey) {
+        const collage = aimanter(tracks, ti, kfId, newT, newV, pxPerMs)
+        newT = collage.t
+        newV = collage.v
+        guidesRef.current = collage.guideT !== null || collage.guideV !== null
+          ? { t: collage.guideT, v: collage.guideV, ti } : null
+      } else {
+        guidesRef.current = null
+      }
       store.moveKf(trackId, kfId, newT, newV)
     }
   }
 
-  function onMouseUp() { drag.current = null }
+  function onMouseUp() {
+    drag.current = null
+    if (guidesRef.current) {
+      guidesRef.current = null
+      draw()
+    }
+  }
 
   function onDblClick(e: React.MouseEvent<HTMLCanvasElement>) {
     const rect = tlRef.current!.getBoundingClientRect()

@@ -110,6 +110,8 @@ export interface AnimationEditorState {
   /** Largeur de la zone des pistes : sans elle, impossible de savoir où s'arrête le défilement. */
   largeurVisible: number
   selectedKf: { trackId: Axe; kfId: string } | null
+  /** Les images-clés déplacées se collent aux repères proches (voir Timeline, aimanter). */
+  aimant: boolean
 
   // Actions — historique
   snapshot: () => void
@@ -130,6 +132,7 @@ export interface AnimationEditorState {
   setLargeurVisible:     (px: number) => void
   zoomerAutourDuCurseur: (facteur: number) => void
   toutVoir:              () => void
+  basculerAimant:        () => void
 
   // Actions — keyframes
   selectKf:    (trackId: Axe, kfId: string) => void
@@ -185,6 +188,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     pxPerMs: 0.17,
     scrollX: 0,
     largeurVisible: 0,
+    aimant: true,
     selectedKf: null,
 
     snapshot: pushSnapshot,
@@ -245,6 +249,8 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
       const pivot = xCurseur >= 0 && xCurseur <= largeurVisible ? xCurseur : largeurVisible / 2
       get().zoom(facteur, pivot, largeurVisible)
     },
+
+    basculerAimant: () => set(s => ({ aimant: !s.aimant })),
 
     toutVoir() {
       const { largeurVisible, totalMs } = get()
