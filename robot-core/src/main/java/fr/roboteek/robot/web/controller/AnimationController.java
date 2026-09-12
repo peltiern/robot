@@ -58,6 +58,9 @@ public class AnimationController {
     /** Crée une animation. Refuse d'écraser : pour cela, {@link #remplacer} est explicite. */
     @PostMapping
     public ResponseEntity<List<String>> creer(@RequestBody Animation animation) {
+        if (!animation.versionLisible()) {
+            return versionRefusee(animation);
+        }
         if (animation.nom() == null || bibliotheque.existe(animation.nom())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -73,9 +76,24 @@ public class AnimationController {
      */
     @PutMapping("/{nom}")
     public ResponseEntity<List<String>> remplacer(@PathVariable String nom, @RequestBody Animation animation) {
+        if (!animation.versionLisible()) {
+            return versionRefusee(animation);
+        }
         Animation aEnregistrer = conserverLesSons(animation.avecNom(nom));
         bibliotheque.enregistrer(aEnregistrer);
         return ResponseEntity.ok(Avertissements.de(aEnregistrer));
+    }
+
+    /**
+     * Refuse d'écrire une animation que la bibliothèque ne relirait pas.
+     * <p>
+     * Elle ignore au chargement toute version autre que la courante. Écrire le fichier quand même,
+     * c'était perdre l'animation au redémarrage suivant sans un mot : c'est arrivé avec l'éditeur,
+     * resté à la version 1 quand le robot est passé à la 2 le 2026-09-08.
+     */
+    private static ResponseEntity<List<String>> versionRefusee(Animation animation) {
+        return ResponseEntity.badRequest().body(List.of("Animation en version " + animation.version()
+                + " : le robot n'enregistre que la version " + Animation.VERSION_COURANTE + "."));
     }
 
     @DeleteMapping("/{nom}")

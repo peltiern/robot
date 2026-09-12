@@ -33,7 +33,7 @@ export function toAnimation(
 /**
  * Le chemin inverse : les images-clés de toutes les pistes, regroupées par instant.
  *
- * C'est la forme qu'attend `loadPreset` — l'éditeur raisonne en « à cet instant, ces axes sont
+ * C'est la forme qu'attend `chargerEtapes` — l'éditeur raisonne en « à cet instant, ces axes sont
  * à ces valeurs », alors que le fichier est rangé par axe.
  */
 export function versEtapesEditeur(animation: Animation) {

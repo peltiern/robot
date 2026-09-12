@@ -64,6 +64,13 @@ public class AnimationEnCoursController {
      */
     @PutMapping
     public ResponseEntity<AnimationEnCours> lancer(@RequestBody DemandeLecture demande) {
+        if (demande.animation() != null && !demande.animation().versionLisible()) {
+            // Un brouillon d'une autre version vient d'un éditeur en retard sur le robot. Le jouer,
+            // ce serait lire ses yeux dans l'ancien repère — donc viser le contact des coques.
+            return ResponseEntity.badRequest().body(new AnimationEnCours(demande.animation().nom(), List.of(
+                    "Animation en version " + demande.animation().version() + " : le robot ne joue que la version "
+                            + Animation.VERSION_COURANTE + ". Rechargez l'éditeur.")));
+        }
         Optional<Animation> animation = aJouer(demande);
         if (animation.isEmpty()) {
             // Un fichier présent mais refusé n'est pas une animation « inconnue » : répondre 404

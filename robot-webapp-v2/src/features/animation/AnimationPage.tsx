@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, useCallback } from 'react'
 import { useAnimationStore } from './store/animationStore'
 import { Toolbar }         from './components/Toolbar'
 import { Timeline }        from './components/Timeline'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { LibraryPanel }    from './components/LibraryPanel'
+import { PanneauAvertissements } from './components/PanneauAvertissements'
 import { toAnimation, versEtapesEditeur } from './utils/convert'
 import { animationApi }    from '../../shared/api/animationApi'
 import type { Animation }  from '../../shared/types/animation'
@@ -16,6 +17,10 @@ import styles from './AnimationPage.module.css'
  */
 const PERIODE_CURSEUR_MS = 100
 
+// three.js pèse plusieurs centaines de Ko : il n'est chargé qu'à l'affichage de l'aperçu, pour que
+// le HUD — qui tourne sur la tablette et n'en a pas l'usage — n'en paie jamais le prix.
+const Maquette3D = lazy(() => import('./components/Maquette3D'))
+
 export function AnimationPage() {
   const store      = useAnimationStore()
   const ws         = useWebSocketStore()
@@ -25,17 +30,19 @@ export function AnimationPage() {
   // Charger les définitions de tracks depuis le backend au montage
   useEffect(() => { store.loadTracksFromBackend() }, [])
   const originRef  = useRef<number>(0)   // performance.now() quand playhead = 0
-  const [modal, setModal] = useState<'export' | 'import' | null>(null)
-  const [exportJson, setExportJson]   = useState('')
-  const [importJson, setImportJson]   = useState('')
   const [statusMsg, setStatusMsg]     = useState('')
-  const [avertissements, setAvertissements] = useState<string[]>([])
   const [libraryKey, setLibraryKey]   = useState(0)
+
+  // Robot perdu en mode Robot : on repasse en simulation, sans quoi la lecture continuerait
+  // d'envoyer ses ordres dans le vide pendant que l'écran ferait croire qu'il joue.
+  useEffect(() => {
+    if (!ws.connected) changerDestination(false)
+  }, [ws.connected])
 
   // ── Boucle de lecture (RAF) ────────────────────────────────────────────────
 
   const tick = useCallback(() => {
-    const { playing, looping, totalMs, setPlayhead, setPlaying } = useAnimationStore.getState()
+    const { playing, looping, totalMs, surRobot, setPlayhead, setPlaying } = useAnimationStore.getState()
     if (!playing) return
 
     const elapsed = performance.now() - originRef.current
@@ -45,7 +52,7 @@ export function AnimationPage() {
         setPlayhead(0)
         // Relancer aussi le robot : sa lecture, elle, ne boucle pas. Sans ça la timeline
         // repartait indéfiniment pendant que la tête ne bougeait plus qu'une fois.
-        animationApi.jouerBrouillon(animationPourLeRobot()).catch(() => {})
+        if (surRobot) animationApi.jouerBrouillon(animationPourLeRobot()).catch(() => {})
       } else {
         setPlayhead(totalMs)
         setPlaying(false)
@@ -58,28 +65,46 @@ export function AnimationPage() {
   }, [])
 
   function play() {
-    const { playhead, totalMs } = store
+    const { playhead, totalMs, surRobot } = useAnimationStore.getState()
     originRef.current = performance.now() - (playhead >= totalMs ? 0 : playhead)
     store.setPlaying(true)
     rafRef.current = requestAnimationFrame(tick)
+    if (!surRobot) return
     // Envoyer au robot (pistes désactivées exclues), en brouillon : l'animation en cours
     // d'écriture n'a aucune raison d'être enregistrée pour être essayée.
     animationApi.jouerBrouillon(animationPourLeRobot())
-      .then(lecture => afficherAvertissements(lecture.avertissements))
       .catch(() => setStatusMsg('Le robot a refusé de jouer'))
   }
 
   function pause() {
     store.setPlaying(false)
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    animationApi.arreter().catch(() => {})
+    if (useAnimationStore.getState().surRobot) animationApi.arreter().catch(() => {})
   }
 
   function stop() {
     store.setPlaying(false)
     store.setPlayhead(0)
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    animationApi.arreter().catch(() => {})
+    if (useAnimationStore.getState().surRobot) animationApi.arreter().catch(() => {})
+  }
+
+  /**
+   * Change la destination de la lecture. En pleine lecture, on s'arrête d'abord : basculer sans
+   * arrêter laisserait le robot finir seul un geste que l'écran ne suit plus, ou l'inverse.
+   */
+  function changerDestination(versRobot: boolean) {
+    const { surRobot, playing, setSurRobot } = useAnimationStore.getState()
+    if (versRobot === surRobot) return
+    if (playing) pause()
+    setSurRobot(versRobot)
+  }
+
+  /** Depuis la bibliothèque, en Simulation : l'animation vient d'être chargée, elle se joue du début. */
+  function jouerDepuisLeDebut() {
+    if (useAnimationStore.getState().playing) pause()
+    store.setPlayhead(0)
+    play()
   }
 
   useEffect(() => {
@@ -88,13 +113,13 @@ export function AnimationPage() {
     }
   }, [store.playing])
 
-  // Curseur : la tête suit la timeline quand on la tire, hors lecture.
+  // Curseur : la tête suit la timeline quand on la tire, hors lecture, et seulement en mode Robot.
   //
   // Bridé ici EN PLUS de l'écrêtage du lecteur, pour deux raisons distinctes : le robot se
   // protège de tout client, et l'éditeur évite d'inonder le websocket d'un message par pixel
   // de souris — l'animation entière voyage à chaque envoi.
   useEffect(() => {
-    if (store.playing || !ws.connected) return
+    if (store.playing || !ws.connected || !store.surRobot) return
     const maintenant = performance.now()
     if (maintenant - dernierCurseurRef.current < PERIODE_CURSEUR_MS) return
     dernierCurseurRef.current = maintenant
@@ -155,41 +180,12 @@ export function AnimationPage() {
     return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled))
   }
 
-  // ── Import / Export ────────────────────────────────────────────────────────
-
-  function openExport() {
-    const anim = buildAnimation()
-    setExportJson(JSON.stringify(anim, null, 2))
-    setModal('export')
-  }
-
-  function openImport() {
-    setImportJson('')
-    setModal('import')
-  }
-
-  function doImport() {
-    try {
-      const data = JSON.parse(importJson)
-      if (!data?.tracks) { alert('Format invalide : propriété "tracks" manquante.'); return }
-      // Reconvertir Animation → EditorTrack
-      store.loadPreset(versEtapesEditeur(data), data.dureeTotale ?? store.totalMs)
-      if (data.nom) store.setAnimationName(data.nom)
-      setModal(null)
-    } catch (e: any) {
-      alert('JSON invalide : ' + e.message)
-    }
-  }
-
   async function saveToServer() {
     try {
       const anim = buildAnimation()
-      const avertissements = await animationApi.enregistrer(anim.nom, anim)
-      setAvertissements(avertissements)
+      await animationApi.enregistrer(anim.nom, anim)
       store.marquerEnregistre()
-      setStatusMsg(avertissements.length > 0
-        ? `Sauvegardé avec ${avertissements.length} avertissement(s)`
-        : 'Sauvegardé ✓')
+      setStatusMsg('Sauvegardé ✓')
       setTimeout(() => setStatusMsg(''), 3000)
       setLibraryKey(k => k + 1)
     } catch {
@@ -198,42 +194,31 @@ export function AnimationPage() {
   }
 
   function handleLoadFromLibrary(anim: Animation) {
-    store.loadPreset(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs)
+    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs)
     store.setAnimationName(anim.nom)
-    setAvertissements([])
-  }
-
-  /**
-   * Les avertissements du vérificateur : ce que le robot ne saura pas suivre. Ils n'empêchent
-   * ni d'enregistrer ni de jouer — le mouvement sera simplement en retard sur la courbe — mais
-   * sans eux l'écart entre ce que la timeline montre et ce que la tête fait reste inexplicable.
-   */
-  function afficherAvertissements(nouveaux: string[]) {
-    setAvertissements(nouveaux)
   }
 
   return (
     <div className={styles.page}>
+      <div className={styles.apercu}>
+        <Suspense fallback={<div className={styles.chargement}>Chargement de la maquette…</div>}>
+          <Maquette3D className={styles.maquette} />
+        </Suspense>
+      </div>
+
       <Toolbar
-        onPlay={play} onPause={pause} onStop={stop}
-        onExport={openExport} onImport={openImport}
+        onPlay={play} onPause={pause} onStop={stop} onSave={saveToServer}
+        onChangerDestination={changerDestination}
+        robotJoignable={ws.connected}
       />
 
       <div className={styles.main}>
-        <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} />
+        <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} onJouer={jouerDepuisLeDebut} />
         <Timeline />
         <PropertiesPanel />
       </div>
 
-      {avertissements.length > 0 && (
-        <div className={styles.avertissements}>
-          <strong>Le robot ne suivra pas exactement :</strong>
-          <ul>
-            {avertissements.map((a, i) => <li key={i}>{a}</li>)}
-          </ul>
-          <button className={styles.btn} onClick={() => setAvertissements([])}>Masquer</button>
-        </div>
-      )}
+      <PanneauAvertissements />
 
       <footer className={styles.footer}>
         <span className={ws.connected ? styles.dotOn : styles.dotOff} />
@@ -242,42 +227,8 @@ export function AnimationPage() {
         <span>Clic = ajouter · Drag = déplacer · Dbl-clic = supprimer · Ctrl+Molette = zoom · Espace = play</span>
         <div className={styles.footerRight}>
           {statusMsg && <span className={styles.statusMsg}>{statusMsg}</span>}
-          <button className={styles.saveBtn} onClick={saveToServer}>💾 Sauvegarder</button>
         </div>
       </footer>
-
-      {/* Modal Export */}
-      {modal === 'export' && (
-        <div className={styles.overlay} onClick={() => setModal(null)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalTitle}>Exporter l'animation — JSON</div>
-            <textarea className={styles.modalArea} readOnly value={exportJson} />
-            <div className={styles.modalFooter}>
-              <button className={styles.btn} onClick={() => navigator.clipboard.writeText(exportJson)}>📋 Copier</button>
-              <button className={styles.btn} onClick={() => setModal(null)}>Fermer</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Import */}
-      {modal === 'import' && (
-        <div className={styles.overlay} onClick={() => setModal(null)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalTitle}>Importer une animation — JSON</div>
-            <textarea
-              className={styles.modalArea}
-              placeholder='Collez le JSON ici…'
-              value={importJson}
-              onChange={e => setImportJson(e.target.value)}
-            />
-            <div className={styles.modalFooter}>
-              <button className={styles.btn} onClick={doImport}>📥 Importer</button>
-              <button className={styles.btn} onClick={() => setModal(null)}>Annuler</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

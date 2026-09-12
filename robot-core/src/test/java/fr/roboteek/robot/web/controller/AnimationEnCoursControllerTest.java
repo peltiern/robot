@@ -109,6 +109,21 @@ class AnimationEnCoursControllerTest {
         assertFalse(reponse.getBody().avertissements().isEmpty(), "le refus doit dire pourquoi");
     }
 
+    /**
+     * Un brouillon d'une autre version vient d'un éditeur en retard sur le robot : ses yeux seraient
+     * lus dans l'ancien repère, donc joués vers le contact des coques.
+     */
+    @Test
+    void unBrouillonDUneAutreVersionNEstPasJoue() {
+        Animation perimee = new Animation("Brouillon", 60000, animation("Brouillon").pistes(), List.of(), 1);
+
+        ResponseEntity<AnimationEnCours> reponse = controleur.lancer(new DemandeLecture(null, perimee));
+
+        assertEquals(HttpStatus.BAD_REQUEST, reponse.getStatusCode());
+        assertFalse(lecteur.enLecture());
+        assertFalse(reponse.getBody().avertissements().isEmpty(), "le refus doit dire pourquoi");
+    }
+
     @Test
     void unNomInconnuNExistePas() {
         assertEquals(HttpStatus.NOT_FOUND,

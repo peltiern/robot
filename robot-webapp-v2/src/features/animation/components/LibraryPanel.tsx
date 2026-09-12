@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Icone } from '../../../shared/components/Icone'
 import { animationApi } from '../../../shared/api/animationApi'
 import type { Animation } from '../../../shared/types/animation'
 import { useAnimationStore } from '../store/animationStore'
@@ -8,9 +9,11 @@ interface Props {
   refreshKey: number
   onLoadAnimation: (anim: Animation) => void
   onSave: () => Promise<void>
+  /** Joue depuis le début ce que l'éditeur vient de charger — la lecture en Simulation. */
+  onJouer: () => void
 }
 
-export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
+export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: Props) {
   const store = useAnimationStore()
   const [names, setNames]               = useState<string[]>([])
   const [loading, setLoading]           = useState(false)
@@ -19,6 +22,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
   const [pendingLoad, setPendingLoad]     = useState<string | null>(null)
   const [pendingNew, setPendingNew]       = useState(false)
+  const [jouerApresChargement, setJouerApresChargement] = useState(false)
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -37,7 +41,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
 
   function doNew() {
     store.reset()
-    store.setAnimationName('NouvellAnimation')
+    store.setAnimationName('NouvelleAnimation')
   }
 
   function handleNew() {
@@ -53,30 +57,32 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
     doNew()
   }
 
-  function requestLoad(name: string) {
+  function requestLoad(name: string, puisJouer = false) {
     if (busy || pendingDelete || pendingNew) return
     // La question ne se pose que s'il y a quelque chose à perdre. La poser à chaque clic — y
     // compris juste après avoir chargé une animation qu'on n'a pas touchée — faisait passer le
     // chargement pour cassé : on cliquait, un panneau s'ouvrait, et rien ne semblait se passer.
     if (!store.modifie) {
-      chargerAnimation(name, false)
+      chargerAnimation(name, false, puisJouer)
       return
     }
+    setJouerApresChargement(puisJouer)
     setPendingLoad(name)
   }
 
   async function confirmLoad(saveFirst: boolean) {
     const name = pendingLoad!
     setPendingLoad(null)
-    await chargerAnimation(name, saveFirst)
+    await chargerAnimation(name, saveFirst, jouerApresChargement)
   }
 
-  async function chargerAnimation(name: string, saveFirst: boolean) {
+  async function chargerAnimation(name: string, saveFirst: boolean, puisJouer: boolean) {
     setBusy(name)
     try {
       if (saveFirst) await onSave()
       const anim = await animationApi.charger(name)
       onLoadAnimation(anim)
+      if (puisJouer) onJouer()
     } catch {
       setError(`Impossible de charger "${name}"`)
     } finally {
@@ -87,6 +93,12 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
   async function handlePlay(name: string, e: React.MouseEvent) {
     e.stopPropagation()
     if (busy || pendingDelete || pendingLoad) return
+    // En Simulation, ce bouton ne doit pas plus faire bouger la tête que le reste de la page :
+    // l'animation est chargée dans l'éditeur et jouée dans la maquette, seul endroit où elle se voit.
+    if (!store.surRobot) {
+      requestLoad(name, true)
+      return
+    }
     setBusy(name + ':play')
     try {
       await animationApi.jouer(name)
@@ -123,7 +135,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.title}>BIBLIOTHÈQUE</span>
-        <button className={styles.newBtn} onClick={handleNew} title="Nouvelle animation">＋</button>
+        <button className={styles.newBtn} onClick={handleNew} title="Nouvelle animation"><Icone nom="plus" taille={16} /></button>
       </div>
 
       {pendingNew && (
@@ -191,16 +203,16 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
               title={name}
             >
               <span className={styles.itemName}>
-                {isLoading ? '⏳ ' : ''}{name}
+                {isLoading && <Icone nom="sablier" taille={11} />}{name}
               </span>
               <div className={styles.actions}>
                 <button
                   className={styles.actionBtn}
                   onClick={e => handlePlay(name, e)}
-                  title="Jouer sur le robot"
+                  title={store.surRobot ? 'Jouer sur le robot' : 'Charger et jouer dans la maquette'}
                   disabled={!!busy || anyPending}
                 >
-                  {isPlaying ? '⏳' : '▶'}
+                  <Icone nom={isPlaying ? 'sablier' : 'reprise'} taille={13} />
                 </button>
                 <button
                   className={`${styles.actionBtn} ${styles.deleteBtn}`}
@@ -208,7 +220,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave }: Props) {
                   title="Supprimer"
                   disabled={!!busy || anyPending}
                 >
-                  {isDel ? '⏳' : '✕'}
+                  <Icone nom={isDel ? 'sablier' : 'croix'} taille={13} />
                 </button>
               </div>
             </div>

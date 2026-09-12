@@ -207,3 +207,6 @@
   color: var(--dim);
 }
 .confirmCancel:hover { background: #2d333b; color: var(--text); }
+
+/* Le sablier qui précède le nom pendant le chargement : sans marge, il colle à la première lettre. */
+.itemName svg { margin-right: 4px; vertical-align: -1px; }
