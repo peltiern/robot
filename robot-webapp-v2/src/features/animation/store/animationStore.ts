@@ -3,6 +3,8 @@ import type { Axe, AxeAnimable } from '../../../shared/types/animation'
 import { axeApi } from '../../../shared/api/axeApi'
 import { assignTrackColors } from '../../../shared/utils/trackColors'
 import { uid } from '../utils/convert'
+import { corriger, corrigerTout } from '../utils/corrections'
+import type { Avertissement } from '../utils/verificateur'
 
 export interface EditorKeyframe { id: string; t: number; v: number }
 
@@ -20,17 +22,20 @@ export interface EditorTrack {
 
 const SNAP = 50 // ms
 
-// Axes de repli, le temps que le robot réponde. Ce sont les valeurs mesurées sur le robot au
-// 2026-08-30 — celles qui étaient écrites ici avant étaient fausses de beaucoup (l'inclinaison
-// annoncée −25→50 quand le servo ne fait que −8→7), et une timeline qui laisse dessiner ce que
-// la mécanique refuse est pire qu'inutile. Elles restent un pis-aller : la vérité est
-// /api/axes-animables, qui les remplace dès qu'il répond.
+/** Ce que le défilement laisse voir après la fin : sans elle, l'image-clé de fin est coupée en deux. */
+export const MARGE_FIN_PX = 14
+
+// Axes de repli, le temps que le robot réponde — et surtout quand il ne répond pas : c'est avec
+// eux que la simulation tourne robot éteint. Valeurs du robot au 2026-09-11, en degrés d'organe.
+// Les précédentes dataient d'avant les vrais degrés du 2026-09-08 : elles donnaient à
+// l'inclinaison une course de 15° quand elle en a 93, et aux yeux l'ancien repère. Elles restent un
+// pis-aller : /api/axes-animables les remplace dès qu'il répond.
 const AXES_DE_REPLI: AxeAnimable[] = [
-  { id: 'OEIL_GAUCHE',          libelle: 'Œil gauche',            positionMin:  -5, positionMax: 20, vitesseParDefaut:  40, accelerationParDefaut:  60 },
-  { id: 'OEIL_DROIT',           libelle: 'Œil droit',             positionMin:  -5, positionMax: 20, vitesseParDefaut:  40, accelerationParDefaut:  60 },
-  { id: 'COU_GAUCHE_DROITE',    libelle: 'Cou gauche / droite',   positionMin: -60, positionMax: 60, vitesseParDefaut:  40, accelerationParDefaut: 200 },
-  { id: 'COU_HAUT_BAS',         libelle: 'Cou haut / bas',        positionMin:  -8, positionMax:  7, vitesseParDefaut:  10, accelerationParDefaut: 200 },
-  { id: 'COU_MONTER_DESCENDRE', libelle: 'Cou monter / descendre', positionMin: -10, positionMax: 60, vitesseParDefaut: 100, accelerationParDefaut: 200 },
+  { id: 'OEIL_GAUCHE',          libelle: 'Œil gauche',             positionMin: -33,   positionMax:  5.5, vitesseParDefaut:  79, accelerationParDefaut: 119 },
+  { id: 'OEIL_DROIT',           libelle: 'Œil droit',              positionMin: -33,   positionMax:  5.5, vitesseParDefaut:  79, accelerationParDefaut: 119 },
+  { id: 'COU_GAUCHE_DROITE',    libelle: 'Cou gauche / droite',    positionMin: -95,   positionMax: 95,   vitesseParDefaut:  63, accelerationParDefaut: 317 },
+  { id: 'COU_HAUT_BAS',         libelle: 'Cou haut / bas',         positionMin: -39.8, positionMax: 53,   vitesseParDefaut:  50, accelerationParDefaut: 994 },
+  { id: 'COU_MONTER_DESCENDRE', libelle: 'Cou monter / descendre', positionMin: -10,   positionMax: 60,   vitesseParDefaut: 100, accelerationParDefaut: 200 },
 ]
 
 /** Le chemin inverse de buildEditorTracks : reconstruire les axes depuis l'état de l'éditeur. */
@@ -93,10 +98,17 @@ export interface AnimationEditorState {
   playhead: number
   playing: boolean
   looping: boolean
+  /**
+   * Vrai quand lecture et curseur font bouger le vrai robot. Faux au départ : ouvrir la page ou
+   * tirer le curseur ne doit jamais faire bouger la tête par surprise.
+   */
+  surRobot: boolean
 
   // Éditeur
   pxPerMs: number
   scrollX: number
+  /** Largeur de la zone des pistes : sans elle, impossible de savoir où s'arrête le défilement. */
+  largeurVisible: number
   selectedKf: { trackId: Axe; kfId: string } | null
 
   // Actions — historique
@@ -108,12 +120,16 @@ export interface AnimationEditorState {
   setPlayhead:    (t: number) => void
   setPlaying:     (b: boolean) => void
   toggleLoop:     () => void
+  setSurRobot:    (b: boolean) => void
   setTotalMs:     (ms: number) => void
 
   // Actions — vue
   setPxPerMs:  (v: number) => void
   setScrollX:  (v: number) => void
   zoom:        (factor: number, atPx: number, canvasW: number) => void
+  setLargeurVisible:     (px: number) => void
+  zoomerAutourDuCurseur: (facteur: number) => void
+  toutVoir:              () => void
 
   // Actions — keyframes
   selectKf:    (trackId: Axe, kfId: string) => void
@@ -126,8 +142,11 @@ export interface AnimationEditorState {
   // Actions — animation
   setAnimationName:       (n: string) => void
   toggleTrack:            (trackId: Axe) => void
-  loadPreset:             (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number) => void
+  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number) => void
   reset:                  () => void
+  /** Corrige ce qu'un avertissement signale ; une édition comme une autre, donc annulable. */
+  corrigerAvertissement:  (avertissement: Avertissement) => void
+  toutCorriger:           () => void
   loadTracksFromBackend:  () => Promise<void>
 }
 
@@ -143,8 +162,16 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     })
   }
 
+  // Le défilement s'arrête à la fin de l'animation : au-delà il n'y a rien à voir, et c'est là
+  // qu'un dézoom laissait la timeline, vide, sans rien pour en revenir.
+  function borner(scrollX: number, pxPerMs = get().pxPerMs, totalMs = get().totalMs) {
+    const { largeurVisible } = get()
+    const max = largeurVisible > 0 ? Math.max(0, totalMs * pxPerMs + MARGE_FIN_PX - largeurVisible) : Infinity
+    return Math.max(0, Math.min(scrollX, max))
+  }
+
   return {
-    animationName: 'NouvellAnimation',
+    animationName: 'NouvelleAnimation',
     modifie: false,
     marquerEnregistre: () => set({ modifie: false }),
     totalMs: 3000,
@@ -154,8 +181,10 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     playhead: 0,
     playing: false,
     looping: true,
+    surRobot: false,
     pxPerMs: 0.17,
     scrollX: 0,
+    largeurVisible: 0,
     selectedKf: null,
 
     snapshot: pushSnapshot,
@@ -191,19 +220,44 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     setPlayhead:  t  => set({ playhead: Math.max(0, Math.min(t, get().totalMs)) }),
     setPlaying:   b  => set({ playing: b }),
     toggleLoop:   ()  => set(s => ({ looping: !s.looping })),
+    setSurRobot:  b  => set({ surRobot: b }),
     setTotalMs(ms) {
       pushSnapshot()
-      set({ totalMs: ms })
+      set({ totalMs: ms, scrollX: borner(get().scrollX, get().pxPerMs, ms) })
     },
 
-    setPxPerMs: v  => set({ pxPerMs: Math.max(0.015, Math.min(3, v)) }),
-    setScrollX: v  => set({ scrollX: Math.max(0, v) }),
+    setPxPerMs(v) {
+      const pxPerMs = Math.max(0.015, Math.min(3, v))
+      set({ pxPerMs, scrollX: borner(get().scrollX, pxPerMs) })
+    },
+    setScrollX: v  => set({ scrollX: borner(v) }),
+
+    setLargeurVisible(px) {
+      set({ largeurVisible: px })
+      set({ scrollX: borner(get().scrollX) })
+    },
+
+    // Autour du curseur plutôt que du bord gauche : on zoome pour regarder ce qu'on édite, et le
+    // curseur est là où on édite. Hors de la vue, il ne peut servir de pivot : le milieu le remplace.
+    zoomerAutourDuCurseur(facteur) {
+      const { playhead, pxPerMs, scrollX, largeurVisible } = get()
+      const xCurseur = playhead * pxPerMs - scrollX
+      const pivot = xCurseur >= 0 && xCurseur <= largeurVisible ? xCurseur : largeurVisible / 2
+      get().zoom(facteur, pivot, largeurVisible)
+    },
+
+    toutVoir() {
+      const { largeurVisible, totalMs } = get()
+      if (largeurVisible <= 0) return
+      // Un peu moins que la largeur exacte : sinon l'image-clé de fin tombe sur le bord, à moitié coupée.
+      set({ pxPerMs: Math.max(0.015, Math.min(3, largeurVisible * 0.97 / totalMs)), scrollX: 0 })
+    },
 
     zoom(factor, atPx, _canvasW) {
       const { pxPerMs, scrollX } = get()
       const atT = (atPx + scrollX) / pxPerMs
       const next = Math.max(0.015, Math.min(3, pxPerMs * factor))
-      set({ pxPerMs: next, scrollX: Math.max(0, atT * next - atPx) })
+      set({ pxPerMs: next, scrollX: borner(atT * next - atPx, next) })
     },
 
     selectKf: (trackId, kfId) => set({ selectedKf: { trackId, kfId } }),
@@ -251,6 +305,18 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
 
     setAnimationName: n => set({ animationName: n }),
 
+    corrigerAvertissement(avertissement) {
+      pushSnapshot()
+      const { tracks, totalMs } = get()
+      set(corriger({ tracks, totalMs }, avertissement))
+    },
+
+    toutCorriger() {
+      pushSnapshot()
+      const { tracks, totalMs } = get()
+      set(corrigerTout({ tracks, totalMs }))
+    },
+
     toggleTrack(trackId) {
       pushSnapshot()
       set(s => ({
@@ -260,7 +326,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
       }))
     },
 
-    loadPreset(steps, totalMs) {
+    chargerEtapes(steps, totalMs) {
       pushSnapshot()
       const currentDefs = get().tracks.map(versAxeAnimable)
       const tracks = buildEditorTracks(currentDefs, totalMs)

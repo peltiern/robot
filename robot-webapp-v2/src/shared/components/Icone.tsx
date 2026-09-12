@@ -34,6 +34,18 @@ export type NomIcone =
   | 'alerte'
   | 'chenille'
   | 'manette'
+  | 'annuler'
+  | 'retablir'
+  | 'debut'
+  | 'pause'
+  | 'boucle'
+  | 'moins'
+  | 'toutVoir'
+  | 'ecran'
+  | 'robot'
+  | 'disquette'
+  | 'corbeille'
+  | 'sablier'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -164,6 +176,84 @@ const TRACES: Record<NomIcone, ReactNode> = {
       <path d="M8.8 7.8h6.4a5.2 5.2 0 0 1 5.1 4.2l.7 3.8a2.5 2.5 0 0 1-4.5 1.9L15 15.6H9l-1.5 2.1a2.5 2.5 0 0 1-4.5-1.9l.7-3.8a5.2 5.2 0 0 1 5.1-4.2Z" />
       <path d="M8 10.8v2.4M6.8 12h2.4" />
       <circle cx="16.2" cy="12" r="1.1" fill="currentColor" stroke="none" />
+    </>
+  ),
+  annuler: (
+    <>
+      <path d="M9 14 4.5 9.5 9 5" />
+      <path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-3" />
+    </>
+  ),
+  retablir: (
+    <>
+      <path d="m15 14 4.5-4.5L15 5" />
+      <path d="M19.5 9.5H10a5.5 5.5 0 0 0 0 11h3" />
+    </>
+  ),
+  debut: (
+    <>
+      <path d="M6 5.4v13.2" />
+      <path d="M18.5 5.4 9.5 12l9 6.6z" />
+    </>
+  ),
+  // Deux barres creuses, comme `reprise` est un triangle creux : les deux se remplacent l'une
+  // l'autre sur le même bouton, et ne doivent pas changer de graisse en basculant.
+  pause: (
+    <>
+      <rect x="6.2" y="5.4" width="3.8" height="13.2" rx="1.3" />
+      <rect x="14" y="5.4" width="3.8" height="13.2" rx="1.3" />
+    </>
+  ),
+  boucle: (
+    <>
+      <path d="M4 11.5V10a4 4 0 0 1 4-4h11" />
+      <path d="m16 3 3 3-3 3" />
+      <path d="M20 12.5V14a4 4 0 0 1-4 4H5" />
+      <path d="m8 21-3-3 3-3" />
+    </>
+  ),
+  moins: <path d="M5.2 12h13.6" />,
+  // Deux flèches qui s'écartent jusqu'à deux butées : tout ramener entre les bords.
+  toutVoir: (
+    <>
+      <path d="M3.6 5v14M20.4 5v14" />
+      <path d="M7.4 12h9.2" />
+      <path d="m10 9.2-2.8 2.8 2.8 2.8M14 9.2l2.8 2.8-2.8 2.8" />
+    </>
+  ),
+  ecran: (
+    <>
+      <rect x="2.8" y="4.2" width="18.4" height="12.4" rx="2.4" />
+      <path d="M8.5 20h7M12 16.6V20" />
+    </>
+  ),
+  // Les deux coques de WALL·E, jumelées : le robot lui-même. À ne pas confondre avec `oeil`, qui
+  // veut dire « ce qu'il voit ».
+  robot: (
+    <>
+      <path d="M3 9.6a2.8 2.8 0 0 1 2.8-2.8h4.4A1.8 1.8 0 0 1 12 8.6v6.2a3.4 3.4 0 0 1-3.4 3.4H6.6A3.6 3.6 0 0 1 3 14.6z" />
+      <path d="M21 9.6a2.8 2.8 0 0 0-2.8-2.8h-4.4A1.8 1.8 0 0 0 12 8.6v6.2a3.4 3.4 0 0 0 3.4 3.4h2a3.6 3.6 0 0 0 3.6-3.6z" />
+      <circle cx="7.6" cy="12.4" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="16.4" cy="12.4" r="1.4" fill="currentColor" stroke="none" />
+    </>
+  ),
+  disquette: (
+    <>
+      <path d="M5.6 3.6h10.2l4.6 4.6v10.2a2 2 0 0 1-2 2H5.6a2 2 0 0 1-2-2V5.6a2 2 0 0 1 2-2Z" />
+      <path d="M7.6 3.6v4.6h7V3.6M7.4 20.4v-6h9.2v6" />
+    </>
+  ),
+  corbeille: (
+    <>
+      <path d="M4 6.6h16M9.4 6.6V4.4h5.2v2.2" />
+      <path d="m6 6.6 1 12.6a1.6 1.6 0 0 0 1.6 1.4h6.8a1.6 1.6 0 0 0 1.6-1.4l1-12.6" />
+      <path d="M10 10.6v6M14 10.6v6" />
+    </>
+  ),
+  sablier: (
+    <>
+      <path d="M6.4 3.4h11.2M6.4 20.6h11.2" />
+      <path d="M7.6 3.4c0 4.2 4.4 5.4 4.4 8.6s-4.4 4.4-4.4 8.6M16.4 3.4c0 4.2-4.4 5.4-4.4 8.6s4.4 4.4 4.4 8.6" />
     </>
   ),
 }

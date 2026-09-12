@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -129,6 +131,60 @@ class VerificateurAnimationTest {
                             new ImageCle(0, 0), new ImageCle(10, 500)))), List.of());
 
             assertEquals(List.of(), verificateur.controler(animation));
+        }
+    }
+
+    /**
+     * Les verdicts de {@code verificateur.ts}, le portage de l'éditeur, exécuté tel quel sur les mêmes
+     * pistes. Recopiés et non recalculés, comme pour l'interpolation : tout l'intérêt est de comparer
+     * deux implémentations écrites séparément. Si ce test casse, l'éditeur propose de corriger ce que
+     * le robot jouerait bien, ou se tait sur ce qu'il ne tiendra pas.
+     */
+    @Nested
+    class MemesVerdictsQueLEditeur {
+
+        @Test
+        void unePositionHorsButee() {
+            assertEquals(List.of("horsButee 1000-1000", "tropRapide 0-1000 1667"),
+                    verdicts(List.of(new ImageCle(0, 0), new ImageCle(1000, -40))));
+        }
+
+        @Test
+        void unDepassementDeLaCourbe() {
+            assertEquals(List.of("depassement 1090-1090", "tropRapide 0-300 913", "tropRapide 300-1000 1479"),
+                    verdicts(List.of(new ImageCle(0, 0), new ImageCle(300, -12.5), new ImageCle(1000, 20),
+                            new ImageCle(1200, 20), new ImageCle(2500, -5.25))));
+        }
+
+        @Test
+        void uneAnimationJouable() {
+            assertEquals(List.of(), verdicts(List.of(new ImageCle(0, 0), new ImageCle(2000, 10))));
+        }
+
+        /** Nature, intervalle et, pour une transition, la durée qu'il lui faudrait — ce que l'éditeur corrige. */
+        private List<String> verdicts(List<ImageCle> imagesCles) {
+            return verificateur.controler(animationAvec(imagesCles)).stream()
+                    .map(a -> {
+                        String nature = nature(a.message());
+                        String verdict = nature + " " + a.instantDebut() + "-" + a.instantFin();
+                        if (!nature.equals("tropRapide")) {
+                            return verdict;
+                        }
+                        Matcher duree = Pattern.compile("il en faut (\\d+)").matcher(a.message());
+                        return duree.find() ? verdict + " " + duree.group(1) : verdict;
+                    })
+                    .toList();
+        }
+
+        /** Le Java ne nomme pas la nature : elle se lit au début du message. */
+        private static String nature(String message) {
+            if (message.startsWith("Position")) {
+                return "horsButee";
+            }
+            if (message.startsWith("La courbe")) {
+                return "depassement";
+            }
+            return "tropRapide";
         }
     }
 }

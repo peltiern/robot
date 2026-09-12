@@ -17,8 +17,8 @@ export type Axe =
 
 export interface ImageCle {
   instant: number          // ms depuis le début de l'animation
-  valeur: number           // degrés d'ORGANE (0 = posture de travail) — pour les yeux ce n'est
-                           // pas la position du servo : la tringlerie amplifie de 1,25 à 3,70
+  valeur: number           // degrés d'ORGANE. Pour les yeux, 0 = dessus de la coque de niveau, et ce
+                           // n'est pas la position du servo : la tringlerie amplifie de 1,25 à 3,70
   vitesse?: number         // absent = celle de la piste
   acceleration?: number
 }
@@ -41,10 +41,11 @@ export interface Animation {
 }
 
 // Le robot refuse une animation sans version, et il a raison : avant la 1, les pistes des yeux
-// portaient des unités de position moteur. La tringlerie n'étant pas linéaire, +14 unités valent
-// 19,4° d'œil — une animation de l'ancien monde rejouée telle quelle décalerait le geste d'un
-// tiers sans que rien ne le dise.
-export const VERSION_ANIMATION = 1
+// portaient des unités de position moteur. La 2 (2026-09-08) change le repère des yeux — zéro à
+// la coque de niveau, positif = bord extérieur vers le haut.
+// DOIT SUIVRE Animation.VERSION_COURANTE côté Java. Restée à 1 quand le robot est passé à la 2,
+// elle faisait enregistrer des animations que le robot ignorait au redémarrage suivant, sans un mot.
+export const VERSION_ANIMATION = 2
 
 /** Ce que le robot répond quand il lance une animation. */
 export interface AnimationEnCours {
@@ -56,9 +57,8 @@ export interface AnimationEnCours {
  * Un axe animable, tel que le robot le décrit — butées et vitesses de travail comprises.
  *
  * Rien de tout ça n'est codé en dur côté éditeur : les butées viennent de robot.properties, et
- * celles qui étaient écrites ici étaient fausses (l'inclinaison annoncée −25→50 quand le servo
- * ne fait que −8→7). Une timeline qui laisse dessiner ce que la mécanique refuse est pire
- * qu'inutile.
+ * chaque fois qu'elles ont été recopiées ici, elles ont fini par être fausses. Une timeline qui
+ * laisse dessiner ce que la mécanique refuse est pire qu'inutile.
  */
 export interface AxeAnimable {
   id: Axe

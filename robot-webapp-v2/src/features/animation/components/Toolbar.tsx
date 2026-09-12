@@ -1,43 +1,26 @@
-import { useRef } from 'react'
+import { Icone } from '../../../shared/components/Icone'
 import { useAnimationStore } from '../store/animationStore'
 import { fmtMs } from '../utils/convert'
 import styles from './Toolbar.module.css'
 
-const PRESETS = {
-  NEUTRAL:   [{ t: 200, vals: { OEIL_GAUCHE: 0, OEIL_DROIT: 0, COU_GAUCHE_DROITE: 0, COU_HAUT_BAS: 0 } }],
-  THINKING:  [{ t: 200, vals: { OEIL_GAUCHE: -10, OEIL_DROIT: 0, COU_GAUCHE_DROITE: 20, COU_HAUT_BAS: 20 } }],
-  SAD:       [{ t: 100, vals: { OEIL_GAUCHE: -24, OEIL_DROIT: -24, COU_GAUCHE_DROITE: 0, COU_HAUT_BAS: 0 } }],
-  SURPRISED: [{ t: 100, vals: { OEIL_GAUCHE: 0, OEIL_DROIT: -20 } }],
-  AMAZED:    [
-    { t: 100, vals: { OEIL_GAUCHE: -3, OEIL_DROIT: -3, COU_HAUT_BAS: 20 } },
-    { t: 600, vals: { OEIL_GAUCHE: 0,  OEIL_DROIT: 0,  COU_HAUT_BAS: 0  } },
-  ],
-} as const
+const TAILLE = 18
 
 interface Props {
-  onPlay:   () => void
-  onPause:  () => void
-  onStop:   () => void
-  onExport: () => void
-  onImport: () => void
+  onPlay:  () => void
+  onPause: () => void
+  onStop:  () => void
+  onSave:  () => void
+  /** L'appelant décide de ce qu'il faut arrêter en chemin, la barre ne fait que demander. */
+  onChangerDestination: (surRobot: boolean) => void
+  robotJoignable: boolean
 }
 
-export function Toolbar({ onPlay, onPause, onStop, onExport, onImport }: Props) {
+export function Toolbar({ onPlay, onPause, onStop, onSave, onChangerDestination, robotJoignable }: Props) {
   const {
-    playing, looping, playhead, totalMs, animationName,
-    setPlaying, toggleLoop, setTotalMs, setAnimationName, loadPreset,
-    setPxPerMs, pxPerMs, past, future, undo, redo,
+    playing, looping, playhead, totalMs, animationName, surRobot, modifie,
+    setPlaying, toggleLoop, setTotalMs, setAnimationName,
+    zoomerAutourDuCurseur, toutVoir, past, future, undo, redo,
   } = useAnimationStore()
-
-  const selectRef = useRef<HTMLSelectElement>(null)
-
-  function handlePreset(e: React.ChangeEvent<HTMLSelectElement>) {
-    const key = e.target.value as keyof typeof PRESETS
-    if (!key) return
-    const steps = PRESETS[key] as any
-    loadPreset(steps, totalMs)
-    e.target.value = ''
-  }
 
   return (
     <div className={styles.toolbar}>
@@ -48,26 +31,33 @@ export function Toolbar({ onPlay, onPause, onStop, onExport, onImport }: Props) 
         onChange={e => setAnimationName(e.target.value)}
         title="Nom de l'animation"
       />
+      {/* À côté du nom, puisque c'est sous ce nom qu'elle part. Allumée tant qu'il reste des
+          modifications à perdre. */}
+      <button
+        className={`${styles.iconBtn} ${modifie ? styles.active : ''}`}
+        onClick={onSave}
+        title={modifie ? 'Sauvegarder — modifications non enregistrées' : 'Sauvegarder'}
+      ><Icone nom="disquette" taille={TAILLE} /></button>
 
       <div className={styles.sep} />
 
       {/* Undo / Redo */}
-      <button className={styles.iconBtn} onClick={undo} disabled={past.length === 0} title="Annuler (Ctrl+Z)">↩</button>
-      <button className={styles.iconBtn} onClick={redo} disabled={future.length === 0} title="Rétablir (Ctrl+Y)">↪</button>
+      <button className={styles.iconBtn} onClick={undo} disabled={past.length === 0} title="Annuler (Ctrl+Z)"><Icone nom="annuler" taille={TAILLE} /></button>
+      <button className={styles.iconBtn} onClick={redo} disabled={future.length === 0} title="Rétablir (Ctrl+Y)"><Icone nom="retablir" taille={TAILLE} /></button>
 
       <div className={styles.sep} />
 
       {/* Transport */}
-      <button className={styles.iconBtn} onClick={() => { setPlaying(false); useAnimationStore.getState().setPlayhead(0) }} title="Retour début (Home)">⏮</button>
+      <button className={styles.iconBtn} onClick={() => { setPlaying(false); useAnimationStore.getState().setPlayhead(0) }} title="Retour début (Home)"><Icone nom="debut" taille={TAILLE} /></button>
       <button className={styles.iconBtn} onClick={playing ? onPause : onPlay} title="Lecture / Pause (Espace)">
-        {playing ? '⏸' : '▶'}
+        <Icone nom={playing ? 'pause' : 'reprise'} taille={TAILLE} />
       </button>
-      <button className={styles.iconBtn} onClick={onStop} title="Stop">⏹</button>
+      <button className={styles.iconBtn} onClick={onStop} title="Stop"><Icone nom="stop" taille={TAILLE} /></button>
       <button
         className={`${styles.iconBtn} ${looping ? styles.active : ''}`}
         onClick={toggleLoop}
         title="Boucle"
-      >🔁</button>
+      ><Icone nom="boucle" taille={TAILLE} /></button>
 
       <div className={styles.sep} />
       <span className={styles.timeDisp}>{fmtMs(playhead)}</span>
@@ -88,24 +78,28 @@ export function Toolbar({ onPlay, onPause, onStop, onExport, onImport }: Props) 
 
       <div className={styles.sep} />
 
-      {/* Zoom */}
+      {/* Zoom : en double de Ctrl+Molette, qui n'existe pas sur la tablette. */}
       <label className={styles.dim}>Zoom</label>
-      <button className={styles.iconBtn} onClick={() => setPxPerMs(pxPerMs / 1.3)} title="Ctrl+Molette">−</button>
-      <button className={styles.iconBtn} onClick={() => setPxPerMs(pxPerMs * 1.3)} title="Ctrl+Molette">+</button>
-
-      <div className={styles.sep} />
-
-      {/* Présets */}
-      <label className={styles.dim}>Préset</label>
-      <select className={styles.select} ref={selectRef} defaultValue="" onChange={handlePreset}>
-        <option value="">— choisir —</option>
-        {Object.keys(PRESETS).map(k => <option key={k} value={k}>{k}</option>)}
-      </select>
+      <button className={styles.iconBtn} onClick={() => zoomerAutourDuCurseur(1 / 1.3)} title="Dézoomer (Ctrl+Molette)"><Icone nom="moins" taille={TAILLE} /></button>
+      <button className={styles.iconBtn} onClick={() => zoomerAutourDuCurseur(1.3)} title="Zoomer autour du curseur (Ctrl+Molette)"><Icone nom="plus" taille={TAILLE} /></button>
+      <button className={styles.iconBtn} onClick={toutVoir} title="Voir toute l'animation"><Icone nom="toutVoir" taille={TAILLE} /></button>
 
       <div className={styles.spacer} />
 
-      <button className={styles.btn} onClick={onImport}>📂 Importer</button>
-      <button className={styles.btn} onClick={onExport}>💾 Exporter</button>
+      {/* Deux boutons plutôt qu'une case à cocher : on voit toujours où part la lecture. */}
+      <div className={styles.destination}>
+        <button
+          className={`${styles.btn} ${surRobot ? '' : styles.actif}`}
+          onClick={() => onChangerDestination(false)}
+          title="La lecture et le curseur ne se jouent que dans l'aperçu 3D"
+        ><Icone nom="ecran" taille={15} />Simulation</button>
+        <button
+          className={`${styles.btn} ${surRobot ? styles.actif : ''}`}
+          onClick={() => onChangerDestination(true)}
+          disabled={!robotJoignable}
+          title={robotJoignable ? 'La lecture et le curseur font bouger le robot' : 'Robot déconnecté'}
+        ><Icone nom="robot" taille={15} />Robot</button>
+      </div>
     </div>
   )
 }

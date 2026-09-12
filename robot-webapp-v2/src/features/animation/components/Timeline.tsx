@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { useAnimationStore, type EditorTrack } from '../store/animationStore'
+import { MARGE_FIN_PX, useAnimationStore, type EditorTrack } from '../store/animationStore'
 import { trackVal } from '../utils/catmullRom'
 import styles from './Timeline.module.css'
 
@@ -24,6 +24,10 @@ function yToV(y: number, tr: EditorTrack, ti: number) {
   return tr.max - (y - ti * TH - PAD) / h * (tr.max - tr.min)
 }
 function tiAtY(y: number) { return Math.floor(y / TH) }
+
+// Les butées du cou sortent d'une transmission (−39,8 = (75 − 67) × −4,97) et arrivent du robot avec
+// toutes leurs décimales : « 52.980199999999996° » dans l'étiquette d'une piste.
+function auDixieme(v: number) { return Math.round(v * 10) / 10 }
 
 // ── Rendu canvas ─────────────────────────────────────────────────────────────
 
@@ -146,6 +150,7 @@ export function Timeline() {
   const rulRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const rulWrapRef = useRef<HTMLDivElement>(null)
+  const barreRef = useRef<HTMLDivElement>(null)
   const dpr = window.devicePixelRatio || 1
 
   // État drag local (ref pour ne pas trigger de re-render)
@@ -174,6 +179,7 @@ export function Timeline() {
     tl.width = cw * dpr; tl.height = ch * dpr
     rul.style.width = rw + 'px'; rul.style.height = RH + 'px'
     rul.width = rw * dpr; rul.height = RH * dpr
+    useAnimationStore.getState().setLargeurVisible(cw)
 
     draw()
   }, [store.tracks.length, dpr])
@@ -202,6 +208,23 @@ export function Timeline() {
     if (rulWrapRef.current) obs.observe(rulWrapRef.current)
     return () => obs.disconnect()
   }, [resize])
+
+  // La barre suit le store, et non l'inverse : molette, zoom et suivi du curseur écrivent tous
+  // scrollX, et elle doit refléter chacun d'eux.
+  useEffect(() => {
+    const barre = barreRef.current
+    if (barre && Math.abs(barre.scrollLeft - store.scrollX) > 0.5) barre.scrollLeft = store.scrollX
+  })
+
+  // Le curseur qui sort de la vue la ramène à lui — en lecture comme après Début ou Fin. Sans ça,
+  // une lecture zoomée filait hors de l'écran, et Début renvoyait à zéro sans montrer zéro. Un
+  // défilement à la main ne bouge pas le curseur : il n'est donc jamais contrarié.
+  useEffect(() => {
+    const { playhead, pxPerMs, scrollX, largeurVisible, setScrollX } = useAnimationStore.getState()
+    if (largeurVisible <= 0) return
+    const x = playhead * pxPerMs - scrollX
+    if (x < 0 || x > largeurVisible) setScrollX(playhead * pxPerMs - largeurVisible * 0.1)
+  }, [store.playhead])
 
   // Les événements wheel doivent être non-passifs pour pouvoir appeler preventDefault()
   // et éviter que Ctrl+Wheel déclenche le zoom du navigateur.
@@ -375,22 +398,33 @@ export function Timeline() {
                   </button>
                   {tr.name}
                 </div>
-                <div className={styles.tlRange}>{tr.min}° / {tr.max}°</div>
+                <div className={styles.tlRange}>{auDixieme(tr.min)}° / {auDixieme(tr.max)}°</div>
                 <div className={styles.tlVal}>{v.toFixed(1)}°</div>
               </div>
             )
           })}
         </div>
 
-        {/* Canvas */}
-        <div className={styles.canvasWrap} ref={wrapRef} style={{ height: H }}>
-          <canvas
-            ref={tlRef}
-            onMouseDown={onMouseDown}
-            onMouseMove={onMouseMove}
-            onMouseUp={onMouseUp}
-            onDoubleClick={onDblClick}
-          />
+        <div className={styles.colonnePistes}>
+          <div className={styles.canvasWrap} ref={wrapRef} style={{ height: H }}>
+            <canvas
+              ref={tlRef}
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp}
+              onDoubleClick={onDblClick}
+            />
+          </div>
+          <div
+            ref={barreRef}
+            className={styles.barre}
+            onScroll={e => {
+              const s = e.currentTarget.scrollLeft
+              if (Math.abs(s - useAnimationStore.getState().scrollX) > 0.5) store.setScrollX(s)
+            }}
+          >
+            <div style={{ width: store.totalMs * store.pxPerMs + MARGE_FIN_PX }} />
+          </div>
         </div>
       </div>
     </div>

@@ -1,28 +1,9 @@
+import { Icone } from '../../../shared/components/Icone'
 import { useAnimationStore } from '../store/animationStore'
-import { trackVal } from '../utils/catmullRom'
 import styles from './PropertiesPanel.module.css'
 
 export function PropertiesPanel() {
-  const { tracks, playhead, selectedKf, moveKf, deleteKf, clearSel } = useAnimationStore()
-
-  // Positions interpolées pour l'aperçu SVG
-  const pos = Object.fromEntries(
-    tracks.map(tr => {
-      const sorted = [...tr.kfs].sort((a, b) => a.t - b.t)
-      return [tr.id, trackVal(sorted, playhead, tr.min, tr.max)]
-    })
-  )
-
-  const oeilG = pos['OEIL_GAUCHE'] ?? 0
-  const oeilD = pos['OEIL_DROIT']  ?? 0
-  const couGD = pos['COU_GAUCHE_DROITE'] ?? 0
-  const couHB = pos['COU_HAUT_BAS']      ?? 0
-
-  // Calculs SVG — identiques au HTML original
-  const headTx = -couGD * 0.6
-  const headTy = -couHB * 0.4
-  const pupLY  = 82 - oeilG * 1.2
-  const pupRY  = 82 - oeilD * 1.2
+  const { tracks, selectedKf, moveKf, deleteKf, clearSel } = useAnimationStore()
 
   // Keyframe sélectionnée
   let selTrack = null, selKf = null
@@ -33,41 +14,6 @@ export function PropertiesPanel() {
 
   return (
     <div className={styles.panel}>
-
-      {/* Aperçu robot SVG */}
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Aperçu Robot</div>
-        <svg viewBox="0 0 196 196" xmlns="http://www.w3.org/2000/svg" className={styles.robotSvg}>
-          {/* base */}
-          <rect x="68" y="182" width="60" height="10" rx="5" fill="#1e2d3d"/>
-          {/* cou */}
-          <rect x="86" y="148" width="24" height="38" rx="4" fill="#1e2d3d"/>
-          {/* tête — panoramique + inclinaison */}
-          <g transform={`translate(${headTx}, ${headTy})`}>
-            <rect x="28" y="34" width="140" height="116" rx="16" fill="#1a2a3d" stroke="#2a4a6a" strokeWidth="1.5"/>
-            <circle cx="26"  cy="88" r="13" fill="#111e2d" stroke="#2a4a6a" strokeWidth="1"/>
-            <circle cx="170" cy="88" r="13" fill="#111e2d" stroke="#2a4a6a" strokeWidth="1"/>
-            {/* socket gauche */}
-            <circle cx="74"  cy="82" r="27" fill="#0a1520" stroke="#2a4a6a" strokeWidth="1.5"/>
-            {/* socket droit */}
-            <circle cx="122" cy="82" r="27" fill="#0a1520" stroke="#2a4a6a" strokeWidth="1.5"/>
-            {/* pupille gauche */}
-            <circle cx="74" cy={pupLY} r="15" fill="#4fc3f7" opacity=".9"/>
-            <circle cx="74" cy={pupLY} r="7"  fill="#1a6080"/>
-            <circle cx="80" cy={pupLY - 6} r="4" fill="white" opacity=".55"/>
-            {/* pupille droite */}
-            <circle cx="122" cy={pupRY} r="15" fill="#4fc3f7" opacity=".9"/>
-            <circle cx="122" cy={pupRY} r="7"  fill="#1a6080"/>
-            <circle cx="128" cy={pupRY - 6} r="4" fill="white" opacity=".55"/>
-            {/* bouche */}
-            <rect x="52" y="126" width="92" height="11" rx="5" fill="#0a1e12"/>
-            <rect x="55" y="128" width="86" height="7"  rx="3" fill="#3fb95077"/>
-            {/* antenne */}
-            <line x1="98" y1="34" x2="98" y2="16" stroke="#2a4a6a" strokeWidth="2.5"/>
-            <circle cx="98" cy="11" r="6" fill="#58a6ff" opacity=".85"/>
-          </g>
-        </svg>
-      </div>
 
       {/* Pas de réglage de vitesse ici : elles viennent du robot.
           Vitesse et accélération sont des propriétés du servo, lues dans robot.properties et
@@ -104,7 +50,7 @@ export function PropertiesPanel() {
               className={styles.deleteBtn}
               onClick={() => { deleteKf(selTrack!.id as any, selKf!.id); clearSel() }}
             >
-              🗑 Supprimer
+              <Icone nom="corbeille" taille={13} />Supprimer
             </button>
           </div>
         ) : (

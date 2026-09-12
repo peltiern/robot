@@ -80,6 +80,19 @@ class AnimationControllerTest {
         }
 
         /**
+         * Le fichier serait écrit, puis ignoré au prochain chargement : l'animation disparaîtrait
+         * au redémarrage sans un mot. C'est arrivé avec l'éditeur resté à la version 1.
+         */
+        @Test
+        void uneAnimationDUneAutreVersionNEstPasEcrite() {
+            Animation perimee = new Animation("Salut", 2000, animation("Salut").pistes(), List.of(), 1);
+
+            assertEquals(HttpStatus.BAD_REQUEST, controleur.remplacer("Salut", perimee).getStatusCode());
+            assertEquals(HttpStatus.BAD_REQUEST, controleur.creer(perimee).getStatusCode());
+            assertEquals(List.of(), controleur.noms());
+        }
+
+        /**
          * Une transition trop rapide pour le servo n'empêche pas d'enregistrer — un brouillon est
          * légitime — mais elle doit être dite, sinon l'écart entre la courbe et le mouvement reste
          * inexplicable.

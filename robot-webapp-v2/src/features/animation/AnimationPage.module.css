@@ -33,89 +33,26 @@
 .footerRight { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .statusMsg   { color: var(--success); font-size: 11px; }
 
-.saveBtn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 2px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 11px;
-  transition: border-color 0.1s;
+
+
+/* L'aperçu 3D prend toute la largeur : c'est la dimension que l'écran a en trop, alors que la
+   hauteur est comptée — la timeline en a besoin pour ses cinq pistes. */
+.apercu {
+  position: relative;
+  flex-shrink: 0;
+  height: clamp(200px, 34vh, 380px);
+  background: #101318;
+  border-bottom: 1px solid var(--border);
 }
-.saveBtn:hover { border-color: var(--accent); }
-
-/* ── Modals ───────────────────────────────────── */
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: #00000099;
-  z-index: 100;
+/* Sans touch-action, glisser au doigt sur la tablette fait défiler la page au lieu de tourner la
+   maquette. */
+.maquette { width: 100%; height: 100%; touch-action: none; }
+.maquette canvas { display: block; }
+.chargement {
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px;
-  width: 560px;
-  max-width: 94vw;
-  max-height: 82vh;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.modalTitle { font-size: 15px; font-weight: 700; color: var(--text); }
-
-.modalArea {
-  flex: 1;
-  min-height: 260px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 8px;
-  border-radius: 6px;
-  font-family: monospace;
   font-size: 11px;
-  resize: vertical;
-}
-.modalArea:focus { outline: none; border-color: var(--accent); }
-
-.modalFooter {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.btn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 4px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.12s;
-}
-.btn:hover { background: #2d333b; border-color: #58a6ff66; }
-
-/* Bandeau des avertissements du vérificateur : ce que le robot ne saura pas suivre. */
-.avertissements {
-  padding: 8px 12px;
-  background: #4a3410;
-  border-top: 1px solid #7a5510;
-  color: #ffd08a;
-  font-size: 12px;
-  max-height: 140px;
-  overflow-y: auto;
-}
-
-.avertissements ul {
-  margin: 4px 0 6px;
-  padding-left: 18px;
+  color: var(--dim);
 }

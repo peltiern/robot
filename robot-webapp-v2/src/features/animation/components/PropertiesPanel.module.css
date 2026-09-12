@@ -23,7 +23,6 @@
   margin-bottom: 8px;
 }
 
-.robotSvg { width: 196px; height: 196px; display: block; }
 
 /* Keyframe editor */
 .kfEditor    { display: flex; flex-direction: column; gap: 7px; }
@@ -54,6 +53,10 @@
   cursor: pointer;
   font-size: 11px;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   transition: background 0.1s, border-color 0.1s;
 }
 .deleteBtn:hover { background: #f8514922; border-color: var(--danger); }
