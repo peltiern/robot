@@ -82,7 +82,9 @@ nav:
   - Présentation: index.md
   - Matériel: materiel/index.md
   - Architecture logicielle: architecture/index.md
-  - Fonctionnalités: fonctionnalites/index.md
+  - Fonctionnalités:
+      - Vue d'ensemble: fonctionnalites/index.md
+      - Le regard: fonctionnalites/regard.md
   - Application HUD: hud/index.md
   - API:
       - Vue d'ensemble: api/index.md
