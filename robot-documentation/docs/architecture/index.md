@@ -8,6 +8,9 @@ remplaçable, testable et surveillable indépendamment des autres.
 
 ## Les couches, autour du bus
 
+<div class="diagram-zoom">
+<input type="checkbox" id="zoom-archi-bus" class="diagram-zoom-toggle">
+<label for="zoom-archi-bus" class="diagram-zoom-label">
 <figure>
 <div class="archi-bus" aria-hidden="false">
 <style>
@@ -20,62 +23,51 @@ remplaçable, testable et surveillable indépendamment des autres.
 .archi-bus .sous-titre{font-size:11px;opacity:.75}
 .archi-bus .lien{stroke:currentColor;stroke-width:1.25;opacity:.45;marker-start:url(#archi-fleche);marker-end:url(#archi-fleche)}
 .archi-bus .accent{fill:var(--md-accent-fg-color)}
-.archi-bus .etiquette{font-size:12px;font-weight:600;fill:var(--md-accent-fg-color);opacity:0}
+.archi-bus .etiquette-vol{font-size:12px;font-weight:600;fill:var(--md-accent-fg-color)}
 
-@keyframes archi-organes-pulse{
-  0%,3%,100%{stroke:currentColor;stroke-width:1.5}
+@keyframes archi-capteurs-pulse{
+  0%,100%{stroke:currentColor;stroke-width:1.5}
   1.5%{stroke:var(--md-accent-fg-color);stroke-width:3}
-  80%,86%{stroke:currentColor;stroke-width:1.5}
-  83%{stroke:var(--md-accent-fg-color);stroke-width:3}
+  6%{stroke:currentColor;stroke-width:1.5}
+}
+@keyframes archi-actionneurs-pulse{
+  0%,76%,100%{stroke:currentColor;stroke-width:1.5}
+  80%{stroke:var(--md-accent-fg-color);stroke-width:3}
+  86%{stroke:currentColor;stroke-width:1.5}
 }
 @keyframes archi-decisionnel-pulse{
-  0%,33%,49%,100%{stroke:currentColor;stroke-width:1.5}
+  0%,31%,49%,100%{stroke:currentColor;stroke-width:1.5}
   40%{stroke:var(--md-accent-fg-color);stroke-width:3}
 }
-@keyframes archi-paquet-a{
-  0%,100%{opacity:0}
-  1%{opacity:1;cy:340px}
-  14%{opacity:1;cy:255px}
-  16%{opacity:0}
+/* Le paquet grimpe de la couche vers le bus, glisse À L'INTÉRIEUR du bus
+   (cy=230, à mi-hauteur), puis redescend dans la couche d'arrivée — un
+   coude, pas un saut, pour que le trajet dans le bus se voie vraiment. */
+@keyframes archi-paquet-aller{
+  0%,100%{transform:translate(120px,340px);opacity:0}
+  1%{transform:translate(120px,340px);opacity:1}
+  9%{transform:translate(120px,255px);opacity:1}
+  13%{transform:translate(120px,230px);opacity:1}
+  27%{transform:translate(600px,230px);opacity:1}
+  31%{transform:translate(600px,340px);opacity:1}
+  32%{opacity:0}
 }
-@keyframes archi-paquet-b{
-  0%,17%,100%{opacity:0}
-  19%{opacity:1;cy:255px}
-  32%{opacity:1;cy:340px}
-  34%{opacity:0}
+@keyframes archi-paquet-retour{
+  0%,48%{transform:translate(600px,340px);opacity:0}
+  49%{transform:translate(600px,340px);opacity:1}
+  57%{transform:translate(600px,255px);opacity:1}
+  61%{transform:translate(600px,230px);opacity:1}
+  75%{transform:translate(280px,230px);opacity:1}
+  79%{transform:translate(280px,340px);opacity:1}
+  80%{opacity:0}
+  100%{transform:translate(600px,340px);opacity:0}
 }
-@keyframes archi-paquet-c{
-  0%,48%,100%{opacity:0}
-  50%{opacity:1;cy:340px}
-  63%{opacity:1;cy:255px}
-  65%{opacity:0}
-}
-@keyframes archi-paquet-d{
-  0%,66%,100%{opacity:0}
-  68%{opacity:1;cy:255px}
-  80%{opacity:1;cy:340px}
-  82%{opacity:0}
-}
-@keyframes archi-etiquette-1{
-  0%,2%,33%,100%{opacity:0}
-  4%{opacity:1}
-  31%{opacity:1}
-}
-@keyframes archi-etiquette-2{
-  0%,48%,79%,100%{opacity:0}
-  50%{opacity:1}
-  77%{opacity:1}
-}
-.archi-bus #p-organes{animation:archi-organes-pulse 9s ease-in-out infinite}
+.archi-bus #p-capteurs{animation:archi-capteurs-pulse 9s ease-in-out infinite}
+.archi-bus #p-actionneurs{animation:archi-actionneurs-pulse 9s ease-in-out infinite}
 .archi-bus #p-decisionnel{animation:archi-decisionnel-pulse 9s ease-in-out infinite}
-.archi-bus #q-a{animation:archi-paquet-a 9s linear infinite}
-.archi-bus #q-b{animation:archi-paquet-b 9s linear infinite}
-.archi-bus #q-c{animation:archi-paquet-c 9s linear infinite}
-.archi-bus #q-d{animation:archi-paquet-d 9s linear infinite}
-.archi-bus #t-1{animation:archi-etiquette-1 9s linear infinite}
-.archi-bus #t-2{animation:archi-etiquette-2 9s linear infinite}
+.archi-bus #g-aller{animation:archi-paquet-aller 9s linear infinite}
+.archi-bus #g-retour{animation:archi-paquet-retour 9s linear infinite}
 </style>
-<svg viewBox="0 0 900 460" role="img" aria-label="Toutes les couches parlent uniquement au bus d'évènements, jamais entre elles directement. Exemple animé : la caméra détecte un visage, le décisionnel décide où regarder, le cou reçoit l'ordre — chaque étape passe par le bus.">
+<svg viewBox="0 0 900 460" role="img" aria-label="Toutes les couches parlent uniquement au bus d'évènements, jamais entre elles directement. Exemple animé : l'évènement VisagePercuEvent grimpe des capteurs jusqu'au bus, s'y déplace horizontalement avec son nom visible, puis redescend vers le décisionnel ; l'évènement MouvementCouEvent fait le même trajet du décisionnel vers les actionneurs.">
   <defs>
     <marker id="archi-fleche" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M0,0 L8,4 L0,8 Z" fill="currentColor"/>
@@ -85,10 +77,11 @@ remplaçable, testable et surveillable indépendamment des autres.
   <!-- connecteurs -->
   <line class="lien" x1="175" y1="114" x2="175" y2="205"/>
   <line class="lien" x1="725" y1="114" x2="725" y2="205"/>
-  <line class="lien" x1="145" y1="340" x2="145" y2="255"/>
-  <line class="lien" x1="345" y1="340" x2="345" y2="255"/>
-  <line class="lien" x1="530" y1="340" x2="530" y2="255"/>
-  <line class="lien" x1="720" y1="340" x2="720" y2="255"/>
+  <line class="lien" x1="120" y1="340" x2="120" y2="255"/>
+  <line class="lien" x1="280" y1="340" x2="280" y2="255"/>
+  <line class="lien" x1="440" y1="340" x2="440" y2="255"/>
+  <line class="lien" x1="600" y1="340" x2="600" y2="255"/>
+  <line class="lien" x1="760" y1="340" x2="760" y2="255"/>
 
   <!-- bus -->
   <rect class="bus" x="50" y="205" width="800" height="50" rx="6"/>
@@ -105,40 +98,49 @@ remplaçable, testable et surveillable indépendamment des autres.
   <text x="725" y="94" text-anchor="middle" class="sous-titre">surveille tout</text>
 
   <!-- couches du dessous -->
-  <rect id="p-organes" class="boite" x="50" y="340" width="190" height="64" rx="8"/>
-  <text x="145" y="366" text-anchor="middle" class="titre-boite">organes/</text>
-  <text x="145" y="384" text-anchor="middle" class="sous-titre">capteurs, actionneurs</text>
+  <text x="200" y="330" text-anchor="middle" class="sous-titre">— organes/ —</text>
+  <rect id="p-capteurs" class="boite" x="50" y="340" width="140" height="64" rx="8"/>
+  <text x="120" y="366" text-anchor="middle" class="titre-boite">capteurs/</text>
+  <text x="120" y="384" text-anchor="middle" class="sous-titre">caméra, micro...</text>
 
-  <rect class="boite" x="270" y="340" width="150" height="64" rx="8"/>
-  <text x="345" y="366" text-anchor="middle" class="titre-boite">mémoire/</text>
-  <text x="345" y="384" text-anchor="middle" class="sous-titre">courte, longue</text>
+  <rect id="p-actionneurs" class="boite" x="210" y="340" width="140" height="64" rx="8"/>
+  <text x="280" y="366" text-anchor="middle" class="titre-boite">actionneurs/</text>
+  <text x="280" y="384" text-anchor="middle" class="sous-titre">cou, yeux, roues...</text>
 
-  <rect id="p-decisionnel" class="boite" x="450" y="340" width="160" height="64" rx="8"/>
-  <text x="530" y="366" text-anchor="middle" class="titre-boite">décisionnel/</text>
-  <text x="530" y="384" text-anchor="middle" class="sous-titre">arbitrage, regard</text>
+  <rect class="boite" x="370" y="340" width="140" height="64" rx="8"/>
+  <text x="440" y="366" text-anchor="middle" class="titre-boite">mémoire/</text>
+  <text x="440" y="384" text-anchor="middle" class="sous-titre">courte, longue</text>
 
-  <rect class="boite" x="640" y="340" width="160" height="64" rx="8"/>
-  <text x="720" y="366" text-anchor="middle" class="titre-boite">activités/</text>
-  <text x="720" y="384" text-anchor="middle" class="sous-titre">conversation...</text>
+  <rect id="p-decisionnel" class="boite" x="530" y="340" width="140" height="64" rx="8"/>
+  <text x="600" y="366" text-anchor="middle" class="titre-boite">décisionnel/</text>
+  <text x="600" y="384" text-anchor="middle" class="sous-titre">arbitrage, regard</text>
 
-  <!-- étiquettes de l'évènement en cours -->
-  <text id="t-1" x="450" y="195" text-anchor="middle" class="etiquette">VisagePercuEvent</text>
-  <text id="t-2" x="450" y="195" text-anchor="middle" class="etiquette">MouvementCouEvent</text>
+  <rect class="boite" x="690" y="340" width="140" height="64" rx="8"/>
+  <text x="760" y="366" text-anchor="middle" class="titre-boite">activités/</text>
+  <text x="760" y="384" text-anchor="middle" class="sous-titre">conversation...</text>
 
-  <!-- paquets animés -->
-  <circle id="q-a" class="accent" cx="145" cy="340" r="6"/>
-  <circle id="q-b" class="accent" cx="530" cy="255" r="6"/>
-  <circle id="q-c" class="accent" cx="530" cy="340" r="6"/>
-  <circle id="q-d" class="accent" cx="145" cy="255" r="6"/>
+  <!-- évènements animés : chacun grimpe jusqu'au bus, s'y déplace à l'horizontale
+       avec son nom, puis redescend dans la couche d'arrivée -->
+  <g id="g-aller" class="paquet">
+    <circle class="accent" r="6"/>
+    <text class="etiquette-vol" y="-14" text-anchor="middle">VisagePercuEvent</text>
+  </g>
+  <g id="g-retour" class="paquet">
+    <circle class="accent" r="6"/>
+    <text class="etiquette-vol" y="-14" text-anchor="middle">MouvementCouEvent</text>
+  </g>
 </svg>
 </div>
 <figcaption>
-Exemple réel et complet : la caméra détecte un visage (<code>VisagePercuEvent</code>),
-le <code>décisionnel</code> (<code>Regard</code>) décide où tourner la tête et publie
-<code>MouvementCouEvent</code>, que l'organe <code>Cou</code> exécute. Quatre couches,
-zéro appel direct entre elles — seulement le bus.
+Exemple réel et complet : la caméra (<code>capteurs/</code>) détecte un visage
+(<code>VisagePercuEvent</code>), le <code>décisionnel</code> (<code>Regard</code>)
+décide où tourner la tête et publie <code>MouvementCouEvent</code>, que l'organe
+<code>Cou</code> (<code>actionneurs/</code>) exécute. Cinq couches, zéro appel direct
+entre elles — seulement le bus.
 </figcaption>
 </figure>
+</label>
+</div>
 
 Aucune flèche ne relie deux boîtes entre elles : c'est voulu. Un organe qui appellerait
 une autre couche directement (un `@Scheduled` qui pousse lui-même au websocket, par
@@ -151,6 +153,9 @@ bus.
 
 ## Mémoire courte, mémoire longue
 
+<div class="diagram-zoom">
+<input type="checkbox" id="zoom-archi-mem" class="diagram-zoom-toggle">
+<label for="zoom-archi-mem" class="diagram-zoom-label">
 <figure>
 <div class="archi-mem">
 <style>
@@ -208,6 +213,8 @@ sens après coupure). À droite, rien ne bouge : c'est le seul fichier SQLite du
 rejoué au démarrage via <code>schema.sql</code>.
 </figcaption>
 </figure>
+</label>
+</div>
 
 ## Et ensuite
 

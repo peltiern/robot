@@ -11,3 +11,59 @@
 .md-typeset h2 {
   font-weight: 700;
 }
+
+/*
+ * Zoom plein écran pour les schémas dessinés en SVG (pas des <img>, donc hors
+ * de portée de glightbox) : case à cocher invisible + <label>, aucun JS.
+ * Réutilisé sur chaque page qui a un diagramme animé.
+ */
+.diagram-zoom-toggle {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.diagram-zoom-label {
+  display: block;
+  cursor: zoom-in;
+  border-radius: .2rem;
+}
+
+.diagram-zoom-label:hover {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 4px;
+}
+
+.diagram-zoom-label::after {
+  content: "🔍 cliquer pour agrandir";
+  display: block;
+  text-align: center;
+  font-size: .7rem;
+  opacity: .6;
+  margin-top: .3rem;
+}
+
+.diagram-zoom-toggle:checked + .diagram-zoom-label {
+  cursor: zoom-out;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--md-default-bg-color);
+  padding: 2rem 1rem;
+  margin: 0;
+  outline: none;
+}
+
+.diagram-zoom-toggle:checked + .diagram-zoom-label figure {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0;
+}
+
+.diagram-zoom-toggle:checked + .diagram-zoom-label::after {
+  content: "✕ cliquer pour réduire";
+}
