@@ -1,0 +1,518 @@
+openapi: 3.0.3
+info:
+  title: API du robot Wall-E
+  version: "1.0"
+  description: >
+    API REST exposée par `robot-core` (Spring Boot). Aucune authentification, CORS
+    ouvert (`@CrossOrigin(origins = "*")`). Pensée pour la découverte de capacités :
+    un client construit son interface à partir de `/organes` et `/axes-animables`
+    plutôt que de coder des identifiants en dur.
+
+
+    Le WebSocket (STOMP, endpoint `/wsendpoint`) n'est pas représenté ici — voir la
+    section dédiée en bas de page.
+servers:
+  - url: /api
+
+tags:
+  - name: Organes
+  - name: Personnes
+  - name: Regard
+  - name: Animations
+  - name: Arrêt d'urgence
+
+paths:
+  /organes:
+    get:
+      tags: [Organes]
+      summary: Liste tous les organes
+      description: >
+        Découverte de capacités : chaque organe porte ses articulations (s'il est
+        pilotable) ou ses mesures (s'il est un capteur), jamais les deux.
+      responses:
+        "200":
+          description: Liste des organes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Organe" }
+
+  /organes/{id}:
+    get:
+      tags: [Organes]
+      summary: Un organe par son identifiant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+          example: cou
+      responses:
+        "200":
+          description: L'organe
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Organe" }
+        "404":
+          description: Organe inconnu
+
+  /personnes:
+    get:
+      tags: [Personnes]
+      summary: Liste résumée des personnes connues
+      description: Sans historique ni conversation — voir `/personnes/{id}` pour le détail.
+      responses:
+        "200":
+          description: Liste résumée
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/FichePersonneDto" }
+    post:
+      tags: [Personnes]
+      summary: Crée une personne
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                prenom: { type: string }
+                photos:
+                  type: array
+                  items: { type: string, format: binary }
+      responses:
+        "200":
+          description: Personne créée
+
+  /personnes/{id}:
+    get:
+      tags: [Personnes]
+      summary: Fiche complète d'une personne
+      description: Timeline des rencontres et fil de conversation inclus.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Fiche complète
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FichePersonneDto" }
+        "404":
+          description: Personne inconnue
+    put:
+      tags: [Personnes]
+      summary: Renomme une personne
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prenom: { type: string }
+              example: { prenom: "Nicolas" }
+      responses:
+        "200":
+          description: Personne renommée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FichePersonneDto" }
+    delete:
+      tags: [Personnes]
+      summary: Supprime une personne
+      description: En cascade — visages et rencontres emportés (clés étrangères activées).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Supprimée
+
+  /personnes/{id}/vignette:
+    get:
+      tags: [Personnes]
+      summary: Portrait de la personne
+      description: >
+        Jamais inclus dans le JSON de la fiche — trente portraits en base64 dans une
+        liste feraient ramer la tablette.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Image JPEG
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+
+  /personnes/{id}/visages:
+    post:
+      tags: [Personnes]
+      summary: Ajoute des visages à une personne existante
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photos:
+                  type: array
+                  items: { type: string, format: binary }
+      responses:
+        "200":
+          description: Visages ajoutés
+
+  /personnes/{id}/conversation:
+    delete:
+      tags: [Personnes]
+      summary: Efface le fil de conversation
+      description: Garde la personne et ses rencontres, oublie ce qui a été dit.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Conversation effacée
+
+  /regard:
+    get:
+      tags: [Regard]
+      summary: Réglages courants du regard
+      description: >
+        De quoi le HUD dessine la zone morte sur l'image vidéo. Relu à chaque appel
+        (réglages rechargeables à chaud), jamais mis en cache. Voir la page
+        [Fonctionnalités → Le regard](../fonctionnalites/regard.md).
+      responses:
+        "200":
+          description: Réglages actuels
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReglagesRegard" }
+
+  /animations:
+    get:
+      tags: [Animations]
+      summary: Noms des animations connues
+      responses:
+        "200":
+          description: Liste de noms
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+    post:
+      tags: [Animations]
+      summary: Crée une animation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Animation" }
+      responses:
+        "200":
+          description: Animation créée
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: string }
+
+  /animations/{nom}:
+    get:
+      tags: [Animations]
+      summary: Une animation complète
+      parameters:
+        - name: nom
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: L'animation
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Animation" }
+        "404":
+          description: Animation inconnue
+    put:
+      tags: [Animations]
+      summary: Remplace une animation
+      parameters:
+        - name: nom
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Animation" }
+      responses:
+        "200":
+          description: Animation remplacée
+    delete:
+      tags: [Animations]
+      summary: Supprime une animation
+      parameters:
+        - name: nom
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Supprimée
+
+  /animation-en-cours:
+    get:
+      tags: [Animations]
+      summary: Animation en cours de lecture
+      responses:
+        "200":
+          description: État courant
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnimationEnCours" }
+    put:
+      tags: [Animations]
+      summary: Lance une lecture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DemandeLecture" }
+      responses:
+        "200":
+          description: Lecture lancée
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnimationEnCours" }
+    delete:
+      tags: [Animations]
+      summary: Arrête la lecture en cours
+      responses:
+        "204":
+          description: Arrêtée
+
+  /axes-animables:
+    get:
+      tags: [Animations]
+      summary: Axes que l'éditeur peut animer
+      description: >
+        Construit les pistes de l'éditeur d'animation — un axe corrigé dans
+        `robot.properties` change la timeline sans recompiler le front.
+      responses:
+        "200":
+          description: Liste des axes
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AxeAnimable" }
+
+  /arret-urgence:
+    get:
+      tags: [Arrêt d'urgence]
+      summary: État courant de l'arrêt d'urgence
+      description: >
+        Lecture seule : déclencher ou réarmer l'arrêt d'urgence passe par le
+        WebSocket, comme tout ordre au robot. Cette route répond juste à la question
+        qu'un client se pose en arrivant — sans elle, un HUD ouvert après coup
+        afficherait un robot normal alors qu'il refuse tout mouvement.
+      responses:
+        "200":
+          description: État courant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  actif: { type: boolean }
+                example: { actif: false }
+
+components:
+  schemas:
+    TypeOrgane:
+      type: string
+      enum: [ACTIONNEUR, CAPTEUR]
+      description: Pilotable (porte des articulations) ou capteur (porte des mesures).
+
+    Orientation:
+      type: string
+      enum: [VERTICAL, HORIZONTAL, ROTATION]
+      description: Oriente le choix du widget côté client (un axe VERTICAL appelle un curseur vertical).
+
+    EtatSante:
+      type: string
+      enum: [VIVANT, MUET, ETEINT]
+      description: >
+        VIVANT bat à la cadence attendue ; MUET devrait battre et ne bat plus
+        (anomalie) ; ETEINT n'est pas en service, par configuration ou faute de
+        matériel (normal).
+
+    Sante:
+      type: object
+      properties:
+        etat: { $ref: "#/components/schemas/EtatSante" }
+        ageMillis: { type: integer, format: int64, nullable: true }
+        surveille: { type: boolean }
+
+    Articulation:
+      type: object
+      description: Un degré de liberté pilotable, dans le même repère que les évènements de mouvement.
+      properties:
+        id: { type: string, example: pan }
+        libelle: { type: string, example: Panoramique }
+        unite: { type: string, example: deg }
+        min: { type: number }
+        max: { type: number }
+        orientation: { $ref: "#/components/schemas/Orientation" }
+        position:
+          type: number
+          nullable: true
+          description: Position courante, `null` si l'organe n'est pas démarré.
+        positionInitiale:
+          type: number
+          nullable: true
+          description: Position visée au démarrage — pas forcément 0.
+
+    Mesure:
+      type: object
+      description: Une mesure en lecture seule d'un organe CAPTEUR.
+      properties:
+        id: { type: string }
+        libelle: { type: string }
+        unite: { type: string }
+        min: { type: number }
+        max: { type: number }
+        valeur: { type: number, nullable: true }
+        hautEstBon:
+          type: boolean
+          description: >
+            Faux pour la plupart des mesures (charge, température...) : monter est
+            mauvais signe. Vrai pour un espace disque libre, par exemple.
+
+    Organe:
+      type: object
+      properties:
+        id: { type: string, example: cou }
+        libelle: { type: string, example: Cou }
+        type: { $ref: "#/components/schemas/TypeOrgane" }
+        articulations:
+          type: array
+          items: { $ref: "#/components/schemas/Articulation" }
+        mesures:
+          type: array
+          items: { $ref: "#/components/schemas/Mesure" }
+        sante:
+          allOf: [{ $ref: "#/components/schemas/Sante" }]
+          nullable: true
+
+    RencontreDto:
+      type: object
+      properties:
+        instant: { type: string, format: date-time }
+        type: { type: string, enum: [PREMIERE, RETOUR] }
+        secondesDAbsence:
+          type: integer
+          format: int64
+          description: "-1 pour une première rencontre."
+
+    MessageDto:
+      type: object
+      properties:
+        role: { type: string, enum: [USER, ASSISTANT, SYSTEM] }
+        texte: { type: string }
+
+    FichePersonneDto:
+      type: object
+      properties:
+        id: { type: string }
+        prenom: { type: string }
+        derniereRencontre: { type: string, format: date-time, nullable: true }
+        nombreDeVisages:
+          type: integer
+          description: Zéro veut dire connue, mais jamais reconnue.
+        nombreDeRencontres: { type: integer }
+        aUneVignette: { type: boolean }
+        rencontres:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/RencontreDto" }
+        conversation:
+          type: array
+          nullable: true
+          items: { $ref: "#/components/schemas/MessageDto" }
+
+    ReglagesRegard:
+      type: object
+      properties:
+        regardEnabled: { type: boolean }
+        zoneMorteRegardDegres: { type: number, example: 4.0 }
+        champHorizontalCameraDegres: { type: number, example: 69.36 }
+        centreOptiqueXRelatif: { type: number, example: 0.518014 }
+        centreOptiqueYRelatif: { type: number, example: 0.429453 }
+        deportCameraDegres: { type: number, example: 3.8 }
+
+    AxeAnimable:
+      type: object
+      properties:
+        id: { type: string, description: "Nom de l'axe, tel qu'il voyage dans le JSON." }
+        libelle: { type: string }
+        positionMin:
+          type: number
+          description: "Degrés relatifs — zéro est la posture de travail, pas une position moteur."
+        positionMax: { type: number }
+        vitesseParDefaut: { type: number, description: "°/s" }
+        accelerationParDefaut: { type: number, description: "°/s²" }
+
+    Animation:
+      type: object
+      properties:
+        nom: { type: string }
+        dureeTotale: { type: integer, format: int64, description: millisecondes }
+        pistes:
+          type: array
+          items: { type: object, description: "Une piste par axe, avec ses images-clés." }
+        sons:
+          type: array
+          items: { type: object }
+        version: { type: integer, nullable: true }
+
+    AnimationEnCours:
+      type: object
+      properties:
+        nom: { type: string }
+        avertissements:
+          type: array
+          items: { type: string }
+
+    DemandeLecture:
+      type: object
+      properties:
+        nom: { type: string }
+        animation: { $ref: "#/components/schemas/Animation" }

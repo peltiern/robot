@@ -67,3 +67,16 @@
 .diagram-zoom-toggle:checked + .diagram-zoom-label::after {
   content: "✕ cliquer pour réduire";
 }
+
+/*
+ * La référence API (Redoc) a besoin de bien plus que la colonne de contenu :
+ * on la fait déborder pleine largeur, comme une vraie doc API.
+ */
+.redoc-embed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
