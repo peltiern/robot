@@ -21,6 +21,18 @@ const PERIODE_CURSEUR_MS = 100
 // le HUD — qui tourne sur la tablette et n'en a pas l'usage — n'en paie jamais le prix.
 const Maquette3D = lazy(() => import('./components/Maquette3D'))
 
+/** En haut pour régler les yeux, à droite pour voir le robot entier. */
+export type Disposition = 'haut' | 'droite'
+const CLE_DISPOSITION = 'atelier.disposition'
+
+function dispositionRetenue(): Disposition {
+  try {
+    return localStorage.getItem(CLE_DISPOSITION) === 'haut' ? 'haut' : 'droite'
+  } catch {
+    return 'droite'
+  }
+}
+
 export function AnimationPage() {
   const store      = useAnimationStore()
   const ws         = useWebSocketStore()
@@ -32,6 +44,12 @@ export function AnimationPage() {
   const originRef  = useRef<number>(0)   // performance.now() quand playhead = 0
   const [statusMsg, setStatusMsg]     = useState('')
   const [libraryKey, setLibraryKey]   = useState(0)
+  const [disposition, setDisposition] = useState<Disposition>(dispositionRetenue)
+
+  function changerDisposition(nouvelle: Disposition) {
+    setDisposition(nouvelle)
+    try { localStorage.setItem(CLE_DISPOSITION, nouvelle) } catch { /* retenue pour la session seulement */ }
+  }
 
   // Robot perdu en mode Robot : on repasse en simulation, sans quoi la lecture continuerait
   // d'envoyer ses ordres dans le vide pendant que l'écran ferait croire qu'il joue.
@@ -199,23 +217,29 @@ export function AnimationPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${disposition === 'haut' ? styles.enHaut : styles.aDroite}`}>
+      {/* L'aperçu reste au même endroit du DOM quelle que soit la disposition : c'est la grille qui le
+          place. Déplacé d'un parent à l'autre, React le démonterait et le modèle serait rechargé. */}
       <div className={styles.apercu}>
         <Suspense fallback={<div className={styles.chargement}>Chargement de la maquette…</div>}>
-          <Maquette3D className={styles.maquette} />
+          <Maquette3D className={styles.maquette} disposition={disposition} onChangerDisposition={changerDisposition} />
         </Suspense>
       </div>
 
-      <Toolbar
-        onPlay={play} onPause={pause} onStop={stop} onSave={saveToServer}
-        onChangerDestination={changerDestination}
-        robotJoignable={ws.connected}
-      />
+      <div className={styles.barre}>
+        <Toolbar
+          onPlay={play} onPause={pause} onStop={stop} onSave={saveToServer}
+          onChangerDestination={changerDestination}
+          robotJoignable={ws.connected}
+        />
+      </div>
 
       <div className={styles.main}>
-        <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} onJouer={jouerDepuisLeDebut} />
+        <div className={styles.gauche}>
+          <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} onJouer={jouerDepuisLeDebut} />
+          <PropertiesPanel />
+        </div>
         <Timeline />
-        <PropertiesPanel />
       </div>
 
       <PanneauAvertissements />

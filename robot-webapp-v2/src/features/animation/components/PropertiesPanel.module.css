@@ -1,8 +1,7 @@
 .panel {
-  width: 220px;
   flex-shrink: 0;
   background: var(--surface);
-  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;

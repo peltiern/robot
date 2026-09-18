@@ -1,5 +1,6 @@
 /**
- * La tringlerie des yeux, relevée sur « Wall-E Eye.stl » (voir robot-core/3d/yeux-walle.html).
+ * La tringlerie des yeux, relevée sur « Wall-E Eye.stl » (voir robot-core/3d/yeux-walle.html), et
+ * retrouvée au centième dans l'assemblage complet « Wall-E GoBilda Full.stl ».
  *
  * Le servo n'est pas sur l'axe de l'œil : vissé dans la coque, il pousse une bielle ancrée sur la
  * platine fixe. C'est un quadrilatère O–S–P–D, dont le rapport va de 1,25 au neutre à 3,70 en bout
@@ -15,9 +16,6 @@ export const MECA = {
   BRAS: 32.0,
   BIELLE: 84.728,
   PSI0: -73.652,          // orientation du bras au neutre
-  Z_SERVO: 66.4,
-  Z_BIELLE: 74.5,
-  Z_ANCRAGE: 74.5,
   SERVO_MIN: -5.6,        // les deux coques se touchent
   SERVO_MAX: 21.3,
 } as const

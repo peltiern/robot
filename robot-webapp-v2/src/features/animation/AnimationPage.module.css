@@ -1,15 +1,37 @@
+/* Une grille plutôt qu'une colonne flex : l'aperçu passe du haut à la droite sans changer de parent. */
 .page {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   height: 100%;
   overflow: hidden;
   background: var(--bg);
 }
+.page > * { grid-column: 1 / -1; min-height: 0; }
+
+.aDroite { grid-template-rows: auto minmax(0, 1fr) auto auto; }
+.aDroite .barre  { grid-row: 1; }
+.aDroite .main   { grid-row: 2; grid-column: 1; }
+.aDroite .apercu { grid-row: 2; grid-column: 2; }
+
+.enHaut { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+.enHaut .apercu { grid-row: 1; }
+.enHaut .barre  { grid-row: 2; }
+.enHaut .main   { grid-row: 3; }
 
 .main {
-  flex: 1;
   display: flex;
   overflow: hidden;
+}
+
+/* Bibliothèque et image-clé empilées à gauche : la timeline reste d'un seul tenant entre elles et la
+   maquette, au lieu d'être coupée de la maquette par le panneau de l'image-clé. */
+.gauche {
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  min-height: 0;
 }
 
 /* ── Footer ──────────────────────────────────── */
@@ -35,15 +57,14 @@
 
 
 
-/* L'aperçu 3D prend toute la largeur : c'est la dimension que l'écran a en trop, alors que la
-   hauteur est comptée — la timeline en a besoin pour ses cinq pistes. */
+/* À droite, le robot entier tient dans la colonne : il est haut et étroit. En haut, le bandeau large et
+   bas convient au visage, et la timeline garde toute la largeur. */
 .apercu {
   position: relative;
-  flex-shrink: 0;
-  height: clamp(200px, 34vh, 380px);
   background: #101318;
-  border-bottom: 1px solid var(--border);
 }
+.aDroite .apercu { width: clamp(240px, 26vw, 440px); border-left: 1px solid var(--border); }
+.enHaut .apercu  { height: clamp(200px, 34vh, 380px); border-bottom: 1px solid var(--border); }
 /* Sans touch-action, glisser au doigt sur la tablette fait défiler la page au lieu de tourner la
    maquette. */
 .maquette { width: 100%; height: 100%; touch-action: none; }

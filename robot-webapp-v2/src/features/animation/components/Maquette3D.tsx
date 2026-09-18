@@ -1,23 +1,36 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAnimationStore } from '../store/animationStore'
-import { creerMaquette } from '../maquette/scene'
+import { creerMaquette, type Maquette, type Vue } from '../maquette/scene'
 import { SimulateurServos } from '../maquette/simulateur'
+import type { Disposition } from '../AnimationPage'
+import styles from './Maquette3D.module.css'
 
 /**
- * La tête du robot en 3D, qui joue la timeline comme le robot la jouerait.
+ * Le robot en 3D, qui joue la timeline comme il la jouerait.
  *
  * Elle montre la même chose dans les deux modes : en Simulation c'est tout ce qui bouge, en Robot
  * c'est ce qu'on demande à la vraie tête — de quoi voir d'un coup d'œil si elle suit.
  *
  * Exportée par défaut pour être chargée à part (voir PropertiesPanel).
  */
-export default function Maquette3D({ className }: { className?: string }) {
+interface Proprietes {
+  className?: string
+  disposition: Disposition
+  onChangerDisposition: (d: Disposition) => void
+}
+
+export default function Maquette3D({ className, disposition, onChangerDisposition }: Proprietes) {
   const hoteRef = useRef<HTMLDivElement>(null)
+  const maquetteRef = useRef<Maquette | null>(null)
+  // la vue qui va avec la place : le visage dans le bandeau du haut, le robot entier dans la colonne
+  const vueDe = (d: Disposition): Vue => d === 'haut' ? 'visage' : 'entier'
+  const [vue, setVue] = useState<Vue>(vueDe(disposition))
 
   useEffect(() => {
     const hote = hoteRef.current
     if (!hote) return
-    const maquette = creerMaquette()
+    const maquette = creerMaquette(vueDe(disposition))
+    maquetteRef.current = maquette
     hote.appendChild(maquette.element)
     const observateur = new ResizeObserver(() => maquette.dimensionner(hote.clientWidth, hote.clientHeight))
     observateur.observe(hote)
@@ -48,8 +61,36 @@ export default function Maquette3D({ className }: { className?: string }) {
       observateur.disconnect()
       maquette.liberer()
       maquette.element.remove()
+      maquetteRef.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- la vue initiale seulement ; la suite passe par cadrer
   }, [])
 
-  return <div ref={hoteRef} className={className} />
+  function cadrer(nouvelle: Vue) {
+    setVue(nouvelle)
+    maquetteRef.current?.cadrer(nouvelle)
+  }
+
+  function deplacer() {
+    const nouvelle: Disposition = disposition === 'haut' ? 'droite' : 'haut'
+    onChangerDisposition(nouvelle)
+    cadrer(vueDe(nouvelle))
+  }
+
+  return (
+    <div className={`${styles.cadre} ${className ?? ''}`}>
+      <div ref={hoteRef} className={styles.hote} />
+      <div className={styles.vues}>
+        {(['entier', 'visage'] as const).map(v => (
+          <button key={v} className={vue === v ? styles.actif : undefined} onClick={() => cadrer(v)}
+                  title="Clic droit ou Maj pour déplacer · double-clic pour recadrer">
+            {v === 'entier' ? 'Robot' : 'Visage'}
+          </button>
+        ))}
+        <button onClick={deplacer} title={disposition === 'haut' ? 'Mettre la maquette à droite' : 'Mettre la maquette en haut'}>
+          {disposition === 'haut' ? 'À droite ⇥' : 'En haut ⤒'}
+        </button>
+      </div>
+    </div>
+  )
 }

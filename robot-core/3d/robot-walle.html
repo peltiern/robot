@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wall-E complet</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #101318; color: #d9dde3; font: 13px/1.45 system-ui, sans-serif; overflow: hidden; }
+  #scene { position: fixed; inset: 0; }
+  #panneau { position: fixed; top: 12px; left: 12px; width: 310px; max-height: calc(100% - 24px); overflow: auto;
+             background: rgba(16, 19, 24, .9); border: 1px solid #2a3038; border-radius: 8px; padding: 12px 14px; box-sizing: border-box; }
+  h1 { font-size: 15px; margin: 0 0 6px; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: #8fa3b8; margin: 14px 0 4px; }
+  .axe { margin-top: 7px; }
+  .axe label { display: flex; justify-content: space-between; }
+  .axe input { width: 100%; margin: 2px 0 0; }
+  .val { font-variant-numeric: tabular-nums; color: #f5b324; }
+  .note { color: #8a94a0; font-size: 12px; }
+  button { background: #232a33; color: #d9dde3; border: 1px solid #37414d; border-radius: 5px; padding: 4px 9px; margin: 8px 4px 0 0; cursor: pointer; }
+  button:hover { border-color: #5a6878; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  td { padding: 2px 0; vertical-align: top; }
+  td:last-child { text-align: right; font-variant-numeric: tabular-nums; padding-left: 8px; }
+  #chargement { position: fixed; inset: 0; display: grid; place-items: center; color: #8fa3b8; pointer-events: none; }
+  @media (max-width: 640px) { #panneau { width: auto; right: 12px; top: auto; bottom: 12px; max-height: 45%; } }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<div id="chargement">Chargement du modèle…</div>
+<div id="panneau">
+  <h1>Wall-E — modèle cinématique</h1>
+  <div class="note">Relevé dans « Wall-E GoBilda Full.stl » (27 M triangles), décimé corps par corps ; les pivots sont
+    mesurés, pas estimés. Glisser pour tourner, clic droit pour déplacer, molette pour zoomer.</div>
+  <h2>Axes</h2>
+  <div id="axes"></div>
+  <button id="neutre">Neutre</button><button id="export">Pose de l'export</button><button id="balayage">Balayage</button>
+  <h2>Lectures</h2>
+  <table id="lectures"></table>
+  <h2>Cotes relevées</h2>
+  <table>
+    <tr><td>Barres du parallélogramme</td><td>128,00 mm</td></tr>
+    <tr><td>Monter : bras · tige · levier</td><td>28 · 87 · 48</td></tr>
+    <tr><td>Barres sur la course (−10 → 60)</td><td>152,5° → 97,9°</td></tr>
+    <tr><td>Montée du chariot sur la course</td><td>67,7 mm</td></tr>
+    <tr><td>Axe du panoramique</td><td>6,6 mm à droite du plan</td></tr>
+    <tr><td>Arbre des yeux / inclinaison</td><td>21,70 mm au-dessus</td></tr>
+    <tr><td>Yeux : |OS| · bras · bielle</td><td>87,62 · 32,00 · 84,73</td></tr>
+    <tr><td>Épaules (Z) : gauche / droite</td><td>275,78 / 276,98</td></tr>
+  </table>
+  <div class="note" style="margin-top:8px">Zéros géométriques : tête de face, arbre des yeux horizontal, coques au neutre
+    du relevé d'août. Le monter compte en valeur du HUD, calé sur la hauteur mesurée sur le robot le 2026-09-13
+    (bras et tige du robot, pas ceux du CAD).</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const RAD = Math.PI / 180, DEG = 180 / Math.PI;
+const borne = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ── la tringlerie des yeux : même loi que tringlerie.ts et TransmissionOeil ──
+const MECA = { S: [86.132, -16.082], D: [13.0, -26.001], BRAS: 32.0, BIELLE: 84.728, PSI0: -73.652 };
+const D_R = Math.hypot(MECA.D[0], MECA.D[1]), D_A = Math.atan2(MECA.D[1], MECA.D[0]);
+function oeilDepuisServo(servo) {
+  const a = (MECA.PSI0 + servo) * RAD;
+  const qx = MECA.S[0] + MECA.BRAS * Math.cos(a), qy = MECA.S[1] + MECA.BRAS * Math.sin(a);
+  const q = Math.hypot(qx, qy), b = Math.atan2(qy, qx);
+  const k = (q * q + D_R * D_R - MECA.BIELLE * MECA.BIELLE) / (2 * q * D_R);
+  return (D_A - b + Math.acos(borne(k, -1, 1))) * DEG;
+}
+// Bornes élargies par rapport à l'éditeur : l'export pose un œil seul à +11,8°, au-delà de la butée
+// « deux yeux en haut » (+6,86°) mais en deçà de celle d'un œil seul (+13,71°).
+function servoDepuisOeil(oeil) {
+  let bas = -15, haut = 22.3;
+  if (oeil >= oeilDepuisServo(bas)) return bas;
+  if (oeil <= oeilDepuisServo(haut)) return haut;
+  for (let i = 0; i < 60; i++) {
+    const m = (bas + haut) / 2;
+    if (oeilDepuisServo(m) > oeil) bas = m; else haut = m;
+  }
+  return (bas + haut) / 2;
+}
+
+const AXES = [
+  { id: 'panoramique', nom: 'Panoramique', min: -95, max: 95, note: 'positif : vers sa droite' },
+  { id: 'inclinaison', nom: 'Inclinaison', min: -40, max: 53, note: 'positif : tête relevée' },
+  { id: 'monterDescendre', nom: 'Monter / descendre', min: -10, max: 60, note: 'valeur du HUD ; 0 : repos' },
+  { id: 'oeilDroit', nom: 'Œil droit', min: -35, max: 14, note: 'positif : bord extérieur en haut' },
+  { id: 'oeilGauche', nom: 'Œil gauche', min: -35, max: 14, note: '' },
+  { id: 'epauleDroite', nom: 'Épaule droite', min: -60, max: 90, note: 'positif : bras relevé' },
+  { id: 'epauleGauche', nom: 'Épaule gauche', min: -60, max: 90, note: '' },
+];
+const pose = Object.fromEntries(AXES.map(a => [a.id, 0]));
+const curseurs = {};
+const hoteAxes = document.getElementById('axes');
+for (const a of AXES) {
+  const bloc = document.createElement('div');
+  bloc.className = 'axe';
+  bloc.innerHTML = `<label><span>${a.nom}</span><span class="val" id="v-${a.id}"></span></label>` +
+    `<input type="range" min="${a.min}" max="${a.max}" step="0.1" value="0">` +
+    (a.note ? `<div class="note">${a.note}</div>` : '');
+  const entree = bloc.querySelector('input');
+  entree.addEventListener('input', () => { arreterBalayage(); pose[a.id] = +entree.value; appliquer(); });
+  curseurs[a.id] = entree;
+  hoteAxes.appendChild(bloc);
+}
+
+// ── scène ──
+const hote = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+hote.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x101318);
+const camera = new THREE.PerspectiveCamera(32, 1, 5, 10000);
+camera.position.set(-900, 900, -1500);
+const orbite = new THREE.OrbitControls(camera, renderer.domElement);
+orbite.target.set(0, 380, 0);
+orbite.enableDamping = true;
+orbite.update();
+scene.add(new THREE.HemisphereLight(0xc6ddf0, 0x1b1f26, 0.75));
+const cle = new THREE.DirectionalLight(0xffffff, 0.95); cle.position.set(-600, 1100, -900); scene.add(cle);
+const remplissage = new THREE.DirectionalLight(0xa8c4de, 0.4); remplissage.position.set(700, 300, -300); scene.add(remplissage);
+const contre = new THREE.DirectionalLight(0x9fc8ec, 0.5); contre.position.set(100, 600, 1200); scene.add(contre);
+const sol = new THREE.Mesh(new THREE.CircleGeometry(900, 64), new THREE.MeshStandardMaterial({ color: 0x1a1f26, roughness: 1 }));
+sol.rotation.x = -Math.PI / 2; scene.add(sol);
+const grille = new THREE.GridHelper(1800, 36, 0x2c343e, 0x222931); grille.position.y = 0.5; scene.add(grille);
+
+function dimensionner() {
+  const l = hote.clientWidth, h = hote.clientHeight;
+  renderer.setSize(l, h); camera.aspect = l / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', dimensionner); dimensionner();
+
+let N = null, C = null, brasMonter = null, tige = null, rotuleA = null, rotuleB = null, axeRotule = null;
+const base = {};
+
+// ── monter / descendre : servo → bras de 28 → tige de 87 → levier de 48 de la barre du milieu ──
+// Plan de travail (u, v) = (z, y) de three : u vers l'arrière, v vers le haut. v : valeur du HUD.
+function monter(v) {
+  const m = C.monter, uv = p => [p[2], p[1]];
+  const O2 = uv(m.O2), B = uv(m.B);
+  const phi = (m.calage + m.sens * m.degParUnite * v) * RAD;
+  const M = [O2[0] + m.bras * Math.cos(phi), O2[1] + m.bras * Math.sin(phi)];
+  const vx = M[0] - B[0], vy = M[1] - B[1], q = Math.hypot(vx, vy);
+  const k = (q * q + m.levier * m.levier - m.tige * m.tige) / (2 * q * m.levier);
+  const levier = Math.atan2(vy, vx) + m.branche * Math.acos(borne(k, -1, 1));
+  const R = [B[0] + m.levier * Math.cos(levier), B[1] + m.levier * Math.sin(levier)];
+  return { theta: levier * DEG + 180, phi, M, R };
+}
+const V3 = THREE.Vector3;
+function tendre(objet, a, b) {
+  const d = b.clone().sub(a);
+  objet.position.copy(a);
+  objet.scale.set(1, d.length(), 1);
+  objet.quaternion.setFromUnitVectors(new V3(0, 1, 0), d.normalize());
+}
+
+const tmp = new THREE.Vector3();
+function appliquer() {
+  if (!N) return;
+  for (const a of AXES) document.getElementById('v-' + a.id).textContent = pose[a.id].toFixed(1) + '°';
+
+  N.panoramique.rotation.y = -pose.panoramique * RAD;
+  N.tete.rotation.x = pose.inclinaison * RAD;
+  // le pignon du Stingray roule autour de la roue fixe : deux fois l'inclinaison, par rapport à la tête
+  N.pignon_inclinaison.rotation.x = C.pignon.rapport * pose.inclinaison * RAD;
+  N.bras_droit.rotation.x = pose.epauleDroite * RAD;
+  N.bras_gauche.rotation.x = pose.epauleGauche * RAD;
+
+  // le parallélogramme : les barres tournent, le chariot translate sans tourner
+  const m = monter(pose.monterDescendre), t0 = C.monter.theta0, L = C.monter.barre;
+  const dth = (m.theta - t0) * RAD;
+  for (const b of ['barre_avant', 'barre_milieu', 'barre_arriere']) N[b].rotation.x = -dth;
+  N.palonnier_monter.rotation.x = -(m.phi - monter(C.export.monterDescendre).phi);
+  const du = L * (Math.cos(m.theta * RAD) - Math.cos(t0 * RAD));
+  const dv = L * (Math.sin(m.theta * RAD) - Math.sin(t0 * RAD));
+  N.chariot.position.set(base.chariot.x, base.chariot.y + dv, base.chariot.z + du);
+  // le bras et la tige du robot, dessinés à part : ceux du CAD ne sont pas les bons
+  brasMonter.rotation.x = -m.phi;
+  // La tige est plane : ses 87 mm sont ceux que la courbe mesurée confirme dans le plan du mouvement.
+  // L'écart latéral jusqu'au levier est l'axe de la rotule, un boulon transversal.
+  const a = new V3(C.monter.xBras, m.M[1], m.M[0]), b = new V3(C.monter.xBras, m.R[1], m.R[0]);
+  tendre(tige, a, b); rotuleA.position.copy(a); rotuleB.position.copy(b);
+  tendre(axeRotule, new V3(C.monter.xLevier, m.R[1], m.R[0]), b);
+  const repos = monter(0), hRepos = L * Math.sin(repos.theta * RAD), h = L * Math.sin(m.theta * RAD);
+  const reculRepos = L * Math.cos(repos.theta * RAD), recul = L * Math.cos(m.theta * RAD);
+
+  // les yeux : la coque suit le quadrilatère, le palonnier obéit au servo
+  const servos = {};
+  for (const [cote, s, phi] of [['droit', 1, pose.oeilDroit], ['gauche', -1, pose.oeilGauche]]) {
+    const servo = servoDepuisOeil(phi);
+    servos[cote] = servo;
+    N['coque_' + cote].rotation.z = s * oeilDepuisServo(servo) * RAD;
+    N['palonnier_oeil_' + cote].rotation.z = s * servo * RAD;
+  }
+  N.caisse.updateMatrixWorld(true);
+  // les bielles se tendent entre un point mobile (le palonnier) et un point fixe (la platine)
+  const T = C.pivots.tete;
+  for (const cote of ['droit', 'gauche']) {
+    const o = C.oeil[cote];
+    tmp.set(o.P[0] - o.S[0], o.P[1] - o.S[1], o.P[2] - o.S[2]);
+    N['palonnier_oeil_' + cote].localToWorld(tmp);
+    N.tete.worldToLocal(tmp);
+    const D = [o.D[0] - T[0], o.D[1] - T[1]], P0 = [o.P[0] - T[0], o.P[1] - T[1]];
+    const bielle = N['bielle_oeil_' + cote];
+    bielle.position.copy(tmp);
+    bielle.rotation.z = Math.atan2(D[1] - tmp.y, D[0] - tmp.x) - Math.atan2(D[1] - P0[1], D[0] - P0[0]);
+  }
+
+  const hauteur = w => L * Math.sin(monter(w).theta * RAD);
+  const gainM = (hauteur(pose.monterDescendre + 0.05) - hauteur(pose.monterDescendre - 0.05)) / 0.1;
+  const gainO = s => Math.abs((oeilDepuisServo(s + 0.05) - oeilDepuisServo(s - 0.05)) / 0.1);
+  const lignes = [
+    ['Barres du parallélogramme', m.theta.toFixed(2) + '°'],
+    ['Chariot / repos : montée · recul', (h - hRepos).toFixed(1) + ' · ' + (recul - reculRepos).toFixed(1) + ' mm'],
+    ['Montée par unité du HUD', gainM.toFixed(2) + ' mm'],
+    ['Servo œil droit (gain)', servos.droit.toFixed(2) + '° (' + gainO(servos.droit).toFixed(2) + ')'],
+    ['Servo œil gauche (gain)', servos.gauche.toFixed(2) + '° (' + gainO(servos.gauche).toFixed(2) + ')'],
+  ];
+  document.getElementById('lectures').innerHTML = lignes.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('');
+}
+
+function poser(valeurs) {
+  for (const a of AXES) { pose[a.id] = valeurs[a.id] ?? 0; curseurs[a.id].value = pose[a.id]; }
+  appliquer();
+}
+document.getElementById('neutre').onclick = () => { arreterBalayage(); poser({}); };
+document.getElementById('export').onclick = () => { arreterBalayage(); poser(C.export); };
+
+let balayage = null;
+function arreterBalayage() { balayage = null; }
+document.getElementById('balayage').onclick = () => { balayage = balayage ? null : performance.now(); };
+
+new THREE.GLTFLoader().load('robot-walle.glb', gltf => {
+  const racine = gltf.scene;
+  C = racine.userData;
+  N = {};
+  racine.traverse(o => {
+    if (o.userData && o.userData.name) N[o.userData.name] = o;
+    if (o.isMesh) { o.material.flatShading = true; o.material.needsUpdate = true; }
+  });
+  base.chariot = N.chariot.position.clone();
+  // bras goBILDA de 6 trous (48 × 8 × 4), vissé sur le moyeu : trous 1 et 4 de part et d'autre de l'axe, rotule au trou 6
+  brasMonter = new THREE.Group();
+  const lame = new THREE.Mesh(new THREE.BoxGeometry(4, 8, 48), new THREE.MeshStandardMaterial({ color: 0xb9c0c7, metalness: 0.7, roughness: 0.35 }));
+  lame.position.z = 8;
+  brasMonter.add(lame);
+  brasMonter.position.set(C.monter.xBras, C.monter.O2[1], C.monter.O2[2]);
+  const acier = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 0.6, roughness: 0.35 });
+  const geoTige = new THREE.CylinderGeometry(1.6, 1.6, 1, 12); geoTige.translate(0, 0.5, 0);
+  tige = new THREE.Mesh(geoTige, acier);
+  rotuleA = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 12), acier);
+  rotuleB = rotuleA.clone();
+  const geoAxe = new THREE.CylinderGeometry(2, 2, 1, 12); geoAxe.translate(0, 0.5, 0);
+  axeRotule = new THREE.Mesh(geoAxe, acier);
+  scene.add(racine, brasMonter, tige, rotuleA, rotuleB, axeRotule);
+  document.getElementById('chargement').remove();
+  poser({});
+}, undefined, e => {
+  document.getElementById('chargement').textContent =
+    'Impossible de charger robot-walle.glb : ouvrir la page par un serveur (python3 -m http.server), pas en file://';
+  console.error(e);
+});
+
+function boucle(t) {
+  requestAnimationFrame(boucle);
+  if (balayage !== null && N) {
+    const s = (t - balayage) / 1000;
+    poser({
+      panoramique: 60 * Math.sin(s * 0.6), inclinaison: 6 + 30 * Math.sin(s * 0.9 + 1),
+      monterDescendre: 25 + 30 * Math.sin(s * 0.5), oeilDroit: -14 + 18 * Math.sin(s * 1.3),
+      oeilGauche: -14 + 18 * Math.sin(s * 1.3 + 0.8), epauleDroite: 30 * Math.sin(s * 0.7),
+      epauleGauche: 30 * Math.sin(s * 0.7 + Math.PI),
+    });
+  }
+  orbite.update();
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(boucle);
+</script>
+</body>
+</html>
