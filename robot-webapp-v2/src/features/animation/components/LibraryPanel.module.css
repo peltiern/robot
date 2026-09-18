@@ -209,3 +209,12 @@
 
 /* Le sablier qui précède le nom pendant le chargement : sans marge, il colle à la première lettre. */
 .itemName svg { margin-right: 4px; vertical-align: -1px; }
+
+/* Pas encore sur le robot : une pastille plutôt qu'un libellé, la colonne est étroite. */
+.enAttente {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warning, #e0a040);
+  flex-shrink: 0;
+}

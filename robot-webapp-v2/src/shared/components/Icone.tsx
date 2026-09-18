@@ -47,6 +47,8 @@ export type NomIcone =
   | 'corbeille'
   | 'sablier'
   | 'aimant'
+  | 'exporter'
+  | 'importer'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -258,6 +260,19 @@ const TRACES: Record<NomIcone, ReactNode> = {
       <path d="M15 5.5H9a6.5 6.5 0 0 0 0 13h6v-4H9a2.5 2.5 0 0 1 0-5h6z" />
       <path d="M11.5 5.5v4M11.5 14.5v4" />
       <path d="M17.7 9.8a3.5 3.5 0 0 1 0 4.4M20 7.8a6.5 6.5 0 0 1 0 8.4" />
+    </>
+  ),
+  // Un bac et une flèche : qui sort du bac pour l'export, qui y entre pour l'import.
+  exporter: (
+    <>
+      <path d="M4.4 14.6v3.8a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2v-3.8" />
+      <path d="M12 15V3.8M7.6 8.2 12 3.8l4.4 4.4" />
+    </>
+  ),
+  importer: (
+    <>
+      <path d="M4.4 14.6v3.8a2 2 0 0 0 2 2h11.2a2 2 0 0 0 2-2v-3.8" />
+      <path d="M12 3.8V15M7.6 10.6 12 15l4.4-4.4" />
     </>
   ),
   sablier: (

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Icone } from '../../../shared/components/Icone'
 import { animationApi } from '../../../shared/api/animationApi'
 import type { Animation } from '../../../shared/types/animation'
+import { bibliotheque, lireFichier } from '../utils/bibliotheque'
 import { useAnimationStore } from '../store/animationStore'
 import styles from './LibraryPanel.module.css'
 
@@ -11,11 +12,15 @@ interface Props {
   onSave: () => Promise<void>
   /** Joue depuis le début ce que l'éditeur vient de charger — la lecture en Simulation. */
   onJouer: () => void
+  onExporter: () => void
 }
 
-export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: Props) {
+export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer, onExporter }: Props) {
   const store = useAnimationStore()
   const [names, setNames]               = useState<string[]>([])
+  const [enAttente, setEnAttente]       = useState<Set<string>>(new Set())
+  const [robotAbsent, setRobotAbsent]   = useState(false)
+  const fichierRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading]           = useState(false)
   const [busy, setBusy]                 = useState<string | null>(null)
   const [error, setError]               = useState<string | null>(null)
@@ -28,10 +33,10 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
     setLoading(true)
     setError(null)
     try {
-      const list = await animationApi.noms()
-      setNames([...list].sort((a, b) => a.localeCompare(b, 'fr')))
-    } catch {
-      setError('Backend non disponible')
+      const { robot, enAttente } = await bibliotheque.lister()
+      setRobotAbsent(robot === null)
+      setEnAttente(new Set(enAttente))
+      setNames([...new Set([...(robot ?? []), ...enAttente])].sort((a, b) => a.localeCompare(b, 'fr')))
     } finally {
       setLoading(false)
     }
@@ -80,7 +85,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
     setBusy(name)
     try {
       if (saveFirst) await onSave()
-      const anim = await animationApi.charger(name)
+      const anim = await bibliotheque.charger(name)
       onLoadAnimation(anim)
       if (puisJouer) onJouer()
     } catch {
@@ -101,7 +106,9 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
     }
     setBusy(name + ':play')
     try {
-      await animationApi.jouer(name)
+      // pas encore sur le robot : on lui joue la version en attente, sans l'enregistrer
+      if (bibliotheque.estEnAttente(name)) await animationApi.jouerBrouillon(await bibliotheque.charger(name))
+      else await animationApi.jouer(name)
     } catch {
       setError(`Impossible de jouer "${name}"`)
     } finally {
@@ -121,7 +128,7 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
     setBusy(name + ':del')
     try {
       if (saveFirst) await onSave()
-      await animationApi.supprimer(name)
+      await bibliotheque.supprimer(name)
       if (store.animationName === name) doNew()
       await refresh()
     } catch {
@@ -131,11 +138,39 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
     }
   }
 
+  /**
+   * Un fichier importé entre dans la bibliothèque comme un enregistrement, puis s'ouvre. Un nom
+   * déjà pris reçoit un suffixe : importer ne doit pas écraser en silence ce qui est sur le robot.
+   */
+  async function importer(fichier: File) {
+    setError(null)
+    try {
+      const anim = await lireFichier(fichier)
+      let nom = anim.nom
+      for (let i = 2; names.includes(nom); i++) nom = `${anim.nom} (${i})`
+      await bibliotheque.enregistrer({ ...anim, nom })
+      await refresh()
+      requestLoad(nom)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+    }
+  }
+
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <span className={styles.title}>BIBLIOTHÈQUE</span>
+        <button className={styles.newBtn} onClick={() => fichierRef.current?.click()} title="Importer un fichier JSON"><Icone nom="importer" taille={14} /></button>
+        <button className={styles.newBtn} onClick={onExporter} title="Exporter l'animation en cours dans un fichier JSON"><Icone nom="exporter" taille={14} /></button>
         <button className={styles.newBtn} onClick={handleNew} title="Nouvelle animation"><Icone nom="plus" taille={16} /></button>
+        <input
+          ref={fichierRef} type="file" accept=".json,application/json" hidden
+          onChange={e => {
+            const fichier = e.target.files?.[0]
+            e.target.value = ''   // pour pouvoir réimporter le même fichier
+            if (fichier) importer(fichier)
+          }}
+        />
       </div>
 
       {pendingNew && (
@@ -154,7 +189,11 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
 
         {!loading && error && <div className={styles.errorMsg}>{error}</div>}
 
-        {!loading && !error && names.length === 0 && (
+        {!loading && robotAbsent && (
+          <div className={styles.hint}>Robot injoignable : seules les animations gardées dans le navigateur sont là.</div>
+        )}
+
+        {!loading && !error && !robotAbsent && names.length === 0 && (
           <div className={styles.hint}>Aucune animation sauvegardée</div>
         )}
 
@@ -205,6 +244,9 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer }: P
               <span className={styles.itemName}>
                 {isLoading && <Icone nom="sablier" taille={11} />}{name}
               </span>
+              {enAttente.has(name) && (
+                <span className={styles.enAttente} title="Gardée dans le navigateur : partira au robot à son retour" />
+              )}
               <div className={styles.actions}>
                 <button
                   className={styles.actionBtn}

@@ -7,6 +7,7 @@ import { LibraryPanel }    from './components/LibraryPanel'
 import { PanneauAvertissements } from './components/PanneauAvertissements'
 import { toAnimation, versEtapesEditeur } from './utils/convert'
 import { animationApi }    from '../../shared/api/animationApi'
+import { bibliotheque, exporterFichier } from './utils/bibliotheque'
 import type { Animation }  from '../../shared/types/animation'
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import styles from './AnimationPage.module.css'
@@ -55,6 +56,19 @@ export function AnimationPage() {
   // d'envoyer ses ordres dans le vide pendant que l'écran ferait croire qu'il joue.
   useEffect(() => {
     if (!ws.connected) changerDestination(false)
+  }, [ws.connected])
+
+  // Le robot revient : ce qui a été enregistré pendant son absence lui part d'un coup, puis la
+  // bibliothèque est relue dans tous les cas. Relue seulement après un envoi, elle restait sur
+  // « Robot injoignable » quand il n'y avait rien en attente.
+  useEffect(() => {
+    if (!ws.connected) return
+    bibliotheque.envoyerEnAttente().then(({ envoyees, remplacees }) => {
+      if (envoyees.length === 0) return
+      const remplace = remplacees.length > 0 ? ` (remplacées : ${remplacees.join(', ')})` : ''
+      signaler(`${envoyees.length} animation${envoyees.length > 1 ? 's' : ''} envoyée${envoyees.length > 1 ? 's' : ''} au robot${remplace}`)
+    }).catch(() => { /* robot pas encore prêt : la prochaine connexion réessaiera */ })
+      .finally(() => setLibraryKey(k => k + 1))
   }, [ws.connected])
 
   // ── Boucle de lecture (RAF) ────────────────────────────────────────────────
@@ -198,16 +212,19 @@ export function AnimationPage() {
     return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled))
   }
 
+  function signaler(message: string, dureeMs = 5000) {
+    setStatusMsg(message)
+    setTimeout(() => setStatusMsg(m => m === message ? '' : m), dureeMs)
+  }
+
   async function saveToServer() {
-    try {
-      const anim = buildAnimation()
-      await animationApi.enregistrer(anim.nom, anim)
-      store.marquerEnregistre()
-      setStatusMsg('Sauvegardé ✓')
-      setTimeout(() => setStatusMsg(''), 3000)
-      setLibraryKey(k => k + 1)
-    } catch {
-      setStatusMsg('Erreur lors de la sauvegarde')
+    const resultat = await bibliotheque.enregistrer(buildAnimation())
+    store.marquerEnregistre()
+    setLibraryKey(k => k + 1)
+    if (resultat.ou === 'robot') {
+      signaler('Sauvegardé ✓', 3000)
+    } else {
+      signaler(`Gardée dans le navigateur, partira au robot à son retour (${resultat.raison})`, 8000)
     }
   }
 
@@ -236,7 +253,8 @@ export function AnimationPage() {
 
       <div className={styles.main}>
         <div className={styles.gauche}>
-          <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} onJouer={jouerDepuisLeDebut} />
+          <LibraryPanel refreshKey={libraryKey} onLoadAnimation={handleLoadFromLibrary} onSave={saveToServer} onJouer={jouerDepuisLeDebut}
+                        onExporter={() => exporterFichier(buildAnimation())} />
           <PropertiesPanel />
         </div>
         <Timeline />
