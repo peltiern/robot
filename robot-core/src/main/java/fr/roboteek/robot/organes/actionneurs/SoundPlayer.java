@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Lecteur de sons du robot.
@@ -37,6 +39,11 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
      * Flag de démarrage de l'organe (cycle de vie Spring).
      */
     private volatile boolean running = false;
+
+    /** Le {@code play} en cours pour un son du Studio, ou {@code null} si le robot se tait. */
+    private volatile Process lecture;
+
+    private volatile String sonEnCours;
 
     /**
      * Joue un son.
@@ -74,6 +81,69 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
     }
 
     /**
+     * Joue un fichier son du Studio, sans attendre la fin.
+     * <p>
+     * À la différence de {@link #play(RobotSound)}, qui bloque son appelant, la lecture est rendue
+     * tout de suite : la demande vient d'un appel HTTP, et tenir la requête ouverte pendant la
+     * seconde que dure le son ferait passer le Studio pour lent alors qu'il ne l'est pas.
+     * <p>
+     * Un seul son à la fois : le robot n'a qu'une bouche, et deux {@code play} en parallèle se
+     * mélangeraient sur la même carte son. Lancer un son en coupe donc un autre.
+     *
+     * @return faux si l'organe n'est pas démarré ou si {@code play} n'a pas pu être lancé
+     */
+    public synchronized boolean jouer(String nom, Path fichier) {
+        if (!running) {
+            return false;
+        }
+        arreterLecture();
+        final ReconnaissanceVocaleControleEvent pause = new ReconnaissanceVocaleControleEvent();
+        pause.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
+        applicationEventPublisher.publishEvent(pause);
+        try {
+            Process process = new ProcessBuilder("play", "-q", fichier.toString()).start();
+            lecture = process;
+            sonEnCours = nom;
+            process.onExit().thenRun(() -> finDeLecture(process));
+            return true;
+        } catch (IOException e) {
+            logger.error("Son « {} » non joué", nom, e);
+            finDeLecture(null);
+            return false;
+        }
+    }
+
+    /** Le son du Studio en cours de lecture, s'il y en a un. */
+    public Optional<String> sonEnCours() {
+        return Optional.ofNullable(sonEnCours);
+    }
+
+    /**
+     * Coupe le son en cours ; rend faux si le robot ne jouait rien. La reconnaissance vocale est
+     * relancée par {@link #finDeLecture}, que la fin soit voulue ou naturelle.
+     */
+    public synchronized boolean arreterLecture() {
+        Process process = lecture;
+        if (process == null) {
+            return false;
+        }
+        process.destroy();
+        return true;
+    }
+
+    private synchronized void finDeLecture(Process process) {
+        if (process != null && lecture != process) {
+            // Un son plus récent a pris la place : c'est lui qui rendra l'écoute, pas celui-ci.
+            return;
+        }
+        lecture = null;
+        sonEnCours = null;
+        final ReconnaissanceVocaleControleEvent redemarrage = new ReconnaissanceVocaleControleEvent();
+        redemarrage.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER);
+        applicationEventPublisher.publishEvent(redemarrage);
+    }
+
+    /**
      * Intercepte les évènements pour jouer un son.
      *
      * @param playSoundEvent évènement pour jouer un son
@@ -93,7 +163,9 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
 
     @Override
     public void arreter() {
-
+        // Un `play` laissé derrière soi continuerait de parler après l'arrêt de l'organe, et la
+        // reconnaissance vocale resterait en pause sans que personne ne la relance.
+        arreterLecture();
     }
 
     @Override
