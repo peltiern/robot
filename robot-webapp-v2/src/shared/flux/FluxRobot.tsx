@@ -12,10 +12,11 @@ import { NB_ECHANTILLONS_HISTORIQUE, useTelemetryStore } from '../stores/telemet
 /**
  * Tous les flux du robot, branchés en un seul endroit et sans rien afficher.
  *
- * Monté une seule fois par le Layout, donc vivant pendant toute la session : changer de vue ne
- * coupe aucun abonnement, et rien n'est perdu pendant qu'on regarde ailleurs. C'est la seule
- * raison d'être de ce composant — chaque flux tenait avant dans son propre fichier, tous
- * recopiaient le même décodage, et il fallait penser à monter le nouveau.
+ * Monté une seule fois par la Racine, donc vivant pendant toute la session, jusque dans l'atelier
+ * et le studio : changer de vue ne coupe aucun abonnement, et rien n'est perdu pendant qu'on
+ * regarde ailleurs. C'est la seule raison d'être de ce composant — chaque flux tenait avant dans
+ * son propre fichier, tous recopiaient le même décodage, et il fallait penser à monter le
+ * nouveau.
  *
  * La vidéo fait bande à part ({@link ../video/VideoProvider}) : elle saute les images en retard au
  * lieu de les empiler, et gère des Blob URL à libérer.

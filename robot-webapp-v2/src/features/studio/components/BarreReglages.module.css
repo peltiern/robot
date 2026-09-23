@@ -1,0 +1,21 @@
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 0 12px 8px;
+}
+
+.reglage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 11px 'Nunito', sans-serif;
+  color: var(--texte-faible);
+}
+.reglage input { width: 90px; accent-color: var(--accent); }
+
+.valeur {
+  min-width: 44px;
+  text-align: right;
+  color: var(--accent);
+}

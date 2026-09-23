@@ -10,7 +10,7 @@ import styles from './hud.module.css'
  * Fil de discussion et bouton « faire parler le robot ».
  *
  * Le fil vient du store partagé (alimenté par `ConversationProvider`, monté au
- * niveau du Layout) : il survit à un passage par l'atelier, et les échanges qui
+ * niveau de la Racine) : il survit à un passage par l'atelier, et les échanges qui
  * ont lieu pendant ce temps sont bien captés.
  *
  * Chaque bulle humaine porte le portrait de celui qui a parlé. Sans cela le fil
