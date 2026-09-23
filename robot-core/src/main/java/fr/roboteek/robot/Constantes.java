@@ -85,4 +85,11 @@ public class Constantes {
      */
     public static final String DOSSIER_ANIMATIONS = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "animations";
 
+    /**
+     * Chemin vers le dossier des sons créés dans le Studio, recette et WAV. Distinct de
+     * {@link #DOSSIER_SONS}, qui garde les quatre échantillons d'origine : ceux-là sont livrés avec
+     * le robot, ceux-ci s'écrivent, se refont et se suppriment depuis l'éditeur.
+     */
+    public static final String DOSSIER_SONS_CREES = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "sons";
+
 }
