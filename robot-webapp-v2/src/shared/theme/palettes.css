@@ -105,3 +105,25 @@
   --alarme-sombre: #8f2b1b;
   --alarme-vive:   #f04a30;
 }
+
+/* ── TIMBRES DU STUDIO SON ────────────────────────────────────────────────────
+   Six couleurs pour six façons de sonner : elles distinguent des sons, pas des
+   états, et ne dépendent donc pas de la palette. Trois s'alignent sur des rôles
+   existants pour rester dans le monde du HUD ; les trois autres complètent le
+   cercle, en gardant le même contraste sur fond sombre.
+
+     voix ...... la parole, la couleur d'accent
+     sifflet ... le bip glissé, la teinte des données
+     notes ..... les sauts de note, le vert des seuils tenus
+     trille .... le roulement rapide
+     scanner ... la vibration électronique
+     grognement  le bourdon grave
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --t-voix:   var(--accent);
+  --t-sweep:  var(--donnee);
+  --t-note:   var(--ok);
+  --t-trill:  #d59cf0;
+  --t-warble: #7fa8ff;
+  --t-blat:   #ff8a6a;
+}

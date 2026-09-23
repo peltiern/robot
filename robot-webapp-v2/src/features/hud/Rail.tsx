@@ -16,10 +16,11 @@ const VOLETS: { cle: keyof Volets; icone: NomIcone; libelle: string }[] = [
  * l'application ; tout le reste montre et cache des volets sans rien démonter —
  * les abonnements WebSocket ne sont jamais coupés par un geste d'affichage.
  *
- * Les bascules de volets ne concernent que le pilotage : dans l'atelier, la
- * scène est prise en entier par l'éditeur.
+ * Les volets et la coupure du son ne concernent que le pilotage : sur un établi, la scène est
+ * prise en entier par l'éditeur, et la voix du robot ne se joue pas.
  */
-export function Rail({ pilotage }: { pilotage: boolean }) {
+export function Rail({ coque }: { coque: 'robot' | 'atelier' }) {
+  const pilotage = coque === 'robot'
   const volets = useHudStore()
   const basculerVolet = useHudStore((s) => s.basculerVolet)
   const reglages = useHudStore((s) => s.reglages)
@@ -50,6 +51,13 @@ export function Rail({ pilotage }: { pilotage: boolean }) {
         <Icone nom="anim" />
         <span>ATELIER</span>
       </NavLink>
+      <NavLink
+        to="/studio"
+        className={({ isActive }) => `${styles.outil} ${isActive ? styles.outilActif : ''}`}
+      >
+        <Icone nom="note" />
+        <span>STUDIO</span>
+      </NavLink>
 
       <hr className={styles.separateur} />
 
@@ -66,15 +74,17 @@ export function Rail({ pilotage }: { pilotage: boolean }) {
           </button>
         ))}
 
-      <button
-        className={`${styles.outil} ${muet ? '' : styles.outilActif}`}
-        aria-pressed={!muet}
-        onClick={basculerSon}
-        title={muet ? 'Écouter la voix du robot' : 'Couper le son'}
-      >
-        <Icone nom={muet ? 'sonCoupe' : 'son'} />
-        <span>SON</span>
-      </button>
+      {pilotage && (
+        <button
+          className={`${styles.outil} ${muet ? '' : styles.outilActif}`}
+          aria-pressed={!muet}
+          onClick={basculerSon}
+          title={muet ? 'Écouter la voix du robot' : 'Couper le son'}
+        >
+          <Icone nom={muet ? 'sonCoupe' : 'son'} />
+          <span>SON</span>
+        </button>
+      )}
 
       <div className={styles.pousse} />
 

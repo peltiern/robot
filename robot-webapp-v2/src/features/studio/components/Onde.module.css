@@ -1,0 +1,23 @@
+.cadre {
+  position: relative;
+  height: 70px;
+  margin: 8px 12px 0;
+  border: 2px solid var(--bordure);
+  border-radius: var(--r-bloc);
+  overflow: hidden;
+  background: var(--creux);
+  flex-shrink: 0;
+}
+
+.toile { width: 100%; height: 100%; display: block; }
+
+.etiquette {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  font: 800 10px 'Nunito', sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+  pointer-events: none;
+}

@@ -49,6 +49,8 @@ export type NomIcone =
   | 'aimant'
   | 'exporter'
   | 'importer'
+  | 'note'
+  | 'main'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -105,6 +107,21 @@ const TRACES: Record<NomIcone, ReactNode> = {
     </>
   ),
   thermo: <path d="M10 13.6V5.4a2 2 0 0 1 4 0v8.2a4 4 0 1 1-4 0Z" />,
+  // Déplacer et modeler : la main du Studio, face à son crayon.
+  main: (
+    <>
+      <path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12M11 11.5V4a1.5 1.5 0 0 1 3 0v8M14 6.5a1.5 1.5 0 0 1 3 0V13" />
+      <path d="M17 9.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.6-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L8 14" />
+    </>
+  ),
+  // Le Studio : une note, et l'onde qu'elle produit.
+  note: (
+    <>
+      <path d="M10.5 16.4V5.2l8 -1.6v11.2" />
+      <circle cx="7.6" cy="17.2" r="2.9" fill="currentColor" stroke="none" />
+      <circle cx="15.6" cy="15.6" r="2.9" fill="currentColor" stroke="none" />
+    </>
+  ),
   micro: (
     <>
       <rect x="9" y="2.8" width="6" height="10.4" rx="3" />
