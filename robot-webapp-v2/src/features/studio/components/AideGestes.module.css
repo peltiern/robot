@@ -1,0 +1,27 @@
+.aide {
+  margin-top: 16px;
+  padding: 12px 12px 0;
+  border-top: 2px solid var(--bordure);
+}
+
+/* Une classe et non la balise : le titre de la colonne qui l'accueille l'écraserait. */
+.aide .titre {
+  margin: 0 0 8px;
+  font: 800 11px 'Nunito', sans-serif;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--texte-faible);
+}
+
+.aide ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--texte-faible);
+}
+
+.aide b { color: var(--texte); }
