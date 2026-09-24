@@ -68,6 +68,19 @@ class AnimationControllerTest {
         }
 
         /**
+         * Un nom à espace est un nom valide, pas une URI : concaténé tel quel dans l'adresse de la
+         * réponse, il faisait une 500 après que le fichier avait été écrit.
+         */
+        @Test
+        void creerUnNomAEspaceRendUneAdresseEncodee() {
+            var reponse = controleur.creer(animation("Mon animation"));
+
+            assertEquals(HttpStatus.CREATED, reponse.getStatusCode());
+            assertEquals("/api/animations/Mon%20animation", reponse.getHeaders().getLocation().toString());
+            assertTrue(bibliotheque.existe("Mon animation"));
+        }
+
+        /**
          * Le nom de l'URL fait foi : c'est ce qui permet d'enregistrer sous un autre nom sans que
          * l'éditeur ait à modifier son brouillon, et ça reste vrai après un renommage de fichier.
          */

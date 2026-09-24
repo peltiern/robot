@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 import tools.jackson.databind.JsonNode;
 
 import java.util.Base64;
@@ -109,9 +110,13 @@ public class SonController {
             // recette sans version, audio qui n'est pas un WAV. L'éditeur doit pouvoir le dire.
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+        // L'adresse du son créé s'encode : un nom est libre de contenir des espaces, pas une URI.
+        // Concaténé tel quel, « nouveau son 2 » faisait lever URI.create APRÈS l'écriture des
+        // fichiers — le robot avait le son, le Studio recevait une 500 et le gardait en attente.
         return existait
                 ? ResponseEntity.noContent().build()
-                : ResponseEntity.created(java.net.URI.create("/api/sons/" + nom)).build();
+                : ResponseEntity.created(UriComponentsBuilder.fromPath("/api/sons/{nom}")
+                        .buildAndExpand(nom).encode().toUri()).build();
     }
 
     @DeleteMapping("/{nom}")
