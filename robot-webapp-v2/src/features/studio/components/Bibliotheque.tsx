@@ -1,28 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Icone } from '../../../shared/components/Icone'
-import { depuisSuiteBips, depuisSuiteVoix, MODELES_BIPS, MODELES_VOIX } from '../synthese/modeles'
-import type { Morceau, Son } from '../synthese/types'
+import type { Son } from '../synthese/types'
 import { bibliotheque, type Liste } from '../utils/bibliotheque'
+import { AideGestes } from './AideGestes'
 import styles from './Bibliotheque.module.css'
 
 /**
- * Les sons du robot, ceux qui attendent de lui être envoyés, et les modèles pour démarrer.
+ * Les sons rangés : ceux du robot, et ceux qui attendent de lui être envoyés.
  *
- * La pastille orange dit qu'un son n'est encore que dans le navigateur. Elle disparaît d'elle-même
- * au retour du robot, quand la file part.
+ * La pastille orange dit qu'un son n'est encore que dans le navigateur ; elle disparaît d'elle-même
+ * au retour du robot, quand la file part. Chaque ligne se supprime et se joue sans être ouverte —
+ * sur le robot quand il répond, dans le navigateur sinon.
  */
 export function Bibliotheque({
   nomCourant,
   rafraichir,
+  robotJoignable,
+  onNouveau,
   onCharger,
-  onChargerModele,
+  onJouer,
   onMessage,
 }: {
   nomCourant: string
   /** Change de valeur pour relire la bibliothèque : après un enregistrement, ou au retour du robot. */
   rafraichir: number
+  robotJoignable: boolean
+  onNouveau: () => void
   onCharger: (son: Son) => void
-  onChargerModele: (nom: string, morceaux: Morceau[]) => void
+  /** `surLeRobot` : le robot l'a et répond ; sinon le son se joue dans le navigateur. */
+  onJouer: (nom: string, surLeRobot: boolean) => void
   onMessage: (texte: string) => void
 }) {
   const [liste, setListe] = useState<Liste>({ robot: null, enAttente: [] })
@@ -60,7 +66,13 @@ export function Bibliotheque({
 
   return (
     <aside className={styles.colonne}>
-      <h2>Mes sons</h2>
+      {/* Le « + » dans l'en-tête de la liste, comme dans la bibliothèque de l'Atelier. */}
+      <div className={styles.entete}>
+        <h2>Mes sons</h2>
+        <button className={styles.action} title="Nouveau son" onClick={onNouveau}>
+          <Icone nom="plus" taille={16} />
+        </button>
+      </div>
       {noms.length === 0 ? (
         <p className={styles.vide}>
           {liste.robot === null
@@ -69,46 +81,43 @@ export function Bibliotheque({
         </p>
       ) : (
         <ul className={styles.liste}>
-          {noms.map((nom) => (
-            <li key={nom} className={nom === nomCourant ? styles.courant : undefined}>
-              <button className={styles.entree} onClick={() => void ouvrir(nom)}>
-                {liste.enAttente.includes(nom) && (
-                  <span className={styles.attente} title="Dans le navigateur : partira au robot à sa reconnexion" />
-                )}
-                {nom}
-              </button>
-              <button className={styles.supprimer} title={`Supprimer « ${nom} »`} onClick={() => void supprimer(nom)}>
-                <Icone nom="corbeille" taille={16} />
-              </button>
-            </li>
-          ))}
+          {noms.map((nom) => {
+            const enAttente = liste.enAttente.includes(nom)
+            // Un son qui n'est que dans le navigateur, le robot ne peut pas le jouer.
+            const surLeRobot = robotJoignable && !enAttente
+            return (
+              <li key={nom} className={`${styles.ligne} ${nom === nomCourant ? styles.courant : ''}`} onClick={() => void ouvrir(nom)} title={nom}>
+                <span className={styles.nom}>{nom}</span>
+                {enAttente && <span className={styles.attente} title="Dans le navigateur : partira au robot à sa reconnexion" />}
+                <div className={styles.actions}>
+                  <button
+                    className={styles.action}
+                    title={surLeRobot ? 'Jouer sur le robot' : 'Jouer dans le navigateur'}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onJouer(nom, surLeRobot)
+                    }}
+                  >
+                    <Icone nom="reprise" taille={13} />
+                  </button>
+                  <button
+                    className={`${styles.action} ${styles.supprimer}`}
+                    title={`Supprimer « ${nom} »`}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      void supprimer(nom)
+                    }}
+                  >
+                    <Icone nom="corbeille" taille={13} />
+                  </button>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       )}
 
-      <h2>Modèles · paroles</h2>
-      <ul className={styles.liste}>
-        {MODELES_VOIX.map((modele) => (
-          <li key={modele.nom}>
-            <button className={styles.entree} onClick={() => onChargerModele(modele.nom.toLowerCase(), depuisSuiteVoix(modele.suite))}>
-              {modele.nom}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <h2>Modèles · bips</h2>
-      <ul className={styles.liste}>
-        {MODELES_BIPS.map((modele) => (
-          <li key={modele.nom}>
-            <button
-              className={styles.entree}
-              onClick={() => onChargerModele(modele.nom.toLowerCase(), depuisSuiteBips(modele.suite ?? modele.tirage!()))}
-            >
-              {modele.nom}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <AideGestes />
     </aside>
   )
 }

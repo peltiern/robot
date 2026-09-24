@@ -18,8 +18,11 @@ async function raison(reponse: Response): Promise<string> {
 async function requete<T>(url: string, init?: RequestInit): Promise<T> {
   const reponse = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...init })
   if (!reponse.ok) throw new Error(await raison(reponse))
-  if (reponse.status === 204) return undefined as T
-  return reponse.json()
+  // Le corps décide, pas le code : le robot répond 201 sans corps à la création d'un son. Lu comme
+  // du JSON, ce vide faisait échouer l'enregistrement — le son partait pourtant bien au robot, et
+  // le Studio le gardait en plus dans le navigateur en annonçant un robot injoignable.
+  const texte = await reponse.text()
+  return (texte ? JSON.parse(texte) : undefined) as T
 }
 
 /**

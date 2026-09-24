@@ -49,6 +49,7 @@ export function Frise({ tete, onEcouter }: { tete: number | null; onEcouter: (m:
   const choisir = useStudioStore((s) => s.choisir)
   const modifier = useStudioStore((s) => s.modifier)
   const ajouterMorceau = useStudioStore((s) => s.ajouterMorceau)
+  const montrerBarreMorceau = useStudioStore((s) => s.montrerBarreMorceau)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gesteRef = useRef<Geste | null>(null)
@@ -240,6 +241,8 @@ export function Frise({ tete, onEcouter }: { tete: number | null; onEcouter: (m:
     gesteRef.current = null
     fenetreFigeeRef.current = null
     if (!geste) return
+    // Le geste est fini : la barre du morceau peut prendre sa place sans rien déplacer sous la souris.
+    montrerBarreMorceau()
 
     if (geste.sorte === 'trait') {
       finirTrait(position(e))
@@ -340,7 +343,7 @@ export function Frise({ tete, onEcouter }: { tete: number | null; onEcouter: (m:
       {son.morceaux.length === 0 && !trait && (
         <div className={styles.vide}>
           <b>Rien à entendre pour l’instant</b>
-          Choisis une humeur, pioche un modèle à gauche,
+          Choisis une humeur, pioche un modèle juste au-dessus,
           <br />
           ou prends le crayon et dessine le son.
         </div>

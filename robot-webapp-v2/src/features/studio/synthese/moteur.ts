@@ -254,9 +254,23 @@ function bruit(ctx: BaseAudioContext, sortie: AudioNode, t: number, duree: numbe
   source.stop(t + duree + 0.02)
 }
 
-/** Durée du son rendu, en secondes, extinction comprise. */
+/**
+ * Combien le bruit d'attaque d'un morceau le précède, en secondes entendues : le clic et le
+ * souffle se posent juste avant le morceau, pour qu'il démarre dessus.
+ */
+export const avanceAttaque = (m: Morceau): number => (m.attaque === 'click' ? 0.012 : m.attaque === 'hiss' ? 0.035 : 0)
+
+/**
+ * Durée du son rendu, en secondes.
+ *
+ * Le fichier s'arrête juste après le dernier morceau dessiné. Il durait au moins 0,15 s, plus
+ * 0,1 s après le dernier morceau : du silence que personne n'avait dessiné, et qui se serait
+ * entendu comme un retard dans une animation. Restent 20 ms, parce que le compresseur et le
+ * limiteur regardent chacun 6 ms en avance et décalent d'autant la sortie : sans cette marge, la
+ * fin du son serait coupée.
+ */
 export function dureeDe(morceaux: Morceau[], R: Reglages): number {
-  return Math.max(0.15, ...morceaux.map((m) => (m.debut + m.duree) / R.debit)) + 0.1
+  return Math.max(0, ...morceaux.map((m) => (m.debut + m.duree) / R.debit)) + 0.02
 }
 
 /**
@@ -310,8 +324,8 @@ export function rendre(morceaux: Morceau[], R: Reglages): Promise<AudioBuffer> {
   morceaux.forEach((m) => {
     const t = m.debut / R.debit
     const duree = m.duree / R.debit
-    if (m.attaque === 'click') bruit(ctx, melange, Math.max(0, t - 0.012), 0.018, 1400)
-    else if (m.attaque === 'hiss') bruit(ctx, melange, Math.max(0, t - 0.035), 0.05, 4500)
+    if (m.attaque === 'click') bruit(ctx, melange, Math.max(0, t - avanceAttaque(m)), 0.018, 1400)
+    else if (m.attaque === 'hiss') bruit(ctx, melange, Math.max(0, t - avanceAttaque(m)), 0.05, 4500)
     if (m.timbre === 'voix') syllabe(ctx, melange, t, duree, m.courbe, m.v1, m.v2, m.vib, R, volumes(m))
     else bip(ctx, melange, t, duree, m.courbe, m.timbre, R, volumes(m))
   })

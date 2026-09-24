@@ -72,3 +72,9 @@
   cursor: pointer;
 }
 .encore:disabled { opacity: 0.4; cursor: default; }
+
+/* Les modèles partagent la barre des humeurs : même geste, mêmes puces. */
+.separateur { width: 2px; align-self: stretch; background: var(--bordure); }
+
+/* Un bip n'a pas d'emoji : on le distingue d'une parole par sa couleur de timbre. */
+.puceBip { color: var(--t-sweep); }

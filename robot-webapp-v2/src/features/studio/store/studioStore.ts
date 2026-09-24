@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { avanceAttaque } from '../synthese/moteur'
 import {
   avancementDuPoint,
   baseHz,
@@ -39,6 +40,13 @@ interface EtatStudio {
   timbreCrayon: Timbre
   historique: Son[]
   refaits: Son[]
+  /**
+   * La barre du morceau est-elle montrée ? Elle ne suit pas directement la sélection : elle
+   * n'apparaît qu'une fois le geste fini, sans quoi la frise rapetisserait sous la souris pendant
+   * le glisser qui vient de choisir le morceau, et le point tiré sauterait.
+   */
+  barreMorceau: boolean
+  montrerBarreMorceau: () => void
 
   choisir: (id: number | null) => void
   changerMode: (mode: Mode) => void
@@ -58,6 +66,9 @@ interface EtatStudio {
   supprimerChoisi: () => void
   dupliquerChoisi: () => void
   changerNbPoints: (n: number) => void
+  /** Ce qui précède le premier son dessiné, en secondes entendues — ce que « rogner » retirerait. */
+  silenceAvant: () => number
+  rogner: () => void
   reglerPoint: (i: number, hauteur: number) => void
   reglerVolume: (i: number, volume: number) => void
 }
@@ -81,8 +92,10 @@ export const useStudioStore = create<EtatStudio>((set, get) => ({
   timbreCrayon: 'voix',
   historique: [],
   refaits: [],
+  barreMorceau: false,
 
-  choisir: (selId) => set({ selId }),
+  choisir: (selId) => set(selId == null ? { selId, barreMorceau: false } : { selId }),
+  montrerBarreMorceau: () => set({ barreMorceau: get().selId != null }),
   changerMode: (mode) => set({ mode }),
   changerTimbreCrayon: (timbreCrayon) => set({ timbreCrayon }),
 
@@ -102,6 +115,7 @@ export const useStudioStore = create<EtatStudio>((set, get) => ({
     set({
       son,
       selId: null,
+      barreMorceau: false,
       historique: memoriser ? [...get().historique.slice(-150), precedent] : [],
       refaits: [],
     })
@@ -143,7 +157,8 @@ export const useStudioStore = create<EtatStudio>((set, get) => ({
     get().modifier((son) => {
       son.morceaux.push(m)
     })
-    set({ selId: m.id })
+    // Un morceau ajouté l'est au bout d'un geste (trait, double-clic) : la barre peut paraître.
+    set({ selId: m.id, barreMorceau: true })
   },
 
   supprimerChoisi() {
@@ -152,7 +167,7 @@ export const useStudioStore = create<EtatStudio>((set, get) => ({
     get().modifier((son) => {
       son.morceaux = son.morceaux.filter((m) => m.id !== id)
     })
-    set({ selId: null })
+    set({ selId: null, barreMorceau: false })
   },
 
   dupliquerChoisi() {
@@ -164,6 +179,28 @@ export const useStudioStore = create<EtatStudio>((set, get) => ({
       debut: choisi.debut + choisi.duree + 0.04,
     })
     get().ajouterMorceau(copieMorceau)
+  },
+
+  silenceAvant() {
+    const { morceaux, reglages } = get().son
+    if (!morceaux.length) return 0
+    return Math.max(0, Math.min(...morceaux.map((m) => m.debut / reglages.debit - avanceAttaque(m))))
+  },
+
+  /**
+   * Ramène le premier son dessiné à l'instant zéro, en décalant tout le son d'autant — attaque
+   * comprise, pour qu'un clic posé devant le premier morceau ne soit pas rogné avec le silence.
+   * Le silence d'après, lui, n'existe plus : le fichier s'arrête avec le dernier morceau.
+   */
+  rogner() {
+    const silence = get().silenceAvant()
+    if (silence <= 0) return
+    get().modifier((son) => {
+      const decalage = silence * son.reglages.debit
+      son.morceaux.forEach((m) => {
+        m.debut = Math.max(0, m.debut - decalage)
+      })
+    })
   },
 
   changerNbPoints(n) {

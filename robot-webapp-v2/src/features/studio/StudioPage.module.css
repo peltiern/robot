@@ -50,6 +50,22 @@
 
 .espace { flex: 1; }
 
+/* La disquette, comme dans la barre de l'Atelier : discrète, et à l'accent tant qu'il reste des
+   retouches à perdre. */
+.icone {
+  display: grid;
+  place-items: center;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--texte-faible);
+  cursor: pointer;
+}
+.icone:hover:not(:disabled) { background: var(--carter-clair); color: var(--texte); }
+.iconeActive { color: var(--accent); }
+.icone:disabled { opacity: 0.28; cursor: default; }
+
 .jouer {
   width: 46px;
   height: 46px;
@@ -68,40 +84,16 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 190px minmax(0, 1fr) 272px;
+  grid-template-columns: 210px minmax(0, 1fr);
 }
 
-.bibliotheque {
-  overflow-y: auto;
-  padding: 12px;
-  border-right: 2px solid var(--bordure);
-}
-.bibliotheque h2 {
-  margin: 0 0 8px;
-  font: 800 11px 'Nunito', sans-serif;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--texte-faible);
-}
-.bibliotheque ul { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 4px; }
-.bibliotheque button {
-  width: 100%;
-  text-align: left;
-  padding: 6px 9px;
-  border: 2px solid transparent;
-  border-radius: var(--r-puce);
-  background: var(--carter-clair);
-  color: var(--texte);
-  font: 600 14px 'Nunito', sans-serif;
-  cursor: pointer;
-}
-.bibliotheque button:hover { border-color: var(--bordure); }
 
 .centre {
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .outils {
@@ -149,7 +141,6 @@
   background: color-mix(in srgb, var(--c) 22%, var(--creux));
 }
 
-.astuce { margin-left: auto; font-size: 12px; color: var(--texte-faible); }
 
 .infos {
   margin: 0;
@@ -171,5 +162,4 @@
 
 @media (max-width: 1100px) {
   .corps { grid-template-columns: 1fr; }
-  .bibliotheque { border-right: 0; border-bottom: 2px solid var(--bordure); }
 }

@@ -3,11 +3,12 @@ import { Icone } from '../../shared/components/Icone'
 import { sonApi } from '../../shared/api/sonApi'
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import { BarreHumeurs } from './components/BarreHumeurs'
+import { BarreModeles } from './components/BarreModeles'
 import { Bibliotheque } from './components/Bibliotheque'
 import { BarreReglages } from './components/BarreReglages'
 import { Frise } from './components/Frise'
 import { Onde } from './components/Onde'
-import { PanneauMorceau } from './components/PanneauMorceau'
+import { BarreMorceau } from './components/BarreMorceau'
 import { couleurTimbre } from './dessin'
 import { useLecture } from './lecture'
 import { rendre } from './synthese/moteur'
@@ -37,10 +38,17 @@ export function StudioPage() {
   const refaire = useStudioStore((s) => s.refaire)
   const supprimerChoisi = useStudioStore((s) => s.supprimerChoisi)
   const choisir = useStudioStore((s) => s.choisir)
+  const rogner = useStudioStore((s) => s.rogner)
+  // Recalculé à chaque retouche : le bouton ne s'allume que s'il y a vraiment du silence à retirer.
+  const silenceAvant = useStudioStore((s) => s.silenceAvant())
 
   const robotJoignable = useWebSocketStore((s) => s.connected)
   const lecture = useLecture()
   const [message, setMessage] = useState('')
+  // Le son tel qu'il a été enregistré ou ouvert pour la dernière fois : la disquette s'allume tant
+  // qu'il reste des retouches à perdre, comme dans l'Atelier.
+  const [enregistre, setEnregistre] = useState<string | null>(null)
+  const modifie = son.morceaux.length > 0 && JSON.stringify(son) !== enregistre
   const [rafraichir, setRafraichir] = useState(0)
   // Le rendu retient POUR QUEL son il a été calculé : c'est ce qui dit, sans drapeau à tenir à
   // jour, que l'onde affichée est en retard sur la dernière retouche.
@@ -148,6 +156,7 @@ export function StudioPage() {
   // la lecture, soit une centaine de milliers d'octets réencodés soixante fois par seconde.
   async function enregistrer() {
     const resultat = await bibliotheque.enregistrer(son)
+    setEnregistre(JSON.stringify(son))
     setMessage(
       resultat.ou === 'robot'
         ? `« ${son.nom} » enregistré sur le robot`
@@ -156,13 +165,21 @@ export function StudioPage() {
     setRafraichir((n) => n + 1)
   }
 
-  /** Écouter le son là où il sera joué : le haut-parleur du robot ne sonne pas comme un poste. */
-  async function jouerSurLeRobot() {
+  /**
+   * Un son de la bibliothèque, sans l'ouvrir : sur le robot quand il l'a et qu'il répond — son
+   * haut-parleur ne sonne pas comme un poste —, dans le navigateur sinon.
+   */
+  async function jouerRange(nom: string, surLeRobot: boolean) {
     try {
-      await sonApi.jouer(son.nom)
-      setMessage(`« ${son.nom} » joué sur le robot`)
+      if (surLeRobot) {
+        await sonApi.jouer(nom)
+        setMessage(`« ${nom} » joué sur le robot`)
+        return
+      }
+      const range = await bibliotheque.charger(nom)
+      lecture.jouer(await rendre(range.morceaux, range.reglages))
     } catch (e) {
-      setMessage(`Le robot n'a pas joué « ${son.nom} » : ${e instanceof Error ? e.message : String(e)}. Enregistre-le d'abord.`)
+      setMessage(`« ${nom} » n'a pas été joué : ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
@@ -179,49 +196,52 @@ export function StudioPage() {
           spellCheck={false}
           onChange={(e) => renommer(e.target.value)}
         />
-        <button className={styles.bouton} onClick={() => void enregistrer()} disabled={!son.morceaux.length}>
-          Enregistrer
-        </button>
-        <button className={styles.bouton} onClick={() => remplacer(sonVide())}>
-          Nouveau
+        {/* À côté du nom, puisque c'est sous ce nom qu'il part. Allumée tant qu'il reste des
+            retouches à perdre. */}
+        <button
+          className={`${styles.icone} ${modifie ? styles.iconeActive : ''}`}
+          onClick={() => void enregistrer()}
+          disabled={!son.morceaux.length}
+          title={modifie ? 'Enregistrer — retouches non enregistrées' : 'Enregistrer'}
+        >
+          <Icone nom="disquette" taille={20} />
         </button>
         <div className={styles.espace} />
         <button className={styles.bouton} onClick={() => void exporterWav(son)} disabled={!son.morceaux.length}>
           Exporter le WAV
         </button>
-        <button
-          className={styles.bouton}
-          onClick={() => void jouerSurLeRobot()}
-          disabled={!robotJoignable || !son.morceaux.length}
-          title={robotJoignable ? 'Écouter ce son sur le robot' : 'Robot injoignable'}
-        >
-          Jouer sur le robot
-        </button>
+
         <button className={styles.jouer} onClick={() => void jouerTout()} title="Écouter (espace)">
           <Icone nom={lecture.enCours ? 'stop' : 'reprise'} taille={20} />
         </button>
       </header>
 
-      <BarreHumeurs
-        onCompose={(compose) => {
-          remplacer(compose)
-          ecouterCeSon(compose)
-        }}
-      />
 
       <div className={styles.corps}>
         <Bibliotheque
           nomCourant={son.nom}
           rafraichir={rafraichir}
+          robotJoignable={robotJoignable}
+          onNouveau={() => remplacer(sonVide())}
           onCharger={(ouvert) => {
             remplacer(ouvert)
+            setEnregistre(JSON.stringify(ouvert))
             ecouterCeSon(ouvert)
           }}
-          onChargerModele={charger}
+          onJouer={(nom, surLeRobot) => void jouerRange(nom, surLeRobot)}
           onMessage={setMessage}
         />
 
         <section className={styles.centre}>
+          {/* Improviser et partir d'un modèle, au-dessus de la frise : c'est ici qu'on crée. */}
+          <BarreHumeurs
+            onCompose={(compose) => {
+              remplacer(compose)
+              ecouterCeSon(compose)
+            }}
+          />
+          <BarreModeles onCharger={charger} />
+
           <div className={styles.outils}>
             <button className={styles.outil} aria-pressed={mode === 'main'} title="Déplacer et modeler (V)" onClick={() => changerMode('main')}>
               <Icone nom="main" taille={20} />
@@ -259,16 +279,27 @@ export function StudioPage() {
               <Icone nom="retablir" taille={20} />
             </button>
 
-            <span className={styles.astuce}>
-              {mode === 'crayon'
-                ? 'Dessine de gauche à droite : plus haut = plus aigu'
-                : 'Plus haut = plus aigu · de gauche à droite = le temps'}
-            </span>
+            <span className={styles.separateur} />
+            <button
+              className={styles.outil}
+              disabled={silenceAvant < 0.001}
+              title={
+                silenceAvant < 0.001
+                  ? 'Rien à rogner : le son commence au premier morceau'
+                  : `Rogner : retirer ${silenceAvant.toFixed(2).replace('.', ',')} s de silence avant le premier son`
+              }
+              onClick={rogner}
+            >
+              <Icone nom="ciseaux" taille={20} />
+            </button>
+
           </div>
 
           <BarreReglages onEcouter={() => void jouerTout()} />
 
           <Frise tete={lecture.tete} onEcouter={(m) => void jouerMorceau(m)} />
+
+          <BarreMorceau onEcouter={(m) => void jouerMorceau(m)} />
 
           <Onde rendu={tampon} perime={perime} tete={lecture.tete} />
 
@@ -288,7 +319,6 @@ export function StudioPage() {
           {message && <p className={styles.message}>{message}</p>}
         </section>
 
-        <PanneauMorceau onEcouter={(m) => void jouerMorceau(m)} />
       </div>
     </div>
   )
