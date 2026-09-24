@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -65,7 +65,11 @@ public class AnimationController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
         bibliotheque.enregistrer(animation);
-        return ResponseEntity.created(URI.create("/api/animations/" + animation.nom()))
+        // Nom encodé dans l'adresse : concaténé tel quel, un espace (« Mon animation ») faisait
+        // lever URI.create après l'écriture du fichier, et le client recevait une 500 pour une
+        // animation pourtant enregistrée. Le même défaut, trouvé d'abord sur les sons.
+        return ResponseEntity.created(UriComponentsBuilder.fromPath("/api/animations/{nom}")
+                        .buildAndExpand(animation.nom()).encode().toUri())
                 .body(Avertissements.de(animation));
     }
 

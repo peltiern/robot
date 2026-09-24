@@ -55,6 +55,22 @@ class SonControllerTest {
         assertEquals(List.of("Coucou"), controleur.noms());
     }
 
+    /**
+     * Le cas qui a échoué sur le robot le 2026-09-24 : « nouveau son 2 » était écrit, puis la
+     * fabrication de son adresse levait une exception, et le Studio recevait une 500 pour un son
+     * pourtant enregistré — qu'il gardait alors en attente dans le navigateur.
+     */
+    @Test
+    void creerUnNomAEspaceRendUneAdresseEncodee() {
+        var parLeNom = controleur.enregistrer("nouveau son 2", new SonEnregistre("nouveau son 2", recette(), wavBase64()));
+        var parLaCreation = controleur.creer(new SonEnregistre("nouveau son 3", recette(), wavBase64()));
+
+        assertEquals(HttpStatus.CREATED, parLeNom.getStatusCode());
+        assertEquals("/api/sons/nouveau%20son%202", parLeNom.getHeaders().getLocation().toString());
+        assertEquals(HttpStatus.CREATED, parLaCreation.getStatusCode());
+        assertEquals("/api/sons/nouveau%20son%203", parLaCreation.getHeaders().getLocation().toString());
+    }
+
     @Test
     void laRecetteEtLAudioSeRelisentParLeurNom() {
         controleur.enregistrer("Coucou", new SonEnregistre("Coucou", recette(), wavBase64()));
