@@ -303,23 +303,34 @@ export function StudioPage() {
 
           <Onde rendu={tampon} perime={perime} tete={lecture.tete} />
 
+          {/* Sous l'onde et non dans la barre d'état : c'est le son en cours qu'elle décrit. */}
           <p className={styles.infos}>
             {tampon && octets ? (
               <>
                 Le robot recevra <b>{son.nom}.wav</b> · <b>{tampon.duration.toFixed(2).replace('.', ',')} s</b> · 44,1 kHz mono ·{' '}
                 {enKo(octets)} Ko
-                <span className={styles.compte}>
-                  {son.morceaux.length} morceau{son.morceaux.length > 1 ? 'x' : ''}
-                </span>
               </>
             ) : (
               'Aucun son.'
             )}
+            <span className={styles.compte}>
+              {son.morceaux.length} morceau{son.morceaux.length > 1 ? 'x' : ''}
+            </span>
           </p>
-          {message && <p className={styles.message}>{message}</p>}
         </section>
-
       </div>
+
+      {/* La barre d'état court sous tout le Studio, bibliothèque comprise : elle dit ce qui vaut
+          pour tout l'écran — le robot est-il là, et qu'a-t-il répondu —, comme celle de l'Atelier. */}
+      <footer className={styles.pied}>
+        <span className={robotJoignable ? styles.pointOk : styles.pointKo} />
+        <span>{robotJoignable ? 'Robot connecté' : 'Robot injoignable'}</span>
+        {message && (
+          <span className={styles.message} title={message}>
+            {message}
+          </span>
+        )}
+      </footer>
     </div>
   )
 }
