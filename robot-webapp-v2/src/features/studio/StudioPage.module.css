@@ -1,4 +1,4 @@
-/* Le Studio : barre, humeurs, puis bibliothèque / frise / panneau. */
+/* Le Studio : barre du haut, bibliothèque et frise, barre d'état sur toute la largeur. */
 
 .page {
   flex: 1;
@@ -142,6 +142,19 @@
 }
 
 
+.pied {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  flex-shrink: 0;
+  background: var(--carter);
+  border-top: 2px solid var(--bordure);
+  font-size: 12px;
+  color: var(--texte-faible);
+  white-space: nowrap;
+}
+
 .infos {
   margin: 0;
   padding: 6px 12px 10px;
@@ -152,12 +165,22 @@
 }
 .infos b { color: var(--texte); }
 
+.pointOk,
+.pointKo { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.pointOk { background: var(--ok); }
+.pointKo { background: var(--alarme); }
+
+/* Le message du robot peut être long : il s'arrête en points de suspension, et se lit en entier au
+   survol. */
 .message {
-  margin: 0;
-  padding: 0 12px 10px;
-  font: 700 12px 'Nunito', sans-serif;
+  margin-left: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 700;
   color: var(--ok);
 }
+
 .compte { margin-left: auto; }
 
 @media (max-width: 1100px) {
