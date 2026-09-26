@@ -226,6 +226,31 @@ function renderTimeline(
   ctx.fill()
 }
 
+/**
+ * Les teintes des sons, sans le rouge : il dit « introuvable ». En hexadécimal, parce que le dessin
+ * leur colle une transparence au bout.
+ */
+const TEINTES_SONS = ['#86c06a', '#5bd6e2', '#e3c14b', '#d59cf0', '#7fa8ff', '#ff9f6a', '#4fd1a5', '#f28ab2']
+
+/**
+ * Une couleur par son, tirée de son nom : le même son garde la sienne d'une séance à l'autre, et ses
+ * copies se reconnaissent. Deux noms qui tombent sur la même teinte, l'un glisse à la suivante
+ * libre — dans une même animation, huit sons se distinguent toujours.
+ */
+function couleursDesSons(sons: EditorSon[]): Map<string, string> {
+  const couleurs = new Map<string, string>()
+  const prises = new Set<number>()
+  for (const nom of [...new Set(sons.map(s => s.nom))].sort()) {
+    let h = 0
+    for (const c of nom) h = (h * 31 + c.charCodeAt(0)) >>> 0
+    let i = h % TEINTES_SONS.length
+    while (prises.has(i) && prises.size < TEINTES_SONS.length) i = (i + 1) % TEINTES_SONS.length
+    prises.add(i)
+    couleurs.set(nom, TEINTES_SONS[i])
+  }
+  return couleurs
+}
+
 /** Durée affichée d'un son pas encore chargé : un bloc de largeur nulle ne s'attraperait pas. */
 const DUREE_PROVISOIRE_MS = 400
 
@@ -245,8 +270,9 @@ function renderSons(
   sons: EditorSon[], etats: Record<string, EtatSon>,
   totalMs: number, pxPerMs: number, scrollX: number,
   selectedSon: string | null,
-  couleur: string, couleurAbsent: string,
+  couleurAbsent: string,
 ) {
+  const couleurs = couleursDesSons(sons)
   ctx.fillStyle = '#10151c'
   ctx.fillRect(0, y0, W, SH)
 
@@ -258,7 +284,7 @@ function renderSons(
     const haut = y0 + 6, h = SH - 12
     const absent = etat?.etat === 'absent'
     const choisi = son.id === selectedSon
-    const teinte = absent ? couleurAbsent : couleur
+    const teinte = absent ? couleurAbsent : couleurs.get(son.nom) ?? TEINTES_SONS[0]
 
     ctx.save()
     ctx.beginPath()
@@ -385,12 +411,11 @@ export function Timeline() {
     rctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     const couleurGuide = getComputedStyle(tl).getPropertyValue('--accent').trim() || '#f4a72c'
-    const couleurSon = getComputedStyle(tl).getPropertyValue('--ok').trim() || '#86c06a'
     const couleurAbsent = getComputedStyle(tl).getPropertyValue('--alarme').trim() || '#e8503a'
     renderTimeline(ctx, tl.clientWidth, tl.clientHeight, tracks, playhead, totalMs, pxPerMs, scrollX, selectedKf,
       guidesRef.current, couleurGuide, (y0: number) =>
         renderSons(ctx, tl.clientWidth, y0, sons, useSonsAtelier.getState().sons, totalMs, pxPerMs, scrollX,
-          selectedSon, couleurSon, couleurAbsent))
+          selectedSon, couleurAbsent))
     renderRuler(rctx, rul.clientWidth, totalMs, pxPerMs, scrollX)
   }
 
