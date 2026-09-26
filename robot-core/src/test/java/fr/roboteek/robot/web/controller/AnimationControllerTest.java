@@ -6,7 +6,6 @@ import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.ImageCle;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Piste;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.SonDeclenche;
-import fr.roboteek.robot.organes.actionneurs.RobotSound;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -129,18 +128,29 @@ class AnimationControllerTest {
         }
 
         /**
-         * L'éditeur ne connaît pas encore les sons : il relit une animation, la renvoie, et les
-         * effacerait sans que personne ne l'ait demandé.
+         * L'éditeur envoie maintenant sa piste son telle quelle : une liste vide veut dire « plus
+         * de son », et doit effacer. L'ancienne précaution, qui recopiait les sons enregistrés,
+         * aurait ressuscité le dernier son qu'on vient de supprimer.
          */
         @Test
-        void enregistrerSansSonNEffacePasCeuxQuiExistent() {
+        void enregistrerSansSonEffaceLesSons() {
             bibliotheque.enregistrer(new Animation("Salut", 2000, animation("Salut").pistes(),
-                    List.of(new SonDeclenche(500, RobotSound.values()[0]))));
+                    List.of(new SonDeclenche(500, "coucou"))));
 
             controleur.remplacer("Salut", animation("Salut"));
 
-            assertEquals(1, bibliotheque.charger("Salut").orElseThrow().sons().size(),
-                    "la piste son doit survivre à un enregistrement qui l'ignore");
+            assertEquals(List.of(), bibliotheque.charger("Salut").orElseThrow().sons());
+        }
+
+        @Test
+        void lesSonsSontEnregistresParLeurNom() {
+            Animation avecSon = new Animation("Salut", 2000, animation("Salut").pistes(),
+                    List.of(new SonDeclenche(500, "humeur joie")));
+
+            controleur.remplacer("Salut", avecSon);
+
+            assertEquals(List.of(new SonDeclenche(500, "humeur joie")),
+                    bibliotheque.charger("Salut").orElseThrow().sons());
         }
 
         @Test

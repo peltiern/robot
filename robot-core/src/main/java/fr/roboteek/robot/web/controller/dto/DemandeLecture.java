@@ -12,6 +12,13 @@ import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
  *
  * @param nom       nom d'une animation enregistrée, ou {@code null}
  * @param animation animation complète à jouer sans l'enregistrer, ou {@code null}
+ * @param depuis    instant de départ en ms, ou {@code null} pour le début : l'éditeur qui reprend
+ *                  la lecture au milieu de la timeline doit voir la tête partir de là
  */
-public record DemandeLecture(String nom, Animation animation) {
+public record DemandeLecture(String nom, Animation animation, Long depuis) {
+
+    /** Sans instant de départ : l'animation part du début. */
+    public DemandeLecture(String nom, Animation animation) {
+        this(nom, animation, null);
+    }
 }

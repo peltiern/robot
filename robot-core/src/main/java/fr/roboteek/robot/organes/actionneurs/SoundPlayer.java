@@ -15,8 +15,16 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Lecteur de sons du robot.
@@ -44,6 +52,15 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
     private volatile Process lecture;
 
     private volatile String sonEnCours;
+
+    /**
+     * Temps accordé à un {@code play} coupé pour rendre la carte son. Après un {@code kill -9} c'est
+     * presque immédiat ; la borne évite seulement d'attendre sans fin un processus récalcitrant.
+     */
+    private static final long ATTENTE_CARTE_RENDUE_MS = 200;
+
+    /** Les {@code play} que nous avons coupés : leur sortie en erreur est voulue, pas un échec. */
+    private final Set<Process> coupes = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     /**
      * Joue un son.
@@ -87,12 +104,20 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
      * tout de suite : la demande vient d'un appel HTTP, et tenir la requête ouverte pendant la
      * seconde que dure le son ferait passer le Studio pour lent alors qu'il ne l'est pas.
      * <p>
-     * Un seul son à la fois : le robot n'a qu'une bouche, et deux {@code play} en parallèle se
-     * mélangeraient sur la même carte son. Lancer un son en coupe donc un autre.
+     * Un seul son à la fois : le robot n'a qu'une bouche, et {@code play} joue directement sur la
+     * carte, qui n'accepte qu'un programme à la fois. Lancer un son en coupe donc un autre.
      *
      * @return faux si l'organe n'est pas démarré ou si {@code play} n'a pas pu être lancé
      */
-    public synchronized boolean jouer(String nom, Path fichier) {
+    public boolean jouer(String nom, Path fichier) {
+        return jouer(nom, fichier, 0);
+    }
+
+    /**
+     * Joue un fichier son à partir de {@code depuisSecondes} : une animation lancée au milieu fait
+     * entendre sa bande-son à partir de là, pas du début.
+     */
+    public synchronized boolean jouer(String nom, Path fichier, double depuisSecondes) {
         if (!running) {
             return false;
         }
@@ -101,10 +126,18 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
         pause.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
         applicationEventPublisher.publishEvent(pause);
         try {
-            Process process = new ProcessBuilder("play", "-q", fichier.toString()).start();
+            List<String> commande = new ArrayList<>(List.of("play", "-q", fichier.toString()));
+            if (depuisSecondes > 0) {
+                // `trim` de sox : ne garde que ce qui suit cet instant.
+                commande.addAll(List.of("trim", String.format(Locale.ROOT, "%.3f", depuisSecondes)));
+            }
+            Process process = new ProcessBuilder(commande).start();
             lecture = process;
             sonEnCours = nom;
-            process.onExit().thenRun(() -> finDeLecture(process));
+            process.onExit().thenRun(() -> {
+                signalerUnEchec(nom, process);
+                finDeLecture(process);
+            });
             return true;
         } catch (IOException e) {
             logger.error("Son « {} » non joué", nom, e);
@@ -127,8 +160,36 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
         if (process == null) {
             return false;
         }
-        process.destroy();
+        // Tué net, et non poliment. Poliment (`destroy`, un SIGTERM), `play` joue d'abord ce qui
+        // reste dans son tampon : mesuré le 2026-09-25 sur le Jetson, il garde la carte 844 ms. Le
+        // son suivant, lancé dans la foulée, ne trouvait pas la carte et échouait en silence — deux
+        // sons côte à côte dans une animation, et le second ne jouait jamais.
+        coupes.add(process);
+        process.destroyForcibly();
+        try {
+            process.waitFor(ATTENTE_CARTE_RENDUE_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         return true;
+    }
+
+    /**
+     * Un {@code play} qui échoue le dit sur sa sortie d'erreur, que personne ne lisait : c'est ainsi
+     * que la carte occupée est restée invisible. Ceux que nous avons coupés, eux, sortent en erreur
+     * à dessein.
+     */
+    private void signalerUnEchec(String nom, Process process) {
+        if (coupes.remove(process) || process.exitValue() == 0) {
+            return;
+        }
+        String erreur;
+        try {
+            erreur = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8).strip();
+        } catch (IOException e) {
+            erreur = "(sortie d'erreur illisible)";
+        }
+        logger.warn("Son « {} » : play a échoué (code {}) : {}", nom, process.exitValue(), erreur);
     }
 
     private synchronized void finDeLecture(Process process) {

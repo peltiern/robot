@@ -30,13 +30,23 @@ export interface Piste {
   imagesCles: ImageCle[]
 }
 
+/**
+ * Un son du Studio lancé à un instant de l'animation, désigné par son nom dans la bibliothèque —
+ * pas embarqué : retoucher le son dans le Studio doit profiter à toutes les animations qui s'en
+ * servent.
+ */
+export interface SonDeclenche {
+  instant: number          // ms depuis le début de l'animation
+  son: string              // nom du son dans la bibliothèque du Studio
+}
+
 export interface Animation {
   nom: string
   dureeTotale: number      // ms ; indépendante de la dernière image-clé, une animation peut
                            // finir sur une pause
   pistes: Piste[]
-  sons: unknown[]          // emplacement réservé ; l'éditeur ne les connaît pas encore et les
-                           // renvoie tels quels — le backend les conserve de toute façon
+  sons: SonDeclenche[]     // la piste Son ; envoyée telle quelle, vide comprise — vide veut
+                           // dire « plus de son », et le robot efface
   version: number          // unité des valeurs ; cf. VERSION_ANIMATION
 }
 
@@ -51,6 +61,8 @@ export const VERSION_ANIMATION = 2
 export interface AnimationEnCours {
   nom: string
   avertissements: string[]
+  /** Ce que les moteurs attendent la bande-son avant de bouger, en ms : la tête de lecture aussi. */
+  attenteDuSon?: number
 }
 
 /**

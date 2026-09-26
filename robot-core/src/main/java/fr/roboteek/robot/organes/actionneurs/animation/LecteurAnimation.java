@@ -117,6 +117,18 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     private IntSupplier attenteDesOrganes = () -> 0;
 
     /**
+     * La bande-son, programmée à part (voir {@link PisteSonore}). Par mutateur et facultative :
+     * les tests montent ce lecteur sans contexte Spring, et une animation sans son reste une
+     * animation correcte.
+     */
+    private PisteSonore pisteSonore;
+
+    @Autowired(required = false)
+    void pisteSonore(PisteSonore pisteSonore) {
+        this.pisteSonore = pisteSonore;
+    }
+
+    /**
      * Branche la mesure sur les vraies files. {@code required = false} : les tests montent cette
      * classe sans contexte Spring, et un lecteur sans mesure de retard reste un lecteur correct.
      */
@@ -169,15 +181,41 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      *         attendrait un mouvement qui ne viendra pas.
      */
     public boolean jouer(Animation animation) {
+        return jouer(animation, 0);
+    }
+
+    /**
+     * Lance une animation à partir d'un instant : l'éditeur qui reprend la lecture au milieu de la
+     * timeline doit voir la tête — et entendre la bande-son — partir de là, pas du début.
+     * <p>
+     * Quand une bande-son part, <b>les moteurs l'attendent</b> : {@code play} met environ 300 ms à
+     * se faire entendre, et c'est le mouvement qui prend ce retard plutôt que le son. Ainsi un
+     * bruitage tombe juste sur son geste, même posé à l'instant zéro.
+     */
+    public boolean jouer(Animation animation, long depuisMs) {
         if (!running || arretUrgence || animation == null) {
             return false;
         }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
         dernieresConsignesCurseur.clear();
-        lecture = new Lecture(animation, horloge.millis());
-        logger.info("Animation « {} » lancée ({} ms, {} piste(s))",
-                animation.nom(), animation.dureeTotale(), animation.pistes().size());
+        long depuis = Math.max(0, Math.min(depuisMs, animation.dureeTotale()));
+        long attente = pisteSonore != null && pisteSonore.demarrer(animation, depuis) ? pisteSonore.avanceMs() : 0;
+        // Relevé APRÈS le lancement de la bande-son : son assemblage prend quelques millisecondes,
+        // qui ne doivent pas s'ajouter au décalage entre le son et le geste.
+        lecture = new Lecture(animation, horloge.millis() + attente - depuis, attente);
+        logger.info("Animation « {} » lancée à {} ms ({} ms, {} piste(s), {} son(s){})",
+                animation.nom(), depuis, animation.dureeTotale(), animation.pistes().size(), animation.sons().size(),
+                attente > 0 ? ", mouvement retardé de " + attente + " ms pour le son" : "");
         return true;
+    }
+
+    /**
+     * Combien de temps les moteurs attendent la bande-son de l'animation en cours, pour que
+     * l'éditeur fasse partir sa tête de lecture en même temps que la tête du robot.
+     */
+    public long attenteDuSon() {
+        Lecture enCours = lecture;
+        return enCours == null ? 0 : enCours.attenteDuSon;
     }
 
     /**
@@ -189,7 +227,15 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         Lecture enCours = lecture;
         lecture = null;
         if (enCours != null) {
+            couperLaBandeSon();
             logger.info("Animation « {} » interrompue", enCours.animation.nom());
+        }
+    }
+
+    /** Une animation interrompue n'a plus de raison de sonner : ce qui reste à venir est annulé. */
+    private void couperLaBandeSon() {
+        if (pisteSonore != null) {
+            pisteSonore.arreter();
         }
     }
 
@@ -288,6 +334,10 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         long budgetMs = (long) (1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI));
 
         long instant = horloge.millis() - enCours.instantDebut;
+        if (instant < 0) {
+            // Les moteurs attendent que la bande-son se fasse entendre (voir jouer).
+            return budgetMs;
+        }
         if (instant > enCours.animation.dureeTotale()) {
             terminer(enCours);
             return budgetMs;
@@ -413,6 +463,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      */
     private void terminer(Lecture enCours) {
         lecture = null;
+        if (pisteSonore != null) {
+            pisteSonore.laisserFinir();
+        }
         if (enCours.toursEnRetard > 0) {
             logger.warn("Animation « {} » terminée, mais {} tour(s) sur {} sont partis avant que les "
                             + "organes aient consommé le précédent : le robot ne suit pas la cadence",
@@ -461,6 +514,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
         Lecture enCours = lecture;
         lecture = null;
+        couperLaBandeSon();
         logger.info("Animation « {} » interrompue : la manette prend la main", enCours.animation.nom());
     }
 
@@ -480,6 +534,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         Lecture enCours = lecture;
         lecture = null;
         if (enCours != null) {
+            couperLaBandeSon();
             logger.warn("Lecteur d'animation : arrêt d'urgence, « {} » abandonnée", enCours.animation.nom());
         }
     }
@@ -496,6 +551,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     public void stop() {
         running = false;
         lecture = null;
+        couperLaBandeSon();
         arreter();
         logger.info("Lecteur d'animation arrêté");
     }
@@ -557,6 +613,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
         private final long instantDebut;
 
+        /** Ce que les moteurs attendent la bande-son avant de bouger, en ms ; 0 sans son. */
+        private final long attenteDuSon;
+
         /** Dernière consigne envoyée à chaque axe, pour ne pas réécrire ce qui n'a pas bougé. */
         private final Map<Axe, Double> dernieresConsignes = new EnumMap<>(Axe.class);
 
@@ -572,8 +631,13 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         int toursEnRetard;
 
         Lecture(Animation animation, long instantDebut) {
+            this(animation, instantDebut, 0);
+        }
+
+        Lecture(Animation animation, long instantDebut, long attenteDuSon) {
             this.animation = animation;
             this.instantDebut = instantDebut;
+            this.attenteDuSon = attenteDuSon;
         }
     }
 }

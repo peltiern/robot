@@ -231,6 +231,42 @@ class LecteurAnimationTest {
             assertEquals(0, lecture.toursEnRetard);
         }
 
+        /**
+         * Quand une bande-son vient de partir, les moteurs l'attendent : un tour pendant l'attente ne
+         * publie rien. Un tour qui publierait compterait ici un retard, la file étant réputée pleine.
+         */
+        @Test
+        void lesMoteursAttendentLaBandeSon() {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            lecteur.attenteDesOrganes(() -> 2);
+
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(uneAnimation(), System.currentTimeMillis() + 300, 300);
+            lecteur.avancerSiBesoin(lecture);
+
+            assertEquals(0, lecture.toursEnRetard, "rien ne doit partir avant que le son se fasse entendre");
+        }
+
+        /** Une lecture reprise au milieu part de là : la tête ne repasse pas par le début. */
+        @Test
+        void uneLectureRepriseAuMilieuPartDeLa() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+
+            lecteur.jouer(new Animation("Balayage", 2000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(2000, 40))), List.of()), 1500);
+
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+            long limite = System.currentTimeMillis() + 5000;
+            while (recus.cou.isEmpty() && System.currentTimeMillis() < limite) {
+                Thread.sleep(20);
+            }
+            assertFalse(recus.cou.isEmpty(), "Aucun mouvement de cou publié");
+            assertTrue(recus.cou.getFirst().getPositionPanoramique() > 25,
+                    "à 1,5 s d'un balayage de 0 à 40°, la tête est déjà bien engagée, pas au départ");
+            assertEquals(0, lecteur.attenteDuSon(), "sans son, les moteurs n'attendent rien");
+        }
+
         private static Animation uneAnimation() {
             return new Animation("Essai", 1500, List.of(
                     piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(1500, 25))), List.of());

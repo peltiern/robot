@@ -83,7 +83,11 @@ public class AnimationController {
         if (!animation.versionLisible()) {
             return versionRefusee(animation);
         }
-        Animation aEnregistrer = conserverLesSons(animation.avecNom(nom));
+        // La piste son part telle que l'éditeur l'envoie, vide comprise : c'est ainsi qu'on efface
+        // le dernier son d'une animation. Une précaution recopiait autrefois les sons enregistrés
+        // quand la liste arrivait vide — utile tant que l'éditeur les ignorait, elle aurait
+        // désormais ressuscité chaque son supprimé.
+        Animation aEnregistrer = animation.avecNom(nom);
         bibliotheque.enregistrer(aEnregistrer);
         return ResponseEntity.ok(Avertissements.de(aEnregistrer));
     }
@@ -105,25 +109,6 @@ public class AnimationController {
         return bibliotheque.supprimer(nom)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
-    }
-
-    /**
-     * Garde la piste son de la version enregistrée quand celle qui arrive n'en porte aucune.
-     * <p>
-     * L'éditeur ne connaît pas encore les sons : il relit une animation, la renvoie, et les
-     * effacerait sans que personne ne l'ait demandé. Le jour où il saura les éditer, il enverra
-     * une liste — fût-elle vide après une suppression volontaire — et cette précaution deviendra
-     * inutile sans devenir gênante.
-     */
-    private Animation conserverLesSons(Animation animation) {
-        if (!animation.sons().isEmpty()) {
-            return animation;
-        }
-        return bibliotheque.charger(animation.nom())
-                .filter(existante -> !existante.sons().isEmpty())
-                .map(existante -> new Animation(animation.nom(), animation.dureeTotale(),
-                        animation.pistes(), existante.sons()))
-                .orElse(animation);
     }
 
 }

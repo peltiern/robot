@@ -1,5 +1,5 @@
 import { VERSION_ANIMATION, type Animation, type Axe, type Piste } from '../../../shared/types/animation'
-import type { EditorTrack } from '../store/animationStore'
+import type { EditorSon, EditorTrack } from '../store/animationStore'
 
 /**
  * La frontière entre le modèle de l'éditeur et le contrat du robot.
@@ -14,6 +14,7 @@ export function toAnimation(
   nom: string,
   dureeTotale: number,
   tracks: EditorTrack[],
+  sons: EditorSon[],
 ): Animation {
   const pistes: Piste[] = tracks
     .filter(t => t.kfs.length > 0)
@@ -25,9 +26,20 @@ export function toAnimation(
         .sort((a, b) => a.t - b.t)
         .map(kf => ({ instant: kf.t, valeur: kf.v })),
     }))
-  // sons : l'éditeur ne les connaît pas encore. Le backend conserve ceux de la version
-  // enregistrée quand la liste arrive vide, donc les envoyer ainsi n'efface rien.
-  return { nom, dureeTotale, pistes, sons: [], version: VERSION_ANIMATION }
+  return {
+    nom,
+    dureeTotale,
+    pistes,
+    sons: [...sons].sort((a, b) => a.t - b.t).map(s => ({ instant: s.t, son: s.nom })),
+    version: VERSION_ANIMATION,
+  }
+}
+
+/** La piste Son d'une animation relue, à la forme de l'éditeur. */
+export function versSonsEditeur(animation: Animation): EditorSon[] {
+  return (animation.sons ?? [])
+    .filter(s => typeof s?.son === 'string' && s.son)
+    .map(s => ({ id: uid(), t: s.instant, nom: s.son }))
 }
 
 /**

@@ -431,4 +431,17 @@ public interface RobotConfig extends Config {
     @Key("robot.animation.seuil.degres")
     @DefaultValue("0.3")
     double animationSeuilDegres();
+
+    /**
+     * Avance, en millisecondes, avec laquelle un son d'animation est lancé avant son instant.
+     * <p>
+     * C'est le temps que met {@code play} à se faire entendre sur le Jetson — démarrage du
+     * processus et ouverture de la carte son —, mesuré le 2026-09-23 à <b>295 ms ± 13 ms</b> sur
+     * cinq essais. Lancé à l'heure, chaque bruitage arriverait d'autant en retard sur le geste.
+     * <p>
+     * À remesurer si la sortie audio change (autre carte, autre lecteur que {@code play}).
+     */
+    @Key("robot.animation.son.avance.ms")
+    @DefaultValue("300")
+    long animationSonAvanceMs();
 }

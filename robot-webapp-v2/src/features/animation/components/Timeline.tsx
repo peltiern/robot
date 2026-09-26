@@ -1,9 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react'
-import { MARGE_FIN_PX, useAnimationStore, type EditorTrack } from '../store/animationStore'
+import { useEffect, useRef, useCallback, useState } from 'react'
+import { MARGE_FIN_PX, useAnimationStore, type EditorSon, type EditorTrack } from '../store/animationStore'
 import { trackVal } from '../utils/catmullRom'
+import { sonsDisponibles, useSonsAtelier, type EtatSon } from '../utils/sonsAtelier'
 import styles from './Timeline.module.css'
 
 const TH = 88    // track height px
+const SH = 52    // hauteur de la piste Son, px : un bloc doit pouvoir montrer son onde
 const RH = 26    // ruler height px
 const KR = 7     // keyframe diamond half-size
 const PAD = 10   // marge haute et basse d'une piste, px
@@ -93,6 +95,7 @@ function renderTimeline(
   selectedKf: { trackId: string; kfId: string } | null,
   guides: Guides | null,
   couleurGuide: string,
+  dessinerSons: (y0: number) => void,
 ) {
   ctx.clearRect(0, 0, W, H)
   const pas = pasDeLaRegle(pxPerMs)
@@ -170,6 +173,8 @@ function renderTimeline(
     ctx.stroke()
   })
 
+  dessinerSons(tracks.length * TH)
+
   // Guides de l'aimant, par-dessus les courbes : ils disent à quoi l'image-clé vient de se coller.
   if (guides) {
     ctx.save()
@@ -198,6 +203,81 @@ function renderTimeline(
   ctx.beginPath()
   ctx.moveTo(px - 5, 0); ctx.lineTo(px + 5, 0); ctx.lineTo(px, 8)
   ctx.fill()
+}
+
+/** Durée affichée d'un son pas encore chargé : un bloc de largeur nulle ne s'attraperait pas. */
+const DUREE_PROVISOIRE_MS = 400
+
+function dureeAffichee(etat: EtatSon | undefined) {
+  return etat?.etat === 'pret' ? etat.duree * 1000 : DUREE_PROVISOIRE_MS
+}
+
+/**
+ * La piste Son, sous les axes : chaque son est un bloc de sa vraie durée, avec son onde.
+ *
+ * La durée compte plus que tout ici : c'est elle qui dit si un bruitage chevauche le suivant, ou
+ * déborde de la fin de l'animation, ce qu'un simple repère à l'instant de départ cacherait.
+ */
+function renderSons(
+  ctx: CanvasRenderingContext2D,
+  W: number, y0: number,
+  sons: EditorSon[], etats: Record<string, EtatSon>,
+  totalMs: number, pxPerMs: number, scrollX: number,
+  selectedSon: string | null,
+  couleur: string, couleurAbsent: string,
+) {
+  ctx.fillStyle = '#10151c'
+  ctx.fillRect(0, y0, W, SH)
+
+  // Au-delà de la fin, le son continue de sonner mais l'animation est finie : on le montre.
+  const xFin = tToX(totalMs, pxPerMs, scrollX)
+  if (xFin < W) {
+    ctx.fillStyle = 'rgba(0,0,0,.35)'
+    ctx.fillRect(Math.max(0, xFin), y0, W - Math.max(0, xFin), SH)
+  }
+
+  for (const son of sons) {
+    const etat = etats[son.nom]
+    const x = tToX(son.t, pxPerMs, scrollX)
+    const w = Math.max(6, dureeAffichee(etat) * pxPerMs)
+    if (x + w < 0 || x > W) continue
+    const haut = y0 + 6, h = SH - 12
+    const absent = etat?.etat === 'absent'
+    const choisi = son.id === selectedSon
+    const teinte = absent ? couleurAbsent : couleur
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.roundRect(x, haut, w, h, 6)
+    ctx.fillStyle = teinte + (choisi ? '40' : '26')
+    ctx.fill()
+    ctx.lineWidth = choisi ? 2 : 1.5
+    ctx.strokeStyle = choisi ? '#fff' : teinte
+    if (absent || etat?.etat === 'chargement' || !etat) ctx.setLineDash([4, 3])
+    ctx.stroke()
+    ctx.setLineDash([])
+    ctx.clip()
+
+    if (etat?.etat === 'pret') {
+      ctx.fillStyle = teinte
+      const milieu = haut + h / 2
+      for (let i = 0; i < w; i++) {
+        const crete = etat.cretes[Math.floor(i / w * etat.cretes.length)] ?? 0
+        const demi = Math.max(0.5, crete * (h / 2 - 3))
+        ctx.fillRect(x + i, milieu - demi, 1, demi * 2)
+      }
+    }
+
+    ctx.fillStyle = '#e6edf3'
+    ctx.font = '600 11px sans-serif'
+    ctx.fillText(absent ? `${son.nom} — introuvable` : son.nom, x + 6, haut + 13)
+    ctx.restore()
+  }
+
+  // Séparateur haut : la piste Son n'est pas un axe, elle ne doit pas se lire comme la suite du dernier.
+  ctx.strokeStyle = '#30363d'
+  ctx.lineWidth = 2
+  ctx.beginPath(); ctx.moveTo(0, y0 + 1); ctx.lineTo(W, y0 + 1); ctx.stroke()
 }
 
 function renderRuler(
@@ -229,6 +309,9 @@ function renderRuler(
 
 export function Timeline() {
   const store = useAnimationStore()
+  const etatsSons = useSonsAtelier(s => s.sons)
+  const demanderSon = useSonsAtelier(s => s.demander)
+  const [menuSons, setMenuSons] = useState<{ x: number; y: number; noms: string[] | null } | null>(null)
   const tlRef  = useRef<HTMLCanvasElement>(null)
   const rulRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -239,7 +322,8 @@ export function Timeline() {
 
   // État drag local (ref pour ne pas trigger de re-render)
   const drag = useRef<{
-    type: 'kf' | 'ph' | 'ruler'
+    type: 'kf' | 'ph' | 'ruler' | 'son'
+    sonId?: string
     trackId?: string
     kfId?: string
     startX?: number
@@ -256,7 +340,7 @@ export function Timeline() {
     if (!tl || !rul || !wrap || !rulWrap) return
 
     const cw = wrap.clientWidth
-    const ch = TH * store.tracks.length
+    const ch = TH * store.tracks.length + SH
     const rw = rulWrap.clientWidth
 
     tl.style.width = cw + 'px'; tl.style.height = ch + 'px'
@@ -269,7 +353,7 @@ export function Timeline() {
   }, [store.tracks.length, dpr])
 
   function draw() {
-    const { tracks, playhead, totalMs, pxPerMs, scrollX, selectedKf } = useAnimationStore.getState()
+    const { tracks, sons, selectedSon, playhead, totalMs, pxPerMs, scrollX, selectedKf } = useAnimationStore.getState()
     const tl = tlRef.current, rul = rulRef.current
     if (!tl || !rul) return
 
@@ -279,14 +363,26 @@ export function Timeline() {
     rctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
     const couleurGuide = getComputedStyle(tl).getPropertyValue('--accent').trim() || '#f4a72c'
+    const couleurSon = getComputedStyle(tl).getPropertyValue('--ok').trim() || '#86c06a'
+    const couleurAbsent = getComputedStyle(tl).getPropertyValue('--alarme').trim() || '#e8503a'
     renderTimeline(ctx, tl.clientWidth, tl.clientHeight, tracks, playhead, totalMs, pxPerMs, scrollX, selectedKf,
-      guidesRef.current, couleurGuide)
+      guidesRef.current, couleurGuide, (y0: number) =>
+        renderSons(ctx, tl.clientWidth, y0, sons, useSonsAtelier.getState().sons, totalMs, pxPerMs, scrollX,
+          selectedSon, couleurSon, couleurAbsent))
     renderRuler(rctx, rul.clientWidth, totalMs, pxPerMs, scrollX)
   }
 
   useEffect(() => {
     draw()
   })
+
+  // Chaque son posé est chargé une fois : sa durée fait la largeur de son bloc.
+  useEffect(() => {
+    store.sons.forEach(son => demanderSon(son.nom))
+  }, [store.sons, demanderSon])
+
+  // Un son qui finit de charger change de largeur : on redessine.
+  useEffect(() => { draw() }, [etatsSons])
 
   useEffect(() => {
     const obs = new ResizeObserver(resize)
@@ -346,6 +442,24 @@ export function Timeline() {
     return null
   }
 
+  function hitSon(x: number, y: number) {
+    const { sons, tracks, pxPerMs, scrollX } = store
+    const y0 = tracks.length * TH
+    if (y < y0 || y > y0 + SH) return null
+    // Du dernier au premier : c'est le dernier posé qui est dessiné par-dessus.
+    for (let i = sons.length - 1; i >= 0; i--) {
+      const son = sons[i]
+      const x0 = tToX(son.t, pxPerMs, scrollX)
+      const w = Math.max(6, dureeAffichee(useSonsAtelier.getState().sons[son.nom]) * pxPerMs)
+      if (x >= x0 && x <= x0 + w) return son
+    }
+    return null
+  }
+
+  function dansLaPisteSon(y: number) {
+    return y >= store.tracks.length * TH
+  }
+
   function hitPlayhead(x: number) {
     return Math.abs(x - tToX(store.playhead, store.pxPerMs, store.scrollX)) < 8
   }
@@ -361,6 +475,19 @@ export function Timeline() {
     if (hitPlayhead(x)) {
       store.setPlaying(false)
       drag.current = { type: 'ph' }
+      return
+    }
+
+    // La piste Son ne pose rien au clic : un son se choisit dans la bibliothèque, par le « + ».
+    if (dansLaPisteSon(y)) {
+      const son = hitSon(x, y)
+      if (son) {
+        store.snapshot()
+        store.selectSon(son.id)
+        drag.current = { type: 'son', sonId: son.id, startX: x, origT: son.t }
+      } else {
+        store.clearSel()
+      }
       return
     }
 
@@ -392,7 +519,14 @@ export function Timeline() {
     if (!drag.current) {
       const isOnPh = hitPlayhead(x)
       const isOnKf = !!hitKf(x, y)
-      tlRef.current!.style.cursor = isOnPh ? 'ew-resize' : isOnKf ? 'grab' : 'crosshair'
+      const isOnSon = !!hitSon(x, y)
+      tlRef.current!.style.cursor = isOnPh ? 'ew-resize' : isOnKf || isOnSon ? 'grab' : dansLaPisteSon(y) ? 'default' : 'crosshair'
+      return
+    }
+
+    if (drag.current.type === 'son') {
+      const { sonId, startX, origT } = drag.current
+      store.moveSon(sonId!, origT! + (x - startX!) / pxPerMs)
       return
     }
 
@@ -433,7 +567,13 @@ export function Timeline() {
 
   function onDblClick(e: React.MouseEvent<HTMLCanvasElement>) {
     const rect = tlRef.current!.getBoundingClientRect()
-    const hit = hitKf(e.clientX - rect.left, e.clientY - rect.top)
+    const x = e.clientX - rect.left, y = e.clientY - rect.top
+    const son = hitSon(x, y)
+    if (son) {
+      store.deleteSon(son.id)
+      return
+    }
+    const hit = hitKf(x, y)
     if (hit) store.deleteKf(hit.trackId, hit.kfId)
   }
 
@@ -463,10 +603,36 @@ export function Timeline() {
     store.setPlayhead(Math.max(0, Math.min(xToT(e.clientX - rect.left, store.pxPerMs, store.scrollX), store.totalMs)))
   }
 
-  const H = TH * store.tracks.length
+  const H = TH * store.tracks.length + SH
+
+  /** Ouvre la liste des sons du Studio, sous le « + » : robot éteint, ceux qui l'attendent y sont. */
+  function ouvrirMenuSons(e: React.MouseEvent<HTMLButtonElement>) {
+    const r = e.currentTarget.getBoundingClientRect()
+    setMenuSons({ x: r.left, y: r.bottom + 4, noms: null })
+    void sonsDisponibles().then(noms => setMenuSons(m => (m ? { ...m, noms } : m)))
+  }
+
+  function poserSon(nom: string) {
+    store.addSon(nom, store.playhead)
+    setMenuSons(null)
+  }
 
   return (
     <div className={styles.tlArea}>
+      {menuSons && (
+        <>
+          <div className={styles.voileMenu} onClick={() => setMenuSons(null)} />
+          <ul className={styles.menuSons} style={{ left: menuSons.x, top: menuSons.y }}>
+            {menuSons.noms === null && <li className={styles.menuVide}>Chargement…</li>}
+            {menuSons.noms?.length === 0 && <li className={styles.menuVide}>Aucun son : crée-en un dans le Studio.</li>}
+            {menuSons.noms?.map(nom => (
+              <li key={nom}>
+                <button onClick={() => poserSon(nom)}>{nom}</button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
       {/* Ruler */}
       <div className={styles.tlHead}>
         <div className={styles.labelHeader}>ACTUATEURS</div>
@@ -507,6 +673,18 @@ export function Timeline() {
               </div>
             )
           })}
+          <div className={`${styles.trackLabel} ${styles.pisteSon}`} style={{ height: SH }}>
+            <div className={styles.tlName}>
+              <span className={styles.dot} style={{ background: 'var(--ok)' }} />
+              Son
+              <button className={styles.ajoutSon} onClick={ouvrirMenuSons} title="Poser un son du Studio à l'instant du curseur">
+                +
+              </button>
+            </div>
+            <div className={styles.tlRange}>
+              {store.sons.length ? `${store.sons.length} son${store.sons.length > 1 ? 's' : ''}` : 'aucun son'}
+            </div>
+          </div>
         </div>
 
         <div className={styles.colonnePistes}>
