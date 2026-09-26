@@ -6,6 +6,7 @@ import { PilotagePage } from '../features/pilotage/PilotagePage'
 import { AnimationPage } from '../features/animation/AnimationPage'
 import { StudioPage } from '../features/studio/StudioPage'
 import { PersonnesPage } from '../features/personnes/PersonnesPage'
+import { VoixPage } from '../features/voix/VoixPage'
 
 /**
  * Deux coques, et non une seule : le pilotage n'a de sens que robot allumé, tandis que les
@@ -27,6 +28,7 @@ export function App() {
           <Route element={<CoqueAtelier />}>
             <Route path="/atelier" element={<AnimationPage />} />
             <Route path="/studio" element={<StudioPage />} />
+            <Route path="/voix" element={<VoixPage />} />
             <Route path="/personnes" element={<PersonnesPage />} />
           </Route>
           <Route index element={<Navigate to="/pilotage" replace />} />

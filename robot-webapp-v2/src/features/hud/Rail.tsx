@@ -58,6 +58,13 @@ export function Rail({ coque }: { coque: 'robot' | 'atelier' }) {
         <Icone nom="note" />
         <span>STUDIO</span>
       </NavLink>
+      <NavLink
+        to="/voix"
+        className={({ isActive }) => `${styles.outil} ${isActive ? styles.outilActif : ''}`}
+      >
+        <Icone nom="voix" />
+        <span>VOIX</span>
+      </NavLink>
 
       <hr className={styles.separateur} />
 
