@@ -49,7 +49,10 @@ const CURSEURS: Curseur[] = [
   { cle: 'grain', gauche: 'propre', droite: 'grésillante', ...lineaire(0, 40, 1), lire: (v) => (v < 0.1 ? 'aucun' : `${Math.round(v)} dB`) },
   { cle: 'machine', gauche: 'humaine', droite: 'machine', ...lineaire(0, 1, 0.01), lire: (v) => `${Math.round(v * 100)} %` },
   { cle: 'metal', gauche: 'libre', droite: 'en boîte', ...lineaire(0, 1, 0.01), lire: (v) => `${Math.round(v * 100)} %` },
-  { cle: 'modulation', gauche: 'fluide', droite: 'hachée', ...lineaire(0, 200, 1), lire: (v) => (v < 0.5 ? 'aucune' : `${Math.round(v)} Hz`) },
+  // Vers 30 Hz la modulation hache la voix, vers 150 Hz elle la rend métallique : c'est pour le métal
+  // que Nicolas s'en sert, d'où les bouts du curseur.
+  { cle: 'modulation', gauche: 'aucune', droite: 'métallique', ...lineaire(0, 200, 1), lire: (v) => (v < 0.5 ? 'aucune' : `${Math.round(v)} Hz`) },
+  { cle: 'profondeur', gauche: 'légère', droite: 'entière', ...lineaire(0, 1, 0.01), lire: (v) => `${Math.round(v * 100)} %` },
 ]
 
 const PHRASE = 'Bonjour ! Je suis Wall-E. Tu veux jouer avec moi ?'
@@ -75,7 +78,10 @@ export function VoixPage() {
     if (!robotJoignable) return
     voixApi
       .etat()
-      .then((lu) => {
+      .then((reponse) => {
+        // Une voix adoptée avant la profondeur ne la porte pas : le robot la lit à 1, la page aussi.
+        const complete = (v: Voix): Voix => ({ ...v, reglages: { ...v.reglages, profondeur: v.reglages.profondeur ?? 1 } })
+        const lu = { ...reponse, adoptee: complete(reponse.adoptee), origine: { ...reponse.origine, profondeur: reponse.origine.profondeur ?? 1 } }
         setEtat(lu)
         setVoix((courante) => courante ?? lu.adoptee)
       })

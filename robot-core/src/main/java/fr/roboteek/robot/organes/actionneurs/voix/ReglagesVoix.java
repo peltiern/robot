@@ -19,10 +19,19 @@ import java.util.List;
  * @param grain      saturation, en dB de gain dans l'{@code overdrive}, 0 pour une voix propre
  * @param machine    chorus et flanger dosés ensemble, de 0 (humaine) à 1 (le Wall-E d'origine)
  * @param metal      écho très court qui fait résonner la voix comme dans une boîte, de 0 à 1
- * @param modulation fréquence (Hz) qui hache la voix, la voix des robots de film ; 0 pour ne rien hacher
+ * @param modulation fréquence (Hz) de la modulation : vers 30 Hz elle hache la voix, vers 150 Hz elle
+ *                   la rend métallique ; 0 pour ne rien moduler
+ * @param profondeur part de la voix que la modulation emporte, de 0 à 1 ; {@code null} vaut 1, la
+ *                   modulation entière — c'est ce que faisait une voix adoptée avant ce réglage
  */
 public record ReglagesVoix(double hauteur, double debit, double passeHaut, double passeBas,
-                           double grain, double machine, double metal, double modulation) {
+                           double grain, double machine, double metal, double modulation, Double profondeur) {
+
+    /** Modulation entière : les réglages d'avant la profondeur. */
+    public ReglagesVoix(double hauteur, double debit, double passeHaut, double passeBas,
+                        double grain, double machine, double metal, double modulation) {
+        this(hauteur, debit, passeHaut, passeBas, grain, machine, metal, modulation, 1.0);
+    }
 
     /** La voix validée à l'oreille le 2026-08-16, celle du script. */
     public static final ReglagesVoix ORIGINE = new ReglagesVoix(-2, 1, 450, 3200, 12, 1, 0, 0);
@@ -41,7 +50,8 @@ public record ReglagesVoix(double hauteur, double debit, double passeHaut, doubl
                 borner(grain, 0, 40),
                 borner(machine, 0, 1),
                 borner(metal, 0, 1),
-                borner(modulation, 0, 200));
+                borner(modulation, 0, 200),
+                profondeur == null ? 1.0 : borner(profondeur, 0, 1));
     }
 
     /**
@@ -76,8 +86,14 @@ public record ReglagesVoix(double hauteur, double debit, double passeHaut, doubl
             // 0,7 : à 0,9, sox avertit que l'écho sature.
             effets.addAll(List.of("echo", "0.8", "0.7", "5", nombre(0.7 * r.metal)));
         }
-        if (r.modulation >= 0.5) {
+        if (r.modulation >= 0.5 && r.profondeur >= 0.01) {
             effets.addAll(List.of("synth", "sine", "amod", nombre(r.modulation)));
+            if (r.profondeur < 0.999) {
+                // Le décalage de l'onde de synth dose la modulation : mesuré sur un son pur, un
+                // décalage de x % laisse une profondeur de 100 − x %. Nicolas trouvait le métal à
+                // 100 % trop difficile à comprendre ; à moitié, la voix reste dessous.
+                effets.add(nombre(100 * (1 - r.profondeur)));
+            }
         }
         // Renormalise : saturation, écho et modulation font varier le niveau d'un réglage à l'autre.
         effets.addAll(List.of("gain", "-n", "-2"));

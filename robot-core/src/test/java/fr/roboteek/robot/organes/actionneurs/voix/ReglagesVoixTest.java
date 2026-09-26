@@ -52,11 +52,34 @@ class ReglagesVoixTest {
         assertEquals(List.of("echo", "0.8", "0.7", "5", "0.7", "synth", "sine", "amod", "60", "gain", "-n", "-2"), effets);
     }
 
+    /** Le métal à moitié : la modulation laisse la moitié de la voix intacte, dessous. */
+    @Test
+    void laProfondeurDoseLaModulation() {
+        List<String> effets = new ReglagesVoix(0, 1, 0, 20000, 0, 0, 0, 150, 0.5).effetsSox();
+
+        assertEquals(List.of("synth", "sine", "amod", "150", "50", "gain", "-n", "-2"), effets);
+    }
+
+    /** Une voix adoptée avant la profondeur n'a pas ce champ : elle garde sa modulation entière. */
+    @Test
+    void uneProfondeurAbsenteVautLaModulationEntiere() {
+        ReglagesVoix sansProfondeur = new ReglagesVoix(0, 1, 0, 20000, 0, 0, 0, 30, null);
+
+        assertEquals(1.0, sansProfondeur.bornes().profondeur());
+        assertEquals(List.of("synth", "sine", "amod", "30", "gain", "-n", "-2"), sansProfondeur.effetsSox());
+    }
+
+    @Test
+    void uneProfondeurNulleNeModulePlus() {
+        assertEquals(List.of("gain", "-n", "-2"), new ReglagesVoix(0, 1, 0, 20000, 0, 0, 0, 150, 0.0).effetsSox());
+    }
+
     /** Venus d'une requête HTTP : un tempo nul ou un passe-bas négatif rendrait le robot muet. */
     @Test
     void desReglagesHorsLimitesSontRamenesDansCeQueSoxAccepte() {
         ReglagesVoix bornes = new ReglagesVoix(-50, 0, -10, -5, 999, 7, -1, Double.NaN).bornes();
 
-        assertEquals(new ReglagesVoix(-12, 0.5, 0, 800, 40, 1, 0, 0), bornes);
+        assertEquals(new ReglagesVoix(-12, 0.5, 0, 800, 40, 1, 0, 0, 1.0), bornes);
+        assertEquals(0.0, new ReglagesVoix(0, 1, 0, 20000, 0, 0, 0, 150, -3.0).bornes().profondeur());
     }
 }

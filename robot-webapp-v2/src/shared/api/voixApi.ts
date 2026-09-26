@@ -17,8 +17,10 @@ export interface ReglagesVoix {
   machine: number
   /** écho de boîte, 0 à 1 */
   metal: number
-  /** Hz de hachage, 0 : rien */
+  /** Hz de modulation : ~30 hache, ~150 rend métallique ; 0 : rien */
   modulation: number
+  /** part de la voix que la modulation emporte, 0 à 1 (le robot la lit à 1 si elle manque) */
+  profondeur: number
 }
 
 /** Une voix de base : un modèle Piper, et pour un modèle à plusieurs voix, laquelle. */
