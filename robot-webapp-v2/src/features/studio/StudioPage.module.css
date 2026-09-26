@@ -190,3 +190,16 @@
 /* D'où vient un son importé : le nom du fichier d'origine, à la place des outils de la frise. */
 .origine { font-size: 13px; color: var(--texte-faible); }
 .origine b { color: var(--texte); }
+
+/* Le second clic qui écrase un autre son : en couleur d'alarme, puisqu'il détruit quelque chose. */
+.remplacer {
+  padding: 6px 10px;
+  border: 2px solid var(--alarme);
+  border-radius: var(--r-puce);
+  background: none;
+  color: var(--alarme);
+  font: 700 13px 'Nunito', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.remplacer:hover { background: var(--alarme); color: var(--sur-accent); }

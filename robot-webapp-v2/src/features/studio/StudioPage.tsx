@@ -53,6 +53,13 @@ export function StudioPage() {
   // resérialiser à chaque image de la lecture sinon.
   const modifie = useMemo(() => aDuSon(son) && JSON.stringify(son) !== enregistre, [son, enregistre])
   const [rafraichir, setRafraichir] = useState(0)
+  // Le nom sous lequel le son ouvert est rangé : l'enregistrer sous ce nom-là le met à jour, sous un
+  // autre nom déjà pris il en écraserait un autre. null pour un son neuf (nouveau, humeur, modèle).
+  const [nomRange, setNomRange] = useState<string | null>(null)
+  // Le nom pour lequel la disquette est armée : un second clic remplace. Lié au nom et non à un
+  // drapeau, il se désarme de lui-même dès qu'on renomme.
+  const [aConfirmer, setAConfirmer] = useState<string | null>(null)
+  const arme = aConfirmer === son.nom
   // Le rendu retient POUR QUEL son il a été calculé : c'est ce qui dit, sans drapeau à tenir à
   // jour, que l'onde affichée est en retard sur la dernière retouche.
   const [rendu, setRendu] = useState<{ tampon: AudioBuffer | null; pour: Son } | null>(null)
@@ -144,6 +151,7 @@ export function StudioPage() {
   function charger(nom: string, morceaux: Morceau[]) {
     const nouveau: Son = { nom, version: VERSION_SON, reglages: REGLAGES_PAR_DEFAUT(), morceaux }
     remplacer(nouveau)
+    setNomRange(null)
     ecouterCeSon(nouveau)
   }
 
@@ -157,13 +165,32 @@ export function StudioPage() {
 
   // Le WAV n'est refait que quand le tampon change : sans ce filet, il l'était à chaque image de
   // la lecture, soit une centaine de milliers d'octets réencodés soixante fois par seconde.
+  /**
+   * Robot et navigateur enregistrent tous deux en remplaçant : un son neuf nommé « nouveau son », ou
+   * un son renommé comme un autre, écrasait l'existant sans un mot. D'où le second clic, comme pour
+   * supprimer une personne — pas de `confirm()`, qui gèlerait le navigateur et le flux vidéo.
+   */
   async function enregistrer() {
+    if (son.nom !== nomRange && !arme) {
+      const liste = await bibliotheque.lister()
+      if ((liste.robot ?? []).includes(son.nom) || liste.enAttente.includes(son.nom)) {
+        setAConfirmer(son.nom)
+        setMessage(`Un autre son s'appelle déjà « ${son.nom} » : renomme celui-ci, ou clique « Remplacer » pour l'écraser`)
+        return
+      }
+    }
+    setAConfirmer(null)
     const resultat = await bibliotheque.enregistrer(son)
     setEnregistre(JSON.stringify(son))
+    setNomRange(son.nom)
+    // Renommer puis enregistrer fait une copie, et c'est voulu : les animations désignent leurs sons
+    // par le nom, supprimer l'ancien les laisserait muettes. Mais il faut le dire, sinon on croit
+    // l'avoir renommé.
+    const copie = nomRange && nomRange !== son.nom ? ` — « ${nomRange} » est toujours là` : ''
     setMessage(
       resultat.ou === 'robot'
-        ? `« ${son.nom} » enregistré sur le robot`
-        : `« ${son.nom} » gardé dans le navigateur : il partira au robot à sa reconnexion (${resultat.raison})`,
+        ? `« ${son.nom} » enregistré sur le robot${copie}`
+        : `« ${son.nom} » gardé dans le navigateur : il partira au robot à sa reconnexion (${resultat.raison})${copie}`,
     )
     setRafraichir((n) => n + 1)
   }
@@ -209,6 +236,7 @@ export function StudioPage() {
     if (dernier) {
       remplacer(dernier)
       setEnregistre(JSON.stringify(dernier))
+      setNomRange(dernier.nom)
       ecouterCeSon(dernier)
     }
     const importes = fichiers.length - refuses.length
@@ -246,6 +274,11 @@ export function StudioPage() {
         >
           <Icone nom="disquette" taille={20} />
         </button>
+        {arme && (
+          <button className={styles.remplacer} onClick={() => void enregistrer()} title={`Écraser le son « ${son.nom} » déjà rangé`}>
+            Remplacer « {son.nom} »
+          </button>
+        )}
         <div className={styles.espace} />
         <button className={styles.bouton} onClick={() => void exporterWav(son)} disabled={!aDuSon(son)}>
           Exporter le WAV
@@ -262,11 +295,15 @@ export function StudioPage() {
           nomCourant={son.nom}
           rafraichir={rafraichir}
           robotJoignable={robotJoignable}
-          onNouveau={() => remplacer(sonVide())}
+          onNouveau={() => {
+            remplacer(sonVide())
+            setNomRange(null)
+          }}
           onImporter={(fichiers) => void importer(fichiers)}
           onCharger={(ouvert) => {
             remplacer(ouvert)
             setEnregistre(JSON.stringify(ouvert))
+            setNomRange(ouvert.nom)
             ecouterCeSon(ouvert)
           }}
           onJouer={(nom, surLeRobot) => void jouerRange(nom, surLeRobot)}
@@ -278,6 +315,7 @@ export function StudioPage() {
           <BarreHumeurs
             onCompose={(compose) => {
               remplacer(compose)
+              setNomRange(null)
               ecouterCeSon(compose)
             }}
           />
