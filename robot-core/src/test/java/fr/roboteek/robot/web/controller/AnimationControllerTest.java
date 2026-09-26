@@ -79,6 +79,16 @@ class AnimationControllerTest {
             assertTrue(bibliotheque.existe("Mon animation"));
         }
 
+        /** Un accent dans l'adresse de retour s'encode en UTF-8, comme le navigateur l'a envoyé. */
+        @Test
+        void creerUnNomAccentueRendUneAdresseEncodee() {
+            var reponse = controleur.creer(animation("Révérence"));
+
+            assertEquals(HttpStatus.CREATED, reponse.getStatusCode());
+            assertEquals("/api/animations/R%C3%A9v%C3%A9rence", reponse.getHeaders().getLocation().toString());
+            assertTrue(bibliotheque.existe("Révérence"));
+        }
+
         /**
          * Le nom de l'URL fait foi : c'est ce qui permet d'enregistrer sous un autre nom sans que
          * l'éditeur ait à modifier son brouillon, et ça reste vrai après un renommage de fichier.

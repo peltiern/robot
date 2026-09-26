@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -41,10 +42,12 @@ public class BibliothequeDesAnimations {
     /**
      * Noms acceptés. Le nom vient d'un chemin d'URL et sert à fabriquer un nom de fichier : sans
      * ce filtre, un nom contenant {@code ../} ferait lire ou écrire n'importe où sur le disque.
-     * Restreindre est aussi ce qui garantit qu'un nom survit à un aller-retour par le système de
-     * fichiers, quel qu'il soit.
+     * Les lettres accentuées sont admises (« Révérence ») : c'est la barre oblique, non l'accent, qui
+     * fait sortir du dossier. Pour qu'un tel nom survive à l'aller-retour par le système de fichiers,
+     * il est ramené à une seule écriture (voir {@link #fichierDe}) et le conteneur du robot tourne en
+     * {@code C.UTF-8}, sans quoi Java ne saurait pas écrire ces noms de fichiers.
      */
-    private static final String NOM_VALIDE = "[A-Za-z0-9._ -]{1,64}";
+    private static final String NOM_VALIDE = "[\\p{L}\\p{M}\\p{N}._ -]{1,64}";
 
     private final Path dossier;
 
@@ -155,10 +158,15 @@ public class BibliothequeDesAnimations {
 
     /** Fichier d'une animation, ou {@code null} si le nom est refusé (voir {@link #NOM_VALIDE}). */
     private Path fichierDe(String nom) {
-        if (nom == null || !nom.matches(NOM_VALIDE)) {
+        if (nom == null) {
             return null;
         }
-        return dossier.resolve(nom + EXTENSION);
+        // Un « é » en un caractère ou en « e » plus l'accent : la même animation, donc le même fichier.
+        String normalise = Normalizer.normalize(nom, Normalizer.Form.NFC);
+        if (!normalise.matches(NOM_VALIDE)) {
+            return null;
+        }
+        return dossier.resolve(normalise + EXTENSION);
     }
 
     private static String nomDepuisFichier(Path fichier) {

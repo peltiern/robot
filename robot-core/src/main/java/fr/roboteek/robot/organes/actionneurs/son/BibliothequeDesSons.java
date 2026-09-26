@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.text.Normalizer;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -48,10 +49,14 @@ public class BibliothequeDesSons {
     private static final String AUDIO = ".wav";
 
     /**
-     * Noms acceptés, mêmes règles que pour les animations : le nom vient d'un chemin d'URL et sert
-     * à fabriquer deux noms de fichiers ; sans ce filtre, un {@code ../} ferait écrire n'importe où.
+     * Noms acceptés : le nom vient d'un chemin d'URL et sert à fabriquer deux noms de fichiers ; sans
+     * ce filtre, un {@code ../} ferait écrire n'importe où. Les lettres accentuées y sont, parce que
+     * le Studio nomme lui-même ses sons « humeur colère » ou « arpège » — refusés, ils restaient pour
+     * toujours dans la file d'attente du navigateur. Pas de barre oblique pour autant : c'est elle, et
+     * non l'accent, qui fait sortir du dossier. Le conteneur du robot tourne en {@code C.UTF-8}, sans
+     * quoi Java ne saurait pas écrire ces noms de fichiers.
      */
-    private static final String NOM_VALIDE = "[A-Za-z0-9._ -]{1,64}";
+    private static final String NOM_VALIDE = "[\\p{L}\\p{M}\\p{N}._ -]{1,64}";
 
     private final Path dossier;
 
@@ -196,10 +201,15 @@ public class BibliothequeDesSons {
 
     /** Fichier d'un son, ou {@code null} si le nom est refusé (voir {@link #NOM_VALIDE}). */
     private Path fichierDe(String nom, String extension) {
-        if (nom == null || !nom.matches(NOM_VALIDE)) {
+        if (nom == null) {
             return null;
         }
-        return dossier.resolve(nom + extension);
+        // Un « é » en un caractère ou en « e » plus l'accent : le même son, donc le même fichier.
+        String normalise = Normalizer.normalize(nom, Normalizer.Form.NFC);
+        if (!normalise.matches(NOM_VALIDE)) {
+            return null;
+        }
+        return dossier.resolve(normalise + extension);
     }
 
     @FunctionalInterface
