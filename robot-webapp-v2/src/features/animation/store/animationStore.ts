@@ -118,6 +118,12 @@ export interface AnimationEditorState {
   selectedKf: { trackId: Axe; kfId: string } | null
   /** Le son choisi sur la piste Son ; exclusif d'une image-clé choisie. */
   selectedSon: string | null
+  /**
+   * Le son copié par Ctrl+C, par son nom. Un presse-papiers propre à l'éditeur et non celui du
+   * système : il n'y a qu'un nom à retenir, et le presse-papiers du navigateur demanderait une
+   * permission pour être relu.
+   */
+  sonCopie: string | null
   /** Les images-clés déplacées se collent aux repères proches (voir Timeline, aimanter). */
   aimant: boolean
 
@@ -152,9 +158,14 @@ export interface AnimationEditorState {
 
   // Actions — piste Son
   addSon:      (nom: string, t: number) => EditorSon
-  moveSon:     (id: string, t: number) => void
+  /** `exact` : l'instant vient de l'aimant et ne doit pas être arrondi au pas de 50 ms. */
+  moveSon:     (id: string, t: number, exact?: boolean) => void
   deleteSon:   (id: string) => void
   selectSon:   (id: string | null) => void
+  /** Copie le son choisi ; rend faux s'il n'y en a pas, pour laisser Ctrl+C au navigateur. */
+  copierSon:   () => boolean
+  /** Colle le son copié à l'instant du curseur ; rend faux s'il n'y a rien à coller. */
+  collerSon:   () => boolean
 
   // Actions — animation
   setAnimationName:       (n: string) => void
@@ -206,6 +217,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     aimant: true,
     selectedKf: null,
     selectedSon: null,
+    sonCopie: null,
 
     snapshot: pushSnapshot,
 
@@ -298,8 +310,10 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
 
     // Sans point de retour : c'est le geste de glisser qui en pose un au départ (voir Timeline),
     // comme pour les images-clés — sinon chaque pixel du glisser serait une étape d'annulation.
-    moveSon(id, tRaw) {
-      const t = Math.max(0, Math.min(Math.round(tRaw / SNAP) * SNAP, get().totalMs))
+    moveSon(id, tRaw, exact = false) {
+      // Arrondir un instant aimanté le décollerait : un son aligné par sa fin sur une image-clé
+      // commence à un instant quelconque, que le pas de 50 ms déplacerait.
+      const t = Math.max(0, Math.min(exact ? Math.round(tRaw) : Math.round(tRaw / SNAP) * SNAP, get().totalMs))
       set(s => ({ sons: s.sons.map(son => son.id === id ? { ...son, t } : son) }))
     },
 
@@ -309,6 +323,23 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     },
 
     selectSon: id => set({ selectedSon: id, selectedKf: null }),
+
+    copierSon() {
+      const { sons, selectedSon } = get()
+      const son = sons.find(s => s.id === selectedSon)
+      if (!son) return false
+      set({ sonCopie: son.nom })
+      return true
+    },
+
+    // À l'instant du curseur, comme on insère dans une timeline : c'est là qu'on regarde. Le son
+    // collé est choisi aussitôt, pour qu'on puisse le glisser à sa place sans le chercher.
+    collerSon() {
+      const { sonCopie, playhead } = get()
+      if (!sonCopie) return false
+      get().addSon(sonCopie, playhead)
+      return true
+    },
 
     addKf(trackId, tRaw, v) {
       pushSnapshot()

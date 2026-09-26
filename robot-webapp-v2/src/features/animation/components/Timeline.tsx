@@ -65,6 +65,27 @@ function aimanter(tracks: EditorTrack[], ti: number, kfId: string, t: number, v:
   return { t: guideT ?? t, v: guideV ?? v, guideT, guideV }
 }
 
+/**
+ * Colle le son qu'on glisse aux images-clés des axes — par son début ou par sa fin, la plus proche
+ * des deux : un bruitage se cale aussi bien sur le geste qui le déclenche que sur celui qui le
+ * conclut. À défaut, son début se colle à une graduation, comme une image-clé.
+ *
+ * @return le nouveau début du son, et l'instant où tracer le guide ; null s'il reste libre
+ */
+function aimanterSon(tracks: EditorTrack[], debut: number, dureeMs: number, pxPerMs: number) {
+  const seuilMs = SEUIL_AIMANT_PX / pxPerMs
+  const instants = tracks.flatMap(tr => tr.kfs.map(k => k.t))
+  const surDebut = plusProche(debut, instants, seuilMs)
+  const surFin = plusProche(debut + dureeMs, instants, seuilMs)
+  const ecartDebut = surDebut === null ? Infinity : Math.abs(surDebut - debut)
+  const ecartFin = surFin === null ? Infinity : Math.abs(surFin - (debut + dureeMs))
+  if (surDebut !== null && ecartDebut <= ecartFin) return { debut: surDebut, guide: surDebut }
+  if (surFin !== null) return { debut: surFin - dureeMs, guide: surFin }
+  const pas = pasDeLaRegle(pxPerMs)
+  const graduation = plusProche(debut, [Math.round(debut / pas) * pas], seuilMs)
+  return graduation === null ? null : { debut: graduation, guide: graduation }
+}
+
 function plusProche(valeur: number, cibles: number[], seuil: number): number | null {
   let retenue: number | null = null
   for (const cible of cibles) {
@@ -526,7 +547,22 @@ export function Timeline() {
 
     if (drag.current.type === 'son') {
       const { sonId, startX, origT } = drag.current
-      store.moveSon(sonId!, origT! + (x - startX!) / pxPerMs)
+      let debut = origT! + (x - startX!) / pxPerMs
+      let exact = false
+      // Même règle que pour les images-clés : l'aimant de la barre, inversé le temps d'un geste par Alt.
+      if (useAnimationStore.getState().aimant !== e.altKey) {
+        const son = store.sons.find(s => s.id === sonId)
+        const duree = dureeAffichee(son ? useSonsAtelier.getState().sons[son.nom] : undefined)
+        const collage = aimanterSon(tracks, debut, duree, pxPerMs)
+        if (collage) {
+          debut = collage.debut
+          exact = true
+        }
+        guidesRef.current = collage ? { t: collage.guide, v: null, ti: 0 } : null
+      } else {
+        guidesRef.current = null
+      }
+      store.moveSon(sonId!, debut, exact)
       return
     }
 
