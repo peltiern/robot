@@ -6,6 +6,7 @@ import fr.roboteek.robot.configuration.speech.SpeechProviderConfig;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.organes.actionneurs.voix.ReglagesVoix;
+import fr.roboteek.robot.organes.actionneurs.voix.Voix;
 import fr.roboteek.robot.organes.actionneurs.voix.VoixDuRobot;
 import fr.roboteek.robot.services.providers.google.speech.synthesizer.GoogleSpeechSynthesizerService;
 import fr.roboteek.robot.services.providers.piper.speech.synthesizer.PiperSpeechSynthesizerService;
@@ -49,6 +50,8 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
     private final GoogleSpeechSynthesisConfig googleConfig;
     private final VoixDuRobot voix;
     private SpeechSynthesizerService speechSynthesizerService;
+    /** Le même que {@link #speechSynthesizerService} quand c'est Piper : lui seul change de modèle. */
+    private PiperSpeechSynthesizerService piper;
     private String fichierSyntheseVocale;
 
     /**
@@ -91,7 +94,7 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
      * @param texte le texte à dire
      */
     public void lire(String texte) {
-        lire(texte, voix.reglages(), true);
+        lire(texte, voix.voix(), true);
     }
 
     /**
@@ -99,7 +102,7 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
      *                      pour savoir où elle en est, une phrase d'essai dite pendant qu'elle se
      *                      déroule lui ferait sauter une étape
      */
-    private void lire(String texte, ReglagesVoix reglages, boolean annoncerLaFin) {
+    private void lire(String texte, Voix voixDeLaPhrase, boolean annoncerLaFin) {
         if (texte == null || texte.isEmpty()) {
             return;
         }
@@ -118,7 +121,12 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
             applicationEventPublisher.publishEvent(eventPause);
             try {
-                lireEtAttendre(texte, reglages);
+                // Sous le verrou : la voix de base ne change qu'entre deux phrases. Une phrase normale
+                // dite après un essai repasse ainsi d'elle-même au modèle adopté.
+                if (piper != null) {
+                    piper.utiliser(voixDeLaPhrase.modele(), voixDeLaPhrase.locuteur());
+                }
+                lireEtAttendre(texte, voixDeLaPhrase.reglages());
             } finally {
                 // Les deux reprises sont dans un finally, et ce n'est pas de la précaution de
                 // principe : la reconnaissance vocale est mise en pause AVANT la synthèse. Si
@@ -192,8 +200,8 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
     @EventListener
     @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
     public void handleEssaiDeVoixEvent(EssaiDeVoixEvent essai) {
-        if (running && StringUtils.isNotBlank(essai.getTexte()) && essai.getReglages() != null) {
-            lire(essai.getTexte().trim(), essai.getReglages(), false);
+        if (running && StringUtils.isNotBlank(essai.getTexte()) && essai.getVoix() != null) {
+            lire(essai.getTexte().trim(), essai.getVoix(), false);
         }
     }
 
@@ -216,7 +224,8 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
         switch (providerConfig.synthesizerProvider()) {
             case PIPER -> {
                 try {
-                    speechSynthesizerService = PiperSpeechSynthesizerService.getInstance();
+                    piper = demarrerPiper();
+                    speechSynthesizerService = piper;
                     // Pas de script de filtre : la voix se colore avec les réglages de l'appli.
                     voixReglable = true;
                 } catch (Exception e) {
@@ -229,6 +238,23 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
                 speechSynthesizerService = GoogleSpeechSynthesizerService.getInstance();
                 fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + googleConfig.voiceFilter();
             }
+        }
+    }
+
+    /**
+     * Avec le modèle adopté ; s'il ne démarre pas (effacé du Jetson, fichier abîmé), avec celui de
+     * {@code robot.properties} plutôt que de passer à Google — qui demande le réseau et une clé.
+     */
+    private PiperSpeechSynthesizerService demarrerPiper() {
+        Voix adoptee = voix.voix();
+        if (adoptee.modele() == null) {
+            return PiperSpeechSynthesizerService.getInstance(null, null);
+        }
+        try {
+            return PiperSpeechSynthesizerService.getInstance(adoptee.modele(), adoptee.locuteur());
+        } catch (IllegalStateException e) {
+            logger.error("Modèle de voix adopté {} impossible à charger, modèle par défaut", adoptee.modele(), e);
+            return PiperSpeechSynthesizerService.getInstance(null, null);
         }
     }
 
