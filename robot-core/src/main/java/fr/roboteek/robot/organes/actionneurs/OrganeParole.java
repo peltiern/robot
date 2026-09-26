@@ -4,11 +4,13 @@ import fr.roboteek.robot.Constantes;
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.configuration.speech.SpeechProviderConfig;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
-import fr.roboteek.robot.configuration.speech.synthesis.piper.PiperSpeechSynthesisConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.actionneurs.voix.ReglagesVoix;
+import fr.roboteek.robot.organes.actionneurs.voix.VoixDuRobot;
 import fr.roboteek.robot.services.providers.google.speech.synthesizer.GoogleSpeechSynthesizerService;
 import fr.roboteek.robot.services.providers.piper.speech.synthesizer.PiperSpeechSynthesizerService;
 import fr.roboteek.robot.services.synthesizer.SpeechSynthesizerService;
+import fr.roboteek.robot.systemenerveux.event.EssaiDeVoixEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleEvent;
 import fr.roboteek.robot.systemenerveux.event.ParoleTermineeEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
@@ -27,9 +29,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static fr.roboteek.robot.configuration.Configurations.googleSpeechSynthesisConfig;
-import static fr.roboteek.robot.configuration.Configurations.piperSpeechSynthesisConfig;
 
 /**
  * Organe permettant de synthétiser un texte (fournisseur cloud ou local, cf.
@@ -41,9 +47,26 @@ import static fr.roboteek.robot.configuration.Configurations.piperSpeechSynthesi
 public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
 
     private final GoogleSpeechSynthesisConfig googleConfig;
-    private final PiperSpeechSynthesisConfig piperConfig;
+    private final VoixDuRobot voix;
     private SpeechSynthesizerService speechSynthesizerService;
     private String fichierSyntheseVocale;
+
+    /**
+     * Vrai quand la voix se colore avec les réglages de l'appli (voir {@link VoixDuRobot}) : c'est le
+     * cas de Piper. La voix Google garde son script, écrit pour elle.
+     */
+    private volatile boolean voixReglable;
+
+    /**
+     * Une seule phrase à la fois. Les phrases arrivent par le bus sur plusieurs fils ; sans ce
+     * verrou, deux phrases rapprochées lançaient deux {@code play}, la carte son n'en acceptait qu'un
+     * et la seconde se perdait sans un mot. Il couvre aussi la pause et la reprise de l'écoute : la
+     * fin d'une phrase relançait sinon l'écoute pendant que la suivante parlait encore.
+     * <p>
+     * Une phrase attend son tour ; un essai de voix, lui, est ignoré si le robot parle déjà (voir
+     * {@link #handleEssaiDeVoixEvent}).
+     */
+    private final ReentrantLock bouche = new ReentrantLock();
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(OrganeParole.class);
@@ -51,11 +74,15 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
     /** Flag de démarrage de l'organe (cycle de vie Spring). */
     private volatile boolean running = false;
 
-    /** Constructeur. */
-    public OrganeParole() {
+    public OrganeParole(VoixDuRobot voix) {
         super();
+        this.voix = voix;
         googleConfig = googleSpeechSynthesisConfig();
-        piperConfig = piperSpeechSynthesisConfig();
+    }
+
+    /** La voix se règle-t-elle depuis l'appli, avec le fournisseur qui a démarré. */
+    public boolean voixReglable() {
+        return voixReglable;
     }
 
     /**
@@ -64,13 +91,34 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
      * @param texte le texte à dire
      */
     public void lire(String texte) {
-        if (texte != null && !texte.isEmpty()) {
+        lire(texte, voix.reglages(), true);
+    }
+
+    /**
+     * @param annoncerLaFin faux pour une phrase d'essai : la présentation compte les fins de phrase
+     *                      pour savoir où elle en est, une phrase d'essai dite pendant qu'elle se
+     *                      déroule lui ferait sauter une étape
+     */
+    private void lire(String texte, ReglagesVoix reglages, boolean annoncerLaFin) {
+        if (texte == null || texte.isEmpty()) {
+            return;
+        }
+        if (annoncerLaFin) {
+            bouche.lock();
+        } else if (!bouche.tryLock()) {
+            // Un essai qui attendrait son tour garderait un des quatre fils du bus pendant toute la
+            // phrase en cours : dix clics sur « écouter » bloqueraient les sons et la conversation.
+            // L'essai suivant, une fois le robot silencieux, dira la même chose.
+            logger.info("Essai de voix ignoré : le robot parle déjà");
+            return;
+        }
+        try {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(CONTROLE.METTRE_EN_PAUSE);
             applicationEventPublisher.publishEvent(eventPause);
             try {
-                lireEtAttendre(texte);
+                lireEtAttendre(texte, reglages);
             } finally {
                 // Les deux reprises sont dans un finally, et ce n'est pas de la précaution de
                 // principe : la reconnaissance vocale est mise en pause AVANT la synthèse. Si
@@ -80,12 +128,16 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
                 final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
                 eventRedemarrage.setControle(CONTROLE.DEMARRER);
                 applicationEventPublisher.publishEvent(eventRedemarrage);
-                applicationEventPublisher.publishEvent(new ParoleTermineeEvent(texte));
+                if (annoncerLaFin) {
+                    applicationEventPublisher.publishEvent(new ParoleTermineeEvent(texte));
+                }
             }
+        } finally {
+            bouche.unlock();
         }
     }
 
-    private void lireEtAttendre(String texte) {
+    private void lireEtAttendre(String texte, ReglagesVoix reglages) {
         logger.info("Lecture :\t{}", texte);
 
         // Perform the text-to-speech request on the text input with the selected voice parameters and
@@ -102,16 +154,46 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
             }
 
             try {
-                Process p = new ProcessBuilder(fichierSyntheseVocale, pathOutputFile).start();
+                Process p = new ProcessBuilder(commandeDeLecture(pathOutputFile, reglages)).start();
                 p.waitFor();
             } catch (IOException e) {
                 logger.error("Erreur lors de la lecture du fichier de synthèse vocale {}", pathOutputFile, e);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 logger.warn("Lecture de la synthèse vocale interrompue");
+            } finally {
+                // Dite, la phrase ne sert plus : rien ne les effaçait, et chacune laissait son WAV
+                // dans synthese-vocale/ depuis le passage à Piper.
+                try {
+                    Files.deleteIfExists(Path.of(pathOutputFile));
+                } catch (IOException e) {
+                    logger.warn("Fichier de phrase non effacé : {}", pathOutputFile, e);
+                }
             }
 
             logger.debug("Fin lecture :\t{}", texte);
+        }
+    }
+
+    /**
+     * Piper : {@code play} directement, avec les effets des réglages — plus de script entre deux, que
+     * seule une édition sur le Jetson pouvait changer. Google : son script, comme avant.
+     */
+    private List<String> commandeDeLecture(String fichier, ReglagesVoix reglages) {
+        if (!voixReglable) {
+            return List.of(fichierSyntheseVocale, fichier);
+        }
+        List<String> commande = new ArrayList<>(List.of("play", fichier));
+        commande.addAll(reglages.effetsSox());
+        return commande;
+    }
+
+    /** Dit une phrase avec une voix qu'on essaie, sans l'adopter. */
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
+    public void handleEssaiDeVoixEvent(EssaiDeVoixEvent essai) {
+        if (running && StringUtils.isNotBlank(essai.getTexte()) && essai.getReglages() != null) {
+            lire(essai.getTexte().trim(), essai.getReglages(), false);
         }
     }
 
@@ -135,7 +217,8 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
             case PIPER -> {
                 try {
                     speechSynthesizerService = PiperSpeechSynthesizerService.getInstance();
-                    fichierSyntheseVocale = Constantes.DOSSIER_SYNTHESE_VOCALE + File.separator + piperConfig.voiceFilter();
+                    // Pas de script de filtre : la voix se colore avec les réglages de l'appli.
+                    voixReglable = true;
                 } catch (Exception e) {
                     logger.error("Impossible d'initialiser Piper, repli sur Google", e);
                     speechSynthesizerService = GoogleSpeechSynthesizerService.getInstance();

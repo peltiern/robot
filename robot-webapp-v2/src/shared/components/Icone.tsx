@@ -53,6 +53,7 @@ export type NomIcone =
   | 'main'
   | 'dupliquer'
   | 'ciseaux'
+  | 'voix'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   oeil: (
@@ -177,6 +178,8 @@ const TRACES: Record<NomIcone, ReactNode> = {
     </>
   ),
   plus: <path d="M12 5.2v13.6M5.2 12h13.6" />,
+  // Une onde de parole : des barres de hauteurs inégales, comme un égaliseur.
+  voix: <path d="M4.4 10.4v3.2M8.2 7.4v9.2M12 4.4v15.2M15.8 8.6v6.8M19.6 10.8v2.4" />,
   // Crayon : corriger ce qui est écrit. Le distinguer de `reglage`, qui ouvre des
   // réglages — un prénom mal compris se rature, il ne se paramètre pas.
   crayon: (

@@ -38,6 +38,9 @@ public class Constantes {
      */
     public static final String DOSSIER_SYNTHESE_VOCALE = System.getenv(ENV_VAR_ROBOT_HOME) + File.separator + "synthese-vocale";
 
+    /** Les réglages de la voix adoptée depuis l'appli (voir {@code VoixDuRobot}). */
+    public static final String FICHIER_VOIX = DOSSIER_SYNTHESE_VOCALE + File.separator + "voix.json";
+
     /**
      * Chemin vers le dossier de gestion du visage.
      */

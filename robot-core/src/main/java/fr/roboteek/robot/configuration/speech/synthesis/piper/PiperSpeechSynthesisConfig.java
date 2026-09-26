@@ -23,7 +23,11 @@ public interface PiperSpeechSynthesisConfig extends Config {
      * pour la voix Google). Piper n'a pas besoin de retouche par défaut : script passthrough.
      *
      * @return le nom du script de filtre
+     * @deprecated plus lue : la voix Piper se colore avec les réglages adoptés depuis l'appli
+     *             ({@code VoixDuRobot}, fichier {@code synthese-vocale/voix.json}), dont l'origine
+     *             reproduit {@code synthesis_piper_walle.sh}.
      */
+    @Deprecated
     @Key("speech.synthesis.piper.voice.filter")
     @DefaultValue("synthesis_piper_passthrough.sh")
     String voiceFilter();
