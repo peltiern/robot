@@ -71,6 +71,15 @@ class SonControllerTest {
         assertEquals("/api/sons/nouveau%20son%203", parLaCreation.getHeaders().getLocation().toString());
     }
 
+    /** Un accent dans l'adresse de retour s'encode en UTF-8, comme le navigateur l'a envoyé. */
+    @Test
+    void creerUnNomAccentueRendUneAdresseEncodee() {
+        var creation = controleur.enregistrer("arpège", new SonEnregistre("arpège", recette(), wavBase64()));
+
+        assertEquals(HttpStatus.CREATED, creation.getStatusCode());
+        assertEquals("/api/sons/arp%C3%A8ge", creation.getHeaders().getLocation().toString());
+    }
+
     @Test
     void laRecetteEtLAudioSeRelisentParLeurNom() {
         controleur.enregistrer("Coucou", new SonEnregistre("Coucou", recette(), wavBase64()));

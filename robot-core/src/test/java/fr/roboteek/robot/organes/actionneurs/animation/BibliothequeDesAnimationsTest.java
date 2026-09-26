@@ -79,6 +79,24 @@ class BibliothequeDesAnimationsTest {
         }
 
         @Test
+        void unNomAccentueEstAccepte() {
+            bibliotheque.enregistrer(animation("Révérence"));
+
+            assertEquals(List.of("Révérence"), bibliotheque.noms());
+            assertEquals("Révérence", bibliotheque.charger("Révérence").orElseThrow().nom());
+        }
+
+        /** « é » en un caractère ou en « e » plus l'accent (un nom venu d'un Mac) : la même animation. */
+        @Test
+        void unAccentDecomposeDesigneLaMemeAnimation() {
+            bibliotheque.enregistrer(animation("Révérence"));
+
+            assertTrue(bibliotheque.existe("Re\u0301ve\u0301rence"));
+            bibliotheque.enregistrer(animation("Re\u0301ve\u0301rence"));
+            assertEquals(List.of("Révérence"), bibliotheque.noms());
+        }
+
+        @Test
         void enregistrerDeuxFoisEcraseSansDoublon() {
             bibliotheque.enregistrer(animation("Salut"));
             bibliotheque.enregistrer(new Animation("Salut", 9000, List.of(), List.of()));

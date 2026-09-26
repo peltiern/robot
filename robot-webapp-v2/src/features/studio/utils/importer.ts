@@ -17,13 +17,16 @@ const SEUIL_SILENCE = Math.pow(10, -50 / 20)
 /** Gardé de part et d'autre du son : rogner au ras coupe l'attaque d'une consonne. */
 const MARGE_S = 0.01
 
-/** Les noms que le robot accepte, sans accents — voir la règle de `BibliothequeDesSons`. */
+/**
+ * Les noms que le robot accepte — lettres (accents compris), chiffres, `._ -`, voir la règle de
+ * `BibliothequeDesSons`. En forme composée : un nom de fichier venu d'un Mac écrit « é » en deux
+ * caractères, et le robot range sous la forme composée.
+ */
 function nomPermis(fichier: string): string {
   const nom = fichier
     .replace(/\.[^.]*$/, '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^A-Za-z0-9._ -]+/g, ' ')
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{M}\p{N}._ -]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 60)

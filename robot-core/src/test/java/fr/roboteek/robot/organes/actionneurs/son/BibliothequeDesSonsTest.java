@@ -66,6 +66,28 @@ class BibliothequeDesSonsTest {
             assertEquals(List.of("babil", "Surprise"), bibliotheque.noms());
         }
 
+        /** Le Studio fabrique lui-même « humeur colère » ou « arpège » : le robot doit les ranger. */
+        @Test
+        void unNomAccentueEstAccepte() {
+            bibliotheque.enregistrer("humeur colère", recette("humeur colère"), wav());
+
+            assertEquals(List.of("humeur colère"), bibliotheque.noms());
+            assertTrue(bibliotheque.audio("humeur colère").isPresent());
+        }
+
+        /**
+         * Un « é » s'écrit en un caractère ou en « e » plus l'accent (un nom de fichier venu d'un Mac).
+         * Les deux désignent le même son : sans ça, deux fichiers identiques à l'œil cohabiteraient.
+         */
+        @Test
+        void unAccentDecomposeDesigneLeMemeSon() {
+            bibliotheque.enregistrer("ohé", recette("ohé"), wav());
+
+            assertTrue(bibliotheque.existe("ohe\u0301"));
+            bibliotheque.enregistrer("ohe\u0301", recette("ohé"), wav());
+            assertEquals(List.of("ohé"), bibliotheque.noms());
+        }
+
         @Test
         void unSonInconnuNExistePas() {
             assertFalse(bibliotheque.existe("Fantome"));
