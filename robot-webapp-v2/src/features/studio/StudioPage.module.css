@@ -186,3 +186,7 @@
 @media (max-width: 1100px) {
   .corps { grid-template-columns: 1fr; }
 }
+
+/* D'où vient un son importé : le nom du fichier d'origine, à la place des outils de la frise. */
+.origine { font-size: 13px; color: var(--texte-faible); }
+.origine b { color: var(--texte); }

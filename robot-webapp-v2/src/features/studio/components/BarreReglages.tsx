@@ -22,7 +22,8 @@ const CURSEURS: { cle: keyof Reglages; gauche: string; droite: string; min: numb
 
 const enDecibels = (niveau: number) => `${niveau >= 0.999 ? '0' : `−${Math.round((1 - niveau) * ETENDUE_VOLUME_DB)}`} dB`
 
-export function BarreReglages({ onEcouter }: { onEcouter: () => void }) {
+/** `seulement` : les curseurs qui ont un sens pour ce son — un son importé n'a que son volume. */
+export function BarreReglages({ onEcouter, seulement }: { onEcouter: () => void; seulement?: (keyof Reglages)[] }) {
   const reglages = useStudioStore((s) => s.son.reglages)
   const regler = useStudioStore((s) => s.reglerEnsemble)
   // Un seul point de retour par geste : sans ça, tirer un curseur en laisserait un par pixel.
@@ -30,7 +31,7 @@ export function BarreReglages({ onEcouter }: { onEcouter: () => void }) {
 
   return (
     <div className={styles.barre}>
-      {CURSEURS.map(({ cle, gauche, droite, min, max, pas }) => (
+      {CURSEURS.filter(({ cle }) => !seulement || seulement.includes(cle)).map(({ cle, gauche, droite, min, max, pas }) => (
         <label key={cle} className={styles.reglage}>
           {gauche}
           <input

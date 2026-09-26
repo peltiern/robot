@@ -52,5 +52,28 @@ export function enBase64(octets: Uint8Array): string {
   return btoa(binaire)
 }
 
+/** Le chemin inverse : les échantillons d'un WAV du Studio (16 bits mono) gardé en base64. */
+export function lireWavBase64(base64: string): Float32Array<ArrayBuffer> {
+  const binaire = atob(base64)
+  const octets = new Uint8Array(binaire.length)
+  for (let i = 0; i < binaire.length; i++) octets[i] = binaire.charCodeAt(i)
+  const vue = new DataView(octets.buffer)
+  // On cherche le bloc « data » plutôt que de le supposer à l'octet 44 : un WAV peut porter d'autres
+  // blocs avant lui.
+  let position = 12
+  while (position + 8 <= octets.length) {
+    const identifiant = String.fromCharCode(...octets.subarray(position, position + 4))
+    const taille = vue.getUint32(position + 4, true)
+    if (identifiant === 'data') {
+      const n = Math.floor(Math.min(taille, octets.length - position - 8) / 2)
+      const echantillons = new Float32Array(n)
+      for (let i = 0; i < n; i++) echantillons[i] = vue.getInt16(position + 8 + i * 2, true) / 0x8000
+      return echantillons
+    }
+    position += 8 + taille + (taille & 1)
+  }
+  return new Float32Array(0)
+}
+
 /** Taille du fichier en kilo-octets, pour la dire à l'utilisateur. */
 export const enKo = (octets: Uint8Array): number => Math.round(octets.length / 1024)

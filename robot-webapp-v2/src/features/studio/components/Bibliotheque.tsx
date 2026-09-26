@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Icone } from '../../../shared/components/Icone'
 import type { Son } from '../synthese/types'
 import { bibliotheque, type Liste } from '../utils/bibliotheque'
@@ -17,6 +17,7 @@ export function Bibliotheque({
   rafraichir,
   robotJoignable,
   onNouveau,
+  onImporter,
   onCharger,
   onJouer,
   onMessage,
@@ -26,12 +27,14 @@ export function Bibliotheque({
   rafraichir: number
   robotJoignable: boolean
   onNouveau: () => void
+  onImporter: (fichiers: File[]) => void
   onCharger: (son: Son) => void
   /** `surLeRobot` : le robot l'a et répond ; sinon le son se joue dans le navigateur. */
   onJouer: (nom: string, surLeRobot: boolean) => void
   onMessage: (texte: string) => void
 }) {
   const [liste, setListe] = useState<Liste>({ robot: null, enAttente: [] })
+  const choixRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     let vivant = true
@@ -72,6 +75,22 @@ export function Bibliotheque({
         <button className={styles.action} title="Nouveau son" onClick={onNouveau}>
           <Icone nom="plus" taille={16} />
         </button>
+        <button className={styles.action} title="Importer des fichiers son (WAV, MP3, OGG…)" onClick={() => choixRef.current?.click()}>
+          <Icone nom="importer" taille={16} />
+        </button>
+        <input
+          ref={choixRef}
+          type="file"
+          accept="audio/*,.wav,.mp3,.ogg"
+          multiple
+          hidden
+          onChange={(e) => {
+            const fichiers = [...(e.target.files ?? [])]
+            // Vidé aussitôt : sans ça, choisir deux fois le même fichier ne déclencherait rien.
+            e.target.value = ''
+            if (fichiers.length) onImporter(fichiers)
+          }}
+        />
       </div>
       {noms.length === 0 ? (
         <p className={styles.vide}>

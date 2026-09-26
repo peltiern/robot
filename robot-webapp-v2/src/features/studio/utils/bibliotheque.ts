@@ -1,6 +1,7 @@
 import { sonApi } from '../../../shared/api/sonApi'
-import { rendre } from '../synthese/moteur'
-import type { Son } from '../synthese/types'
+import { rendreSon } from '../synthese/moteur'
+import { REGLAGES_PAR_DEFAUT, VERSION_SON, type Son } from '../synthese/types'
+import { originalDepuisWav } from './importer'
 import { enBase64, enWav } from '../synthese/wav'
 
 /*
@@ -43,8 +44,31 @@ export interface Liste {
 
 /** Le WAV du son, prêt à voyager. C'est le navigateur qui le fabrique, jamais le robot. */
 async function wavDe(son: Son): Promise<string> {
-  const tampon = await rendre(son.morceaux, son.reglages)
+  const tampon = await rendreSon(son)
   return enBase64(enWav(tampon))
+}
+
+/**
+ * Une recette du robot rendue complète. Le robot n'exige qu'une version : un son déposé à la main
+ * (`curl`) arrive avec `{"version":1}` seul, et le Studio, qui supposait toujours des morceaux et
+ * des réglages, plantait en l'ouvrant. Sans rien à refaire, c'est son WAV qui devient le son, comme
+ * un fichier importé ; faute de WAV, l'ouverture échoue avec la raison du robot.
+ */
+async function completer(nom: string, recette: Partial<Son>): Promise<Son> {
+  const son: Son = {
+    ...recette,
+    nom,
+    version: recette.version ?? VERSION_SON,
+    reglages: { ...REGLAGES_PAR_DEFAUT(), ...recette.reglages },
+    morceaux: recette.morceaux ?? [],
+  }
+  if (son.morceaux.length || son.fichier) return son
+  return {
+    ...son,
+    // Au plafond, sauf réglage déjà enregistré : le son s'ouvre tel que le robot le joue.
+    reglages: { ...son.reglages, volume: recette.reglages?.volume ?? 1 },
+    fichier: { original: await originalDepuisWav(await sonApi.audio(nom)), origine: '' },
+  }
 }
 
 export const bibliotheque = {
@@ -59,7 +83,7 @@ export const bibliotheque = {
 
   /** La version en attente passe avant celle du robot : c'est la plus récente. */
   async charger(nom: string): Promise<Son> {
-    return lireAttente()[nom] ?? (await sonApi.recette(nom))
+    return lireAttente()[nom] ?? (await completer(nom, await sonApi.recette(nom)))
   },
 
   estEnAttente(nom: string): boolean {
@@ -124,7 +148,7 @@ export const bibliotheque = {
 
 /** Le WAV tel quel, pour l'écouter ailleurs ou le déposer à la main sur le robot. */
 export async function exporterWav(son: Son) {
-  const tampon = await rendre(son.morceaux, son.reglages)
+  const tampon = await rendreSon(son)
   const blob = new Blob([enWav(tampon) as BlobPart], { type: 'audio/wav' })
   const lien = document.createElement('a')
   lien.href = URL.createObjectURL(blob)

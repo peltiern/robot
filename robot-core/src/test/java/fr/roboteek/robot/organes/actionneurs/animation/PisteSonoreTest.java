@@ -145,6 +145,25 @@ class PisteSonoreTest {
             assertEquals(0, lecteur.lancements);
         }
 
+        /** Un son plus long que l'animation s'arrête avec elle : on entend ce que la timeline montre. */
+        @Test
+        void unSonPlusLongQueLAnimationEstCoupeASaFin() throws IOException {
+            ranger("long", 88200, (short) 5);   // 2 s
+
+            piste.demarrer(avecSons(1000, new SonDeclenche(0, "long")), 0);
+
+            assertEquals(44100, PisteSonore.lireWav(Files.readAllBytes(lecteur.fichier)).orElseThrow().length);
+        }
+
+        /** Posé après la fin, un son ne s'entend pas du tout. */
+        @Test
+        void unSonPoseApresLaFinNeJoueRien() {
+            ranger("a", 4410, (short) 5);
+
+            assertFalse(piste.demarrer(avecSons(1000, new SonDeclenche(1200, "a")), 0));
+            assertEquals(0, lecteur.lancements);
+        }
+
         @Test
         void uneAnimationSansSonNeJoueRien() {
             assertFalse(piste.demarrer(avecSons(2000), 0));

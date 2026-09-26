@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { bibliotheque as bibliothequeDesSons } from '../../studio/utils/bibliotheque'
-import { rendre } from '../../studio/synthese/moteur'
+import { rendreSon } from '../../studio/synthese/moteur'
 
 /**
  * Les sons de la piste Son, vus de l'Atelier : leur durée, leur onde, et de quoi les entendre en
@@ -47,7 +47,7 @@ async function chargerTampon(nom: string): Promise<AudioBuffer | null> {
   }
   try {
     const recette = await bibliothequeDesSons.charger(nom)
-    return await rendre(recette.morceaux, recette.reglages)
+    return await rendreSon(recette)
   } catch {
     return null
   }

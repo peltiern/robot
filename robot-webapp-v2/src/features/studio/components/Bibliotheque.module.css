@@ -7,10 +7,11 @@
 .entete {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 2px;
   padding: 0 6px 0 12px;
   margin-bottom: 6px;
 }
+.entete h2 { flex: 1; }
 
 .colonne h2 {
   margin: 0;

@@ -95,6 +95,9 @@ export function AnimationPage() {
     const elapsed = Math.max(departRef.current, performance.now() - originRef.current)
     if (!surRobot) lancerLesSonsFranchis(Math.min(elapsed, totalMs))
     if (elapsed >= totalMs) {
+      // Le son s'arrête avec l'animation, comme sur le robot. En boucle, sans ça, un son plus long
+      // qu'elle sonnait encore au tour suivant et repartait par-dessus sa propre fin.
+      couperLeNavigateur()
       if (looping) {
         originRef.current = performance.now()
         derniereTeteRef.current = -1

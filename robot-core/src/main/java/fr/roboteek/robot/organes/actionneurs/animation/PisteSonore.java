@@ -93,16 +93,22 @@ public class PisteSonore {
         arreter();
         List<Pose> poses = new ArrayList<>();
         for (SonDeclenche son : animation.sons()) {
+            if (son.instant() >= animation.dureeTotale()) {
+                continue;
+            }
             lireSon(animation.nom(), son).ifPresent(echantillons -> poses.add(new Pose(son.instant(), echantillons)));
         }
-        long finMs = poses.stream().mapToLong(p -> p.instantMs() + p.echantillons().length * 1000L / FREQUENCE).max().orElse(0);
+        // La bande-son s'arrête avec l'animation : un son plus long qu'elle allait au bout, bien après
+        // l'arrêt des moteurs, sans que la timeline de l'Atelier le montre.
+        long finMs = Math.min(animation.dureeTotale(),
+                poses.stream().mapToLong(p -> p.instantMs() + p.echantillons().length * 1000L / FREQUENCE).max().orElse(0));
         if (finMs <= depuisMs) {
             return false;
         }
         try {
             Path fichier = Files.createTempFile("bande-son-", ".wav");
             fichier.toFile().deleteOnExit();
-            Files.write(fichier, enWav(assembler(poses, Math.max(finMs, animation.dureeTotale()))));
+            Files.write(fichier, enWav(assembler(poses, animation.dureeTotale())));
             String nom = "bande-son de « " + animation.nom() + " »";
             if (!lecteurSon.jouer(nom, fichier, depuisMs / 1000.0)) {
                 logger.warn("Animation « {} » : sa bande-son n'a pas pu être jouée", animation.nom());

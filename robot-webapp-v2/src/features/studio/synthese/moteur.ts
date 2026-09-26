@@ -1,4 +1,5 @@
-import { baseHz, gainDe, type Morceau, type Reglages, type Timbre, valeurA, type Voyelle, volumes } from './types'
+import { baseHz, gainDe, type Morceau, type Reglages, type Son, type Timbre, valeurA, type Voyelle, volumes } from './types'
+import { lireWavBase64 } from './wav'
 
 /**
  * La synthèse, échantillon par échantillon, dans le navigateur.
@@ -331,6 +332,21 @@ export function rendre(morceaux: Morceau[], R: Reglages): Promise<AudioBuffer> {
   })
 
   return ctx.startRendering()
+}
+
+/**
+ * Rend un son, quelle que soit sa sorte : dessiné, il est synthétisé ; importé, son original est
+ * relu et porté au volume réglé. C'est le seul point d'entrée dont les écrans et l'envoi au robot
+ * ont besoin.
+ */
+export async function rendreSon(son: Son): Promise<AudioBuffer> {
+  if (!son.fichier) return rendre(son.morceaux, son.reglages)
+  const original = lireWavBase64(son.fichier.original)
+  const gain = gainDe(son.reglages.volume)
+  const tampon = new AudioBuffer({ numberOfChannels: 1, length: Math.max(1, original.length), sampleRate: SR })
+  const echantillons = tampon.getChannelData(0)
+  for (let i = 0; i < original.length; i++) echantillons[i] = original[i] * gain
+  return tampon
 }
 
 /** La fréquence entendue au milieu du ruban, hors roulement — ce que la frise dessine comme ligne. */

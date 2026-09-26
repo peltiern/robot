@@ -48,6 +48,13 @@ export const sonApi = {
       body: JSON.stringify({ nom, recette: son, wav }),
     }),
 
+  /** Le WAV tel que le robot le joue. */
+  audio: async (nom: string): Promise<ArrayBuffer> => {
+    const reponse = await fetch(`${BIBLIOTHEQUE}/${encodeURIComponent(nom)}/audio`)
+    if (!reponse.ok) throw new Error(await raison(reponse))
+    return reponse.arrayBuffer()
+  },
+
   supprimer: (nom: string): Promise<void> =>
     requete(`${BIBLIOTHEQUE}/${encodeURIComponent(nom)}`, { method: 'DELETE' }),
 
