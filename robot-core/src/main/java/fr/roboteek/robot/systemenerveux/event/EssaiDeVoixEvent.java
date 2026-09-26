@@ -1,10 +1,10 @@
 package fr.roboteek.robot.systemenerveux.event;
 
-import fr.roboteek.robot.organes.actionneurs.voix.ReglagesVoix;
+import fr.roboteek.robot.organes.actionneurs.voix.Voix;
 
 /**
- * Dire une phrase avec une voix qu'on essaie, sans l'adopter : on écoute sur le robot avant de
- * choisir, comme dans le Studio.
+ * Dire une phrase avec une voix qu'on essaie — modèle et réglages —, sans l'adopter : on écoute sur
+ * le robot avant de choisir, comme dans le Studio.
  */
 public class EssaiDeVoixEvent extends RobotEvent {
 
@@ -12,19 +12,19 @@ public class EssaiDeVoixEvent extends RobotEvent {
 
     private final String texte;
 
-    private final ReglagesVoix reglages;
+    private final Voix voix;
 
-    public EssaiDeVoixEvent(String texte, ReglagesVoix reglages) {
+    public EssaiDeVoixEvent(String texte, Voix voix) {
         super(EVENT_TYPE);
         this.texte = texte;
-        this.reglages = reglages;
+        this.voix = voix;
     }
 
     public String getTexte() {
         return texte;
     }
 
-    public ReglagesVoix getReglages() {
-        return reglages;
+    public Voix getVoix() {
+        return voix;
     }
 }

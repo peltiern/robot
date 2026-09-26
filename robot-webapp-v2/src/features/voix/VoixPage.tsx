@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icone } from '../../shared/components/Icone'
-import { voixApi, type EtatVoix, type ReglagesVoix } from '../../shared/api/voixApi'
+import { voixApi, type EtatVoix, type ReglagesVoix, type Voix } from '../../shared/api/voixApi'
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import styles from './VoixPage.module.css'
 
@@ -54,12 +54,19 @@ const CURSEURS: Curseur[] = [
 
 const PHRASE = 'Bonjour ! Je suis Wall-E. Tu veux jouer avec moi ?'
 
-const memes = (a: ReglagesVoix, b: ReglagesVoix) => CURSEURS.every(({ cle }) => Math.abs(a[cle] - b[cle]) < 1e-6)
+const memesReglages = (a: ReglagesVoix, b: ReglagesVoix) => CURSEURS.every(({ cle }) => Math.abs(a[cle] - b[cle]) < 1e-6)
+
+/** Le modèle nommé : `null` désigne celui de robot.properties, et c'est le même que son nom écrit. */
+const cleModele = (voix: Voix, parDefaut: string) => `${voix.modele ?? parDefaut}|${voix.locuteur ?? ''}`
+
+const memes = (a: Voix, b: Voix, parDefaut: string) =>
+  cleModele(a, parDefaut) === cleModele(b, parDefaut) && memesReglages(a.reglages, b.reglages)
 
 export function VoixPage() {
   const robotJoignable = useWebSocketStore((s) => s.connected)
   const [etat, setEtat] = useState<EtatVoix | null>(null)
-  const [reglages, setReglages] = useState<ReglagesVoix | null>(null)
+  const [voix, setVoix] = useState<Voix | null>(null)
+  const reglages = voix?.reglages ?? null
   const [phrase, setPhrase] = useState(PHRASE)
   const [message, setMessage] = useState('')
 
@@ -70,15 +77,15 @@ export function VoixPage() {
       .etat()
       .then((lu) => {
         setEtat(lu)
-        setReglages((courants) => courants ?? lu.adoptee)
+        setVoix((courante) => courante ?? lu.adoptee)
       })
       .catch((e) => setMessage(`Voix illisible : ${e instanceof Error ? e.message : String(e)}`))
   }, [robotJoignable])
 
   async function ecouter() {
-    if (!reglages || !phrase.trim()) return
+    if (!voix || !phrase.trim()) return
     try {
-      await voixApi.essayer(phrase, reglages)
+      await voixApi.essayer(phrase, voix)
       setMessage('Le robot parle avec cette voix…')
     } catch (e) {
       setMessage(`Essai impossible : ${e instanceof Error ? e.message : String(e)}`)
@@ -86,32 +93,33 @@ export function VoixPage() {
   }
 
   async function adopter() {
-    if (!reglages || !etat) return
+    if (!voix || !etat) return
     try {
-      const gardes = await voixApi.adopter(reglages)
-      setEtat({ ...etat, adoptee: gardes })
-      setReglages(gardes)
+      const gardee = await voixApi.adopter(voix)
+      setEtat({ ...etat, adoptee: gardee })
+      setVoix(gardee)
       setMessage('Voix adoptée : le robot parle ainsi dès sa prochaine phrase')
     } catch (e) {
       setMessage(`Voix non adoptée : ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
-  const modifiee = !!etat && !!reglages && !memes(reglages, etat.adoptee)
+  const modifiee = !!etat && !!voix && !memes(voix, etat.adoptee, etat.modeleParDefaut)
+  const origine: Voix | null = etat && { modele: null, locuteur: null, reglages: etat.origine }
 
   return (
     <div className={styles.page}>
       <header className={styles.barre}>
         <span className={styles.marque}>Voix du robot</span>
         <div className={styles.espace} />
-        <button className={styles.bouton} disabled={!modifiee} onClick={() => etat && setReglages(etat.adoptee)} title="Revenir aux réglages avec lesquels le robot parle">
+        <button className={styles.bouton} disabled={!modifiee} onClick={() => etat && setVoix(etat.adoptee)} title="Revenir à la voix avec laquelle le robot parle">
           Revenir à la voix adoptée
         </button>
         <button
           className={styles.bouton}
-          disabled={!etat || !reglages || memes(reglages, etat.origine)}
-          onClick={() => etat && setReglages(etat.origine)}
-          title="La voix Wall-E validée le 16 août 2026 — à écouter, puis à adopter si on y revient"
+          disabled={!etat || !voix || !origine || memes(voix, origine, etat.modeleParDefaut)}
+          onClick={() => origine && setVoix(origine)}
+          title="Le modèle par défaut et la coloration Wall-E validée le 16 août 2026 — à écouter, puis à adopter si on y revient"
         >
           Voix d’origine
         </button>
@@ -123,13 +131,35 @@ export function VoixPage() {
       <div className={styles.centre}>
         {!robotJoignable ? (
           <p className={styles.avis}>Robot injoignable : c’est lui qui parle, la voix ne se règle qu’avec lui.</p>
-        ) : !reglages ? (
+        ) : !voix || !reglages || !etat ? (
           <p className={styles.avis}>Lecture de la voix…</p>
         ) : (
           <>
             {etat && !etat.reglable && (
               <p className={styles.avis}>Le robot parle avec Google : ces réglages ne valent que pour la voix Piper.</p>
             )}
+
+            {/* La voix de base d'abord : c'est elle qui fait le timbre, les curseurs ne font que le
+                colorer. */}
+            <label className={styles.modele}>
+              Voix de base
+              <select
+                value={cleModele(voix, etat.modeleParDefaut)}
+                onChange={(e) => {
+                  const choisi = etat.modeles.find((m) => `${m.fichier}|${m.locuteur ?? ''}` === e.target.value)
+                  if (!choisi) return
+                  setVoix({ ...voix, modele: choisi.fichier, locuteur: choisi.locuteur })
+                  setMessage('Nouvelle voix de base : le premier essai la charge sur le robot, une à deux secondes')
+                }}
+              >
+                {etat.modeles.map((m) => (
+                  <option key={`${m.fichier}|${m.locuteur ?? ''}`} value={`${m.fichier}|${m.locuteur ?? ''}`}>
+                    {m.nom}
+                    {m.fichier === etat.modeleParDefaut ? ' (par défaut)' : ''}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className={styles.essai}>
               <input
@@ -154,7 +184,7 @@ export function VoixPage() {
                     max={1}
                     step={0.001}
                     value={versCurseur(reglages[cle])}
-                    onChange={(e) => setReglages({ ...reglages, [cle]: depuisCurseur(+e.target.value) })}
+                    onChange={(e) => setVoix({ ...voix, reglages: { ...reglages, [cle]: depuisCurseur(+e.target.value) } })}
                   />
                   <span className={styles.bout}>{droite}</span>
                   <b className={styles.valeur}>{lire(reglages[cle])}</b>

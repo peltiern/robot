@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -17,7 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 /**
- * La voix adoptée : les réglages avec lesquels le robot parle, gardés d'un démarrage à l'autre.
+ * La voix adoptée : le modèle et les réglages avec lesquels le robot parle, gardés d'un démarrage à
+ * l'autre.
  * <p>
  * Dans un fichier à part, et non dans {@code robot.properties} : celui-ci n'est lu qu'au démarrage,
  * et c'est justement ce qui obligeait à redémarrer le robot pour chaque retouche. Ici, une voix
@@ -34,7 +36,7 @@ public class VoixDuRobot {
             .enable(SerializationFeature.INDENT_OUTPUT)
             .build();
 
-    private volatile ReglagesVoix reglages;
+    private volatile Voix voix;
 
     /**
      * {@code @Autowired} obligatoire : deux constructeurs, et sans lui Spring n'en choisit aucun,
@@ -49,17 +51,17 @@ public class VoixDuRobot {
     /** Permet aux tests de travailler dans un dossier temporaire. */
     public VoixDuRobot(Path fichier) {
         this.fichier = fichier;
-        this.reglages = lire();
+        this.voix = lire();
     }
 
-    /** Les réglages avec lesquels le robot parle. */
-    public ReglagesVoix reglages() {
-        return reglages;
+    /** La voix avec laquelle le robot parle. */
+    public Voix voix() {
+        return voix;
     }
 
     /** Adopte une voix : elle vaut dès la phrase suivante, et au prochain démarrage. */
-    public ReglagesVoix adopter(ReglagesVoix nouveaux) {
-        ReglagesVoix bornes = nouveaux.bornes();
+    public Voix adopter(Voix nouvelle) {
+        Voix bornes = nouvelle.bornee();
         try {
             Files.createDirectories(fichier.getParent());
             Path temporaire = Files.createTempFile(fichier.getParent(), "voix-", ".tmp");
@@ -72,7 +74,7 @@ public class VoixDuRobot {
         } catch (IOException e) {
             throw new UncheckedIOException("Voix non enregistrée", e);
         }
-        reglages = bornes;
+        voix = bornes;
         logger.info("Voix adoptée : {}", bornes);
         return bornes;
     }
@@ -81,15 +83,21 @@ public class VoixDuRobot {
      * Sans fichier, ou avec un fichier illisible, le robot parle avec la voix d'origine : mieux vaut
      * une voix qu'on n'a pas choisie qu'un robot muet.
      */
-    private ReglagesVoix lire() {
+    private Voix lire() {
         if (!Files.isRegularFile(fichier)) {
-            return ReglagesVoix.ORIGINE;
+            return Voix.ORIGINE;
         }
         try {
-            return json.readValue(fichier.toFile(), ReglagesVoix.class).bornes();
+            JsonNode lu = json.readTree(fichier.toFile());
+            // Le premier format ne gardait que les réglages, sans modèle : celui adopté avant qu'on
+            // puisse choisir le modèle se relit comme tel, avec le modèle de robot.properties.
+            if (!lu.has("reglages")) {
+                return new Voix(null, null, json.treeToValue(lu, ReglagesVoix.class)).bornee();
+            }
+            return json.treeToValue(lu, Voix.class).bornee();
         } catch (JacksonException e) {
             logger.error("Réglages de voix illisibles dans {}, voix d'origine", fichier, e);
-            return ReglagesVoix.ORIGINE;
+            return Voix.ORIGINE;
         }
     }
 }

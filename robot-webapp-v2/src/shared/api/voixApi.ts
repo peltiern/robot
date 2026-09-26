@@ -21,11 +21,29 @@ export interface ReglagesVoix {
   modulation: number
 }
 
+/** Une voix de base : un modèle Piper, et pour un modèle à plusieurs voix, laquelle. */
+export interface ModeleVoix {
+  fichier: string
+  locuteur: number | null
+  nom: string
+}
+
+/** Une voix complète. `modele` à null : celui de robot.properties. */
+export interface Voix {
+  modele: string | null
+  locuteur: number | null
+  reglages: ReglagesVoix
+}
+
 export interface EtatVoix {
-  adoptee: ReglagesVoix
+  adoptee: Voix
+  /** La coloration Wall-E d'origine. */
   origine: ReglagesVoix
-  /** Faux si le robot parle avec Google : les réglages ne valent que pour Piper. */
+  /** Faux si le robot parle avec Google : la voix ne se règle que pour Piper. */
   reglable: boolean
+  /** Les modèles déposés sur le robot. */
+  modeles: ModeleVoix[]
+  modeleParDefaut: string
 }
 
 async function requete<T>(url: string, init?: RequestInit): Promise<T> {
@@ -38,11 +56,10 @@ async function requete<T>(url: string, init?: RequestInit): Promise<T> {
 export const voixApi = {
   etat: (): Promise<EtatVoix> => requete(VOIX),
 
-  /** Répond les réglages gardés : le robot les borne à ce que sox accepte. */
-  adopter: (reglages: ReglagesVoix): Promise<ReglagesVoix> =>
-    requete(VOIX, { method: 'PUT', body: JSON.stringify(reglages) }),
+  /** Répond la voix gardée : le robot borne les réglages à ce que sox accepte. */
+  adopter: (voix: Voix): Promise<Voix> => requete(VOIX, { method: 'PUT', body: JSON.stringify(voix) }),
 
-  /** Le robot dit la phrase avec ces réglages, sans les adopter. */
-  essayer: (texte: string, reglages: ReglagesVoix): Promise<void> =>
-    requete(`${VOIX}/essai`, { method: 'POST', body: JSON.stringify({ texte, reglages }) }),
+  /** Le robot dit la phrase avec cette voix, sans l'adopter. */
+  essayer: (texte: string, voix: Voix): Promise<void> =>
+    requete(`${VOIX}/essai`, { method: 'POST', body: JSON.stringify({ texte, voix }) }),
 }

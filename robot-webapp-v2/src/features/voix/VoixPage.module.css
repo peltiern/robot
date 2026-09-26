@@ -134,3 +134,22 @@
   font-weight: 700;
   color: var(--ok);
 }
+
+.modele {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 13px 'Nunito', sans-serif;
+  color: var(--texte-faible);
+}
+.modele select {
+  flex: 1;
+  max-width: 420px;
+  padding: 7px 10px;
+  border: 2px solid var(--bordure);
+  border-radius: var(--r-puce);
+  background: var(--creux);
+  color: var(--texte);
+  font: 700 14px 'Nunito', sans-serif;
+}
+.modele select:focus { outline: none; border-color: var(--accent); }
