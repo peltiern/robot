@@ -257,7 +257,15 @@ export function AnimationPage() {
     function onUndoRedo(e: KeyboardEvent) {
       if (!e.ctrlKey && !e.metaKey) return
       const key = e.key.toLowerCase()
-      if (key === 'z' && !e.shiftKey) {
+      // Dans un champ texte — le nom de l'animation, la durée —, copier et coller restent ceux du
+      // texte : un son collé à la place d'un nom tapé serait une mauvaise surprise.
+      const cible = e.target as HTMLElement
+      const dansUnChamp = cible.tagName === 'INPUT' || cible.tagName === 'TEXTAREA' || cible.isContentEditable
+      if (key === 'c' && !dansUnChamp) {
+        if (useAnimationStore.getState().copierSon()) e.preventDefault()
+      } else if (key === 'v' && !dansUnChamp) {
+        if (useAnimationStore.getState().collerSon()) e.preventDefault()
+      } else if (key === 'z' && !e.shiftKey) {
         e.preventDefault()
         useAnimationStore.getState().undo()
       } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
@@ -342,7 +350,7 @@ export function AnimationPage() {
         <span className={ws.connected ? styles.dotOn : styles.dotOff} />
         <span>{ws.connected ? 'Robot connecté' : 'Robot déconnecté'}</span>
         <span>·</span>
-        <span>Clic = ajouter · Drag = déplacer · Dbl-clic = supprimer · « + » de la piste Son = poser un son · Ctrl+Molette = zoom · Espace = play</span>
+        <span>Clic = ajouter · Drag = déplacer · Dbl-clic = supprimer · « + » de la piste Son = poser un son · Ctrl+C / Ctrl+V = copier / coller un son au curseur · Ctrl+Molette = zoom · Espace = play</span>
         <div className={styles.footerRight}>
           {statusMsg && <span className={styles.statusMsg}>{statusMsg}</span>}
         </div>
