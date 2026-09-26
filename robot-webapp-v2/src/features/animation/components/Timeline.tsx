@@ -250,13 +250,6 @@ function renderSons(
   ctx.fillStyle = '#10151c'
   ctx.fillRect(0, y0, W, SH)
 
-  // Au-delà de la fin, le son continue de sonner mais l'animation est finie : on le montre.
-  const xFin = tToX(totalMs, pxPerMs, scrollX)
-  if (xFin < W) {
-    ctx.fillStyle = 'rgba(0,0,0,.35)'
-    ctx.fillRect(Math.max(0, xFin), y0, W - Math.max(0, xFin), SH)
-  }
-
   for (const son of sons) {
     const etat = etats[son.nom]
     const x = tToX(son.t, pxPerMs, scrollX)
@@ -293,6 +286,14 @@ function renderSons(
     ctx.font = '600 11px sans-serif'
     ctx.fillText(absent ? `${son.nom} — introuvable` : son.nom, x + 6, haut + 13)
     ctx.restore()
+  }
+
+  // Au-delà de la fin, rien ne sonne : le robot coupe la bande-son avec l'animation. Le voile passe
+  // PAR-DESSUS les blocs, pour qu'on voie ce qu'un son trop long perdra.
+  const xFin = tToX(totalMs, pxPerMs, scrollX)
+  if (xFin < W) {
+    ctx.fillStyle = 'rgba(0,0,0,.6)'
+    ctx.fillRect(Math.max(0, xFin), y0, W - Math.max(0, xFin), SH)
   }
 
   // Séparateur haut : la piste Son n'est pas un axe, elle ne doit pas se lire comme la suite du dernier.

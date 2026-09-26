@@ -56,12 +56,34 @@ export interface Reglages {
   presence: number
 }
 
+/**
+ * Un son importé d'un fichier, et non dessiné : il n'a pas de morceaux, seulement son enregistrement.
+ *
+ * L'original est gardé dans la recette, et non seulement sur le robot : le robot joue le son au
+ * volume réglé, et c'est de l'original qu'on repart pour le régler à nouveau — repartir du son déjà
+ * baissé perdrait un peu de qualité à chaque retouche.
+ *
+ * @property original le fichier converti au format du Studio (WAV 44,1 kHz mono 16 bits), en base64,
+ *                    silences du début et de la fin déjà rognés
+ * @property origine  le nom du fichier importé, pour s'en souvenir ; vide pour un son déposé à la
+ *                    main sur le robot, rouvert depuis son WAV
+ */
+export interface SonFichier {
+  original: string
+  origine: string
+}
+
 export interface Son {
   nom: string
   version: number
   reglages: Reglages
   morceaux: Morceau[]
+  /** Présent seulement pour un son importé ; `morceaux` est alors vide. */
+  fichier?: SonFichier
 }
+
+/** Y a-t-il quelque chose à entendre : des morceaux dessinés, ou un fichier importé. */
+export const aDuSon = (son: Son): boolean => son.morceaux.length > 0 || !!son.fichier
 
 /**
  * Version du format de recette. La 1 est celle du premier Studio.

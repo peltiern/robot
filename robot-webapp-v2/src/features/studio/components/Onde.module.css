@@ -21,3 +21,6 @@
   color: var(--texte-faible);
   pointer-events: none;
 }
+
+/* Un son importé n'a pas de frise : son onde en prend la place. */
+.grande { flex: 1; min-height: 140px; margin-bottom: 8px; }

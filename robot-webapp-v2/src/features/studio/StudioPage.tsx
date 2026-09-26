@@ -11,11 +11,12 @@ import { Onde } from './components/Onde'
 import { BarreMorceau } from './components/BarreMorceau'
 import { couleurTimbre } from './dessin'
 import { useLecture } from './lecture'
-import { rendre } from './synthese/moteur'
-import { REGLAGES_PAR_DEFAUT, TIMBRES, VERSION_SON, type Morceau, type Son, type Timbre } from './synthese/types'
+import { rendre, rendreSon } from './synthese/moteur'
+import { aDuSon, REGLAGES_PAR_DEFAUT, TIMBRES, VERSION_SON, type Morceau, type Son, type Timbre } from './synthese/types'
 import { enKo, enWav } from './synthese/wav'
 import { sonVide, useStudioStore } from './store/studioStore'
 import { bibliotheque, exporterWav } from './utils/bibliotheque'
+import { importerFichier } from './utils/importer'
 import styles from './StudioPage.module.css'
 
 /**
@@ -48,7 +49,9 @@ export function StudioPage() {
   // Le son tel qu'il a été enregistré ou ouvert pour la dernière fois : la disquette s'allume tant
   // qu'il reste des retouches à perdre, comme dans l'Atelier.
   const [enregistre, setEnregistre] = useState<string | null>(null)
-  const modifie = son.morceaux.length > 0 && JSON.stringify(son) !== enregistre
+  // Mémorisé : la recette d'un son importé porte tout son enregistrement, des centaines de Ko à
+  // resérialiser à chaque image de la lecture sinon.
+  const modifie = useMemo(() => aDuSon(son) && JSON.stringify(son) !== enregistre, [son, enregistre])
   const [rafraichir, setRafraichir] = useState(0)
   // Le rendu retient POUR QUEL son il a été calculé : c'est ce qui dit, sans drapeau à tenir à
   // jour, que l'onde affichée est en retard sur la dernière retouche.
@@ -60,11 +63,11 @@ export function StudioPage() {
   // rendre qu'une fois quand on tire un point sur la frise.
   useEffect(() => {
     const minuteur = setTimeout(() => {
-      if (!son.morceaux.length) {
+      if (!aDuSon(son)) {
         setRendu({ tampon: null, pour: son })
         return
       }
-      void rendre(son.morceaux, son.reglages).then((rendu) => setRendu({ tampon: rendu, pour: son }))
+      void rendreSon(son).then((rendu) => setRendu({ tampon: rendu, pour: son }))
     }, 90)
     return () => clearTimeout(minuteur)
   }, [son])
@@ -90,8 +93,8 @@ export function StudioPage() {
       lecture.arreter()
       return
     }
-    if (!son.morceaux.length) return
-    const frais = await rendre(son.morceaux, son.reglages)
+    if (!aDuSon(son)) return
+    const frais = await rendreSon(son)
     setRendu({ tampon: frais, pour: son })
     lecture.jouer(frais)
   }, [lecture, son])
@@ -146,7 +149,7 @@ export function StudioPage() {
 
   /** Rend un son entier puis le joue : ce que font le chargement d'un modèle et l'improvisation. */
   function ecouterCeSon(aJouer: Son) {
-    void rendre(aJouer.morceaux, aJouer.reglages).then((frais) => {
+    void rendreSon(aJouer).then((frais) => {
       setRendu({ tampon: frais, pour: aJouer })
       lecture.jouer(frais)
     })
@@ -177,13 +180,50 @@ export function StudioPage() {
         return
       }
       const range = await bibliotheque.charger(nom)
-      lecture.jouer(await rendre(range.morceaux, range.reglages))
+      lecture.jouer(await rendreSon(range))
     } catch (e) {
       setMessage(`« ${nom} » n'a pas été joué : ${e instanceof Error ? e.message : String(e)}`)
     }
   }
 
+  /**
+   * Les fichiers choisis, convertis, rangés comme n'importe quel son, et le dernier ouvert. Un nom
+   * déjà pris reçoit un numéro : importer ne doit jamais écraser un son en silence.
+   */
+  async function importer(fichiers: File[]) {
+    const liste = await bibliotheque.lister()
+    const pris = new Set([...(liste.robot ?? []), ...liste.enAttente])
+    let dernier: Son | null = null
+    const refuses: string[] = []
+    for (const fichier of fichiers) {
+      try {
+        const importe = await importerFichier(fichier, pris)
+        pris.add(importe.nom)
+        await bibliotheque.enregistrer(importe)
+        dernier = importe
+      } catch (e) {
+        refuses.push(`${fichier.name} (${e instanceof Error ? e.message : String(e)})`)
+      }
+    }
+    setRafraichir((n) => n + 1)
+    if (dernier) {
+      remplacer(dernier)
+      setEnregistre(JSON.stringify(dernier))
+      ecouterCeSon(dernier)
+    }
+    const importes = fichiers.length - refuses.length
+    setMessage(
+      [
+        importes && `${importes} son${importes > 1 ? 's' : ''} importé${importes > 1 ? 's' : ''}`,
+        refuses.length && `illisible${refuses.length > 1 ? 's' : ''} : ${refuses.join(', ')}`,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    )
+  }
+
   const octets = useMemo(() => (tampon ? enWav(tampon) : null), [tampon])
+  const fichier = son.fichier
 
   return (
     <div className={styles.page}>
@@ -201,13 +241,13 @@ export function StudioPage() {
         <button
           className={`${styles.icone} ${modifie ? styles.iconeActive : ''}`}
           onClick={() => void enregistrer()}
-          disabled={!son.morceaux.length}
+          disabled={!aDuSon(son)}
           title={modifie ? 'Enregistrer — retouches non enregistrées' : 'Enregistrer'}
         >
           <Icone nom="disquette" taille={20} />
         </button>
         <div className={styles.espace} />
-        <button className={styles.bouton} onClick={() => void exporterWav(son)} disabled={!son.morceaux.length}>
+        <button className={styles.bouton} onClick={() => void exporterWav(son)} disabled={!aDuSon(son)}>
           Exporter le WAV
         </button>
 
@@ -223,6 +263,7 @@ export function StudioPage() {
           rafraichir={rafraichir}
           robotJoignable={robotJoignable}
           onNouveau={() => remplacer(sonVide())}
+          onImporter={(fichiers) => void importer(fichiers)}
           onCharger={(ouvert) => {
             remplacer(ouvert)
             setEnregistre(JSON.stringify(ouvert))
@@ -242,66 +283,101 @@ export function StudioPage() {
           />
           <BarreModeles onCharger={charger} />
 
-          <div className={styles.outils}>
-            <button className={styles.outil} aria-pressed={mode === 'main'} title="Déplacer et modeler (V)" onClick={() => changerMode('main')}>
-              <Icone nom="main" taille={20} />
-            </button>
-            <button
-              className={styles.outil}
-              aria-pressed={mode === 'crayon'}
-              title="Dessiner un son à main levée (C)"
-              onClick={() => changerMode('crayon')}
-            >
-              <Icone nom="crayon" taille={20} />
-            </button>
-
-            {mode === 'crayon' && (
-              <div className={styles.crayonTimbres}>
-                le crayon dessine :
-                {(Object.keys(TIMBRES) as Timbre[]).map((timbre) => (
-                  <button
-                    key={timbre}
-                    aria-pressed={timbre === timbreCrayon}
-                    style={{ '--c': couleurTimbre(timbre) } as React.CSSProperties}
-                    onClick={() => changerTimbreCrayon(timbre)}
-                  >
-                    {TIMBRES[timbre].nom}
-                  </button>
-                ))}
+          {fichier ? (
+            <>
+              {/* Un son importé n'a pas de morceaux à modeler : on l'écoute, on le renomme, on règle
+                  son volume. Annuler reste, pour le volume. */}
+              <div className={styles.outils}>
+                <span className={styles.origine}>
+                  {fichier.origine ? (
+                    <>
+                      Importé de <b>{fichier.origine}</b> — silences du début et de la fin retirés
+                    </>
+                  ) : (
+                    'Déposé sur le robot sans recette : ouvert tel qu’il le joue'
+                  )}
+                </span>
+                <span className={styles.separateur} />
+                <button className={styles.outil} disabled={!historique.length} title="Annuler (Ctrl+Z)" onClick={annuler}>
+                  <Icone nom="annuler" taille={20} />
+                </button>
+                <button className={styles.outil} disabled={!refaits.length} title="Refaire (Ctrl+Maj+Z)" onClick={refaire}>
+                  <Icone nom="retablir" taille={20} />
+                </button>
               </div>
-            )}
+              <BarreReglages onEcouter={() => void jouerTout()} seulement={['volume']} />
+              <Onde
+                rendu={tampon}
+                perime={perime}
+                tete={lecture.tete}
+                fenetre={tampon ? Math.max(1, tampon.duration * 1.05) : 2}
+                grande
+              />
+            </>
+          ) : (
+            <>
+              <div className={styles.outils}>
+                <button className={styles.outil} aria-pressed={mode === 'main'} title="Déplacer et modeler (V)" onClick={() => changerMode('main')}>
+                  <Icone nom="main" taille={20} />
+                </button>
+                <button
+                  className={styles.outil}
+                  aria-pressed={mode === 'crayon'}
+                  title="Dessiner un son à main levée (C)"
+                  onClick={() => changerMode('crayon')}
+                >
+                  <Icone nom="crayon" taille={20} />
+                </button>
 
-            <span className={styles.separateur} />
-            <button className={styles.outil} disabled={!historique.length} title="Annuler (Ctrl+Z)" onClick={annuler}>
-              <Icone nom="annuler" taille={20} />
-            </button>
-            <button className={styles.outil} disabled={!refaits.length} title="Refaire (Ctrl+Maj+Z)" onClick={refaire}>
-              <Icone nom="retablir" taille={20} />
-            </button>
+                {mode === 'crayon' && (
+                  <div className={styles.crayonTimbres}>
+                    le crayon dessine :
+                    {(Object.keys(TIMBRES) as Timbre[]).map((timbre) => (
+                      <button
+                        key={timbre}
+                        aria-pressed={timbre === timbreCrayon}
+                        style={{ '--c': couleurTimbre(timbre) } as React.CSSProperties}
+                        onClick={() => changerTimbreCrayon(timbre)}
+                      >
+                        {TIMBRES[timbre].nom}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-            <span className={styles.separateur} />
-            <button
-              className={styles.outil}
-              disabled={silenceAvant < 0.001}
-              title={
-                silenceAvant < 0.001
-                  ? 'Rien à rogner : le son commence au premier morceau'
-                  : `Rogner : retirer ${silenceAvant.toFixed(2).replace('.', ',')} s de silence avant le premier son`
-              }
-              onClick={rogner}
-            >
-              <Icone nom="ciseaux" taille={20} />
-            </button>
+                <span className={styles.separateur} />
+                <button className={styles.outil} disabled={!historique.length} title="Annuler (Ctrl+Z)" onClick={annuler}>
+                  <Icone nom="annuler" taille={20} />
+                </button>
+                <button className={styles.outil} disabled={!refaits.length} title="Refaire (Ctrl+Maj+Z)" onClick={refaire}>
+                  <Icone nom="retablir" taille={20} />
+                </button>
 
-          </div>
+                <span className={styles.separateur} />
+                <button
+                  className={styles.outil}
+                  disabled={silenceAvant < 0.001}
+                  title={
+                    silenceAvant < 0.001
+                      ? 'Rien à rogner : le son commence au premier morceau'
+                      : `Rogner : retirer ${silenceAvant.toFixed(2).replace('.', ',')} s de silence avant le premier son`
+                  }
+                  onClick={rogner}
+                >
+                  <Icone nom="ciseaux" taille={20} />
+                </button>
 
-          <BarreReglages onEcouter={() => void jouerTout()} />
+              </div>
 
-          <Frise tete={lecture.tete} onEcouter={(m) => void jouerMorceau(m)} />
+              <BarreReglages onEcouter={() => void jouerTout()} />
 
-          <BarreMorceau onEcouter={(m) => void jouerMorceau(m)} />
+              <Frise tete={lecture.tete} onEcouter={(m) => void jouerMorceau(m)} />
 
-          <Onde rendu={tampon} perime={perime} tete={lecture.tete} />
+              <BarreMorceau onEcouter={(m) => void jouerMorceau(m)} />
+
+              <Onde rendu={tampon} perime={perime} tete={lecture.tete} />
+            </>
+          )}
 
           {/* Sous l'onde et non dans la barre d'état : c'est le son en cours qu'elle décrit. */}
           <p className={styles.infos}>
@@ -313,9 +389,11 @@ export function StudioPage() {
             ) : (
               'Aucun son.'
             )}
-            <span className={styles.compte}>
-              {son.morceaux.length} morceau{son.morceaux.length > 1 ? 'x' : ''}
-            </span>
+            {!fichier && (
+              <span className={styles.compte}>
+                {son.morceaux.length} morceau{son.morceaux.length > 1 ? 'x' : ''}
+              </span>
+            )}
           </p>
         </section>
       </div>
