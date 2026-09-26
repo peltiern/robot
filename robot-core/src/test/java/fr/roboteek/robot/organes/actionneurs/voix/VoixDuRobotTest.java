@@ -54,6 +54,17 @@ class VoixDuRobotTest {
         assertEquals(new Voix(null, null, new ReglagesVoix(-4, 1, 450, 3200, 12, 1, 0.5, 60)), new VoixDuRobot(fichier).voix());
     }
 
+    /** La voix adoptée avant la profondeur : relue avec sa modulation entière, comme elle sonnait. */
+    @Test
+    void uneVoixSansProfondeurSeRelitAvecLaModulationEntiere() throws IOException {
+        Path fichier = dossier.resolve("voix.json");
+        Files.writeString(fichier, """
+                {"modele":null,"locuteur":null,"reglages":{"hauteur":6,"debit":0.85,"passeHaut":350,"passeBas":2600,"grain":5,"machine":0.6,"metal":0.15,"modulation":0}}
+                """);
+
+        assertEquals(1.0, new VoixDuRobot(fichier).voix().reglages().profondeur());
+    }
+
     @Test
     void unFichierIllisibleRendLaVoixDOrigine() throws IOException {
         Path fichier = dossier.resolve("voix.json");
