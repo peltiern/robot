@@ -8,6 +8,9 @@ import type { Avertissement } from '../utils/verificateur'
 
 export interface EditorKeyframe { id: string; t: number; v: number }
 
+/** Un son de la piste Son : où il part, et lequel, par son nom dans la bibliothèque du Studio. */
+export interface EditorSon { id: string; t: number; nom: string }
+
 export interface EditorTrack {
   id: Axe
   name: string
@@ -70,6 +73,7 @@ function buildEditorTracks(defs: AxeAnimable[], totalMs: number): EditorTrack[] 
 
 interface HistorySnapshot {
   tracks: EditorTrack[]
+  sons: EditorSon[]
   animationName: string
   totalMs: number
 }
@@ -81,6 +85,8 @@ export interface AnimationEditorState {
   animationName: string
   totalMs: number
   tracks: EditorTrack[]
+  /** La piste Son. Hors des `tracks` : elle ne porte pas de valeurs, et le robot ne l'interpole pas. */
+  sons: EditorSon[]
 
   /**
    * Vrai dès qu'une modification n'a pas été enregistrée. Sert à ne demander « sauvegarder
@@ -110,6 +116,8 @@ export interface AnimationEditorState {
   /** Largeur de la zone des pistes : sans elle, impossible de savoir où s'arrête le défilement. */
   largeurVisible: number
   selectedKf: { trackId: Axe; kfId: string } | null
+  /** Le son choisi sur la piste Son ; exclusif d'une image-clé choisie. */
+  selectedSon: string | null
   /** Les images-clés déplacées se collent aux repères proches (voir Timeline, aimanter). */
   aimant: boolean
 
@@ -142,10 +150,16 @@ export interface AnimationEditorState {
   deleteKf:    (trackId: Axe, kfId: string) => void
   updateSelKf: (t: number, v: number) => void
 
+  // Actions — piste Son
+  addSon:      (nom: string, t: number) => EditorSon
+  moveSon:     (id: string, t: number) => void
+  deleteSon:   (id: string) => void
+  selectSon:   (id: string | null) => void
+
   // Actions — animation
   setAnimationName:       (n: string) => void
   toggleTrack:            (trackId: Axe) => void
-  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number) => void
+  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number, sons?: EditorSon[]) => void
   reset:                  () => void
   /** Corrige ce qu'un avertissement signale ; une édition comme une autre, donc annulable. */
   corrigerAvertissement:  (avertissement: Avertissement) => void
@@ -157,9 +171,9 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
 
   // Fonction locale — accès direct à set/get, pas via get().snapshot()
   function pushSnapshot() {
-    const { past, tracks, animationName, totalMs } = get()
+    const { past, tracks, sons, animationName, totalMs } = get()
     set({
-      past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, animationName, totalMs }],
+      past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, sons, animationName, totalMs }],
       future: [],
       modifie: true,
     })
@@ -179,6 +193,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     marquerEnregistre: () => set({ modifie: false }),
     totalMs: 3000,
     tracks: buildEditorTracks(AXES_DE_REPLI, 3000),
+    sons: [],
     past: [],
     future: [],
     playhead: 0,
@@ -190,34 +205,39 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     largeurVisible: 0,
     aimant: true,
     selectedKf: null,
+    selectedSon: null,
 
     snapshot: pushSnapshot,
 
     undo() {
-      const { past, future, tracks, animationName, totalMs } = get()
+      const { past, future, tracks, sons, animationName, totalMs } = get()
       if (past.length === 0) return
       const prev = past[past.length - 1]
       set({
         past: past.slice(0, -1),
-        future: [{ tracks, animationName, totalMs }, ...future.slice(0, MAX_HISTORY - 1)],
+        future: [{ tracks, sons, animationName, totalMs }, ...future.slice(0, MAX_HISTORY - 1)],
         tracks: prev.tracks,
+        sons: prev.sons,
         animationName: prev.animationName,
         totalMs: prev.totalMs,
         selectedKf: null,
+        selectedSon: null,
       })
     },
 
     redo() {
-      const { past, future, tracks, animationName, totalMs } = get()
+      const { past, future, tracks, sons, animationName, totalMs } = get()
       if (future.length === 0) return
       const next = future[0]
       set({
-        past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, animationName, totalMs }],
+        past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, sons, animationName, totalMs }],
         future: future.slice(1),
         tracks: next.tracks,
+        sons: next.sons,
         animationName: next.animationName,
         totalMs: next.totalMs,
         selectedKf: null,
+        selectedSon: null,
       })
     },
 
@@ -266,8 +286,29 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
       set({ pxPerMs: next, scrollX: borner(atT * next - atPx, next) })
     },
 
-    selectKf: (trackId, kfId) => set({ selectedKf: { trackId, kfId } }),
-    clearSel:  ()              => set({ selectedKf: null }),
+    selectKf: (trackId, kfId) => set({ selectedKf: { trackId, kfId }, selectedSon: null }),
+    clearSel:  ()              => set({ selectedKf: null, selectedSon: null }),
+
+    addSon(nom, tRaw) {
+      pushSnapshot()
+      const son: EditorSon = { id: uid(), nom, t: Math.max(0, Math.min(Math.round(tRaw / SNAP) * SNAP, get().totalMs)) }
+      set(s => ({ sons: [...s.sons, son], selectedSon: son.id, selectedKf: null }))
+      return son
+    },
+
+    // Sans point de retour : c'est le geste de glisser qui en pose un au départ (voir Timeline),
+    // comme pour les images-clés — sinon chaque pixel du glisser serait une étape d'annulation.
+    moveSon(id, tRaw) {
+      const t = Math.max(0, Math.min(Math.round(tRaw / SNAP) * SNAP, get().totalMs))
+      set(s => ({ sons: s.sons.map(son => son.id === id ? { ...son, t } : son) }))
+    },
+
+    deleteSon(id) {
+      pushSnapshot()
+      set(s => ({ sons: s.sons.filter(son => son.id !== id), selectedSon: s.selectedSon === id ? null : s.selectedSon }))
+    },
+
+    selectSon: id => set({ selectedSon: id, selectedKf: null }),
 
     addKf(trackId, tRaw, v) {
       pushSnapshot()
@@ -332,7 +373,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
       }))
     },
 
-    chargerEtapes(steps, totalMs) {
+    chargerEtapes(steps, totalMs, sons = []) {
       pushSnapshot()
       const currentDefs = get().tracks.map(versAxeAnimable)
       const tracks = buildEditorTracks(currentDefs, totalMs)
@@ -352,14 +393,14 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
           tr.kfs = [{ id: uid(), t: 0, v: 0 }, { id: uid(), t: totalMs, v: 0 }]
         }
       })
-      set({ tracks, totalMs, playhead: 0, selectedKf: null, modifie: false })
+      set({ tracks, sons, totalMs, playhead: 0, selectedKf: null, selectedSon: null, modifie: false })
     },
 
     reset() {
       pushSnapshot()
       const { totalMs, tracks } = get()
       const defs = tracks.map(versAxeAnimable)
-      set({ tracks: buildEditorTracks(defs, totalMs), playhead: 0, selectedKf: null, modifie: false })
+      set({ tracks: buildEditorTracks(defs, totalMs), sons: [], playhead: 0, selectedKf: null, selectedSon: null, modifie: false })
     },
 
     async loadTracksFromBackend() {

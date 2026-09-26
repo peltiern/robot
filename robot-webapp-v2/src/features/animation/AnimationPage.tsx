@@ -5,7 +5,8 @@ import { Timeline }        from './components/Timeline'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { LibraryPanel }    from './components/LibraryPanel'
 import { PanneauAvertissements } from './components/PanneauAvertissements'
-import { toAnimation, versEtapesEditeur } from './utils/convert'
+import { toAnimation, versEtapesEditeur, versSonsEditeur } from './utils/convert'
+import { couperLeNavigateur, jouerDansLeNavigateur, useSonsAtelier } from './utils/sonsAtelier'
 import { animationApi }    from '../../shared/api/animationApi'
 import { bibliotheque, exporterFichier } from './utils/bibliotheque'
 import type { Animation }  from '../../shared/types/animation'
@@ -42,7 +43,17 @@ export function AnimationPage() {
 
   // Charger les définitions de tracks depuis le backend au montage
   useEffect(() => { store.loadTracksFromBackend() }, [])
+
+  // Quitter l'Atelier en pleine lecture ne doit pas laisser un bruitage sonner sur une autre page.
+  useEffect(() => couperLeNavigateur, [])
   const originRef  = useRef<number>(0)   // performance.now() quand playhead = 0
+  // Dernier instant dont les sons ont été lancés, en simulation : un son part quand la tête le
+  // franchit, une fois, et non à chaque image où elle se trouve après lui.
+  const derniereTeteRef = useRef<number>(-1)
+  // En mode Robot, la tête de lecture attend la réponse du robot, puis le temps que ses moteurs
+  // attendent la bande-son : sans ça elle le devancerait d'autant. Elle reste à l'instant de départ.
+  const enAttenteDuRobotRef = useRef(false)
+  const departRef = useRef(0)
   const [statusMsg, setStatusMsg]     = useState('')
   const [libraryKey, setLibraryKey]   = useState(0)
   const [disposition, setDisposition] = useState<Disposition>(dispositionRetenue)
@@ -77,14 +88,21 @@ export function AnimationPage() {
     const { playing, looping, totalMs, surRobot, setPlayhead, setPlaying } = useAnimationStore.getState()
     if (!playing) return
 
-    const elapsed = performance.now() - originRef.current
+    if (enAttenteDuRobotRef.current) {
+      rafRef.current = requestAnimationFrame(tick)
+      return
+    }
+    const elapsed = Math.max(departRef.current, performance.now() - originRef.current)
+    if (!surRobot) lancerLesSonsFranchis(Math.min(elapsed, totalMs))
     if (elapsed >= totalMs) {
       if (looping) {
         originRef.current = performance.now()
+        derniereTeteRef.current = -1
+        departRef.current = 0
         setPlayhead(0)
         // Relancer aussi le robot : sa lecture, elle, ne boucle pas. Sans ça la timeline
         // repartait indéfiniment pendant que la tête ne bougeait plus qu'une fois.
-        if (surRobot) animationApi.jouerBrouillon(animationPourLeRobot()).catch(() => {})
+        if (surRobot) lancerSurLeRobot(0)
       } else {
         setPlayhead(totalMs)
         setPlaying(false)
@@ -96,20 +114,75 @@ export function AnimationPage() {
     rafRef.current = requestAnimationFrame(tick)
   }, [])
 
+  /**
+   * En simulation, c'est le navigateur qui fait entendre la piste Son. En mode Robot, jamais : le
+   * robot la joue lui-même, et l'entendre deux fois, décalée de la latence du réseau, embrouillerait
+   * justement ce qu'on cherche à caler.
+   */
+  function lancerLesSonsFranchis(tete: number) {
+    const { sons } = useAnimationStore.getState()
+    for (const son of sons) {
+      if (son.t > derniereTeteRef.current && son.t <= tete) jouerDansLeNavigateur(son.nom)
+    }
+    derniereTeteRef.current = tete
+  }
+
+  /** Une lecture reprise au milieu d'un son l'entend à partir de là, pas du début ni pas du tout. */
+  function reprendreLesSonsEnCours(tete: number) {
+    const { sons } = useAnimationStore.getState()
+    const etats = useSonsAtelier.getState().sons
+    for (const son of sons) {
+      const etat = etats[son.nom]
+      const duree = etat?.etat === 'pret' ? etat.duree * 1000 : 0
+      if (son.t < tete && tete < son.t + duree) jouerDansLeNavigateur(son.nom, (tete - son.t) / 1000)
+    }
+    derniereTeteRef.current = tete
+  }
+
+  /**
+   * Lance l'animation sur le robot à partir de `depart`, et ne fait partir la tête de lecture
+   * qu'avec lui : à sa réponse, plus le temps que ses moteurs attendent la bande-son.
+   */
+  function lancerSurLeRobot(depart: number) {
+    enAttenteDuRobotRef.current = true
+    departRef.current = depart
+    animationApi.jouerBrouillon(animationPourLeRobot(), depart)
+      .then(reponse => {
+        originRef.current = performance.now() + (reponse.attenteDuSon ?? 0) - depart
+        enAttenteDuRobotRef.current = false
+      })
+      .catch(() => {
+        enAttenteDuRobotRef.current = false
+        pause()
+        setStatusMsg('Le robot a refusé de jouer')
+      })
+  }
+
   function play() {
     const { playhead, totalMs, surRobot } = useAnimationStore.getState()
-    originRef.current = performance.now() - (playhead >= totalMs ? 0 : playhead)
+    const depart = playhead >= totalMs ? 0 : playhead
+    originRef.current = performance.now() - depart
+    departRef.current = depart
     store.setPlaying(true)
     rafRef.current = requestAnimationFrame(tick)
-    if (!surRobot) return
+    if (!surRobot) {
+      // Juste avant le départ, pour qu'un son posé exactement là parte bien.
+      derniereTeteRef.current = depart - 1
+      reprendreLesSonsEnCours(depart)
+      derniereTeteRef.current = depart - 1
+      return
+    }
     // Envoyer au robot (pistes désactivées exclues), en brouillon : l'animation en cours
-    // d'écriture n'a aucune raison d'être enregistrée pour être essayée.
-    animationApi.jouerBrouillon(animationPourLeRobot())
-      .catch(() => setStatusMsg('Le robot a refusé de jouer'))
+    // d'écriture n'a aucune raison d'être enregistrée pour être essayée. À partir du curseur, et
+    // non du début : c'était le cas jusqu'ici, et la tête repartait de zéro sous une timeline au
+    // milieu.
+    lancerSurLeRobot(depart)
   }
 
   function pause() {
     store.setPlaying(false)
+    enAttenteDuRobotRef.current = false
+    couperLeNavigateur()
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     if (useAnimationStore.getState().surRobot) animationApi.arreter().catch(() => {})
   }
@@ -117,6 +190,8 @@ export function AnimationPage() {
   function stop() {
     store.setPlaying(false)
     store.setPlayhead(0)
+    enAttenteDuRobotRef.current = false
+    couperLeNavigateur()
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
     if (useAnimationStore.getState().surRobot) animationApi.arreter().catch(() => {})
   }
@@ -168,8 +243,9 @@ export function AnimationPage() {
       if (e.code === 'Home')   { store.setPlaying(false); store.setPlayhead(0) }
       if (e.code === 'End')    { store.setPlaying(false); store.setPlayhead(store.totalMs) }
       if (e.code === 'Delete' || e.code === 'Backspace') {
-        const { selectedKf, deleteKf, clearSel } = useAnimationStore.getState()
+        const { selectedKf, deleteKf, clearSel, selectedSon, deleteSon } = useAnimationStore.getState()
         if (selectedKf) { deleteKf(selectedKf.trackId, selectedKf.kfId); clearSel() }
+        else if (selectedSon) deleteSon(selectedSon)
       }
       if (e.code === 'KeyL')   { store.toggleLoop() }
     }
@@ -197,7 +273,7 @@ export function AnimationPage() {
 
   /** Toutes les tracks — pour la sauvegarde JSON (les désactivées restent dans le fichier) */
   function buildAnimation() {
-    return toAnimation(store.animationName, store.totalMs, store.tracks)
+    return toAnimation(store.animationName, store.totalMs, store.tracks, store.sons)
   }
 
   /**
@@ -208,8 +284,8 @@ export function AnimationPage() {
    * indéfiniment la première version de la timeline.
    */
   function animationPourLeRobot() {
-    const { animationName, totalMs, tracks } = useAnimationStore.getState()
-    return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled))
+    const { animationName, totalMs, tracks, sons } = useAnimationStore.getState()
+    return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled), sons)
   }
 
   function signaler(message: string, dureeMs = 5000) {
@@ -229,7 +305,7 @@ export function AnimationPage() {
   }
 
   function handleLoadFromLibrary(anim: Animation) {
-    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs)
+    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs, versSonsEditeur(anim))
     store.setAnimationName(anim.nom)
   }
 
@@ -266,7 +342,7 @@ export function AnimationPage() {
         <span className={ws.connected ? styles.dotOn : styles.dotOff} />
         <span>{ws.connected ? 'Robot connecté' : 'Robot déconnecté'}</span>
         <span>·</span>
-        <span>Clic = ajouter · Drag = déplacer · Dbl-clic = supprimer · Ctrl+Molette = zoom · Espace = play</span>
+        <span>Clic = ajouter · Drag = déplacer · Dbl-clic = supprimer · « + » de la piste Son = poser un son · Ctrl+Molette = zoom · Espace = play</span>
         <div className={styles.footerRight}>
           {statusMsg && <span className={styles.statusMsg}>{statusMsg}</span>}
         </div>

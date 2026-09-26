@@ -9,6 +9,12 @@ import java.util.List;
  * @param avertissements ce que le vérificateur a à redire ; elle est jouée quand même, une
  *                       transition trop rapide se traduisant par un mouvement en retard sur la
  *                       courbe et non par un refus
+ * @param attenteDuSon   ce que les moteurs attendent la bande-son avant de bouger, en ms : l'éditeur
+ *                       retient d'autant sa tête de lecture, sans quoi elle devancerait le robot
  */
-public record AnimationEnCours(String nom, List<String> avertissements) {
+public record AnimationEnCours(String nom, List<String> avertissements, long attenteDuSon) {
+
+    public AnimationEnCours(String nom, List<String> avertissements) {
+        this(nom, avertissements, 0);
+    }
 }

@@ -68,8 +68,8 @@ export const animationApi = {
    * Joue un brouillon sans l'enregistrer — ce dont l'éditeur a besoin pendant qu'on écrit un
    * geste. L'obliger à enregistrer pour voir bouger la tête polluerait la bibliothèque d'essais.
    */
-  jouerBrouillon: (animation: Animation): Promise<AnimationEnCours> =>
-    requete(EN_COURS, { method: 'PUT', body: JSON.stringify({ animation }) }),
+  jouerBrouillon: (animation: Animation, depuis = 0): Promise<AnimationEnCours> =>
+    requete(EN_COURS, { method: 'PUT', body: JSON.stringify({ animation, depuis }) }),
 
   arreter: (): Promise<void> =>
     requete(EN_COURS, { method: 'DELETE' }),

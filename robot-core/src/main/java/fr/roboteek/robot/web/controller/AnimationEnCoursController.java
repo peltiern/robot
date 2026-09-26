@@ -85,12 +85,13 @@ public class AnimationEnCoursController {
             }
             return ResponseEntity.notFound().build();
         }
-        if (!lecteur.jouer(animation.get())) {
+        if (!lecteur.jouer(animation.get(), demande.depuis() == null ? 0 : demande.depuis())) {
             // 409 et non 500 : le robot va bien, il refuse — arrêt d'urgence armé, ou organe pas
             // encore démarré. Un 500 enverrait chercher une panne qui n'existe pas.
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        return ResponseEntity.ok(new AnimationEnCours(animation.get().nom(), Avertissements.de(animation.get())));
+        return ResponseEntity.ok(new AnimationEnCours(animation.get().nom(), Avertissements.de(animation.get()),
+                lecteur.attenteDuSon()));
     }
 
     /** Interrompt l'animation en cours. Sans effet s'il n'y en a pas : le résultat est le même. */

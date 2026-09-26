@@ -1,20 +1,19 @@
 package fr.roboteek.robot.organes.actionneurs.animation.modele;
 
-import fr.roboteek.robot.organes.actionneurs.RobotSound;
-
 /**
- * Un son lancé à un instant de l'animation.
+ * Un son du Studio, lancé à un instant de l'animation.
  * <p>
- * <b>La place est réservée, rien ne s'en sert encore</b> (décision du 2026-08-29 : « on verra plus
- * tard ce qu'on en fait »). Elle est posée maintenant parce qu'un format de fichier se change mal
- * une fois des animations écrites, et parce que l'ancien modèle portait déjà un son par étape.
+ * Le son est désigné par son <b>nom</b> dans la bibliothèque du Studio, et non embarqué : le même
+ * bruitage sert à plusieurs animations, et le retoucher dans le Studio doit profiter à toutes.
+ * La contrepartie est qu'un son supprimé depuis laisse un nom orphelin — le lecteur le saute en le
+ * disant, l'éditeur le signale.
  * <p>
- * Deux questions restent entières le jour où on s'en servira : le capteur vocal est mis en pause
- * pendant qu'un son est joué, ce qui abîme la reconnaissance ; et un son a une durée propre, que
- * la timeline ne connaît pas.
+ * La place était réservée depuis le 2026-08-29 avec une énumération de quatre échantillons, jamais
+ * remplie : passer au nom ne change donc pas la version du format, aucune animation enregistrée
+ * ne portant de son.
  *
  * @param instant instant depuis le début de l'animation, en millisecondes
- * @param son     le son à jouer
+ * @param son     nom du son dans la bibliothèque du Studio
  */
-public record SonDeclenche(long instant, RobotSound son) {
+public record SonDeclenche(long instant, String son) {
 }
