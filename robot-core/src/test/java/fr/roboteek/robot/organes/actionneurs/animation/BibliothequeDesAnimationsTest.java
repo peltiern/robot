@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
+import fr.roboteek.robot.decisionnel.emotion.Emotion;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.ImageCle;
@@ -76,6 +77,37 @@ class BibliothequeDesAnimationsTest {
             assertTrue(dossier.resolve("Salut.json").toFile().renameTo(dossier.resolve("Coucou.json").toFile()));
 
             assertEquals("Coucou", bibliotheque.charger("Coucou").orElseThrow().nom());
+        }
+
+        @Test
+        void lEmotionDUneAnimationSeRelit() throws IOException {
+            Animation base = animation("Content");
+            bibliotheque.enregistrer(new Animation("Content", base.dureeTotale(), base.pistes(), List.of(),
+                    Animation.VERSION_COURANTE, Emotion.JOIE));
+
+            assertEquals(Emotion.JOIE, bibliotheque.charger("Content").orElseThrow().emotion());
+            assertTrue(Files.readString(dossier.resolve("Content.json")).contains("\"emotion\" : \"joie\""),
+                    "la clé du Studio, sans accent, dans le fichier");
+        }
+
+        /** Les animations écrites avant les émotions n'ont pas le champ : elles se relisent, sans émotion. */
+        @Test
+        void uneAnimationSansEmotionSeRelit() throws IOException {
+            Files.writeString(dossier.resolve("Ancienne.json"), """
+                    {"nom":"Ancienne","dureeTotale":1000,"pistes":[],"sons":[],"version":2}
+                    """);
+
+            assertEquals(null, bibliotheque.charger("Ancienne").orElseThrow().emotion());
+        }
+
+        /** Une émotion retirée de la liste un jour ne doit pas faire disparaître l'animation. */
+        @Test
+        void uneEmotionInconnueLaisseLAnimationLisible() throws IOException {
+            Files.writeString(dossier.resolve("Nostalgique.json"), """
+                    {"nom":"Nostalgique","dureeTotale":1000,"pistes":[],"sons":[],"version":2,"emotion":"nostalgie"}
+                    """);
+
+            assertEquals(null, bibliotheque.charger("Nostalgique").orElseThrow().emotion());
         }
 
         @Test

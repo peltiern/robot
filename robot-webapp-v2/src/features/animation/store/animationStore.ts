@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Axe, AxeAnimable } from '../../../shared/types/animation'
+import type { Emotion } from '../../../shared/types/emotions'
 import { axeApi } from '../../../shared/api/axeApi'
 import { assignTrackColors } from '../../../shared/utils/trackColors'
 import { uid } from '../utils/convert'
@@ -76,6 +77,7 @@ interface HistorySnapshot {
   sons: EditorSon[]
   animationName: string
   totalMs: number
+  emotion: Emotion | null
 }
 
 const MAX_HISTORY = 50
@@ -87,6 +89,9 @@ export interface AnimationEditorState {
   tracks: EditorTrack[]
   /** La piste Son. Hors des `tracks` : elle ne porte pas de valeurs, et le robot ne l'interpole pas. */
   sons: EditorSon[]
+  /** Ce que l'animation exprime : c'est par là que le robot la choisit pour réagir. */
+  emotion: Emotion | null
+  setEmotion: (emotion: Emotion | null) => void
 
   /**
    * Vrai dès qu'une modification n'a pas été enregistrée. Sert à ne demander « sauvegarder
@@ -170,7 +175,7 @@ export interface AnimationEditorState {
   // Actions — animation
   setAnimationName:       (n: string) => void
   toggleTrack:            (trackId: Axe) => void
-  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number, sons?: EditorSon[]) => void
+  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number, sons?: EditorSon[], emotion?: Emotion | null) => void
   reset:                  () => void
   /** Corrige ce qu'un avertissement signale ; une édition comme une autre, donc annulable. */
   corrigerAvertissement:  (avertissement: Avertissement) => void
@@ -182,9 +187,9 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
 
   // Fonction locale — accès direct à set/get, pas via get().snapshot()
   function pushSnapshot() {
-    const { past, tracks, sons, animationName, totalMs } = get()
+    const { past, tracks, sons, animationName, totalMs, emotion } = get()
     set({
-      past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, sons, animationName, totalMs }],
+      past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, sons, animationName, totalMs, emotion }],
       future: [],
       modifie: true,
     })
@@ -205,6 +210,11 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     totalMs: 3000,
     tracks: buildEditorTracks(AXES_DE_REPLI, 3000),
     sons: [],
+    emotion: null,
+    setEmotion(emotion) {
+      pushSnapshot()
+      set({ emotion })
+    },
     past: [],
     future: [],
     playhead: 0,
@@ -222,14 +232,15 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     snapshot: pushSnapshot,
 
     undo() {
-      const { past, future, tracks, sons, animationName, totalMs } = get()
+      const { past, future, tracks, sons, animationName, totalMs, emotion } = get()
       if (past.length === 0) return
       const prev = past[past.length - 1]
       set({
         past: past.slice(0, -1),
-        future: [{ tracks, sons, animationName, totalMs }, ...future.slice(0, MAX_HISTORY - 1)],
+        future: [{ tracks, sons, animationName, totalMs, emotion }, ...future.slice(0, MAX_HISTORY - 1)],
         tracks: prev.tracks,
         sons: prev.sons,
+        emotion: prev.emotion,
         animationName: prev.animationName,
         totalMs: prev.totalMs,
         selectedKf: null,
@@ -238,14 +249,15 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     },
 
     redo() {
-      const { past, future, tracks, sons, animationName, totalMs } = get()
+      const { past, future, tracks, sons, animationName, totalMs, emotion } = get()
       if (future.length === 0) return
       const next = future[0]
       set({
-        past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, sons, animationName, totalMs }],
+        past: [...past.slice(-(MAX_HISTORY - 1)), { tracks, sons, animationName, totalMs, emotion }],
         future: future.slice(1),
         tracks: next.tracks,
         sons: next.sons,
+        emotion: next.emotion,
         animationName: next.animationName,
         totalMs: next.totalMs,
         selectedKf: null,
@@ -404,7 +416,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
       }))
     },
 
-    chargerEtapes(steps, totalMs, sons = []) {
+    chargerEtapes(steps, totalMs, sons = [], emotion = null) {
       pushSnapshot()
       const currentDefs = get().tracks.map(versAxeAnimable)
       const tracks = buildEditorTracks(currentDefs, totalMs)
@@ -424,14 +436,14 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
           tr.kfs = [{ id: uid(), t: 0, v: 0 }, { id: uid(), t: totalMs, v: 0 }]
         }
       })
-      set({ tracks, sons, totalMs, playhead: 0, selectedKf: null, selectedSon: null, modifie: false })
+      set({ tracks, sons, emotion, totalMs, playhead: 0, selectedKf: null, selectedSon: null, modifie: false })
     },
 
     reset() {
       pushSnapshot()
       const { totalMs, tracks } = get()
       const defs = tracks.map(versAxeAnimable)
-      set({ tracks: buildEditorTracks(defs, totalMs), sons: [], playhead: 0, selectedKf: null, selectedSon: null, modifie: false })
+      set({ tracks: buildEditorTracks(defs, totalMs), sons: [], emotion: null, playhead: 0, selectedKf: null, selectedSon: null, modifie: false })
     },
 
     async loadTracksFromBackend() {

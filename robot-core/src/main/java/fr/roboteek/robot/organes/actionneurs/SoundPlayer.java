@@ -73,6 +73,7 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
             // Envoi d'un évènement pour mettre en pause la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventPause = new ReconnaissanceVocaleControleEvent();
             eventPause.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
+            eventPause.setSource(ReconnaissanceVocaleControleEvent.SOURCE.SON);
             applicationEventPublisher.publishEvent(eventPause);
 
             logger.debug("Lecture son :\t{}", sound);
@@ -93,6 +94,7 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
             // Envoi d'un évènement pour redémarrer la reconnaissance vocale
             final ReconnaissanceVocaleControleEvent eventRedemarrage = new ReconnaissanceVocaleControleEvent();
             eventRedemarrage.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER);
+            eventRedemarrage.setSource(ReconnaissanceVocaleControleEvent.SOURCE.SON);
             applicationEventPublisher.publishEvent(eventRedemarrage);
         }
     }
@@ -124,6 +126,7 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
         arreterLecture();
         final ReconnaissanceVocaleControleEvent pause = new ReconnaissanceVocaleControleEvent();
         pause.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE);
+        pause.setSource(ReconnaissanceVocaleControleEvent.SOURCE.SON);
         applicationEventPublisher.publishEvent(pause);
         try {
             List<String> commande = new ArrayList<>(List.of("play", "-q", fichier.toString()));
@@ -201,6 +204,7 @@ public class SoundPlayer extends AbstractOrgane implements SmartLifecycle {
         sonEnCours = null;
         final ReconnaissanceVocaleControleEvent redemarrage = new ReconnaissanceVocaleControleEvent();
         redemarrage.setControle(ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER);
+        redemarrage.setSource(ReconnaissanceVocaleControleEvent.SOURCE.SON);
         applicationEventPublisher.publishEvent(redemarrage);
     }
 

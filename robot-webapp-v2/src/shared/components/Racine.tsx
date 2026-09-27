@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet } from 'react-router'
 import { useWebSocketStore } from '../stores/websocketStore'
+import { useEmotions } from '../stores/emotionsStore'
 import { FluxRobot } from '../flux/FluxRobot'
 import styles from './Layout.module.css'
 
@@ -25,6 +26,14 @@ export function Racine() {
     connect()
     return () => disconnect()
   }, [connect, disconnect])
+
+  // Les émotions sont redemandées à chaque retour du robot : c'est lui qui en tient la liste, et la
+  // copie du navigateur ne sert qu'en son absence.
+  const connecte = useWebSocketStore((s) => s.connected)
+  const rafraichirEmotions = useEmotions((s) => s.rafraichir)
+  useEffect(() => {
+    if (connecte) void rafraichirEmotions()
+  }, [connecte, rafraichirEmotions])
 
   return (
     <div className={styles.app}>

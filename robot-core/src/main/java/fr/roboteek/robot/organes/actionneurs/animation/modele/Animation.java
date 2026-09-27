@@ -1,5 +1,7 @@
 package fr.roboteek.robot.organes.actionneurs.animation.modele;
 
+import fr.roboteek.robot.decisionnel.emotion.Emotion;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -18,8 +20,12 @@ import java.util.Optional;
  * @param sons        emplacement réservé, toujours vide aujourd'hui (voir {@link SonDeclenche})
  * @param version     version du format, et surtout de l'<b>unité</b> des valeurs. Voir
  *                    {@link #VERSION_COURANTE}.
+ * @param emotion     ce que l'animation exprime, {@code null} si elle n'exprime rien de particulier.
+ *                    Facultatif, donc sans changement de version : une animation écrite avant se
+ *                    relit telle quelle, sans émotion
  */
-public record Animation(String nom, long dureeTotale, List<Piste> pistes, List<SonDeclenche> sons, Integer version) {
+public record Animation(String nom, long dureeTotale, List<Piste> pistes, List<SonDeclenche> sons, Integer version,
+                        Emotion emotion) {
 
     /**
      * Version du format écrite dans tout fichier neuf.
@@ -48,7 +54,12 @@ public record Animation(String nom, long dureeTotale, List<Piste> pistes, List<S
 
     /** Constructeur des animations neuves, qui portent forcément la version courante. */
     public Animation(String nom, long dureeTotale, List<Piste> pistes, List<SonDeclenche> sons) {
-        this(nom, dureeTotale, pistes, sons, VERSION_COURANTE);
+        this(nom, dureeTotale, pistes, sons, VERSION_COURANTE, null);
+    }
+
+    /** Une animation sans émotion, dans une version donnée. */
+    public Animation(String nom, long dureeTotale, List<Piste> pistes, List<SonDeclenche> sons, Integer version) {
+        this(nom, dureeTotale, pistes, sons, version, null);
     }
 
     /** Vrai si l'animation dit dans quelle unité elle est écrite, et que c'est la nôtre. */
@@ -66,7 +77,15 @@ public record Animation(String nom, long dureeTotale, List<Piste> pistes, List<S
      * foi dans l'URL et non dans le corps de la requête.
      */
     public Animation avecNom(String nouveauNom) {
-        return new Animation(nouveauNom, dureeTotale, pistes, sons, version);
+        return new Animation(nouveauNom, dureeTotale, pistes, sons, version, emotion);
+    }
+
+    /**
+     * La même animation, muette : pour l'accompagner d'une phrase, qui lui prendrait sinon la carte
+     * son — elle n'accepte qu'un son à la fois.
+     */
+    public Animation sansSons() {
+        return new Animation(nom, dureeTotale, pistes, List.of(), version, emotion);
     }
 
     /**
@@ -75,6 +94,6 @@ public record Animation(String nom, long dureeTotale, List<Piste> pistes, List<S
      * que l'intention était de ne pas y toucher.
      */
     public Animation sansPistesVides() {
-        return new Animation(nom, dureeTotale, pistes.stream().filter(piste -> !piste.estVide()).toList(), sons, version);
+        return new Animation(nom, dureeTotale, pistes.stream().filter(piste -> !piste.estVide()).toList(), sons, version, emotion);
     }
 }

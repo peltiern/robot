@@ -1,3 +1,4 @@
+import type { Emotion } from '../../../shared/types/emotions'
 import { VERSION_ANIMATION, type Animation, type Axe, type Piste } from '../../../shared/types/animation'
 import type { EditorSon, EditorTrack } from '../store/animationStore'
 
@@ -15,6 +16,7 @@ export function toAnimation(
   dureeTotale: number,
   tracks: EditorTrack[],
   sons: EditorSon[],
+  emotion: Emotion | null,
 ): Animation {
   const pistes: Piste[] = tracks
     .filter(t => t.kfs.length > 0)
@@ -32,6 +34,7 @@ export function toAnimation(
     pistes,
     sons: [...sons].sort((a, b) => a.t - b.t).map(s => ({ instant: s.t, son: s.nom })),
     version: VERSION_ANIMATION,
+    emotion,
   }
 }
 

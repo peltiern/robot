@@ -3,6 +3,7 @@ package fr.roboteek.robot.activites.conversation;
 import fr.roboteek.robot.activites.AbstractActivity;
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
+import fr.roboteek.robot.decisionnel.emotion.ReactionEmotionnelle;
 import fr.roboteek.robot.memoire.courtterme.MemoireCourtTerme;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleControleEvent;
 import fr.roboteek.robot.systemenerveux.event.ReconnaissanceVocaleEvent;
@@ -13,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import java.util.Locale;
 
 /**
  * Activité de conversation avec l'IA (Claude via Spring AI).
@@ -36,11 +39,16 @@ public class ConversationActivity extends AbstractActivity {
      */
     private final MemoireCourtTerme memoireCourtTerme;
 
+    /** Ce que le robot fait de l'émotion d'une réponse : parfois, une animation. */
+    private final ReactionEmotionnelle reaction;
+
     private final Logger logger = LoggerFactory.getLogger(ConversationActivity.class);
 
-    public ConversationActivity(ConversationIA conversationIA, MemoireCourtTerme memoireCourtTerme) {
+    public ConversationActivity(ConversationIA conversationIA, MemoireCourtTerme memoireCourtTerme,
+                                ReactionEmotionnelle reaction) {
         this.conversationIA = conversationIA;
         this.memoireCourtTerme = memoireCourtTerme;
+        this.reaction = reaction;
     }
 
     @Override
@@ -86,6 +94,10 @@ public class ConversationActivity extends AbstractActivity {
                     ReponseIntelligenceArtificielle reponse =
                             conversationIA.repondreARequete(requete, memoireCourtTerme.interlocuteur());
                     if (reponse != null && StringUtils.isNotBlank(reponse.getOutputText())) {
+                        logger.info("Émotion ressentie : {} ({})", reponse.getEmotion().cle(),
+                                String.format(Locale.ROOT, "%.1f", reponse.getIntensite()));
+                        // Avant de parler : l'animation part pendant que la phrase se synthétise.
+                        reaction.reagir(reponse.getEmotion(), reponse.getIntensite());
                         // Pas d'Animation.NEUTRAL avant de répondre : elle recentrait cou et yeux à
                         // chaque phrase, effaçant la pose du robot — y compris, désormais, le regard
                         // posé sur son interlocuteur, qu'il perdrait de vue en lui répondant.

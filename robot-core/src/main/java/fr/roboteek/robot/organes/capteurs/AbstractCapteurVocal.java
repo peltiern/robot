@@ -35,6 +35,8 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Base64;
 
 import static fr.roboteek.robot.configuration.Configurations.robotConfig;
@@ -90,10 +92,12 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     }
 
     /**
-     * Flag indiquant que la reconnaissance est mise en pause
-     * (modifié par les threads des listeners, lu par le thread audio).
+     * Qui retient l'écoute (modifié par les threads des listeners, lu par le thread audio à chaque
+     * bloc) : elle ne reprend que lorsque plus personne ne la retient, et jamais au-delà d'un délai
+     * maximum (voir {@link PausesDeLEcoute}).
      */
-    private volatile boolean misEnPause = false;
+    private final PausesDeLEcoute pauses = new PausesDeLEcoute(Clock.systemUTC(),
+            () -> Duration.ofSeconds(robotConfig().reconnaissancePauseMaxS()));
 
     /** Destination STOMP du flux audio (voir {@code WebSocketBrokerConfig}). */
     private static final String DESTINATION_AUDIO = "/audio";
@@ -227,7 +231,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
 
                     // On teste si le bloc en cours contient de la voix (bruit à une certaine fréquence)
 
-                    if (!misEnPause) {
+                    if (!pauses.enPause()) {
                         // Si le bloc ne correspond pas à un silence (volume au delà d'un certain seuil), on traite ce bloc
                         if (silenceDetector.currentSPL() > SilenceDetector.DEFAULT_SILENCE_THRESHOLD) {
 
@@ -295,7 +299,7 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
                     // Uniquement si un client l'écoute, et hors pause : pendant une pause le
                     // micro ne capte que le robot en train de parler, et l'écho ainsi renvoyé
                     // à la webapp ne sert à rien tout en consommant du débit sur la session.
-                    if (!misEnPause && diffusionAudioEcoutee()) {
+                    if (!pauses.enPause() && diffusionAudioEcoutee()) {
                         fr.roboteek.robot.systemenerveux.event.AudioEvent audioEvent = new fr.roboteek.robot.systemenerveux.event.AudioEvent();
                         audioEvent.setAudioContentBase64(Base64.getEncoder().encodeToString(creerFichierWav(e.getByteBuffer())));
                         applicationEventPublisher.publishEvent(audioEvent);
@@ -401,8 +405,8 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
     @EventListener
     public void handleReconnaissanceVocaleControleEvent(ReconnaissanceVocaleControleEvent reconnaissanceVocaleControleEvent) {
         if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.DEMARRER) {
-            logger.debug("Démarrage de la reconnaissance vocale");
-            misEnPause = false;
+            logger.debug("Reprise de la reconnaissance vocale par {}", reconnaissanceVocaleControleEvent.getSource());
+            pauses.reprendre(reconnaissanceVocaleControleEvent.getSource());
             surInterruptionPhrase();
             // Réinitialisation des blocs
             contenuParle = new byte[0];
@@ -412,8 +416,8 @@ public abstract class AbstractCapteurVocal extends AbstractOrganeWithThread {
             bufferNMoins4 = new byte[0];
             bufferNMoins5 = new byte[0];
         } else if (reconnaissanceVocaleControleEvent.getControle() == ReconnaissanceVocaleControleEvent.CONTROLE.METTRE_EN_PAUSE) {
-            logger.debug("Mise en pause de la reconnaissance vocale");
-            misEnPause = true;
+            logger.debug("Mise en pause de la reconnaissance vocale par {}", reconnaissanceVocaleControleEvent.getSource());
+            pauses.mettreEnPause(reconnaissanceVocaleControleEvent.getSource());
             surInterruptionPhrase();
             // Réinitialisation des blocs
             contenuParle = new byte[0];

@@ -41,7 +41,7 @@ class VoixControllerTest {
         Files.writeString(modeles.resolve("fr_FR-tom-medium.onnx"), "modèle");
         Files.writeString(modeles.resolve("fr_FR-tom-medium.onnx.json"), "{}");
         voix = new VoixDuRobot(dossier.resolve("voix.json"));
-        controleur = new VoixController(voix, new CatalogueDesModeles(modeles), new OrganeParole(voix), publies::add);
+        controleur = new VoixController(voix, new CatalogueDesModeles(modeles), new OrganeParole(voix, null), publies::add);
     }
 
     @Test

@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import type { Emotion } from '../../../shared/types/emotions'
+import { emotionDe, useEmotions } from '../../../shared/stores/emotionsStore'
 import { Icone } from '../../../shared/components/Icone'
 import { animationApi } from '../../../shared/api/animationApi'
 import type { Animation } from '../../../shared/types/animation'
@@ -19,6 +21,8 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer, onE
   const store = useAnimationStore()
   const [names, setNames]               = useState<string[]>([])
   const [enAttente, setEnAttente]       = useState<Set<string>>(new Set())
+  const [emotions, setEmotions]         = useState<Record<string, Emotion>>({})
+  const connues                         = useEmotions(s => s.emotions)
   const [robotAbsent, setRobotAbsent]   = useState(false)
   const fichierRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading]           = useState(false)
@@ -33,9 +37,10 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer, onE
     setLoading(true)
     setError(null)
     try {
-      const { robot, enAttente } = await bibliotheque.lister()
+      const { robot, enAttente, emotions } = await bibliotheque.lister()
       setRobotAbsent(robot === null)
       setEnAttente(new Set(enAttente))
+      setEmotions(emotions)
       setNames([...new Set([...(robot ?? []), ...enAttente])].sort((a, b) => a.localeCompare(b, 'fr')))
     } finally {
       setLoading(false)
@@ -242,7 +247,13 @@ export function LibraryPanel({ refreshKey, onLoadAnimation, onSave, onJouer, onE
               title={name}
             >
               <span className={styles.itemName}>
-                {isLoading && <Icone nom="sablier" taille={11} />}{name}
+                {isLoading && <Icone nom="sablier" taille={11} />}
+                {/* Une place gardée même sans émotion : les noms restent alignés, et on voit d'un coup
+                    d'œil ce qui manque. */}
+                <span className={styles.emotion} title={emotionDe(connues, emotions[name])?.libelle ?? emotions[name] ?? 'Sans émotion'}>
+                  {emotionDe(connues, emotions[name])?.emoji ?? ''}
+                </span>
+                {name}
               </span>
               {enAttente.has(name) && (
                 <span className={styles.enAttente} title="Gardée dans le navigateur : partira au robot à son retour" />

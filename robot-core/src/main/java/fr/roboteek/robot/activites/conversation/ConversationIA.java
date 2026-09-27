@@ -2,6 +2,7 @@ package fr.roboteek.robot.activites.conversation;
 
 import fr.roboteek.robot.activites.main.ReponseIntelligenceArtificielle;
 import fr.roboteek.robot.activites.main.RequeteIntelligenceArtificielle;
+import fr.roboteek.robot.decisionnel.emotion.PhraseRessentie;
 import fr.roboteek.robot.memoire.longterme.conversation.ConversationRepository;
 import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
@@ -106,14 +107,17 @@ public class ConversationIA {
     private ReponseIntelligenceArtificielle traiterRequeteTexte(String inputText, Personne interlocuteur) {
         String outputText = chatClient.prompt()
                 // Prompt système à chaque appel pour que la date du jour reste juste
-                .system(PROMPT_SYSTEME.formatted(LocalDate.now().format(FORMAT_DATE), presentationInterlocuteur(interlocuteur)))
+                .system(promptSysteme(interlocuteur))
                 .user(inputText)
                 .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, idConversation(interlocuteur)))
                 .call()
                 .content();
+        PhraseRessentie phrase = PhraseRessentie.lire(outputText);
         ReponseIntelligenceArtificielle response = new ReponseIntelligenceArtificielle();
         response.setInputText(inputText);
-        response.setOutputText(outputText);
+        response.setOutputText(phrase.texte());
+        response.setEmotion(phrase.emotion());
+        response.setIntensite(phrase.intensite());
         return response;
     }
 
@@ -168,13 +172,16 @@ public class ConversationIA {
      */
     public String saluerRetrouvailles(Personne personne, long secondesDAbsence, boolean reprise) {
         try {
-            return chatClient.prompt()
-                    .system(PROMPT_SYSTEME.formatted(LocalDate.now().format(FORMAT_DATE), presentationInterlocuteur(personne))
-                            + " " + (reprise ? CONSIGNE_REPRISE : CONSIGNE_RETROUVAILLES))
+            String reponse = chatClient.prompt()
+                    .system(promptSysteme(personne) + " " + (reprise ? CONSIGNE_REPRISE : CONSIGNE_RETROUVAILLES))
                     .user("%s vient d'arriver devant toi, %s.".formatted(personne.prenom(), depuisQuand(secondesDAbsence)))
                     .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, idConversation(personne)))
                     .call()
                     .content();
+            // Même consigne que pour une réponse, sur le même fil : l'étiquette y serait sinon
+            // absente, et l'IA y lirait deux formats. Elle est retirée ici, avant d'être dite.
+            String texte = PhraseRessentie.lire(reponse).texte();
+            return StringUtils.isBlank(texte) ? null : texte;
         } catch (RuntimeException e) {
             // L'appel réseau peut échouer, et un bonjour ne vaut pas de laisser tomber la
             // rencontre : l'activité dira une phrase toute faite.
@@ -227,6 +234,15 @@ public class ConversationIA {
             return ID_CONVERSATION_PAR_DEFAUT;
         }
         return ConversationRepository.idConversationDe(interlocuteur.id());
+    }
+
+    /**
+     * Le prompt système d'un échange : qui est le robot, quel jour on est, à qui il parle, et comment
+     * dire ce qu'il ressent (voir {@link PhraseRessentie}).
+     */
+    private static String promptSysteme(Personne interlocuteur) {
+        return PROMPT_SYSTEME.formatted(LocalDate.now().format(FORMAT_DATE), presentationInterlocuteur(interlocuteur))
+                + " " + PhraseRessentie.consigne();
     }
 
     /** Phrase du prompt système présentant la personne en face du robot. */

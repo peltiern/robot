@@ -88,3 +88,13 @@
 .btn:disabled:hover { opacity: 0.35; cursor: default; background: var(--surface2); border-color: var(--border); }
 
 .destination { display: flex; gap: 4px; }
+
+.emotion {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+}
+.emotion:focus { outline: none; border-color: var(--accent); }
