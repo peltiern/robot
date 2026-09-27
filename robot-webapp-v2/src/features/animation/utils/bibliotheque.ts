@@ -1,5 +1,6 @@
 import { animationApi } from '../../../shared/api/animationApi'
 import { VERSION_ANIMATION, type Animation } from '../../../shared/types/animation'
+import type { Emotion } from '../../../shared/types/emotions'
 
 /*
  * La bibliothèque vue de l'éditeur : celle du robot, plus ce qui attend de lui être envoyé.
@@ -37,16 +38,29 @@ export interface Liste {
   /** null : le robot n'a pas répondu. */
   robot: string[] | null
   enAttente: string[]
+  /** L'émotion de chaque animation qui en a une. */
+  emotions: Record<string, Emotion>
 }
 
 export const bibliotheque = {
   async lister(): Promise<Liste> {
-    const enAttente = Object.keys(lireAttente())
+    const attente = lireAttente()
+    const enAttente = Object.keys(attente)
+    const emotions: Record<string, Emotion> = {}
+    let robot: string[] | null
     try {
-      return { robot: await animationApi.noms(), enAttente }
+      const resume = await animationApi.resume()
+      robot = resume.map(r => r.nom)
+      resume.forEach(r => { if (r.emotion) emotions[r.nom] = r.emotion })
     } catch {
-      return { robot: null, enAttente }
+      robot = null
     }
+    // La copie en attente passe avant celle du robot, comme au chargement : c'est la plus récente.
+    Object.entries(attente).forEach(([nom, a]) => {
+      if (a.emotion) emotions[nom] = a.emotion
+      else delete emotions[nom]
+    })
+    return { robot, enAttente, emotions }
   },
 
   /** La version en attente passe avant celle du robot : c'est la plus récente. */

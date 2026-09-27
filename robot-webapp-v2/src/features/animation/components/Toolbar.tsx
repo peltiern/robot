@@ -1,4 +1,5 @@
 import { Icone } from '../../../shared/components/Icone'
+import { useEmotions } from '../../../shared/stores/emotionsStore'
 import { useAnimationStore } from '../store/animationStore'
 import { fmtMs } from '../utils/convert'
 import styles from './Toolbar.module.css'
@@ -17,10 +18,11 @@ interface Props {
 
 export function Toolbar({ onPlay, onPause, onStop, onSave, onChangerDestination, robotJoignable }: Props) {
   const {
-    playing, looping, playhead, totalMs, animationName, surRobot, modifie,
+    playing, looping, playhead, totalMs, animationName, surRobot, modifie, emotion, setEmotion,
     setPlaying, toggleLoop, setTotalMs, setAnimationName,
     zoomerAutourDuCurseur, toutVoir, aimant, basculerAimant, past, future, undo, redo,
   } = useAnimationStore()
+  const emotions = useEmotions(s => s.emotions)
 
   return (
     <div className={styles.toolbar}>
@@ -38,6 +40,23 @@ export function Toolbar({ onPlay, onPause, onStop, onSave, onChangerDestination,
         onClick={onSave}
         title={modifie ? 'Sauvegarder — modifications non enregistrées' : 'Sauvegarder'}
       ><Icone nom="disquette" taille={TAILLE} /></button>
+
+      {/* Ce que l'animation exprime : c'est ainsi que le robot la choisira pour réagir à une phrase.
+          « Neutre » n'est pas proposé : il veut dire « ne pas réagir », une animation n'en a que faire. */}
+      <select
+        className={styles.emotion}
+        value={emotion ?? ''}
+        onChange={e => setEmotion(e.target.value || null)}
+        title="L'émotion que cette animation exprime"
+      >
+        <option value="">Sans émotion</option>
+        {emotions.filter(e => e.cle !== 'neutre').map(e => (
+          <option key={e.cle} value={e.cle}>{e.emoji} {e.libelle}</option>
+        ))}
+        {/* Une émotion que ce navigateur ne connaît pas encore (jamais vu le robot) reste affichée,
+            plutôt que d'être remplacée en silence par « sans émotion ». */}
+        {emotion && !emotions.some(e => e.cle === emotion) && <option value={emotion}>{emotion}</option>}
+      </select>
 
       <div className={styles.sep} />
 

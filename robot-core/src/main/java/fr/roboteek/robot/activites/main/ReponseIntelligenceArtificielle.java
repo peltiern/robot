@@ -1,5 +1,7 @@
 package fr.roboteek.robot.activites.main;
 
+import fr.roboteek.robot.decisionnel.emotion.Emotion;
+
 public class ReponseIntelligenceArtificielle {
 
     private String inputText;
@@ -11,6 +13,28 @@ public class ReponseIntelligenceArtificielle {
     private String outputText;
 
     private byte[] outputAudio;
+
+    /** Ce que la phrase de l'interlocuteur a fait ressentir au robot ; neutre par défaut. */
+    private Emotion emotion = Emotion.NEUTRE;
+
+    /** De 0 à 1. */
+    private double intensite;
+
+    public Emotion getEmotion() {
+        return emotion;
+    }
+
+    public void setEmotion(Emotion emotion) {
+        this.emotion = emotion;
+    }
+
+    public double getIntensite() {
+        return intensite;
+    }
+
+    public void setIntensite(double intensite) {
+        this.intensite = intensite;
+    }
 
     public String getInputText() {
         return inputText;

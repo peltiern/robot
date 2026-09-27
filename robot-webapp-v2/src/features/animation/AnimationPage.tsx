@@ -284,7 +284,7 @@ export function AnimationPage() {
 
   /** Toutes les tracks — pour la sauvegarde JSON (les désactivées restent dans le fichier) */
   function buildAnimation() {
-    return toAnimation(store.animationName, store.totalMs, store.tracks, store.sons)
+    return toAnimation(store.animationName, store.totalMs, store.tracks, store.sons, store.emotion)
   }
 
   /**
@@ -295,8 +295,8 @@ export function AnimationPage() {
    * indéfiniment la première version de la timeline.
    */
   function animationPourLeRobot() {
-    const { animationName, totalMs, tracks, sons } = useAnimationStore.getState()
-    return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled), sons)
+    const { animationName, totalMs, tracks, sons, emotion } = useAnimationStore.getState()
+    return toAnimation(animationName, totalMs, tracks.filter(t => t.enabled), sons, emotion)
   }
 
   function signaler(message: string, dureeMs = 5000) {
@@ -316,7 +316,7 @@ export function AnimationPage() {
   }
 
   function handleLoadFromLibrary(anim: Animation) {
-    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs, versSonsEditeur(anim))
+    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs, versSonsEditeur(anim), anim.emotion ?? null)
     store.setAnimationName(anim.nom)
   }
 

@@ -218,3 +218,6 @@
   background: var(--warning, #e0a040);
   flex-shrink: 0;
 }
+
+/* L'emoji de l'émotion, devant le nom ; sa place reste vide sans émotion, pour garder l'alignement. */
+.emotion { display: inline-block; width: 1.4em; flex-shrink: 0; text-align: center; }

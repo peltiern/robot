@@ -1,5 +1,6 @@
 package fr.roboteek.robot.web.controller;
 
+import fr.roboteek.robot.decisionnel.emotion.PhraseRessentie;
 import fr.roboteek.robot.memoire.longterme.personne.Personne;
 import fr.roboteek.robot.memoire.longterme.personne.RepertoireDesPersonnes;
 import fr.roboteek.robot.memoire.longterme.rencontre.Rencontre;
@@ -84,8 +85,10 @@ public class PersonneController {
                                 rencontre.secondesDAbsence()))
                         .toList(),
                 repertoire.conversation(id).stream()
+                        // L'étiquette d'émotion en tête des réponses du robot est pour lui, pas pour
+                        // qui relit la conversation.
                         .map(message -> new FichePersonneDto.MessageDto(message.getMessageType().name(),
-                                message.getText()))
+                                PhraseRessentie.sansEtiquette(message.getText())))
                         .toList()));
     }
 

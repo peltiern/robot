@@ -1,3 +1,4 @@
+import type { Emotion } from '../types/emotions'
 import type { Animation, AnimationEnCours } from '../types/animation'
 
 // Chemins relatifs, comme tout le reste de l'application : c'est le proxy Vite qui pointe sur
@@ -46,6 +47,10 @@ async function requete<T>(url: string, init?: RequestInit): Promise<T> {
 export const animationApi = {
   noms: (): Promise<string[]> =>
     requete(BIBLIOTHEQUE),
+
+  /** Les animations avec leur émotion, sans les ouvrir une à une. */
+  resume: (): Promise<{ nom: string; emotion: Emotion | null }[]> =>
+    requete(`${BIBLIOTHEQUE}?resume`),
 
   charger: (nom: string): Promise<Animation> =>
     requete(`${BIBLIOTHEQUE}/${encodeURIComponent(nom)}`),

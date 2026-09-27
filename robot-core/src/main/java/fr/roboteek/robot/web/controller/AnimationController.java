@@ -3,6 +3,7 @@ package fr.roboteek.robot.web.controller;
 import fr.roboteek.robot.organes.actionneurs.animation.Avertissements;
 import fr.roboteek.robot.organes.actionneurs.animation.BibliothequeDesAnimations;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
+import fr.roboteek.robot.web.controller.dto.ResumeAnimation;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -46,6 +47,19 @@ public class AnimationController {
     @GetMapping
     public List<String> noms() {
         return bibliotheque.noms();
+    }
+
+    /**
+     * Les animations avec leur émotion, pour que la bibliothèque de l'Atelier la montre sans ouvrir
+     * chacune. Un paramètre sur la même adresse, et non {@code /api/animations/emotions} : ce
+     * chemin-là masquerait une animation qui s'appellerait « emotions ».
+     */
+    @GetMapping(params = "resume")
+    public List<ResumeAnimation> resume() {
+        return bibliotheque.noms().stream()
+                .flatMap(nom -> bibliotheque.charger(nom).stream())
+                .map(animation -> new ResumeAnimation(animation.nom(), animation.emotion()))
+                .toList();
     }
 
     @GetMapping("/{nom}")

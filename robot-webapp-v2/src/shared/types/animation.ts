@@ -8,6 +8,8 @@
 // frontière entre les deux est convert.ts, et elle est volontairement au même endroit que la
 // conversion, pour qu'on voie d'un coup d'oeil ce qui part sur le fil.
 
+import type { Emotion } from './emotions'
+
 export type Axe =
   | 'OEIL_GAUCHE'
   | 'OEIL_DROIT'
@@ -48,6 +50,7 @@ export interface Animation {
   sons: SonDeclenche[]     // la piste Son ; envoyée telle quelle, vide comprise — vide veut
                            // dire « plus de son », et le robot efface
   version: number          // unité des valeurs ; cf. VERSION_ANIMATION
+  emotion?: Emotion | null  // ce que l'animation exprime ; absent des animations écrites avant
 }
 
 // Le robot refuse une animation sans version, et il a raison : avant la 1, les pistes des yeux

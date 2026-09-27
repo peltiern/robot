@@ -444,4 +444,62 @@ public interface RobotConfig extends Config {
     @Key("robot.animation.son.avance.ms")
     @DefaultValue("300")
     long animationSonAvanceMs();
+
+    /**
+     * Ce qui fait réagir le robot à une émotion : la chance de jouer une animation vaut l'intensité
+     * multipliée par ce facteur.
+     * <p>
+     * L'IA donne rarement moins de 0,5 dès qu'elle ressent quelque chose (relevé sur le robot le
+     * 2026-09-27 : 0,5 à 0,8). Sans facteur, le robot réagirait à presque chaque phrase ; à 0,5, une
+     * émotion à 0,6 fait réagir une fois sur trois ou quatre.
+     */
+    @Key("robot.emotions.reaction.facteur")
+    @DefaultValue("0.5")
+    double emotionsReactionFacteur();
+
+    /**
+     * Temps minimum entre deux réactions, en secondes. La confusion revient souvent — chaque fois
+     * que la reconnaissance vocale entend de travers —, et un robot qui secoue la tête à chaque
+     * phrase lasse vite.
+     */
+    @Key("robot.emotions.reaction.delai.s")
+    @DefaultValue("20")
+    long emotionsReactionDelaiS();
+
+    /**
+     * Pour une animation qui a du son : la part des fois où elle se joue <b>avant</b> la phrase, son
+     * compris ; les autres fois, elle l'accompagne, muette. Les deux ne peuvent pas sonner ensemble :
+     * la carte son n'accepte qu'un son à la fois.
+     */
+    @Key("robot.emotions.reaction.avant.part")
+    @DefaultValue("0.5")
+    double emotionsReactionAvantPart();
+
+    /**
+     * Ce qu'une phrase attend, au plus, qu'un son en cours se taise avant d'être dite, en ms. Au-delà
+     * elle est dite quand même : le robot ne doit jamais rester muet à cause d'un son bloqué.
+     */
+    @Key("robot.parole.attente.son.max.ms")
+    @DefaultValue("8000")
+    long paroleAttenteSonMaxMs();
+
+    /**
+     * Dire une réponse phrase par phrase, la suivante se synthétisant pendant que la précédente est
+     * dite. Mesuré le 2026-09-27 : Piper met 2,5 à 4 s pour une réponse entière, mais va plus vite
+     * que la parole ; l'attente tombe à la synthèse de la première phrase. En contrepartie, environ
+     * 0,3 s entre deux phrases, le temps que {@code play} redémarre. {@code false} dit la réponse
+     * d'un bloc, comme avant.
+     */
+    @Key("robot.parole.par.phrase")
+    @DefaultValue("true")
+    boolean paroleParPhrase();
+
+    /**
+     * Durée maximale d'une pause de l'écoute, en secondes. Au-delà, la pause tombe d'elle-même : une
+     * reprise perdue (processus mort, exception) ne doit jamais laisser le robot sourd. Assez longue
+     * pour couvrir une réflexion de l'IA puis une réponse dite phrase par phrase.
+     */
+    @Key("robot.reconnaissance.pause.max.s")
+    @DefaultValue("30")
+    long reconnaissancePauseMaxS();
 }

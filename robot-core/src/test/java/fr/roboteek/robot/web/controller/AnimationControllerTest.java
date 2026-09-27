@@ -1,11 +1,13 @@
 package fr.roboteek.robot.web.controller;
 
+import fr.roboteek.robot.decisionnel.emotion.Emotion;
 import fr.roboteek.robot.organes.actionneurs.animation.BibliothequeDesAnimations;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.ImageCle;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Piste;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.SonDeclenche;
+import fr.roboteek.robot.web.controller.dto.ResumeAnimation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -54,6 +56,18 @@ class AnimationControllerTest {
     void uneAnimationInconnueNExistePas() {
         assertEquals(HttpStatus.NOT_FOUND, controleur.animation("Fantome").getStatusCode());
         assertEquals(HttpStatus.NOT_FOUND, controleur.supprimer("Fantome").getStatusCode());
+    }
+
+    /** La bibliothèque de l'Atelier voit l'émotion de chaque animation sans les ouvrir une à une. */
+    @Test
+    void leResumeDonneLEmotionDeChaqueAnimation() {
+        Animation base = animation("Content");
+        bibliotheque.enregistrer(new Animation("Content", base.dureeTotale(), base.pistes(), List.of(),
+                Animation.VERSION_COURANTE, Emotion.JOIE));
+        bibliotheque.enregistrer(animation("Salut"));
+
+        assertEquals(List.of(new ResumeAnimation("Content", Emotion.JOIE), new ResumeAnimation("Salut", null)),
+                controleur.resume());
     }
 
     @Nested
