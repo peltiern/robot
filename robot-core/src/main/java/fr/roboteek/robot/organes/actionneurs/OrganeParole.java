@@ -5,6 +5,7 @@ import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.configuration.speech.SpeechProviderConfig;
 import fr.roboteek.robot.configuration.speech.synthesis.google.GoogleSpeechSynthesisConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
+import fr.roboteek.robot.organes.actionneurs.voix.Prononciation;
 import fr.roboteek.robot.organes.actionneurs.voix.ReglagesVoix;
 import fr.roboteek.robot.organes.actionneurs.voix.Voix;
 import fr.roboteek.robot.organes.actionneurs.voix.VoixDuRobot;
@@ -150,7 +151,8 @@ public class OrganeParole extends AbstractOrgane implements SmartLifecycle {
 
         // Perform the text-to-speech request on the text input with the selected voice parameters and
         // audio file type
-        byte[] audioContents = speechSynthesizerService.synthesize(texte);
+        // Piper seulement : c'est lui qui prononçait mal le nom ; le texte journalisé reste l'original.
+        byte[] audioContents = speechSynthesizerService.synthesize(voixReglable ? Prononciation.pourPiper(texte) : texte);
 
         if (audioContents != null) {
             // Write the response to the output file.
