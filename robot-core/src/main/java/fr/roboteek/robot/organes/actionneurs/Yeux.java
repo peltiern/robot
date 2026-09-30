@@ -242,7 +242,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
     /** Stoppe le mouvement de l'oeil gauche. */
     public void stopperOeilGauche() {
-        moteurOeilGauche.stop();
+        moteurOeilGauche.arreterEnDouceur();
         mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.STOPPER;
     }
 
@@ -288,7 +288,7 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
 
     /** Stoppe le mouvement de l'oeil droit. */
     public void stopperOeilDroit() {
-        moteurOeilDroit.stop();
+        moteurOeilDroit.arreterEnDouceur();
         mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
     }
 
@@ -438,8 +438,11 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
             return;
         }
         logger.warn("Yeux : arrêt d'urgence, coupure des moteurs");
-        stopperOeilGauche();
-        stopperOeilDroit();
+        // Coupure sèche, comme pour le cou : aucune consigne de position en urgence.
+        moteurOeilGauche.stop();
+        moteurOeilDroit.stop();
+        mouvementsOeilGaucheEnCours = MOUVEMENTS_OEIL.STOPPER;
+        mouvementsOeilDroitEnCours = MOUVEMENTS_OEIL.STOPPER;
     }
 
     @Override
@@ -564,6 +567,27 @@ public class Yeux extends AbstractOrgane implements SmartLifecycle, OrganeSurvei
         }
         Double reelle = moteurOeilDroit.getPositionReelleOuNull();
         return reelle == null ? null : transmissionOeilDroit.depuisMoteur(reelle);
+    }
+
+    /**
+     * Où l'œil gauche a été envoyé en dernier, en degrés d'œil ; {@code null} si l'organe n'est pas
+     * démarré ou que l'œil n'a encore rien reçu. Point de départ d'une piste d'animation relative.
+     */
+    public Double getPositionOeilGaucheVisee() {
+        return visee(moteurOeilGauche, transmissionOeilGauche);
+    }
+
+    /** Voir {@link #getPositionOeilGaucheVisee()}. */
+    public Double getPositionOeilDroitVisee() {
+        return visee(moteurOeilDroit, transmissionOeilDroit);
+    }
+
+    private Double visee(PhidgetsServoMotor moteur, Transmission transmission) {
+        if (!running || moteur == null) {
+            return null;
+        }
+        Double cible = moteur.getPositionCibleOuNull();
+        return cible == null ? null : transmission.depuisMoteur(cible);
     }
 
     /**

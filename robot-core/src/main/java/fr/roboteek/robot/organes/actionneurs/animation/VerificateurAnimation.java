@@ -52,6 +52,13 @@ public class VerificateurAnimation {
                 // d'inventer un avertissement par image-clé.
                 continue;
             }
+            // Une piste relative ne dit pas où l'axe ira, seulement de combien il bougera : ses
+            // butées dépendent de la posture au lancement, que rien ne permet de juger d'avance.
+            // Le lecteur écrête sur le moment ; la vitesse, elle, se contrôle comme ailleurs.
+            if (piste.relative()) {
+                controlerLesTransitions(piste, limites, avertissements);
+                continue;
+            }
             boolean imagesClesDansLesButees = controlerLesPositions(piste, limites, avertissements);
             if (imagesClesDansLesButees) {
                 controlerLaTrajectoire(piste, limites, avertissements);

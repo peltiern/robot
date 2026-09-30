@@ -67,6 +67,19 @@ class VerificateurAnimationTest {
                     "Une image-clé à -40° sur un axe borné à -24° doit être signalée : " + avertissements);
         }
 
+        /**
+         * Une piste relative dit de combien bouger, pas où aller : -30° d'écart n'est hors butée
+         * que si l'œil part d'en bas, ce qui ne se sait qu'au lancement.
+         */
+        @Test
+        void lesButeesNeSontPasJugeesSurUnePisteRelative() {
+            List<Avertissement> avertissements = verificateur.controler(new Animation("essai", 3000,
+                    List.of(new Piste(Axe.OEIL_GAUCHE, 40, 60, List.of(new ImageCle(0, 0), new ImageCle(2000, -30)), true)),
+                    List.of()));
+
+            assertEquals(List.of(), avertissements);
+        }
+
         @Test
         void uneTransitionTropRapideEstSignalee() {
             // 30° en 100 ms : hors de portée à 40 °/s

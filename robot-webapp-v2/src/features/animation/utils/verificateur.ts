@@ -46,26 +46,30 @@ export function verifier(pistes: EditorTrack[]): Avertissement[] {
     const triees = [...piste.kfs].sort((a, b) => a.t - b.t)
     const base = { axe: piste.id, libelle: piste.name }
 
-    let toutesDedans = true
-    for (const k of triees) {
-      if (k.v < piste.min || k.v > piste.max) {
-        toutesDedans = false
-        avertissements.push({
-          ...base, nature: 'horsButee', instantDebut: k.t, instantFin: k.t, idImageCle: k.id,
-          message: `Position ${k.v.toFixed(1)}° hors des butées [${piste.min.toFixed(1)}° ; ${piste.max.toFixed(1)}°]`,
-        })
+    // Une piste relative dit de combien bouger, pas où aller : ses butées dépendent de la posture
+    // au lancement, que l'éditeur ne connaît pas. Le robot écrête sur le moment.
+    if (!piste.relative) {
+      let toutesDedans = true
+      for (const k of triees) {
+        if (k.v < piste.min || k.v > piste.max) {
+          toutesDedans = false
+          avertissements.push({
+            ...base, nature: 'horsButee', instantDebut: k.t, instantFin: k.t, idImageCle: k.id,
+            message: `Position ${k.v.toFixed(1)}° hors des butées [${piste.min.toFixed(1)}° ; ${piste.max.toFixed(1)}°]`,
+          })
+        }
       }
-    }
 
-    // Tant qu'une image-clé sort des butées, le dépassement de la courbe n'apprend rien de plus.
-    if (toutesDedans) {
-      const pire = pireDepassement(piste)
-      if (pire) {
-        avertissements.push({
-          ...base, nature: 'depassement', instantDebut: pire.instant, instantFin: pire.instant,
-          message: `La courbe dépasse jusqu'à ${pire.valeur.toFixed(1)}° vers ${pire.instant} ms, hors des butées `
-            + `[${piste.min.toFixed(1)}° ; ${piste.max.toFixed(1)}°], alors que les images-clés y tiennent`,
-        })
+      // Tant qu'une image-clé sort des butées, le dépassement de la courbe n'apprend rien de plus.
+      if (toutesDedans) {
+        const pire = pireDepassement(piste)
+        if (pire) {
+          avertissements.push({
+            ...base, nature: 'depassement', instantDebut: pire.instant, instantFin: pire.instant,
+            message: `La courbe dépasse jusqu'à ${pire.valeur.toFixed(1)}° vers ${pire.instant} ms, hors des butées `
+              + `[${piste.min.toFixed(1)}° ; ${piste.max.toFixed(1)}°], alors que les images-clés y tiennent`,
+          })
+        }
       }
     }
 

@@ -127,6 +127,13 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     private volatile boolean consigneBornee = false;
 
     /**
+     * La course vers une butée lancée par {@link #forward} ou {@link #backward}, tant qu'aucune
+     * autre consigne ne l'a remplacée ; {@code null} sinon. C'est elle qui dit où arrêter le servo
+     * au relâchement de la manette (voir {@link #arreterEnDouceur()}).
+     */
+    private volatile CourseContinue course;
+
+    /**
      * Constructeur d'un moteur Phidget.
      *
      * @param index index du moteur sur le contrôleur
@@ -192,7 +199,22 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
         }
     }
 
+    /**
+     * Dernière consigne envoyée, ou {@code null} si le servo n'en a encore reçu aucune. Ce que vaut
+     * le servo « au repos » bien mieux que {@link #getPositionReelle()} : celle-ci ne se rafraîchit
+     * qu'à l'atteinte d'une cible, et le regard a déjà fait dériver le cou jusqu'en butée en partant
+     * d'elle (voir {@code Regard}).
+     */
+    public Double getPositionCibleOuNull() {
+        try {
+            return rcServo.getTargetPosition();
+        } catch (PhidgetException e) {
+            return null;
+        }
+    }
+
     public void setPositionCible(double position, Double vitesse, Double acceleration, boolean waitForPosition) {
+        course = null;
         CountDownLatch attente = envoyerConsigne(position, vitesse, acceleration);
         // Attente HORS du verrou : la tenir à l'intérieur empêcherait stop() de passer.
         if (waitForPosition && attente != null) {
@@ -246,6 +268,7 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
      * 600 consignes de position perdues sur 1500 — le servo finit ailleurs qu'où on le croit.
      */
     public synchronized void setPositionCible(double position) {
+        course = null;
         try {
             positionAtteinte.set(false);
             rcServo.setTargetPosition(position);
@@ -350,14 +373,61 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     }
 
     public void forward(Double vitesse, Double acceleration, boolean waitForPosition) {
-        setPositionCible(positionMax, vitesse, acceleration, waitForPosition);
+        lancerCourse(positionMax, vitesse, acceleration, waitForPosition);
     }
 
     public void backward(Double vitesse, Double acceleration, boolean waitForPosition) {
-        setPositionCible(positionMin, vitesse, acceleration, waitForPosition);
+        lancerCourse(positionMin, vitesse, acceleration, waitForPosition);
+    }
+
+    /**
+     * Lance le servo vers une butée en retenant d'où et à quelle allure, pour savoir ensuite où il
+     * en est.
+     * <p>
+     * Le départ est la course en cours s'il y en a une — un demi-tour de joystick sans passer par
+     * le neutre — et sinon la dernière cible, qui est bien la position du servo dès lors qu'il l'a
+     * atteinte. Les allures retenues sont celles réellement écrites sur le contrôleur, après
+     * écrêtage, et non celles demandées.
+     * <p>
+     * Le sens se déduit de la butée visée et non de {@code forward} ou {@code backward} : l'œil
+     * droit, monté en miroir, a sa butée « max » sous sa butée « min », et {@code forward} l'y
+     * fait descendre.
+     */
+    private void lancerCourse(double butee, Double vitesse, Double acceleration, boolean waitForPosition) {
+        long maintenant = System.nanoTime();
+        CourseContinue enCours = course;
+        Double depart = enCours != null
+                ? CourseContinue.entre(enCours.positionA(maintenant), positionMin, positionMax)
+                : getPositionCibleOuNull();
+        setPositionCible(butee, vitesse, acceleration, waitForPosition);
+        Double vitesseDeCourse = vitesseEcrite;
+        Double accelerationDeCourse = accelerationEcrite;
+        course = depart == null || vitesseDeCourse == null || accelerationDeCourse == null ? null
+                : new CourseContinue(depart, butee >= depart ? 1 : -1, vitesseDeCourse, accelerationDeCourse, maintenant);
+    }
+
+    /**
+     * Arrête une course vers la butée <b>là où elle en est</b>, en donnant pour cible la position
+     * calculée au lieu de couper la vitesse.
+     * <p>
+     * Couper la vitesse arrêtait bien la tête, mais laissait la butée pour cible : le robot
+     * croyait sa tête en butée alors qu'elle s'était arrêtée à mi-course. Ici le servo freine avec
+     * la même accélération et s'arrête au même endroit, à la distance de freinage près, et la
+     * cible dit enfin où il est.
+     * <p>
+     * Sans course en cours, rien à calculer : c'est l'arrêt sec de {@link #stop()}.
+     */
+    public void arreterEnDouceur() {
+        CourseContinue enCours = course;
+        if (enCours == null) {
+            stop();
+            return;
+        }
+        setPositionCible(enCours.cibleDArretA(System.nanoTime(), positionMin, positionMax));
     }
 
     public void stop() {
+        course = null;
         try {
             rcServo.setVelocityLimit(0);
             // La limite de vitesse reste à 0 sur le contrôleur : on oublie ce qu'on croyait y avoir
@@ -446,6 +516,14 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
     public synchronized void setVitesse(Double vitesse) {
         try {
             ecrireVitesse(vitesse != null ? vitesse : vitesseParDefaut);
+            // Une course dont l'allure change repart d'où elle en est, à la nouvelle allure. La
+            // rampe entre les deux vitesses est ignorée : l'écart reste sous le degré.
+            CourseContinue enCours = course;
+            if (enCours != null && vitesseEcrite != null && vitesseEcrite != enCours.vitesse()) {
+                long maintenant = System.nanoTime();
+                course = new CourseContinue(enCours.positionA(maintenant), enCours.sens(), vitesseEcrite,
+                        enCours.acceleration(), maintenant);
+            }
         } catch (PhidgetException e) {
             logger.error("Servo {} : vitesse {} refusée", index, vitesse, e);
         }

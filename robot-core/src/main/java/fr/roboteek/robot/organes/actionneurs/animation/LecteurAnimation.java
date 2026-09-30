@@ -1,6 +1,8 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
 import fr.roboteek.robot.configuration.Configurations;
+import fr.roboteek.robot.organes.actionneurs.Cou;
+import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
@@ -27,6 +29,8 @@ import java.time.Clock;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.Optional;
 
@@ -94,6 +98,26 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     /** Ce que le curseur a envoyé en dernier, pour ne pas réécrire un axe qui n'a pas bougé. */
     private final Map<Axe, Double> dernieresConsignesCurseur = new EnumMap<>(Axe.class);
 
+    /**
+     * D'où partent les pistes relatives pendant un tirage de curseur. Relevées une fois au début
+     * du tirage et non à chaque position : la position visée est alors celle que le curseur vient
+     * d'envoyer, et repartir d'elle ajouterait l'écart à lui-même jusqu'à la butée.
+     */
+    private final Map<Axe, Double> originesCurseur = new EnumMap<>(Axe.class);
+
+    /**
+     * L'écart que le curseur a laissé sur chaque axe relatif. Sans lui, reprendre le curseur ou
+     * lancer la lecture après l'avoir posé au milieu de la timeline prendrait pour origine une tête
+     * déjà décalée, et le geste se ferait autour du mauvais point.
+     */
+    private final Map<Axe, Double> decalagesEnPlace = new ConcurrentHashMap<>();
+
+    /**
+     * Où chaque axe a été envoyé en dernier, point de départ des pistes relatives ; {@code null}
+     * quand l'organe ne le sait pas. Branché sur le cou et les yeux par {@link #organes}.
+     */
+    private Function<Axe, Double> positionVisee = axe -> null;
+
     private volatile boolean running = false;
 
     private volatile boolean arretUrgence = false;
@@ -137,6 +161,27 @@ public class LecteurAnimation extends AbstractOrganeWithThread
                             @Qualifier(RobotEventsConfig.COU_EVENT_EXECUTOR) ThreadPoolTaskExecutor cou) {
         this.attenteDesOrganes = () -> yeux.getThreadPoolExecutor().getQueue().size()
                 + cou.getThreadPoolExecutor().getQueue().size();
+    }
+
+    /**
+     * Branche le point de départ des pistes relatives sur les organes. {@code required = false}
+     * pour la même raison que {@link #surveillerLesFiles} : un lecteur sans organes joue encore
+     * les pistes absolues.
+     */
+    @Autowired(required = false)
+    void organes(Cou cou, Yeux yeux) {
+        this.positionVisee = axe -> switch (axe) {
+            case COU_GAUCHE_DROITE -> cou.getPositionPanoramiqueVisee();
+            case COU_HAUT_BAS -> cou.getPositionInclinaisonVisee();
+            case COU_MONTER_DESCENDRE -> cou.getPositionMonterDescendreVisee();
+            case OEIL_GAUCHE -> yeux.getPositionOeilGaucheVisee();
+            case OEIL_DROIT -> yeux.getPositionOeilDroitVisee();
+        };
+    }
+
+    /** Pose le point de départ des pistes relatives à la main, pour les tests. */
+    void positionVisee(Function<Axe, Double> positionVisee) {
+        this.positionVisee = positionVisee;
     }
 
     /** Pose la mesure de retard à la main, pour les tests. */
@@ -198,11 +243,15 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
         dernieresConsignesCurseur.clear();
+        Map<Axe, Double> origines = new EnumMap<>(Axe.class);
+        releverLesOrigines(animation, origines);
+        originesCurseur.clear();
+        decalagesEnPlace.clear();
         long depuis = Math.max(0, Math.min(depuisMs, animation.dureeTotale()));
         long attente = pisteSonore != null && pisteSonore.demarrer(animation, depuis) ? pisteSonore.avanceMs() : 0;
         // Relevé APRÈS le lancement de la bande-son : son assemblage prend quelques millisecondes,
         // qui ne doivent pas s'ajouter au décalage entre le son et le geste.
-        lecture = new Lecture(animation, horloge.millis() + attente - depuis, attente);
+        lecture = new Lecture(animation, horloge.millis() + attente - depuis, attente, origines);
         logger.info("Animation « {} » lancée à {} ms ({} ms, {} piste(s), {} son(s){})",
                 animation.nom(), depuis, animation.dureeTotale(), animation.pistes().size(), animation.sons().size(),
                 attente > 0 ? ", mouvement retardé de " + attente + " ms pour le son" : "");
@@ -285,16 +334,50 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         // exemple — est indiscernable d'un curseur qui n'arrive pas.
         if (maintenant - dernierCurseur > FENETRE_CURSEUR_MS) {
             logger.info("Curseur : « {} » suivie à la main", animation.nom());
+            originesCurseur.clear();
         }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
         dernierCurseur = maintenant;
+        // Complète plutôt que remplace : une piste passée relative en plein tirage prend son
+        // origine là où elle en est, les autres gardent la leur.
+        releverLesOrigines(animation, originesCurseur);
 
-        Lecture ponctuelle = new Lecture(animation, 0);
+        Lecture ponctuelle = new Lecture(animation, 0, 0, Map.copyOf(originesCurseur));
         ponctuelle.dernieresConsignes.putAll(dernieresConsignesCurseur);
         Map<Axe, Double> consignes = consignes(ponctuelle, instant);
         dernieresConsignesCurseur.putAll(ponctuelle.dernieresConsignes);
+        consignes.forEach((axe, position) -> {
+            Double origine = originesCurseur.get(axe);
+            if (origine != null) {
+                decalagesEnPlace.put(axe, position - origine);
+            }
+        });
         publier(animation, consignes, instant);
         return true;
+    }
+
+    /**
+     * Relève le point de départ des pistes relatives qui n'en ont pas encore : là où l'axe a été
+     * envoyé, moins l'écart que le curseur y a laissé.
+     * <p>
+     * Une piste dont l'organe ne sait pas dire où il est n'a pas d'origine, et le lecteur ne la
+     * jouera pas : la jouer depuis zéro ramènerait la tête face à l'avant, c'est-à-dire
+     * exactement ce qu'une piste relative existe pour éviter.
+     */
+    private void releverLesOrigines(Animation animation, Map<Axe, Double> origines) {
+        for (Piste piste : animation.pistes()) {
+            Axe axe = piste.axe();
+            if (!piste.relative() || piste.estVide() || origines.containsKey(axe)) {
+                continue;
+            }
+            Double visee = positionVisee.apply(axe);
+            if (visee == null) {
+                logger.warn("Animation « {} » : piste relative {} ignorée, la position de départ de l'axe est inconnue",
+                        animation.nom(), axe.libelle());
+                continue;
+            }
+            origines.put(axe, visee - decalagesEnPlace.getOrDefault(axe, 0.0));
+        }
     }
 
     @Override
@@ -339,6 +422,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             return budgetMs;
         }
         if (instant > enCours.animation.dureeTotale()) {
+            Map<Axe, Double> poseFinale = consignesFinales(enCours);
+            logger.info("Animation « {} » : pose finale {}", enCours.animation.nom(), poseFinale);
+            publier(enCours.animation, poseFinale, enCours.animation.dureeTotale());
             terminer(enCours);
             return budgetMs;
         }
@@ -360,23 +446,48 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     }
 
     /**
-     * Les axes à commander pour cet instant : interpolés, écrêtés aux butées, et privés de ceux
-     * qui n'ont pas assez bougé depuis le tour précédent.
+     * Les axes à commander pour cet instant : interpolés, ramenés à leur origine pour les pistes
+     * relatives, écrêtés aux butées, et privés de ceux qui n'ont pas assez bougé depuis le tour
+     * précédent.
      * <p>
      * Volontairement séparée de la publication et de la boucle : c'est ici que tient la frugalité
      * du lecteur, et elle se vérifie sans thread ni matériel.
      */
     Map<Axe, Double> consignes(Lecture enCours, long instant) {
-        double seuil = Configurations.robotConfig().animationSeuilDegres();
+        return consignes(enCours, instant, Configurations.robotConfig().animationSeuilDegres());
+    }
+
+    /**
+     * La pose de fin, exacte, pour chaque axe qui n'y est pas déjà : sans le seuil de réécriture.
+     * <p>
+     * Le dernier échantillon tombe avant la fin — à 10 Hz, jusqu'à 100 ms avant — et la courbe
+     * n'y est pas encore arrivée. Sur un « non » qui revient de 15° à 0 en 500 ms, il reste
+     * 1,1°. Une animation absolue n'en souffrait guère, la suivante repartant de ses propres
+     * valeurs ; une piste relative repart, elle, d'où la tête s'est arrêtée. Le 2026-09-30,
+     * plusieurs « non » d'affilée ont ainsi fait dériver la tête d'un degré à chaque fois.
+     */
+    Map<Axe, Double> consignesFinales(Lecture enCours) {
+        return consignes(enCours, enCours.animation.dureeTotale(), 0);
+    }
+
+    private Map<Axe, Double> consignes(Lecture enCours, long instant, double seuil) {
         Map<Axe, Double> aCommander = new EnumMap<>(Axe.class);
 
         for (Map.Entry<Axe, Double> entree : Interpolateur.positionsA(enCours.animation, instant).entrySet()) {
             Axe axe = entree.getKey();
+            double voulue = entree.getValue();
+            if (enCours.animation.piste(axe).orElseThrow().relative()) {
+                Double origine = enCours.origines.get(axe);
+                if (origine == null) {
+                    continue;
+                }
+                voulue += origine;
+            }
             LimitesMoteur limitesAxe = limites.get(axe);
-            double position = limitesAxe != null ? limitesAxe.ecreter(entree.getValue()) : entree.getValue();
+            double position = limitesAxe != null ? limitesAxe.ecreter(voulue) : voulue;
 
             Double precedente = enCours.dernieresConsignes.get(axe);
-            if (precedente != null && Math.abs(position - precedente) < seuil) {
+            if (precedente != null && (Math.abs(position - precedente) < seuil || position == precedente)) {
                 continue;
             }
             aCommander.put(axe, position);
@@ -616,6 +727,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         /** Ce que les moteurs attendent la bande-son avant de bouger, en ms ; 0 sans son. */
         private final long attenteDuSon;
 
+        /** Point de départ de chaque piste relative, relevé au lancement. */
+        private final Map<Axe, Double> origines;
+
         /** Dernière consigne envoyée à chaque axe, pour ne pas réécrire ce qui n'a pas bougé. */
         private final Map<Axe, Double> dernieresConsignes = new EnumMap<>(Axe.class);
 
@@ -635,9 +749,14 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
 
         Lecture(Animation animation, long instantDebut, long attenteDuSon) {
+            this(animation, instantDebut, attenteDuSon, Map.of());
+        }
+
+        Lecture(Animation animation, long instantDebut, long attenteDuSon, Map<Axe, Double> origines) {
             this.animation = animation;
             this.instantDebut = instantDebut;
             this.attenteDuSon = attenteDuSon;
+            this.origines = origines;
         }
     }
 }

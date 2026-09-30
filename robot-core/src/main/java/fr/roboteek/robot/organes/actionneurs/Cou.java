@@ -329,7 +329,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
 
     /** Stoppe le mouvement de la tête sur le plan "Gauche / Droite". */
     public void stopperTeteGaucheDroite() {
-        moteurPanoramique.stop();
+        moteurPanoramique.arreterEnDouceur();
         mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
     }
 
@@ -388,7 +388,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /** Stoppe le mouvement de la tête sur le plan "Haut / Bas". */
     public void stopperTeteHautBas() {
         logger.debug("STOP HAUT BAS");
-        moteurInclinaison.stop();
+        moteurInclinaison.arreterEnDouceur();
         mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
     }
 
@@ -447,7 +447,7 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
     /** Stoppe le mouvement de la tête sur le plan "Monter - Descendre". */
     public void stopperTeteMonterDescendre() {
         logger.debug("STOP MonterDescendre");
-        moteurMonterDescendre.stop();
+        moteurMonterDescendre.arreterEnDouceur();
         mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
     }
 
@@ -524,9 +524,14 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
             return;
         }
         logger.warn("Cou : arrêt d'urgence, coupure des moteurs");
-        stopperTeteGaucheDroite();
-        stopperTeteHautBas();
-        stopperTeteMonterDescendre();
+        // Coupure sèche, et non l'arrêt calculé de la manette : en urgence, on n'envoie aucune
+        // consigne de position, même pour s'arrêter.
+        moteurPanoramique.stop();
+        moteurInclinaison.stop();
+        moteurMonterDescendre.stop();
+        mouvementsPanoramiqueEnCours = MOUVEMENTS_PANORAMIQUE.STOPPER;
+        mouvementsInclinaisonEnCours = MOUVEMENTS_INCLINAISON.STOPPER;
+        mouvementsMonterDescendreEnCours = MOUVEMENTS_MONTER_DESCENDRE.STOPPER;
     }
 
     @Override
@@ -668,6 +673,33 @@ public class Cou extends AbstractOrgane implements SmartLifecycle, OrganeSurveil
         }
         Double reelle = moteurMonterDescendre.getPositionReelleOuNull();
         return reelle == null ? null : transmissionMonterDescendre.depuisMoteur(reelle);
+    }
+
+    /**
+     * Où le cou a été envoyé en dernier, axe par axe, dans le repère logique ; {@code null} si
+     * l'organe n'est pas démarré ou que l'axe n'a encore rien reçu. C'est le point de départ d'une
+     * piste d'animation relative (voir {@link PhidgetsServoMotor#getPositionCibleOuNull()}).
+     */
+    public Double getPositionPanoramiqueVisee() {
+        return visee(moteurPanoramique, transmissionPanoramique);
+    }
+
+    /** Voir {@link #getPositionPanoramiqueVisee()}. */
+    public Double getPositionInclinaisonVisee() {
+        return visee(moteurInclinaison, transmissionInclinaison);
+    }
+
+    /** Voir {@link #getPositionPanoramiqueVisee()}. */
+    public Double getPositionMonterDescendreVisee() {
+        return visee(moteurMonterDescendre, transmissionMonterDescendre);
+    }
+
+    private Double visee(PhidgetsServoMotor moteur, Transmission transmission) {
+        if (!running || moteur == null) {
+            return null;
+        }
+        Double cible = moteur.getPositionCibleOuNull();
+        return cible == null ? null : transmission.depuisMoteur(cible);
     }
 
     /**

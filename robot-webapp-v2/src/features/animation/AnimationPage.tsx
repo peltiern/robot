@@ -5,7 +5,7 @@ import { Timeline }        from './components/Timeline'
 import { PropertiesPanel } from './components/PropertiesPanel'
 import { LibraryPanel }    from './components/LibraryPanel'
 import { PanneauAvertissements } from './components/PanneauAvertissements'
-import { toAnimation, versEtapesEditeur, versSonsEditeur } from './utils/convert'
+import { toAnimation, versEtapesEditeur, versPistesRelatives, versSonsEditeur } from './utils/convert'
 import { couperLeNavigateur, jouerDansLeNavigateur, useSonsAtelier } from './utils/sonsAtelier'
 import { animationApi }    from '../../shared/api/animationApi'
 import { bibliotheque, exporterFichier } from './utils/bibliotheque'
@@ -40,6 +40,10 @@ export function AnimationPage() {
   const ws         = useWebSocketStore()
   const rafRef     = useRef<number | null>(null)
   const dernierCurseurRef = useRef<number>(0)
+  // L'instant du curseur tel qu'à l'arrivée sur la page : l'effet qui suit le curseur s'exécute
+  // aussi au montage, et renvoyait alors au robot la pose de l'animation ouverte. Le 2026-09-30,
+  // chaque retour du Pilotage vers l'Atelier remettait ainsi la tête face à l'avant.
+  const dernierInstantEnvoyeRef = useRef<number>(useAnimationStore.getState().playhead)
 
   // Charger les définitions de tracks depuis le backend au montage
   useEffect(() => { store.loadTracksFromBackend() }, [])
@@ -230,9 +234,11 @@ export function AnimationPage() {
   // de souris — l'animation entière voyage à chaque envoi.
   useEffect(() => {
     if (store.playing || !ws.connected || !store.surRobot) return
+    if (store.playhead === dernierInstantEnvoyeRef.current) return
     const maintenant = performance.now()
     if (maintenant - dernierCurseurRef.current < PERIODE_CURSEUR_MS) return
     dernierCurseurRef.current = maintenant
+    dernierInstantEnvoyeRef.current = store.playhead
     ws.deplacerCurseur(animationPourLeRobot(), store.playhead)
   }, [store.playhead])
 
@@ -316,7 +322,8 @@ export function AnimationPage() {
   }
 
   function handleLoadFromLibrary(anim: Animation) {
-    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs, versSonsEditeur(anim), anim.emotion ?? null)
+    store.chargerEtapes(versEtapesEditeur(anim), anim.dureeTotale ?? store.totalMs, versSonsEditeur(anim), anim.emotion ?? null,
+      versPistesRelatives(anim))
     store.setAnimationName(anim.nom)
   }
 
