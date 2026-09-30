@@ -351,7 +351,9 @@ public class PhidgetsServoMotor implements AttachListener, DetachListener, RCSer
      */
     public void rotate(double angle, Double vitesse, Double acceleration, boolean waitForPosition) {
         double demande = getPositionReelle() + angle;
-        double cible = Math.clamp(demande, positionMin, positionMax);
+        // Et non Math.clamp, qui lève sur l'œil droit : monté en miroir, sa butée « min » est la
+        // plus grande (voir CourseContinue.entre).
+        double cible = CourseContinue.entre(demande, positionMin, positionMax);
         // Sans ces lignes, un servo collé à sa butée est indiscernable d'un servo qui obéit mal :
         // l'appelant redemande, rien ne bouge, et rien ne le dit. Vu sur le cou,
         // vingt consignes de suite dans le vide, prises pour un défaut de réglage.
