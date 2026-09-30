@@ -738,9 +738,13 @@ export function Timeline() {
                   </label>
                 </div>
                 <div className={styles.tlRange}>
-                  {tr.relative ? 'écart au départ' : `${auDixieme(tr.min)}° / ${auDixieme(tr.max)}°`}
+                  {tr.relative ? 'piste relative' : `${auDixieme(tr.min)}° / ${auDixieme(tr.max)}°`}
                 </div>
-                <div className={styles.tlVal}>{v.toFixed(1)}°</div>
+                {/* Relative, la valeur n'est pas une position : « 3,9° » se lisait comme l'endroit où
+                    était la tête, alors que c'est de combien elle s'est écartée de son départ. */}
+                <div className={styles.tlVal}>
+                  {tr.relative ? `départ ${v < 0 ? '−' : '+'}${Math.abs(v).toFixed(1)}°` : `${v.toFixed(1)}°`}
+                </div>
               </div>
             )
           })}
