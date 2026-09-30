@@ -100,6 +100,33 @@ class BibliothequeDesAnimationsTest {
             assertEquals(null, bibliotheque.charger("Ancienne").orElseThrow().emotion());
         }
 
+        /**
+         * Les pistes écrites avant les pistes relatives n'ont pas le champ : elles doivent se
+         * relire absolues. Lues relatives, elles feraient leur geste autour de la tête au lieu d'y
+         * amener la tête.
+         */
+        @Test
+        void unePisteSansLeChampRelativeSeRelitAbsolue() throws IOException {
+            Files.writeString(dossier.resolve("Ancienne.json"), """
+                    {"nom":"Ancienne","dureeTotale":1000,"version":2,"sons":[],"pistes":[
+                      {"axe":"COU_GAUCHE_DROITE","vitesseParDefaut":40,"accelerationParDefaut":200,
+                       "imagesCles":[{"instant":0,"valeur":0}]}]}
+                    """);
+
+            assertFalse(bibliotheque.charger("Ancienne").orElseThrow().pistes().getFirst().relative());
+        }
+
+        @Test
+        void unePisteRelativeSeRelit() throws IOException {
+            Files.writeString(dossier.resolve("Non.json"), """
+                    {"nom":"Non","dureeTotale":1000,"version":2,"sons":[],"pistes":[
+                      {"axe":"COU_GAUCHE_DROITE","vitesseParDefaut":40,"accelerationParDefaut":200,"relative":true,
+                       "imagesCles":[{"instant":0,"valeur":0}]}]}
+                    """);
+
+            assertTrue(bibliotheque.charger("Non").orElseThrow().pistes().getFirst().relative());
+        }
+
         /** Une émotion retirée de la liste un jour ne doit pas faire disparaître l'animation. */
         @Test
         void uneEmotionInconnueLaisseLAnimationLisible() throws IOException {

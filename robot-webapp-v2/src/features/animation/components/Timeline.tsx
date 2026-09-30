@@ -729,8 +729,17 @@ export function Timeline() {
                     <span className={styles.dot} style={{ background: tr.enabled ? tr.color : '#444' }} />
                   </button>
                   {tr.name}
+                  <label
+                    className={styles.caseRelative}
+                    title="Relative : les valeurs sont des écarts à la position de l'axe au lancement (un « non » de la tête là où le regard l'a tournée)"
+                  >
+                    <input type="checkbox" checked={tr.relative} onChange={() => store.basculerRelative(tr.id)} />
+                    rel.
+                  </label>
                 </div>
-                <div className={styles.tlRange}>{auDixieme(tr.min)}° / {auDixieme(tr.max)}°</div>
+                <div className={styles.tlRange}>
+                  {tr.relative ? 'écart au départ' : `${auDixieme(tr.min)}° / ${auDixieme(tr.max)}°`}
+                </div>
                 <div className={styles.tlVal}>{v.toFixed(1)}°</div>
               </div>
             )

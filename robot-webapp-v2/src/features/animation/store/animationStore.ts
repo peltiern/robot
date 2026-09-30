@@ -19,6 +19,8 @@ export interface EditorTrack {
   max: number
   color: string
   enabled: boolean
+  /** Les valeurs sont des écarts à la position de l'axe au lancement (voir Piste.relative). */
+  relative: boolean
   defaultVelocity: number
   defaultAcceleration: number
   kfs: EditorKeyframe[]
@@ -61,6 +63,7 @@ function buildEditorTracks(defs: AxeAnimable[], totalMs: number): EditorTrack[] 
     name:    def.libelle ?? def.id,
     color:   colors[def.id],
     enabled: true,
+    relative: false,
     min: def.positionMin,
     max: def.positionMax,
     defaultVelocity:     def.vitesseParDefaut,
@@ -175,7 +178,8 @@ export interface AnimationEditorState {
   // Actions — animation
   setAnimationName:       (n: string) => void
   toggleTrack:            (trackId: Axe) => void
-  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number, sons?: EditorSon[], emotion?: Emotion | null) => void
+  basculerRelative:       (trackId: Axe) => void
+  chargerEtapes:          (steps: Array<{ t: number; vals: Partial<Record<Axe, number>> }>, totalMs: number, sons?: EditorSon[], emotion?: Emotion | null, relatives?: Axe[]) => void
   reset:                  () => void
   /** Corrige ce qu'un avertissement signale ; une édition comme une autre, donc annulable. */
   corrigerAvertissement:  (avertissement: Avertissement) => void
@@ -416,7 +420,16 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
       }))
     },
 
-    chargerEtapes(steps, totalMs, sons = [], emotion = null) {
+    basculerRelative(trackId) {
+      pushSnapshot()
+      set(s => ({
+        tracks: s.tracks.map(t =>
+          t.id === trackId ? { ...t, relative: !t.relative } : t
+        ),
+      }))
+    },
+
+    chargerEtapes(steps, totalMs, sons = [], emotion = null, relatives = []) {
       pushSnapshot()
       const currentDefs = get().tracks.map(versAxeAnimable)
       const tracks = buildEditorTracks(currentDefs, totalMs)
@@ -432,6 +445,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
         })
       })
       tracks.forEach(tr => {
+        tr.relative = relatives.includes(tr.id)
         if (tr.kfs.length < 2) {
           tr.kfs = [{ id: uid(), t: 0, v: 0 }, { id: uid(), t: totalMs, v: 0 }]
         }
@@ -452,7 +466,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
         const { totalMs, tracks: current } = get()
         const updated = buildEditorTracks(defs, totalMs).map(newTrack => {
           const existing = current.find(t => t.id === newTrack.id)
-          return existing ? { ...newTrack, kfs: existing.kfs, enabled: existing.enabled } : newTrack
+          return existing ? { ...newTrack, kfs: existing.kfs, enabled: existing.enabled, relative: existing.relative } : newTrack
         })
         set({ tracks: updated })
       } catch {

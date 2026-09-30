@@ -24,6 +24,7 @@ export function toAnimation(
       axe: t.id as Axe,
       vitesseParDefaut: t.defaultVelocity,
       accelerationParDefaut: t.defaultAcceleration,
+      relative: t.relative,
       imagesCles: [...t.kfs]
         .sort((a, b) => a.t - b.t)
         .map(kf => ({ instant: kf.t, valeur: kf.v })),
@@ -62,6 +63,11 @@ export function versEtapesEditeur(animation: Animation) {
   return [...parInstant.entries()]
     .sort((a, b) => a[0] - b[0])
     .map(([t, vals]) => ({ t, vals }))
+}
+
+/** Les axes dont la piste est relative, pour que l'éditeur rouvre l'animation telle qu'écrite. */
+export function versPistesRelatives(animation: Animation): Axe[] {
+  return (animation.pistes ?? []).filter(p => p.relative).map(p => p.axe)
 }
 
 /**

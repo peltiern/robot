@@ -30,6 +30,8 @@ export interface Piste {
   vitesseParDefaut: number
   accelerationParDefaut: number
   imagesCles: ImageCle[]
+  relative?: boolean       // valeurs = écarts à la position de l'axe au lancement, et non positions :
+                           // un « non » de la tête là où le regard l'a tournée. Absent = absolue
 }
 
 /**

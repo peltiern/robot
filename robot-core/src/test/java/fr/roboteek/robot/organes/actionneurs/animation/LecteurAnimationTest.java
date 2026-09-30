@@ -52,6 +52,26 @@ class LecteurAnimationTest {
         return new Piste(axe, VITESSE, ACCELERATION, List.of(imagesCles));
     }
 
+    private static Piste pisteRelative(Axe axe, ImageCle... imagesCles) {
+        return new Piste(axe, VITESSE, ACCELERATION, List.of(imagesCles), true);
+    }
+
+    /** Un « non » de la tête : quinze degrés de part et d'autre, retour au point de départ. */
+    private static Animation non() {
+        return new Animation("Non", 1500, List.of(
+                pisteRelative(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(500, -15),
+                        new ImageCle(1000, 15), new ImageCle(1500, 0))), List.of());
+    }
+
+    /**
+     * Une tête tenue sans bouger : la lecture sur le bus prend son premier échantillon quand le
+     * thread passe, jamais pile à zéro, et seul un palier donne une position qui n'en dépend pas.
+     */
+    private static Animation immobile() {
+        return new Animation("Immobile", 2000, List.of(
+                pisteRelative(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(2000, 0))), List.of());
+    }
+
     private LecteurAnimation lecteurCable() {
         LecteurAnimation lecteur = new LecteurAnimation(horloge);
         lecteur.limites(limitesDuRobot());
@@ -111,6 +131,67 @@ class LecteurAnimationTest {
                     assertTrue(position <= 20, "Position hors butée à " + instant + " ms : " + position);
                 }
             }
+        }
+    }
+
+    @Nested
+    class PistesRelatives {
+
+        /** Tout l'objet des pistes relatives : secouer la tête sans la ramener d'abord face à l'avant. */
+        @Test
+        void unNonSeFaitAutourDeLaTeteDejaTournee() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(non(), 0, 0, Map.of(Axe.COU_GAUCHE_DROITE, 40.0));
+
+            assertEquals(40, lecteur.consignes(lecture, 0).get(Axe.COU_GAUCHE_DROITE), 0.001);
+            assertEquals(25, lecteur.consignes(lecture, 500).get(Axe.COU_GAUCHE_DROITE), 0.001);
+            assertEquals(55, lecteur.consignes(lecture, 1000).get(Axe.COU_GAUCHE_DROITE), 0.001);
+            assertEquals(40, lecteur.consignes(lecture, 1500).get(Axe.COU_GAUCHE_DROITE), 0.001);
+        }
+
+        /**
+         * Le dernier échantillon tombe avant la fin, là où la courbe n'est pas encore revenue :
+         * sans la pose finale, chaque « non » laissait la tête un degré à côté, et le suivant
+         * repartait de là.
+         */
+        @Test
+        void laFinRameneExactementAuPointDeDepart() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(non(), 0, 0, Map.of(Axe.COU_GAUCHE_DROITE, 40.0));
+            double avantLaFin = lecteur.consignes(lecture, 1450).get(Axe.COU_GAUCHE_DROITE);
+
+            assertTrue(Math.abs(avantLaFin - 40) > 0.3, "le dernier échantillon doit être encore en chemin : " + avantLaFin);
+            assertEquals(Map.of(Axe.COU_GAUCHE_DROITE, 40.0), lecteur.consignesFinales(lecture));
+        }
+
+        /** Un axe déjà sur sa pose de fin ne coûte pas une écriture de plus. */
+        @Test
+        void unAxeDejaArriveNEstPasReecritALaFin() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(non(), 0, 0, Map.of(Axe.COU_GAUCHE_DROITE, 40.0));
+            lecteur.consignes(lecture, 1500);
+
+            assertEquals(Map.of(), lecteur.consignesFinales(lecture));
+        }
+
+        /** Près d'une butée, le côté qui dépasse est écrêté : le geste devient asymétrique, la mécanique est sauve. */
+        @Test
+        void lEcartEstEcreteAuxButees() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(non(), 0, 0, Map.of(Axe.COU_GAUCHE_DROITE, 55.0));
+
+            assertEquals(60, lecteur.consignes(lecture, 1000).get(Axe.COU_GAUCHE_DROITE), 0.001);
+        }
+
+        /**
+         * Sans point de départ, la piste n'est pas jouée du tout : la jouer depuis zéro ramènerait
+         * la tête face à l'avant, ce que la piste relative existe pour éviter.
+         */
+        @Test
+        void unePisteSansOrigineNEstPasJouee() {
+            LecteurAnimation lecteur = lecteurCable();
+
+            assertEquals(Map.of(), lecteur.consignes(new LecteurAnimation.Lecture(non(), 0), 1000));
         }
     }
 
@@ -354,6 +435,48 @@ class LecteurAnimationTest {
             assertTrue(lecteur.animationEnCours().isEmpty(), "la lecture ne doit plus écrire par-dessus");
         }
 
+        /** Le point de départ est relevé sur l'organe au lancement, là où il a été envoyé en dernier. */
+        @Test
+        void laLecturePartDeLaPositionDuCou() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            lecteur.positionVisee(axe -> 40.0);
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+
+            lecteur.jouer(immobile());
+
+            assertEquals(40, premierCou(recus).getPositionPanoramique(), 0.001);
+        }
+
+        /**
+         * Le curseur relève l'origine une fois par tirage. La relever à chaque position partirait
+         * de celle qu'il vient d'envoyer, et l'écart s'ajouterait à lui-même jusqu'à la butée. Et
+         * la lecture lancée ensuite retire l'écart laissé par le curseur : elle se fait autour du
+         * même point.
+         */
+        @Test
+        void leCurseurNAccumulePasLesEcarts() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+            // Un cou fidèle : il est là où on l'a envoyé en dernier, et à 40° au départ
+            double[] cou = {40};
+            lecteur.positionVisee(axe -> recus.cou.isEmpty() ? cou[0] : (cou[0] = recus.cou.getLast().getPositionPanoramique()));
+
+            lecteur.positionner(non(), 500);
+            Thread.sleep(150);
+            lecteur.positionner(non(), 1000);
+            attendre(() -> recus.cou.size() == 2);
+            assertEquals(55, recus.cou.getLast().getPositionPanoramique(), 0.001,
+                    "le second tirage doit partir de la même origine que le premier");
+            cou[0] = recus.cou.getLast().getPositionPanoramique();
+            recus.cou.clear();
+            lecteur.jouer(immobile());
+
+            assertEquals(40, premierCou(recus).getPositionPanoramique(), 0.001,
+                    "la lecture doit repartir du point d'origine, et non de la tête décalée par le curseur");
+        }
+
         /** Une animation arrêtée en urgence est perdue : la reprendre après réarmement ferait repartir la tête seule. */
         @Test
         void lArretDUrgenceAbandonneLAnimation() {
@@ -387,6 +510,19 @@ class LecteurAnimationTest {
         } finally {
             contexte.close();
         }
+    }
+
+    private static MouvementCouEvent premierCou(MouvementsRecus recus) throws InterruptedException {
+        attendre(() -> !recus.cou.isEmpty());
+        return recus.cou.getFirst();
+    }
+
+    private static void attendre(java.util.function.BooleanSupplier condition) throws InterruptedException {
+        long limite = System.currentTimeMillis() + 5000;
+        while (!condition.getAsBoolean() && System.currentTimeMillis() < limite) {
+            Thread.sleep(10);
+        }
+        assertTrue(condition.getAsBoolean(), "la condition attendue ne s'est pas produite");
     }
 
     @Component

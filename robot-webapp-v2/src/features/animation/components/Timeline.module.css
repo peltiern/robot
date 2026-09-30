@@ -97,6 +97,18 @@
 }
 .trackToggle:hover { opacity: 0.7; }
 
+.caseRelative {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--dim);
+  cursor: pointer;
+}
+.caseRelative input { margin: 0; cursor: pointer; }
+
 .canvasWrap {
   flex: none;
   overflow: hidden;

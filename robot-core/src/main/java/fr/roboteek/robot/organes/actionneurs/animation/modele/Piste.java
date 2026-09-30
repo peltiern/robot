@@ -11,10 +11,20 @@ import java.util.List;
  * @param vitesseParDefaut       vitesse en °/s appliquée aux images-clés qui n'en portent pas
  * @param accelerationParDefaut  accélération en °/s² appliquée de même
  * @param imagesCles             les points posés, <b>toujours triés par instant croissant</b>
+ * @param relative               vrai si les valeurs sont des <b>écarts</b> à la position qu'a l'axe
+ *                               quand l'animation part, et non des positions : c'est ce qui permet
+ *                               de faire « non » de la tête sans la ramener d'abord face à l'avant,
+ *                               là où le regard l'a tournée. Facultatif, donc sans changement de
+ *                               version : une piste écrite avant se relit absolue, comme avant
  */
-public record Piste(Axe axe, double vitesseParDefaut, double accelerationParDefaut, List<ImageCle> imagesCles) {
+public record Piste(Axe axe, double vitesseParDefaut, double accelerationParDefaut, List<ImageCle> imagesCles,
+                    Boolean relative) {
 
     public Piste {
+        // Boolean et non boolean : Jackson refuse de lire un primitif absent, et c'est alors
+        // toute animation écrite avant ce champ qui devenait illisible. Jamais null une fois
+        // construite, pour qu'aucun appelant n'ait à y penser.
+        relative = Boolean.TRUE.equals(relative);
         // Tri fait une fois ici, et non à chaque lecture : l'interpolation cherche l'intervalle qui
         // encadre un instant en parcourant la liste dans l'ordre, et une piste qui arrive du réseau
         // n'offre aucune garantie là-dessus. Copie immuable au passage — une piste circule entre le
@@ -22,6 +32,11 @@ public record Piste(Axe axe, double vitesseParDefaut, double accelerationParDefa
         imagesCles = imagesCles == null
                 ? List.of()
                 : imagesCles.stream().sorted(Comparator.comparingLong(ImageCle::instant)).toList();
+    }
+
+    /** Une piste absolue, la forme de toutes celles écrites avant les pistes relatives. */
+    public Piste(Axe axe, double vitesseParDefaut, double accelerationParDefaut, List<ImageCle> imagesCles) {
+        this(axe, vitesseParDefaut, accelerationParDefaut, imagesCles, false);
     }
 
     /** Vitesse à tenir pour rejoindre cette image-clé : la sienne si elle en porte une, sinon celle de la piste. */
