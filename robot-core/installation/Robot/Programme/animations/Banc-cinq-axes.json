@@ -4,89 +4,104 @@
   "pistes": [
     {
       "axe": "COU_GAUCHE_DROITE",
-      "vitesseParDefaut": 63.0,
-      "accelerationParDefaut": 317.0,
+      "vitesseParDefaut": 150,
+      "accelerationParDefaut": 800,
       "imagesCles": [
         {
           "instant": 0,
-          "valeur": 0.0
+          "valeur": 0
         },
         {
           "instant": 1500,
-          "valeur": 47.49
+          "valeur": 30
         },
         {
-          "instant": 3000,
-          "valeur": 0.0
+          "instant": 2500,
+          "valeur": -30
         },
         {
-          "instant": 4500,
-          "valeur": -47.49
+          "instant": 3200,
+          "valeur": 30
+        },
+        {
+          "instant": 3900,
+          "valeur": -30
         },
         {
           "instant": 6000,
-          "valeur": 0.0
+          "valeur": 0
         }
-      ]
+      ],
+      "relative": false
     },
     {
       "axe": "COU_HAUT_BAS",
-      "vitesseParDefaut": 50.0,
-      "accelerationParDefaut": 994.0,
+      "vitesseParDefaut": 100,
+      "accelerationParDefaut": 994,
       "imagesCles": [
         {
           "instant": 0,
-          "valeur": 0.0
+          "valeur": 0
         },
         {
           "instant": 1500,
-          "valeur": 24.85
+          "valeur": 15
         },
         {
-          "instant": 3000,
-          "valeur": 0.0
+          "instant": 2500,
+          "valeur": -15
         },
         {
-          "instant": 4500,
-          "valeur": -24.85
+          "instant": 3200,
+          "valeur": 15
+        },
+        {
+          "instant": 3900,
+          "valeur": -15
         },
         {
           "instant": 6000,
-          "valeur": 0.0
+          "valeur": 0
         }
-      ]
+      ],
+      "relative": false
     },
     {
       "axe": "COU_MONTER_DESCENDRE",
-      "vitesseParDefaut": 100.0,
-      "accelerationParDefaut": 200.0,
+      "vitesseParDefaut": 100,
+      "accelerationParDefaut": 500,
       "imagesCles": [
         {
           "instant": 0,
-          "valeur": 0.0
+          "valeur": 0
         },
         {
           "instant": 1500,
-          "valeur": 12.0
+          "valeur": 10
         },
         {
-          "instant": 3000,
-          "valeur": 0.0
+          "instant": 2500,
+          "valeur": 0
         },
         {
-          "instant": 4500,
-          "valeur": 12.0
+          "instant": 3200,
+          "valeur": 12
+        },
+        {
+          "instant": 3900,
+          "valeur": 2
         },
         {
           "instant": 6000,
-          "valeur": 0.0
+          "valeur": 0
         }
-      ]
+      ],
+      "relative": false
     },
     {
       "axe": "OEIL_GAUCHE",
-      "vitesseParDefaut": 79.0,
-      "accelerationParDefaut": 119.0,
+      "vitesseParDefaut": 200,
+      "accelerationParDefaut": 600,
       "imagesCles": [
         {
           "instant": 0,
@@ -94,26 +109,31 @@
         },
         {
           "instant": 1500,
-          "valeur": 3.0
+          "valeur": 3
         },
         {
-          "instant": 3000,
-          "valeur": -19.62
+          "instant": 2500,
+          "valeur": -20
         },
         {
-          "instant": 4500,
-          "valeur": 3.0
+          "instant": 3200,
+          "valeur": 3
+        },
+        {
+          "instant": 3900,
+          "valeur": -20
         },
         {
           "instant": 6000,
           "valeur": -14.73
         }
-      ]
+      ],
+      "relative": false
     },
     {
       "axe": "OEIL_DROIT",
-      "vitesseParDefaut": 79.0,
-      "accelerationParDefaut": 119.0,
+      "vitesseParDefaut": 200,
+      "accelerationParDefaut": 600,
       "imagesCles": [
         {
           "instant": 0,
@@ -121,23 +141,29 @@
         },
         {
           "instant": 1500,
-          "valeur": -19.62
+          "valeur": -20
         },
         {
-          "instant": 3000,
-          "valeur": 3.0
+          "instant": 2500,
+          "valeur": 3
         },
         {
-          "instant": 4500,
-          "valeur": -19.62
+          "instant": 3200,
+          "valeur": -20
+        },
+        {
+          "instant": 3900,
+          "valeur": 3
         },
         {
           "instant": 6000,
           "valeur": -14.73
         }
-      ]
+      ],
+      "relative": false
     }
   ],
   "sons": [],
-  "version": 2
+  "version": 2,
+  "emotion": null
 }

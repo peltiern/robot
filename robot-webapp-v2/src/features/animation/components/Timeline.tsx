@@ -737,6 +737,10 @@ export function Timeline() {
                     rel.
                   </label>
                 </div>
+                {/* Des plafonds : le robot tire la vitesse des images-clés, sans jamais dépasser ceux-là. */}
+                <div className={styles.tlRange} title="Plafonds du robot : la vitesse réelle se déduit des images-clés">
+                  max {Math.round(tr.defaultVelocity)} °/s · {Math.round(tr.defaultAcceleration)} °/s²
+                </div>
                 <div className={styles.tlRange}>
                   {tr.relative ? 'piste relative' : `${auDixieme(tr.min)}° / ${auDixieme(tr.max)}°`}
                 </div>

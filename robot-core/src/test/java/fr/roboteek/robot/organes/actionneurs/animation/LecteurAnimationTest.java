@@ -1,5 +1,6 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
+import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.ImageCle;
@@ -195,6 +196,72 @@ class LecteurAnimationTest {
         }
     }
 
+    /**
+     * La vitesse se déduit des images-clés : le robot fait le geste à l'allure où il est dessiné,
+     * et {@code robot.properties} n'en donne que le plafond — ici 40 °/s au panoramique.
+     */
+    @Nested
+    class Allure {
+
+        private double vitesseA(LecteurAnimation lecteur, LecteurAnimation.Lecture lecture, long instant) {
+            lecteur.consignes(lecture, instant);
+            return lecture.vitesses.get(Axe.COU_GAUCHE_DROITE);
+        }
+
+        /** Le même écart de 10° en 2 s ou en 0,4 s : deux allures, sans rien régler. */
+        @Test
+        void unGesteDessineLentEstJoueLentEtUnGesteSerreEstJoueVite() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lent = new LecteurAnimation.Lecture(new Animation("Lent", 2000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(2000, 10))), List.of()), 0);
+            LecteurAnimation.Lecture vif = new LecteurAnimation.Lecture(new Animation("Vif", 400, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(400, 10))), List.of()), 0);
+            lecteur.consignes(lent, 0);
+            lecteur.consignes(vif, 0);
+
+            // Mi-course dans les deux cas, 5° parcourus : en 1 s, puis en 0,2 s, marge de 1,2
+            assertEquals(6, vitesseA(lecteur, lent, 1000), 1e-6);
+            assertEquals(30, vitesseA(lecteur, vif, 200), 1e-6);
+        }
+
+        /** Le premier échantillon n'a pas de précédent : rien ne dit en combien de temps y aller. */
+        @Test
+        void sansConsignePrecedenteCEstLePlafond() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(non(), 0, 0, Map.of(Axe.COU_GAUCHE_DROITE, 0.0));
+
+            assertEquals(40, vitesseA(lecteur, lecture, 0), 1e-6);
+        }
+
+        /** Une courbe plus rapide que le servo est jouée au plafond : l'Atelier l'a signalé « trop rapide ». */
+        @Test
+        void laVitesseNeDepassePasLePlafond() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(new Animation("Brusque", 400, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(400, 40))), List.of()), 0);
+            lecteur.consignes(lecture, 0);
+
+            assertEquals(40, vitesseA(lecteur, lecture, 200), 1e-6);
+        }
+
+        /**
+         * Chaque écriture de vitesse coûte une écriture USB. Une vitesse qui suffit sans être trop
+         * large est rendue telle quelle, et {@code PhidgetsServoMotor} ne la réécrit pas.
+         */
+        @Test
+        void uneVitesseQuiConvientEncoreEstGardee() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(new Animation("Lent", 2000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(2000, 10))), List.of()), 0);
+            lecteur.consignes(lecture, 0);
+            lecteur.consignes(lecture, 1000);
+            double aMiCourse = vitesseA(lecteur, lecture, 1100);
+
+            assertEquals(aMiCourse, vitesseA(lecteur, lecture, 1200),
+                    "la courbe demande à peine moins : la vitesse écrite doit être gardée");
+        }
+    }
+
     @Nested
     class Frugalite {
 
@@ -269,7 +336,10 @@ class LecteurAnimationTest {
             assertFalse(recus.cou.isEmpty(), "Aucun mouvement de cou publié");
             assertFalse(recus.yeux.isEmpty(), "Aucun mouvement d'yeux publié");
             MouvementCouEvent cou = recus.cou.getFirst();
-            assertEquals(VITESSE, cou.getVitessePanoramique());
+            // Le premier échantillon part au plafond du robot, relu par jouer() : la vitesse
+            // écrite dans le fichier n'est plus qu'une copie périmée, que le lecteur ignore.
+            double plafond = LimitesMoteur.parAxe(Configurations.phidgetsConfig()).get(Axe.COU_GAUCHE_DROITE).vitesseMax();
+            assertEquals(plafond, cou.getVitessePanoramique(), 1e-6);
             assertEquals(MouvementCouEvent.POSITION_NEUTRE, cou.getPositionInclinaison(),
                     "Un axe non animé doit rester neutre, sinon le cou le déplacerait");
         }
@@ -404,6 +474,30 @@ class LecteurAnimationTest {
 
             assertEquals(1, apresLaRafale, "vingt envois d'affilée ne doivent produire qu'une écriture");
             assertEquals(2, recus.cou.size(), "le curseur reprend une fois la cadence écoulée");
+        }
+
+        /**
+         * La tête suit la main et non la timeline : l'écart d'instants entre deux envois ne dit
+         * rien, seul compte ce qui a été parcouru depuis l'envoi précédent, à rejoindre avant le
+         * suivant. Le premier envoi d'un tirage part au plafond.
+         */
+        @Test
+        void leCurseurDonneLAllureDeLaMain() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+            Animation animation = new Animation("Brouillon", 4000, List.of(
+                    piste(Axe.COU_GAUCHE_DROITE, new ImageCle(0, 0), new ImageCle(4000, 40))), List.of());
+            double plafond = LimitesMoteur.parAxe(Configurations.phidgetsConfig()).get(Axe.COU_GAUCHE_DROITE).vitesseMax();
+
+            lecteur.positionner(animation, 1000);
+            Thread.sleep(150);
+            lecteur.positionner(animation, 1100);
+            attendre(() -> recus.cou.size() == 2);
+
+            double parcouru = Interpolateur.valeurA(animation.pistes().getFirst(), 1100)
+                    - Interpolateur.valeurA(animation.pistes().getFirst(), 1000);
+            assertEquals(plafond, recus.cou.getFirst().getVitessePanoramique(), 1e-6);
+            assertEquals(Math.min(plafond, parcouru / 0.1 * 1.2), recus.cou.get(1).getVitessePanoramique(), 1e-6);
         }
 
         /**

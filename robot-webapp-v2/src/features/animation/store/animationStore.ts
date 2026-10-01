@@ -90,6 +90,12 @@ export interface AnimationEditorState {
   animationName: string
   totalMs: number
   tracks: EditorTrack[]
+  /**
+   * Vrai quand vitesses et butées des pistes viennent du robot, faux tant qu'on est sur les axes de
+   * repli. Rien ne le montrait : le 2026-09-30, une animation a été enregistrée avec les anciennes
+   * vitesses du cou sans que l'Atelier en dise un mot.
+   */
+  vitessesDuRobot: boolean
   /** La piste Son. Hors des `tracks` : elle ne porte pas de valeurs, et le robot ne l'interpole pas. */
   sons: EditorSon[]
   /** Ce que l'animation exprime : c'est par là que le robot la choisit pour réagir. */
@@ -213,6 +219,7 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
     marquerEnregistre: () => set({ modifie: false }),
     totalMs: 3000,
     tracks: buildEditorTracks(AXES_DE_REPLI, 3000),
+    vitessesDuRobot: false,
     sons: [],
     emotion: null,
     setEmotion(emotion) {
@@ -468,9 +475,10 @@ export const useAnimationStore = create<AnimationEditorState>((set, get) => {
           const existing = current.find(t => t.id === newTrack.id)
           return existing ? { ...newTrack, kfs: existing.kfs, enabled: existing.enabled, relative: existing.relative } : newTrack
         })
-        set({ tracks: updated })
+        set({ tracks: updated, vitessesDuRobot: true })
       } catch {
-        // Backend non disponible — on garde les tracks fallback
+        // Robot injoignable : on garde les axes de repli, et l'Atelier le signale (vitessesDuRobot).
+        set({ vitessesDuRobot: false })
       }
     },
   }

@@ -6,7 +6,6 @@ import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Animation;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Axe;
-import fr.roboteek.robot.organes.actionneurs.animation.modele.ImageCle;
 import fr.roboteek.robot.organes.actionneurs.animation.modele.Piste;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
@@ -27,7 +26,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -51,10 +49,17 @@ import java.util.Optional;
  *   <li><b>un axe qui n'a pas bougé n'est pas réécrit</b> — un canal engagé mais non écrit ne coûte
  *       rien, mesuré, et c'est ce qui rend l'échelle tenable : une animation bouge rarement plus de
  *       deux ou trois axes à la fois ;</li>
- *   <li>vitesse et accélération sont renvoyées à chaque tour mais {@code PhidgetsServoMotor} les
- *       dédoublonne, donc une seule écriture au premier échantillon — et le jour où une image-clé
- *       en change, la nouvelle valeur part sans qu'on ait à s'en occuper.</li>
+ *   <li>la vitesse n'est réécrite que quand celle que demande la courbe sort d'une tolérance
+ *       (voir {@link #allure}) : une écriture de vitesse coûte autant qu'une consigne de position.</li>
  * </ul>
+ * <p>
+ * <b>La vitesse se déduit des images-clés</b>, et non d'un réglage : deux points rapprochés font
+ * un geste rapide, deux points éloignés un geste lent. À chaque échantillon, le servo reçoit la
+ * vitesse qui l'amène sur la nouvelle consigne juste avant la suivante — assez pour ne pas
+ * traîner, pas assez pour arriver, s'arrêter et repartir. {@code robot.properties} n'en donne
+ * plus que le <b>plafond</b>, relu à chaque lancement. Jusqu'au 2026-09-30, chaque fichier
+ * portait une copie des vitesses du robot au jour de son enregistrement, et une animation écrite
+ * à 63 °/s le restait après qu'on eut réglé le cou à 150.
  * <p>
  * Le mode aléatoire a disparu avec l'ancien lecteur : il ne sera pas porté sur ce modèle
  * (décision du 2026-08-30).
@@ -67,6 +72,12 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
     /** Cadence de repli si la configuration porte une valeur absurde (zéro, négative). */
     private static final double CADENCE_DE_REPLI = 10;
+
+    /**
+     * Vitesse sous laquelle on ne descend pas : une limite de vitesse nulle <b>arrête</b> le servo
+     * au lieu de le ralentir.
+     */
+    private static final double VITESSE_PLANCHER = 1;
 
     /** Durée d'un tour à vide, quand aucune animation ne se joue : rien à calculer, on somnole. */
     private static final long PAUSE_AU_REPOS_MS = 100;
@@ -97,6 +108,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
     /** Ce que le curseur a envoyé en dernier, pour ne pas réécrire un axe qui n'a pas bougé. */
     private final Map<Axe, Double> dernieresConsignesCurseur = new EnumMap<>(Axe.class);
+
+    /** Les vitesses que le curseur a écrites, gardées d'un envoi à l'autre comme en lecture. */
+    private final Map<Axe, Double> vitessesCurseur = new EnumMap<>(Axe.class);
 
     /**
      * D'où partent les pistes relatives pendant un tirage de curseur. Relevées une fois au début
@@ -243,6 +257,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
         dernieresConsignesCurseur.clear();
+        vitessesCurseur.clear();
         Map<Axe, Double> origines = new EnumMap<>(Axe.class);
         releverLesOrigines(animation, origines);
         originesCurseur.clear();
@@ -320,7 +335,8 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
         long maintenant = horloge.millis();
         double cadence = Configurations.robotConfig().animationCadenceHertz();
-        if (maintenant - dernierCurseur < 1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI)) {
+        long periode = (long) (1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI));
+        if (maintenant - dernierCurseur < periode) {
             return true;
         }
         if (lecture != null) {
@@ -332,7 +348,8 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         // ce qu'on veut savoir en lisant le journal, c'est qu'un tirage a bien atteint le robot.
         // Sans elle, un curseur qui ne fait rien bouger — parce que la timeline est plate, par
         // exemple — est indiscernable d'un curseur qui n'arrive pas.
-        if (maintenant - dernierCurseur > FENETRE_CURSEUR_MS) {
+        boolean nouveauTirage = maintenant - dernierCurseur > FENETRE_CURSEUR_MS;
+        if (nouveauTirage) {
             logger.info("Curseur : « {} » suivie à la main", animation.nom());
             originesCurseur.clear();
         }
@@ -344,15 +361,25 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
         Lecture ponctuelle = new Lecture(animation, 0, 0, Map.copyOf(originesCurseur));
         ponctuelle.dernieresConsignes.putAll(dernieresConsignesCurseur);
+        ponctuelle.vitessesEcrites.putAll(vitessesCurseur);
+        if (!nouveauTirage) {
+            // La tête suit la main, pas la timeline : un balayage de trois secondes d'animation
+            // peut se faire en un coup de souris. Chaque position doit être rejointe avant la
+            // suivante, qui arrive une période plus tard — d'où l'écart parcouru sur une période,
+            // quel que soit l'écart d'instants. Le premier envoi d'un tirage, lui, n'a pas de
+            // précédent récent : il part au plafond, comme le premier échantillon d'une lecture.
+            dernieresConsignesCurseur.keySet().forEach(axe -> ponctuelle.instantsDernieresConsignes.put(axe, instant - periode));
+        }
         Map<Axe, Double> consignes = consignes(ponctuelle, instant);
         dernieresConsignesCurseur.putAll(ponctuelle.dernieresConsignes);
+        vitessesCurseur.putAll(ponctuelle.vitessesEcrites);
         consignes.forEach((axe, position) -> {
             Double origine = originesCurseur.get(axe);
             if (origine != null) {
                 decalagesEnPlace.put(axe, position - origine);
             }
         });
-        publier(animation, consignes, instant);
+        publier(ponctuelle, consignes);
         return true;
     }
 
@@ -424,7 +451,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         if (instant > enCours.animation.dureeTotale()) {
             Map<Axe, Double> poseFinale = consignesFinales(enCours);
             logger.info("Animation « {} » : pose finale {}", enCours.animation.nom(), poseFinale);
-            publier(enCours.animation, poseFinale, enCours.animation.dureeTotale());
+            publier(enCours, poseFinale);
             terminer(enCours);
             return budgetMs;
         }
@@ -436,7 +463,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         }
 
         long avant = System.nanoTime();
-        publier(enCours.animation, consignes(enCours, instant), instant);
+        publier(enCours, consignes(enCours, instant));
         long dureeMs = (System.nanoTime() - avant) / 1_000_000L;
         enCours.tours++;
         if (dureeMs > budgetMs) {
@@ -490,10 +517,47 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             if (precedente != null && (Math.abs(position - precedente) < seuil || position == precedente)) {
                 continue;
             }
+            enCours.vitesses.put(axe, allure(enCours, axe, position, instant));
             aCommander.put(axe, position);
             enCours.dernieresConsignes.put(axe, position);
+            enCours.instantsDernieresConsignes.put(axe, instant);
         }
         return aCommander;
+    }
+
+    /**
+     * La vitesse à donner au servo pour rejoindre cette consigne : la distance depuis la
+     * précédente, sur le temps écoulé depuis, avec la marge de {@code robot.animation.vitesse.marge}
+     * et plafonnée par {@code robot.properties}.
+     * <p>
+     * La vitesse déjà écrite est <b>gardée</b> tant qu'elle suffit sans dépasser de plus de la
+     * tolérance ce qu'il faut : rendue identique, {@code PhidgetsServoMotor} ne la réécrit pas, et
+     * c'est une écriture USB d'économisée. Sur une courbe, la vitesse bouge surtout au départ et à
+     * l'arrivée d'un geste ; au milieu, elle tient d'un échantillon à l'autre.
+     * <p>
+     * Sans consigne précédente — premier échantillon d'une lecture, premier envoi d'un tirage de
+     * curseur —, rien ne dit en combien de temps y aller : c'est le plafond.
+     */
+    private double allure(Lecture enCours, Axe axe, double position, long instant) {
+        LimitesMoteur limitesAxe = limites.get(axe);
+        double plafond = limitesAxe != null ? limitesAxe.vitesseMax()
+                : enCours.animation.piste(axe).orElseThrow().vitesseParDefaut();
+        Double precedente = enCours.dernieresConsignes.get(axe);
+        Long instantPrecedent = enCours.instantsDernieresConsignes.get(axe);
+        if (precedente == null || instantPrecedent == null || instant <= instantPrecedent) {
+            return plafond;
+        }
+        double besoin = Math.abs(position - precedente) / ((instant - instantPrecedent) / 1000.0);
+        double suffisante = Math.min(besoin, plafond);
+        double voulue = Math.max(VITESSE_PLANCHER, Math.min(plafond, besoin * Configurations.robotConfig().animationVitesseMarge()));
+
+        Double ecrite = enCours.vitessesEcrites.get(axe);
+        if (ecrite != null && ecrite >= suffisante
+                && ecrite <= voulue * (1 + Configurations.robotConfig().animationVitesseTolerance())) {
+            return ecrite;
+        }
+        enCours.vitessesEcrites.put(axe, voulue);
+        return voulue;
     }
 
     /**
@@ -501,7 +565,8 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      * à leur valeur neutre — c'est ainsi que {@code Cou} et {@code Yeux} savent ne pas y toucher.
      * Un évènement n'est publié que s'il porte au moins un axe.
      */
-    private void publier(Animation animation, Map<Axe, Double> consignes, long instant) {
+    private void publier(Lecture enCours, Map<Axe, Double> consignes) {
+        Animation animation = enCours.animation;
         if (consignes.isEmpty()) {
             return;
         }
@@ -515,10 +580,12 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         for (Map.Entry<Axe, Double> consigne : consignes.entrySet()) {
             Axe axe = consigne.getKey();
             double position = consigne.getValue();
-            Piste piste = animation.piste(axe).orElseThrow();
-            ImageCle visee = imageCleVisee(piste, instant);
-            double vitesse = piste.vitesseDe(visee);
-            double acceleration = piste.accelerationDe(visee);
+            double vitesse = enCours.vitesses.get(axe);
+            // Au plafond : le servo doit changer d'allure d'un échantillon à l'autre, et une rampe
+            // douce le contrarierait. Constante, elle n'est écrite qu'une fois.
+            LimitesMoteur limitesAxe = limites.get(axe);
+            double acceleration = limitesAxe != null ? limitesAxe.accelerationMax()
+                    : animation.piste(axe).orElseThrow().accelerationParDefaut();
 
             switch (axe) {
                 case COU_GAUCHE_DROITE -> {
@@ -591,23 +658,6 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         } else {
             logger.info("Animation « {} » terminée", enCours.animation.nom());
         }
-    }
-
-    /**
-     * La première image-clé pas encore franchie, ou la dernière si l'animation est au-delà.
-     * <p>
-     * C'est elle qui porte, le cas échéant, une vitesse et une accélération propres — « rejoins ce
-     * point à cette allure ». À défaut, {@link Piste#vitesseDe} rend celles de la piste, et comme
-     * elles ne changent alors pas d'un tour à l'autre, {@code PhidgetsServoMotor} n'écrit rien.
-     */
-    private static ImageCle imageCleVisee(Piste piste, long instant) {
-        List<ImageCle> imagesCles = piste.imagesCles();
-        for (ImageCle imageCle : imagesCles) {
-            if (imageCle.instant() >= instant) {
-                return imageCle;
-            }
-        }
-        return imagesCles.getLast();
     }
 
     /**
@@ -732,6 +782,18 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
         /** Dernière consigne envoyée à chaque axe, pour ne pas réécrire ce qui n'a pas bougé. */
         private final Map<Axe, Double> dernieresConsignes = new EnumMap<>(Axe.class);
+
+        /** L'instant de l'animation où chaque axe a reçu sa dernière consigne, pour en tirer la vitesse. */
+        private final Map<Axe, Long> instantsDernieresConsignes = new EnumMap<>(Axe.class);
+
+        /** La dernière vitesse que chaque axe a reçue, gardée tant qu'elle convient (voir {@link #allure}). */
+        private final Map<Axe, Double> vitessesEcrites = new EnumMap<>(Axe.class);
+
+        /**
+         * La vitesse de chaque axe commandé au tour en cours, pour la publication qui suit. Visible
+         * dans le paquet, comme {@link #toursEnRetard} : c'est ce que les tests vérifient.
+         */
+        final Map<Axe, Double> vitesses = new EnumMap<>(Axe.class);
 
         private int tours;
 
