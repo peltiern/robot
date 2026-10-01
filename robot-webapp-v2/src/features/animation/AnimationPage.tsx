@@ -48,6 +48,13 @@ export function AnimationPage() {
   // Charger les définitions de tracks depuis le backend au montage
   useEffect(() => { store.loadTracksFromBackend() }, [])
 
+  // Le robot revenu, on redemande ses axes : sans ça, une page ouverte robot éteint garderait les
+  // vitesses de repli jusqu'au prochain rechargement.
+  useEffect(() => {
+    const { vitessesDuRobot, loadTracksFromBackend } = useAnimationStore.getState()
+    if (ws.connected && !vitessesDuRobot) loadTracksFromBackend()
+  }, [ws.connected])
+
   // Quitter l'Atelier en pleine lecture ne doit pas laisser un bruitage sonner sur une autre page.
   useEffect(() => couperLeNavigateur, [])
   const originRef  = useRef<number>(0)   // performance.now() quand playhead = 0
@@ -343,6 +350,13 @@ export function AnimationPage() {
           onChangerDestination={changerDestination}
           robotJoignable={ws.connected}
         />
+        {!store.vitessesDuRobot && (
+          <div className={styles.vitessesDeRepli}>
+            Vitesses par défaut : le robot n'a pas donné les siennes. Une animation enregistrée maintenant
+            portera ces valeurs-là.
+            <button onClick={() => store.loadTracksFromBackend()}>Réessayer</button>
+          </div>
+        )}
       </div>
 
       <div className={styles.main}>

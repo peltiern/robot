@@ -135,8 +135,10 @@ public class VerificateurAnimation {
                 continue;
             }
             double secondesDisponibles = (arrivee.instant() - depart.instant()) / 1000.0;
-            double vitesse = Math.min(piste.vitesseDe(arrivee), limites.vitesseMax());
-            double acceleration = Math.min(piste.accelerationDe(arrivee), limites.accelerationMax());
+            // Le plafond du robot, et non les vitesses écrites dans le fichier : le lecteur déduit
+            // la vitesse de la courbe, et seul le plafond dit si la courbe est tenable.
+            double vitesse = limites.vitesseMax();
+            double acceleration = limites.accelerationMax();
 
             double secondesNecessaires = dureeMinimale(distance, vitesse, acceleration);
             if (secondesNecessaires > secondesDisponibles) {

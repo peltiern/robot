@@ -433,6 +433,29 @@ public interface RobotConfig extends Config {
     double animationSeuilDegres();
 
     /**
+     * Ce qu'on ajoute à la vitesse que demande la courbe, pour que le servo ne traîne jamais
+     * derrière elle : 1,2 le fait arriver sur chaque échantillon un peu avant le suivant.
+     * <p>
+     * La vitesse d'une animation est déduite de ses images-clés (voir {@code LecteurAnimation}).
+     * Trop juste, le servo prend du retard et le geste s'étire ; trop large, il arrive tôt, attend,
+     * repart — un à-coup à chaque échantillon.
+     */
+    @Key("robot.animation.vitesse.marge")
+    @DefaultValue("1.2")
+    double animationVitesseMarge();
+
+    /**
+     * Écart relatif toléré entre la vitesse déjà écrite sur le servo et celle que demande la
+     * courbe avant de la réécrire. Chaque écriture de vitesse coûte ~12 ms de lien USB, autant
+     * qu'une consigne de position : la réécrire à chaque échantillon ferait déborder un tour de
+     * trois axes au-delà de ses 100 ms. Une vitesse suffisante et pas trop large est gardée telle
+     * quelle.
+     */
+    @Key("robot.animation.vitesse.tolerance")
+    @DefaultValue("0.25")
+    double animationVitesseTolerance();
+
+    /**
      * Avance, en millisecondes, avec laquelle un son d'animation est lancé avant son instant.
      * <p>
      * C'est le temps que met {@code play} à se faire entendre sur le Jetson — démarrage du
