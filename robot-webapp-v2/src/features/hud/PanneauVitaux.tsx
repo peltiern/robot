@@ -4,6 +4,8 @@ import { useOrganesStore, capteurs, type Mesure } from '../../shared/stores/orga
 import { useWebSocketStore } from '../../shared/stores/websocketStore'
 import { couleurSeuil, fractionMesure } from '../../shared/utils/seuils'
 import { PastillesSante } from './PastillesSante'
+import { CarteAttitude } from './CarteAttitude'
+import { MESURES_ATTITUDE } from './attitude'
 import styles from './hud.module.css'
 
 /**
@@ -25,7 +27,13 @@ export function PanneauVitaux() {
   const valeurs = useTelemetryStore((s) => s.valeurs)
   const historique = useTelemetryStore((s) => s.historique)
 
-  const mesures = capteurs(organes).flatMap((organe) => organe.mesures)
+  const toutesLesMesures = capteurs(organes).flatMap((organe) => organe.mesures)
+  const mesures = toutesLesMesures.filter((mesure) => !MESURES_ATTITUDE.includes(mesure.id))
+  // La carte n'apparaît que si le robot déclare une centrale inertielle : désactivée, elle ne
+  // déclare pas moins ses mesures, et la carte s'affiche alors en « N/D ».
+  const attitudeDeclaree = toutesLesMesures.some((mesure) => MESURES_ATTITUDE.includes(mesure.id))
+  const valeurDeclaree = (id: string) =>
+    valeurs[id] ?? toutesLesMesures.find((mesure) => mesure.id === id)?.valeur ?? null
   // L'uptime n'est pas déclaré comme mesure par le robot, justement pour qu'il n'atterrisse pas
   // dans cette grille : une valeur qui ne fait que croître n'a pas d'échelle, donc pas d'anneau.
   // Il arrive avec la télémétrie et se lit en toutes lettres, sous les jauges.
@@ -56,7 +64,15 @@ export function PanneauVitaux() {
         </p>
       )}
 
-      {connecte && etat === 'pret' && mesures.length === 0 && (
+      {connecte && etat === 'pret' && attitudeDeclaree && (
+        <CarteAttitude
+          roulis={valeurDeclaree('roulis')}
+          tangage={valeurDeclaree('tangage')}
+          cap={valeurDeclaree('cap')}
+        />
+      )}
+
+      {connecte && etat === 'pret' && mesures.length === 0 && !attitudeDeclaree && (
         <p className={styles.messageBloc}>Aucun capteur exposé par le robot.</p>
       )}
 
@@ -170,7 +186,7 @@ function Anneau({
       <div className={styles.anneauCentre}>
         {disponible ? (
           <>
-            <span className={`${styles.anneauNombre} data`}>{Math.round(valeur)}</span>
+            <span className={`${styles.anneauNombre} data`}>{nombreLisible(valeur, max - min)}</span>
             <span className={styles.anneauUnite}>{unite}</span>
           </>
         ) : (
@@ -179,6 +195,16 @@ function Anneau({
       </div>
     </div>
   )
+}
+
+/**
+ * Valeur au grain de son échelle : entière sur 0-100 %, à deux décimales quand toute l'échelle
+ * tient en quelques unités. Le champ magnétique, sur 0-2 G, s'affichait « 0 » en permanence — le
+ * champ terrestre vaut environ 0,5 G.
+ */
+function nombreLisible(valeur: number, etendue: number): string {
+  if (etendue <= 10) return valeur.toFixed(2)
+  return String(Math.round(valeur))
 }
 
 /**

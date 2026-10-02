@@ -38,6 +38,14 @@ ORGANES = [
         # nouvelle : sans ce drapeau, un disque presque plein s'afficherait en vert.
         {"id": "disqueLibre", "libelle": "Espace libre", "unite": "Go", "min": 0, "max": 58,
          "valeur": 24, "hautEstBon": True}]},
+    # Mêmes identifiants et mêmes bornes que OrganeController.organeInertiel.
+    {"id": "inertiel", "libelle": "Centrale inertielle", "type": "CAPTEUR", "articulations": [], "mesures": [
+        {"id": "roulis", "libelle": "Roulis", "unite": "deg", "min": -180, "max": 180, "valeur": 0},
+        {"id": "tangage", "libelle": "Tangage", "unite": "deg", "min": -90, "max": 90, "valeur": 0},
+        {"id": "cap", "libelle": "Cap", "unite": "deg", "min": -180, "max": 180, "valeur": 0},
+        {"id": "secousse", "libelle": "Secousse", "unite": "g", "min": 0, "max": 2, "valeur": 0.01},
+        {"id": "champMagnetique", "libelle": "Champ magnétique", "unite": "G", "min": 0, "max": 2,
+         "valeur": 0.48}]},
     # Organes sans capacité, présents pour leur seule santé (cf. OrganeController).
     {"id": "chenille-gauche", "libelle": "Chenille gauche", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
     {"id": "chenille-droite", "libelle": "Chenille droite", "type": "ACTIONNEUR", "articulations": [], "mesures": []},
@@ -183,6 +191,50 @@ ECHANGES = [
 ]
 
 
+# Centrale inertielle. Le scénario est fait pour l'œil, pas pour le réalisme : le robot penche
+# franchement d'un côté puis de l'autre (un vrai robot sur chenilles ne prend que quelques degrés)
+# pour qu'on voie comment les jauges traitent un angle négatif, et le cap fait le tour complet pour
+# passer la couture -180 / +180.
+#
+# Le champ magnétique rejoue le test qu'on fera sur le robot : stable chenilles à l'arrêt, décalé
+# pendant qu'elles tournent. L'écart (60 mG) est inventé — c'est précisément ce que le vrai test
+# doit mesurer.
+#
+# La secousse : un bruit de fond au repos, des vibrations tant que les chenilles tournent, et un
+# choc franc une fois par cycle, pendant la marche — de quoi voir l'anneau passer au rouge.
+CYCLE_INERTIEL_S = 30
+CHOC = (16, 16.5)
+SECOUSSE_CHOC_G = 1.9
+CHENILLES_EN_MARCHE = (12, 20)
+CHAMP_TERRESTRE_G = 0.48
+PERTURBATION_MOTEURS_G = 0.06
+
+
+async def boucle_inertielle(_app):
+    while True:
+        t = time.monotonic() - DEPART
+        phase = 2 * math.pi * t / CYCLE_INERTIEL_S
+        debut, fin = CHENILLES_EN_MARCHE
+        moteurs = debut <= t % CYCLE_INERTIEL_S < fin
+        instant = t % CYCLE_INERTIEL_S
+        if CHOC[0] <= instant < CHOC[1]:
+            secousse = SECOUSSE_CHOC_G
+        elif moteurs:
+            secousse = random.uniform(0.08, 0.18)
+        else:
+            secousse = abs(random.gauss(0, 0.006))
+        champ = CHAMP_TERRESTRE_G + (PERTURBATION_MOTEURS_G if moteurs else 0) + random.gauss(0, 0.002)
+        valeurs = {
+            "roulis": 25 * math.sin(phase) + random.gauss(0, 0.3),
+            "tangage": 12 * math.sin(2 * phase) + random.gauss(0, 0.3),
+            "cap": (t * 12) % 360 - 180,
+            "secousse": secousse,
+            "champMagnetique": champ,
+        }
+        await envoyer("/events/telemetrie-organe", json.dumps({"eventType": "telemetrie-organe", "idOrgane": "inertiel", "valeurs": valeurs}))
+        await asyncio.sleep(0.5)
+
+
 async def boucle_conversation(_app):
     i = 0
     while True:
@@ -236,7 +288,7 @@ DEPART = time.monotonic()
 
 
 async def demarrer(app):
-    for boucle in (boucle_video, boucle_telemetrie, boucle_conversation, boucle_sante):
+    for boucle in (boucle_video, boucle_telemetrie, boucle_inertielle, boucle_conversation, boucle_sante):
         app[boucle.__name__] = asyncio.create_task(boucle(app))
 
 

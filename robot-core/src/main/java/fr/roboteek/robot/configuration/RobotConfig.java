@@ -49,6 +49,15 @@ public interface RobotConfig extends Config {
     boolean visionEnabled();
 
     /**
+     * Indique si la centrale inertielle (Phidget MOT1102, voir {@code CapteurInertiel}) doit être
+     * démarrée. Désactivée par défaut, comme la vision : sur un poste sans le hub, l'ouverture
+     * attendrait son délai pour rien à chaque démarrage.
+     */
+    @Key("robot.capteurs.inertiel.enabled")
+    @DefaultValue("false")
+    boolean inertielEnabled();
+
+    /**
      * Cadence maximale de publication du flux vidéo sur le WebSocket, en images par seconde.
      * <p>
      * C'est le débit de production qu'il faut maîtriser, pas la taille du tampon d'envoi :

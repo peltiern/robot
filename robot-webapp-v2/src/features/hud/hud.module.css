@@ -700,6 +700,105 @@
   fill: color-mix(in srgb, var(--donnee) 14%, transparent);
 }
 
+/* ── Attitude (centrale inertielle) ── */
+
+.attitude {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  padding: 0 10px 7px;
+}
+
+.attitudeVue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 5px 6px;
+  background: var(--fond);
+  border: 2px solid var(--bordure);
+  border-radius: 14px;
+}
+
+/* Même taille que les anneaux : la carte ne doit coûter au dialogue qu'une rangée ordinaire. */
+.attitudeVue svg {
+  width: var(--anneau);
+  height: var(--anneau);
+  display: block;
+}
+
+/* Hors mesure, le dessin reste à plat et s'efface : il garde sa place sans rien affirmer. */
+.attitudeIndispo {
+  opacity: 0.3;
+}
+
+.attitudeValeur {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Bascule sur le point de contact au sol, comme le vrai robot sur ses chenilles. */
+.attitudeCorps {
+  transform-box: view-box;
+  transform-origin: 50px 82px;
+  transition: transform 0.3s ease;
+}
+
+.attitudeCap {
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+  transition: transform 0.3s ease;
+}
+
+.attitudeCaisse {
+  fill: var(--carter-clair);
+  stroke: var(--texte);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.attitudeChenille {
+  fill: var(--creux);
+  stroke: var(--texte-faible);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.attitudeOeil,
+.attitudeAvant {
+  fill: var(--donnee);
+}
+
+.attitudeSol {
+  stroke: var(--texte-faible);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.attitudeRepere {
+  stroke: var(--bordure);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+}
+
+.attitudeCadran {
+  fill: none;
+  stroke: var(--creux);
+  stroke-width: 6;
+}
+
+.attitudeGraduation {
+  stroke: var(--inactif);
+  stroke-width: 1.5;
+}
+
+.attitudeZero {
+  stroke: var(--donnee);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
 .messageBloc {
   padding: 0 14px 14px;
   font-size: 13px;

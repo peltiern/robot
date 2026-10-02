@@ -28,6 +28,36 @@ public interface PhidgetsConfig extends Config {
     @DefaultValue("1")
     double differentialDrivingMotorAcceleration();
 
+    // Centrale inertielle MOT1102, branchée sur le même hub VINT que les chenilles.
+
+    @Key("phidgets.spatial.port")
+    @DefaultValue("3")
+    int spatialPort();
+
+    /** Période d'échantillonnage en millisecondes, entre 20 (minimum du MOT1102) et 1000. */
+    @Key("phidgets.spatial.data.interval")
+    @DefaultValue("50")
+    int spatialDataInterval();
+
+    /**
+     * Algorithme de fusion embarqué : {@code IMU} (accéléromètre + gyroscope) ou {@code AHRS}
+     * (avec en plus le magnétomètre, qui corrige la dérive du cap).
+     * <p>
+     * IMU par défaut, <b>par précaution et non sur mesure</b> : le magnétomètre lit aussi le champ
+     * des moteurs voisins. Celui de leurs aimants est fixe et s'étalonne (Phidget Control Panel,
+     * puis correction enregistrée dans la carte) ; celui de leur courant varie avec la vitesse et
+     * ne s'étalonne pas. Son poids dépend de la distance entre la carte et les moteurs, qui n'a
+     * pas encore été évaluée sur le robot. Pour trancher : carte étalonnée et robot immobile,
+     * chenilles en marche puis à l'arrêt, regarder si la mesure {@code champMagnetique} de
+     * {@code CapteurInertiel} bouge. Stable, AHRS est le meilleur choix ; sinon, rester en IMU,
+     * où le cap dérive lentement mais sans à-coup.
+     * <p>
+     * Le roulis et le tangage tiennent sur la gravité : ils sont justes dans les deux cas.
+     */
+    @Key("phidgets.spatial.algorithm")
+    @DefaultValue("IMU")
+    String spatialAlgorithm();
+
     @Key("phidgets.neck.motor.pan.index")
     @DefaultValue("0")
     int neckLeftRightMotorIndex();

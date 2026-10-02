@@ -3,6 +3,8 @@ package fr.roboteek.robot.web.controller;
 import fr.roboteek.robot.configuration.Configurations;
 import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
+import fr.roboteek.robot.organes.capteurs.Attitude;
+import fr.roboteek.robot.organes.capteurs.CapteurInertiel;
 import fr.roboteek.robot.organes.capteurs.CapteurMateriel;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.PlageAngulaire;
@@ -55,14 +57,17 @@ public class OrganeController {
     private final Cou cou;
     private final Yeux yeux;
     private final CapteurMateriel capteurMateriel;
+    private final CapteurInertiel capteurInertiel;
     private final RegistreSante registreSante;
     private final PhidgetsConfig phidgetsConfig = Configurations.phidgetsConfig();
     private final RobotConfig robotConfig = Configurations.robotConfig();
 
-    public OrganeController(Cou cou, Yeux yeux, CapteurMateriel capteurMateriel, RegistreSante registreSante) {
+    public OrganeController(Cou cou, Yeux yeux, CapteurMateriel capteurMateriel,
+                            CapteurInertiel capteurInertiel, RegistreSante registreSante) {
         this.cou = cou;
         this.yeux = yeux;
         this.capteurMateriel = capteurMateriel;
+        this.capteurInertiel = capteurInertiel;
         this.registreSante = registreSante;
     }
 
@@ -80,7 +85,7 @@ public class OrganeController {
     public List<Organe> lister() {
         Map<String, SanteOrgane> sante = releveSante();
         List<Organe> organes = new ArrayList<>(List.of(
-                organeYeux(sante), organeCou(sante), organeMateriel(sante)));
+                organeYeux(sante), organeCou(sante), organeMateriel(sante), organeInertiel(sante)));
         // Les organes surveillés qui ne sont pas décrits ci-dessus n'ont ni articulation ni mesure
         // à offrir : ils n'apparaissent que pour leur santé, et les clients qui bouclent sur les
         // capacités les ignorent d'eux-mêmes.
@@ -186,5 +191,27 @@ public class OrganeController {
                 new Mesure("disqueLibre", "Espace libre", "Go", 0, capteurMateriel.getDisqueTotalGo(),
                         capteurMateriel.getDisqueLibreGo(), true)
         ), toSante(sante.get("materiel")));
+    }
+
+    /**
+     * Centrale inertielle : l'attitude du robot en degrés. Bornes = le domaine des angles, et non
+     * une plage « normale » — un robot sur chenilles ne penche que de quelques degrés, mais c'est
+     * précisément la grande valeur qu'on veut voir quand il se renverse.
+     * <p>
+     * Le champ magnétique est borné à 2 G pour l'affichage : le champ terrestre en vaut environ
+     * 0,5, et c'est son écart à cette valeur, chenilles en marche, qu'on vient lire.
+     * <p>
+     * La secousse est bornée à 2 g : le capteur va jusqu'à 8, mais un robot qui encaisse plus de
+     * 2 g a heurté quelque chose de franc, et l'anneau est alors déjà au rouge.
+     */
+    private Organe organeInertiel(Map<String, SanteOrgane> sante) {
+        Attitude attitude = capteurInertiel.getAttitude();
+        return new Organe("inertiel", "Centrale inertielle", TypeOrgane.CAPTEUR, List.of(), List.of(
+                new Mesure("roulis", "Roulis", UNITE_DEGRE, -180, 180, attitude == null ? null : attitude.roulis()),
+                new Mesure("tangage", "Tangage", UNITE_DEGRE, -90, 90, attitude == null ? null : attitude.tangage()),
+                new Mesure("cap", "Cap", UNITE_DEGRE, -180, 180, attitude == null ? null : attitude.lacet()),
+                new Mesure("secousse", "Secousse", "g", 0, 2, capteurInertiel.getSecousse()),
+                new Mesure("champMagnetique", "Champ magnétique", "G", 0, 2, capteurInertiel.getChampMagnetique())
+        ), toSante(sante.get("inertiel")));
     }
 }
