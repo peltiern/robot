@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bras de Wall-E</title>
+<style>
+  :root { --fond: #eef0f3; --texte: #1d2129; --discret: #5b6270; --panneau: rgba(255,255,255,.95); --accent: #c8642a; --trait: #d5d9e0; }
+  html, body { margin: 0; height: 100%; background: var(--fond); color: var(--texte); font: 13px system-ui, sans-serif; }
+  #vue { position: fixed; inset: 0; }
+  .panneau { position: fixed; background: var(--panneau); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+  #commandes { top: 12px; left: 12px; padding: 10px 12px; width: 290px; }
+  #commandes h1 { font-size: 14px; margin: 0 0 8px; }
+  #commandes label { display: block; margin: 4px 0; }
+  #commandes .controle { border-top: 1px solid var(--trait); margin-top: 8px; padding-top: 6px; color: var(--discret); font-size: 12px; }
+  #anim { border-top: 1px solid var(--trait); margin-top: 8px; padding-top: 6px; }
+  #eclate { border-top: 1px solid var(--trait); margin-top: 8px; padding-top: 6px; }
+  #eclate h2, #anim h2 { font-size: 13px; margin: 0 0 4px; }
+  #eclate .curseur, #anim .curseur { display: grid; grid-template-columns: 70px 1fr 42px; gap: 6px; align-items: center; margin: 3px 0; }
+  #eclate input[type=range], #anim input[type=range] { width: 100%; } #anim .val { text-align: right; font-variant-numeric: tabular-nums; }
+  #anim button { font: inherit; padding: 3px 8px; border: 1px solid #b9bfca; background: #fff; border-radius: 5px; cursor: pointer; }
+  #info { margin-top: 8px; min-height: 3.2em; border-top: 1px solid var(--trait); padding-top: 6px; }
+  #info b { color: var(--accent); }
+  #legende { top: 12px; right: 12px; bottom: 12px; width: 370px; overflow-y: auto; padding: 8px 0; }
+  #legende h2 { font-size: 13px; margin: 4px 12px 2px; }
+  #legende .aide { margin: 0 12px 6px; color: var(--discret); font-size: 12px; }
+  .groupe { margin: 12px 12px 3px; display: flex; align-items: center; gap: 6px; font-size: 11px; text-transform: uppercase;
+            letter-spacing: .05em; color: var(--discret); }
+  .groupe .compte { margin-left: auto; text-transform: none; letter-spacing: 0; }
+  details summary { list-style: none; cursor: pointer; } details summary::-webkit-details-marker { display: none; }
+  details summary .groupe::after { content: '▸ déplier'; margin-left: 8px; text-transform: none; letter-spacing: 0; color: var(--accent); }
+  details[open] summary .groupe::after { content: '▾ replier'; }
+  .ligne { display: grid; grid-template-columns: 14px 30px 1fr; gap: 6px; align-items: center; padding: 3px 12px; cursor: pointer; }
+  .ligne:hover, .ligne.choisie { background: rgba(200,100,42,.12); }
+  .pastille { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); }
+  .nombre { color: var(--discret); text-align: right; }
+  .ref { font-weight: 600; } .des { display: block; color: var(--discret); font-size: 12px; }
+  @media (max-width: 760px) { #legende { top: auto; left: 12px; width: auto; height: 38%; } #commandes { width: auto; right: 12px; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="vue"></div>
+<div id="commandes" class="panneau">
+  <h1>Bras de Wall-E</h1>
+  <label><input type="checkbox" id="ouvert"> caisson ouvert (profilés et plaques latérales masqués)</label>
+  <label><input type="checkbox" id="transparent"> pièces imprimées transparentes (voir la visserie logée dedans)</label>
+  <div id="eclate">
+    <h2>Vue éclatée</h2>
+    <div class="curseur"><span>écartement</span><input type="range" id="ecart" min="0" max="100" step="1" value="0"><span class="val" id="ecart-val">0 %</span></div>
+  </div>
+  <div id="anim">
+    <h2>Mouvements</h2>
+    <div id="curseurs"></div>
+    <label><input type="checkbox" id="demo"> démonstration (les quatre servos en boucle)</label>
+    <button id="zero">tout à zéro</button>
+  </div>
+  <div id="info">Survole une pièce, ou une ligne de la nomenclature. Un clic sur une ligne la met en évidence.</div>
+</div>
+<div id="legende" class="panneau"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── familles de pièces, pour la nomenclature ──
+const FAMILLES = [
+  ['Pièces imprimées', r => r.startsWith('IMPRIME:')],
+  ['Servos', r => /^(D85MG|HS-65MG|2000-|FOURNI:palonnier)/.test(r)],
+  ['Transmission', r => /^(2303-|2305-|2312-|1906-|1908-|1311-|2102-|4103-)/.test(r)],
+  ['Paliers et roulements', r => /^(1601-|1604-|2904-|1526-)/.test(r)],
+  ['Structure goBILDA', r => /^(11\d\d-|12\d\d-|18\d\d-)/.test(r)],
+  ['Visserie, bagues et entretoises', r => /^(28\d\d-|15\d\d-|FOURNI:vis)/.test(r)],
+  ['Câbles et prises', r => r.startsWith('CABLE:')],
+  ['Autres', r => true],
+];
+const famille = r => FAMILLES.find(([, f]) => f(r ?? ''))[0];
+const COULEUR_CABLE = 0xe0a800;
+// Une couleur par servo pour suivre son câble de bout en bout (fils, prise, soudure) ; le câble de pince garde
+// la couleur des câbles.
+const CABLES_SERVOS = [
+  { motif: /D85MG/, couleur: 0xd81b60 },            // framboise : rotation du tube
+  { motif: /HS-65MG/, couleur: 0x00a0c6 },          // turquoise : pince
+  { motif: /servo d'abduction/, couleur: 0x6a3fd0 }, // violet : abduction
+];
+const couleurCable = texte => CABLES_SERVOS.find(c => c.motif.test(texte))?.couleur;
+
+// ── scène ──
+const rendu = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+rendu.setPixelRatio(devicePixelRatio); rendu.setSize(innerWidth, innerHeight); document.getElementById('vue').appendChild(rendu.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xeef0f3);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.3));
+const soleil = new THREE.DirectionalLight(0xffffff, 1.5); scene.add(soleil);
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 1, 5000);
+camera.up.set(0, 0, 1); camera.position.set(260, -300, 220);
+const ctrl = new OrbitControls(camera, rendu.domElement); ctrl.target.set(110, 0, 0); ctrl.update();
+
+// Les fichiers sont régénérés par les scripts : jamais de cache.
+const frais = f => f + '?t=' + Date.now();
+const json = async f => (await fetch(frais(f), { cache: 'no-store' })).json();
+const charger = f => new Promise(ok => new GLTFLoader().load(frais(f), g => { scene.add(g.scene); ok(g.scene); }));
+
+const legende = await json('legende.json');           // pièces goBILDA reprises du bras de Nicolas, par référence
+const v5 = await json('v5.json');                     // pièces ajoutées ou déplacées, et celles qui ne servent plus
+// Le chargeur retire « : » des noms de nœuds (IMPRIME:cloison#1 devient IMPRIMEcloison#1) : on compare
+// toujours des noms passés par la même moulinette.
+const propre = n => THREE.PropertyBinding.sanitizeNodeName(n);
+const refPropre = {}; for (const r of Object.keys(legende)) refPropre[propre(r)] = r;
+const retirees = new Map();                            // nom propre -> raison
+for (const [raison, noms] of Object.entries(v5.masquer)) for (const n of noms) retirees.set(propre(n), raison);
+
+// Une teinte par référence, réparties à l'angle d'or.
+const toutesRefs = [...new Set([...Object.keys(legende), ...v5.pieces.map(p => p.ref)])];
+const couleurRef = {}; toutesRefs.forEach((r, i) => { couleurRef[r] = new THREE.Color().setHSL((i * 0.618034) % 1, 0.62, i % 2 ? 0.46 : 0.6); });
+const designation = r => legende[r]?.designation ?? v5.pieces.find(p => p.ref === r)?.designation ?? r;
+const affiche = r => r.replace(/^(IMPRIME|BRAS|FOURNI|CABLE):/, '');
+
+// ── objets : chaque maillage porte sa référence ; les pièces qui ne servent plus ne sont pas chargées dans la vue ──
+const objets = [];
+const materiau = () => new THREE.MeshStandardMaterial({ metalness: 0.12, roughness: 0.6, side: THREE.DoubleSide,
+                                                         flatShading: true });
+// Copies allégées par allegement.py (filetages lissés) : les maillages complets faisaient saccader l'affichage.
+const origine = await charger('bras-assemble-leger.glb');
+origine.traverse(o => { if (!o.isMesh) return;
+  const ref = refPropre[o.name.replace(/#\d+$/, '')];
+  o.material = materiau();
+  o.userData = { ref, nom: o.name, origine: true, raison: retirees.get(o.name) };
+  objets.push(o); });
+const nouveau = await charger('bras-v5-leger.glb');
+nouveau.traverse(o => { if (!o.isMesh) return;
+  const p = v5.pieces[+o.name.replace(/^v5-/, '')];
+  o.material = materiau();
+  o.userData = { ref: p.ref, nom: p.nom, origine: false, etat: p.etat };
+  objets.push(o); });
+
+// ── état de l'affichage ──
+const etat = { ouvert: false, transparent: false, choix: null, survol: null, ecart: 0 };
+const CAISSON = /^(1121-|1123-)/;
+const visible = o => !o.userData.raison && !(etat.ouvert && CAISSON.test(o.userData.ref ?? ''));
+const couleurDe = o => {
+  const u = o.userData;
+  if ((u.ref ?? '').startsWith('CABLE:')) return new THREE.Color(couleurCable(u.nom + ' ' + u.ref) ?? COULEUR_CABLE);
+  return couleurRef[u.ref] ?? new THREE.Color(0x888888);
+};
+
+function appliquer() {
+  const vise = etat.survol ?? etat.choix;
+  for (const o of objets) {
+    o.visible = visible(o);
+    if (!o.visible) continue;
+    const m = o.material;
+    m.color.copy(couleurDe(o));
+    const dans = !vise || o.userData.ref === vise;
+    const verre = etat.transparent && (o.userData.ref ?? '').startsWith('IMPRIME');
+    m.opacity = verre ? (dans ? 0.22 : 0.05) : (dans ? 1 : 0.07);
+    m.depthWrite = !verre && dans;
+    // transparente seulement si elle l'est vraiment : une pièce opaque se dessine bien plus vite
+    const t = m.opacity < 1;
+    if (m.transparent !== t) { m.transparent = t; m.needsUpdate = true; }
+    m.emissive.setHex(vise && dans ? 0x3a1d06 : 0x000000);
+  }
+  bouger();
+}
+
+// ── nomenclature : les pièces visibles, par famille puis par référence ──
+const boite = document.getElementById('legende'), info = document.getElementById('info');
+function construireLegende() {
+  const lignes = new Map();
+  for (const o of objets) {
+    if (!visible(o)) continue;
+    const r = o.userData.ref;
+    if (!lignes.has(r)) lignes.set(r, { ref: r, n: 0, o });
+    lignes.get(r).n++;
+  }
+  let html = '<h2>Bras de Wall-E</h2><p class="aide">Les pièces du bras, par famille. Un clic sur une ligne la met en évidence.</p>';
+  for (const [titre] of FAMILLES) {
+    const liste = [...lignes.values()].filter(l => famille(l.ref) === titre);
+    if (!liste.length) continue;
+    const total = liste.reduce((s, l) => s + l.n, 0);
+    html += `<div class="groupe">${titre}<span class="compte">${total} pièce${total > 1 ? 's' : ''}</span></div>`;
+    for (const l of liste.sort((a, b) => a.ref.localeCompare(b.ref))) {
+      html += `<div class="ligne" data-k="${l.ref}"><div class="pastille" style="background:#${couleurDe(l.o).getHexString()}"></div>
+        <div class="nombre">×${l.n}</div><div><span class="ref">${affiche(l.ref)}</span><span class="des">${designation(l.ref)}</span></div></div>`;
+    }
+  }
+  boite.innerHTML = html;
+  boite.querySelectorAll('.ligne').forEach(l => {
+    l.classList.toggle('choisie', l.dataset.k === etat.choix);
+    l.onmouseenter = () => { etat.survol = l.dataset.k; decrire(l.dataset.k); appliquer(); };
+    l.onmouseleave = () => { etat.survol = null; appliquer(); };
+    l.onclick = () => { etat.choix = etat.choix === l.dataset.k ? null : l.dataset.k; construireLegende(); appliquer(); };
+  });
+}
+function decrire(ref) { info.innerHTML = `<b>${affiche(ref)}</b> — ${famille(ref).toLowerCase()}<br>${designation(ref)}`; }
+function tout() { etat.choix = null; construireLegende(); appliquer(); }
+
+// ── commandes ──
+document.getElementById('ouvert').onchange = e => { etat.ouvert = e.target.checked; tout(); };
+document.getElementById('transparent').onchange = e => { etat.transparent = e.target.checked; appliquer(); };
+document.getElementById('ecart').oninput = e => {
+  etat.ecart = +e.target.value / 100; document.getElementById('ecart-val').textContent = e.target.value + ' %'; bouger(); };
+
+// ── survol dans la vue ──
+const rayon = new THREE.Raycaster(), souris = new THREE.Vector2();
+rendu.domElement.addEventListener('pointermove', ev => {
+  souris.set(ev.clientX / innerWidth * 2 - 1, -ev.clientY / innerHeight * 2 + 1);
+  rayon.setFromCamera(souris, camera);
+  const t = rayon.intersectObjects(objets.filter(o => o.visible && o.material.opacity > 0.3), false)[0];
+  if (!t) return;
+  const u = t.object.userData;
+  info.innerHTML = `<b>${affiche(u.ref)}</b> — ${famille(u.ref).toLowerCase()}<br>${designation(u.ref)}`
+    + (!u.origine ? `<br><i>${u.nom}</i>` : '');
+});
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); rendu.setSize(innerWidth, innerHeight); });
+// ── mouvements : chaque pièce suit son ensemble (épaule, caisson, tube, palonnier…) ──
+// Les angles sont ceux des articulations ; les engrenages suivent par leur rapport (72/48 pour le pignon
+// d'abduction qui roule sur la couronne fixe, −1 pour l'engrenage du D85MG).
+const anim = await json('animation.json');
+const angles = { flexion: 0, abduction: 0, tube: 0, pince: 0 };
+const NOMS = { flexion: 'flexion', abduction: 'abduction', tube: 'rotation du tube', pince: 'pince' };
+const groupeDe = {}; for (const [n, g] of Object.entries(anim.noeuds)) groupeDe[propre(n)] = g;
+const mobiles = [];
+for (const o of objets) {
+  const g = groupeDe[o.name];
+  if (!g) continue;
+  o.updateWorldMatrix(true, false);
+  const base = o.matrixWorld.clone();
+  scene.attach(o); o.matrixAutoUpdate = false; o.matrix.copy(base);
+  o.geometry.computeBoundingBox();
+  const centre = o.geometry.boundingBox.getCenter(new THREE.Vector3()).applyMatrix4(base);
+  mobiles.push({ o, g, base, centre });
+}
+// Vue éclatée : chaque pièce s'écarte du centre du bras, le long de la droite qui l'y relie. Le centre est
+// celui des pièces visibles au repos ; l'écartement va jusqu'à doubler les distances.
+const CENTRE = new THREE.Box3(); for (const { o, centre } of mobiles) if (!o.userData.raison) CENTRE.expandByPoint(centre);
+const centreBras = CENTRE.getCenter(new THREE.Vector3());
+const ECART_MAX = 1.0, decalage = new THREE.Matrix4(), v = new THREE.Vector3();
+function matrices() {
+  const M = {};
+  const de = g => {
+    if (M[g]) return M[g];
+    const d = anim.groupes[g], p = new THREE.Vector3(...d.point);
+    const R = new THREE.Matrix4().makeTranslation(p.x, p.y, p.z)
+      .multiply(new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(...d.axe).normalize(),
+                                                     THREE.MathUtils.degToRad((angles[d.commande] ?? 0) * d.rapport)))
+      .multiply(new THREE.Matrix4().makeTranslation(-p.x, -p.y, -p.z));
+    return M[g] = d.parent ? de(d.parent).clone().multiply(R) : R;
+  };
+  for (const g of Object.keys(anim.groupes)) de(g);
+  return M;
+}
+const matCable = new THREE.MeshStandardMaterial({ color: COULEUR_CABLE, roughness: 0.5 });
+// Un câble = un cylindre par tronçon et une sphère par coude, créés une fois : à chaque image on ne fait que
+// les placer. Recalculer un TubeGeometry par image coûtait 13 ms pour les quatre câbles et faisait saccader la démo.
+const CYL = new THREE.CylinderGeometry(1, 1, 1, 10, 1, true), BOULE = new THREE.SphereGeometry(1, 10, 6);
+const cordons = anim.cables.map(c => {
+  const g = new THREE.Group(); scene.add(g);
+  const cc = couleurCable(c.nom);
+  const mat = cc !== undefined ? new THREE.MeshStandardMaterial({ color: cc, roughness: 0.5 }) : matCable;
+  const troncons = c.points.slice(1).map(() => { const m = new THREE.Mesh(CYL, mat); g.add(m); return m; });
+  const coudes = c.points.slice(1, -1).map(() => { const m = new THREE.Mesh(BOULE, mat); m.scale.setScalar(c.rayon); g.add(m); return m; });
+  return { g, troncons, coudes };
+});
+const HAUT = new THREE.Vector3(0, 1, 0), dir = new THREE.Vector3();
+function bouger() {
+  const M = matrices();
+  const auRepos = Object.values(angles).every(a => a === 0);
+  const ecart = etat.ecart * ECART_MAX;
+  for (const { o, g, base, centre } of mobiles) {
+    o.matrix.multiplyMatrices(M[g] ?? new THREE.Matrix4(), base);
+    if (ecart) o.matrix.premultiply(decalage.makeTranslation(...v.subVectors(centre, centreBras).multiplyScalar(ecart).toArray()));
+    o.matrixWorldNeedsUpdate = true;
+    // au repos ou éclaté, les cordons dessinés par v5.py ; en mouvement, ceux qu'on recalcule point par point
+    if (g === 'cable') o.visible = (auRepos || ecart > 0) && visible(o);
+  }
+  anim.cables.forEach((c, i) => {
+    const { g, troncons, coudes } = cordons[i]; g.visible = !auRepos && !ecart;
+    if (!g.visible) return;
+    const pts = c.points.map((p, k) => new THREE.Vector3(...p).applyMatrix4(M[c.groupes[k]]));
+    troncons.forEach((m, k) => {
+      dir.subVectors(pts[k + 1], pts[k]); const L = dir.length();
+      m.position.addVectors(pts[k], pts[k + 1]).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(HAUT, dir.divideScalar(L || 1));
+      m.scale.set(c.rayon, L, c.rayon);
+    });
+    coudes.forEach((m, k) => m.position.copy(pts[k + 1]));
+  });
+}
+const curseurs = {};
+for (const [cmd, [a0, a1]] of Object.entries(anim.courses)) {
+  const l = document.createElement('div'); l.className = 'curseur';
+  l.innerHTML = `<span>${NOMS[cmd]}</span><input type="range" min="${a0}" max="${a1}" step="1" value="0"><span class="val">0°</span>`;
+  const r = l.querySelector('input'), v = l.querySelector('.val');
+  r.oninput = () => { angles[cmd] = +r.value; v.textContent = r.value + '°'; bouger(); };
+  curseurs[cmd] = { r, v }; document.getElementById('curseurs').appendChild(l);
+}
+const regler = (cmd, a) => { angles[cmd] = a; curseurs[cmd].r.value = a; curseurs[cmd].v.textContent = Math.round(a) + '°'; };
+document.getElementById('zero').onclick = () => { document.getElementById('demo').checked = false;
+  for (const c in angles) regler(c, 0); bouger(); };
+// Démonstration : chaque servo balaie sa course à son rythme ; la flexion reste modérée pour garder le bras en vue.
+const DEMO = { flexion: [-30, 60, 9], abduction: [-12, 22, 5], tube: [-135, 135, 7], pince: [-60, 60, 2.5] };
+function demo(t) {
+  for (const [c, [a0, a1, T]] of Object.entries(DEMO))
+    // angle exact : arrondi au degré, un mouvement lent (moins d'un degré par image) avançait par à-coups
+    regler(c, a0 + (a1 - a0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * t / 1000 / T)));
+  bouger();
+}
+document.getElementById('anim').hidden = false;
+window.angles = angles; window.bouger = bouger; window.regler = regler;
+window.vueCamera = (pos, cible) => { camera.position.set(...pos); ctrl.target.set(...cible); ctrl.update(); };
+window.objetsVue = objets; window.etatVue = etat; window.bougerVue = bouger; window.appliquerVue = () => { construireLegende(); appliquer(); };
+(function boucle(t) { if (document.getElementById('demo').checked) demo(t); soleil.position.copy(camera.position); rendu.render(scene, camera); requestAnimationFrame(boucle); })();
+tout();
+</script>
+</body>
+</html>

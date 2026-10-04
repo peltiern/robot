@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Montage du bras</title>
+<style>
+  :root { --fond: #eef0f3; --texte: #1d2129; --discret: #5b6270; --panneau: rgba(255,255,255,.95); --accent: #c8642a;
+          --trait: #d5d9e0; --alerte: #b3261e; }
+  html, body { margin: 0; height: 100%; background: var(--fond); color: var(--texte); font: 13px system-ui, sans-serif; }
+  #vue { position: fixed; inset: 0; }
+  .panneau { position: fixed; background: var(--panneau); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+  #etape { top: 12px; left: 12px; width: 340px; padding: 12px 14px; max-height: calc(100% - 24px); overflow-y: auto; box-sizing: border-box; }
+  #etape .num { color: var(--accent); font-weight: 600; font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+  #etape h1 { font-size: 17px; margin: 2px 0 8px; }
+  #etape .atelier { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 9px; background: #e6e9ef; color: var(--discret); margin-bottom: 6px; }
+  #etape p { line-height: 1.45; margin: 0 0 10px; }
+  #etape .alerte { border-left: 3px solid var(--alerte); padding: 4px 8px; color: var(--alerte); background: rgba(179,38,30,.06); margin-bottom: 10px; }
+  #boutons { display: flex; gap: 6px; margin: 4px 0 10px; }
+  #boutons button { font: inherit; padding: 4px 10px; border: 1px solid #b9bfca; background: #fff; border-radius: 5px; cursor: pointer; }
+  #boutons button:disabled { opacity: .4; cursor: default; }
+  #pieces h2, #sommaire h2 { font-size: 12px; margin: 10px 0 4px; color: var(--discret); text-transform: uppercase; letter-spacing: .05em; }
+  .ligne { display: grid; grid-template-columns: 14px 26px 1fr; gap: 6px; align-items: center; padding: 2px 0; }
+  .pastille { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); }
+  .nombre { color: var(--discret); text-align: right; }
+  .ref { font-weight: 600; } .des { display: block; color: var(--discret); font-size: 12px; }
+  #sommaire { top: 12px; right: 12px; width: 250px; padding: 8px 0; max-height: calc(100% - 24px); overflow-y: auto; box-sizing: border-box; }
+  #sommaire h2 { margin: 4px 12px; }
+  #sommaire div { padding: 3px 12px; cursor: pointer; color: var(--discret); }
+  #sommaire div:hover { background: rgba(200,100,42,.08); }
+  #sommaire div.courante { color: var(--texte); font-weight: 600; background: rgba(200,100,42,.14); }
+  #sommaire div.fausse::after { content: ' ⚠'; color: var(--alerte); }
+  #sommaire .n { display: inline-block; width: 22px; color: var(--accent); }
+  @media (max-width: 760px) { #sommaire { display: none; } #etape { width: auto; right: 12px; max-height: 45%; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="vue"></div>
+<div id="etape" class="panneau">
+  <div class="num" id="num"></div>
+  <h1 id="titre">Chargement…</h1>
+  <div id="atelier"></div>
+  <div id="boutons">
+    <button id="prec">◀ précédente</button><button id="rejouer">↻ rejouer</button><button id="suiv">suivante ▶</button>
+  </div>
+  <div id="alerte"></div>
+  <p id="texte"></p>
+  <div id="pieces"></div>
+</div>
+<div id="sommaire" class="panneau"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── scène ──
+const rendu = new THREE.WebGLRenderer({ antialias: true });
+rendu.setPixelRatio(devicePixelRatio); rendu.setSize(innerWidth, innerHeight); document.getElementById('vue').appendChild(rendu.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xeef0f3);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.3));
+const soleil = new THREE.DirectionalLight(0xffffff, 1.5); scene.add(soleil);
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 1, 5000);
+camera.up.set(0, 0, 1); camera.position.set(260, -300, 220);
+const ctrl = new OrbitControls(camera, rendu.domElement); ctrl.target.set(110, 0, 0); ctrl.update();
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); rendu.setSize(innerWidth, innerHeight); });
+
+const frais = f => f + '?t=' + Date.now();
+const json = async f => (await fetch(frais(f), { cache: 'no-store' })).json();
+const charger = f => new Promise(ok => new GLTFLoader().load(frais(f), g => { scene.add(g.scene); ok(g.scene); }));
+const legende = await json('legende.json'), v5 = await json('v5.json'), notice = await json('notice.json');
+const ETAPES = notice.etapes;
+
+// ── pièces : clé de notice.py -> maillage, posé à plat dans la scène pour être déplacé librement ──
+const propre = n => THREE.PropertyBinding.sanitizeNodeName(n);
+const piece = {};                        // nom propre -> { o, base, ref, nom }
+for (const [f, origine] of [['bras-assemble-leger.glb', true], ['bras-v5-leger.glb', false]]) {
+  const racine = await charger(f);
+  const maillages = []; racine.traverse(o => { if (o.isMesh) maillages.push(o); });
+  for (const o of maillages) {
+    o.updateWorldMatrix(true, false);
+    const base = o.matrixWorld.clone();
+    scene.attach(o); o.matrixAutoUpdate = false; o.matrix.copy(base); o.visible = false;
+    let ref, nom;
+    if (origine) { nom = o.name; ref = Object.keys(legende).find(r => propre(r) === o.name.replace(/#\d+$/, '')) ?? o.name; }
+    else { const p = v5.pieces[+o.name.replace(/^v5-/, '')]; ref = p.ref; nom = p.nom; }
+    o.material = new THREE.MeshStandardMaterial({ metalness: 0.12, roughness: 0.6, side: THREE.DoubleSide, flatShading: true });
+    piece[o.name] = { o, base, ref, nom };
+  }
+}
+const de = cle => piece[propre(cle)];
+const designation = r => legende[r]?.designation ?? v5.pieces.find(p => p.ref === r)?.designation ?? r;
+const affiche = r => r.replace(/^(IMPRIME|BRAS|FOURNI|CABLE):/, '');
+
+// Une teinte par référence (angle d'or), comme dans la visionneuse ; ce qui est déjà monté passe en gris.
+const refs = [...new Set(Object.values(piece).map(p => p.ref))];
+const couleurRef = {}; refs.forEach((r, i) => { couleurRef[r] = new THREE.Color().setHSL((i * 0.618034) % 1, 0.62, i % 2 ? 0.46 : 0.6); });
+const GRIS = new THREE.Color(0xb9bfc9), GRIS_IMPRIME = new THREE.Color(0xd9c9b4);
+
+// ── ce qui est en place à chaque étape : le bras (atelier null) et les sous-ensembles montés à part ──
+// avant[n] = { cle -> atelier } des pièces posées avant l'étape n
+const avant = [];
+{
+  const ou = new Map();
+  for (const e of ETAPES) {
+    avant.push(new Map(ou));
+    for (const m of e.mouvements) {
+      if (m.joindre) { for (const [c, a] of ou) if (a === m.joindre) ou.set(c, null); }
+      else for (const c of m.cles) ou.set(c, e.atelier);
+    }
+  }
+}
+// Les clés que déplace un mouvement (celles de l'atelier pour un « joindre »)
+const clesDe = (n, m) => m.joindre ? [...avant[n]].filter(([, a]) => a === m.joindre).map(([c]) => c) : m.cles;
+
+// ── affichage d'une étape ──
+let courante = 0, debut = 0;
+const DUREE = { vis: 650, piece: 1100, pause: 150 };
+function trajet(m) {
+  // points du chemin, de la place vers le loin ; l'animation les parcourt à l'envers
+  const pts = [new THREE.Vector3()];
+  for (const [d, L] of m.chemin ?? []) pts.push(pts.at(-1).clone().addScaledVector(new THREE.Vector3(...d).normalize(), L));
+  return pts;
+}
+let plan = [];                            // [{ cles, pts, t0, t1 }]
+function preparer(n) {
+  const e = ETAPES[n];
+  // ce qui est visible : les pièces de l'atelier de l'étape (ou du bras), et celles qui bougent
+  const deja = avant[n], atelier = e.atelier ?? null;
+  const bougent = new Set(e.mouvements.flatMap(m => clesDe(n, m)));
+  for (const p of Object.values(piece)) p.o.visible = false;
+  for (const [c, a] of deja) if (a === atelier || bougent.has(c)) {
+    const p = de(c); p.o.visible = true;
+    p.o.material.color.copy(p.ref.startsWith('IMPRIME') ? GRIS_IMPRIME : GRIS); p.o.material.emissive.setHex(0);
+    p.o.matrix.copy(p.base);
+  }
+  let t = 0; plan = [];
+  for (const m of e.mouvements) {
+    const cles = clesDe(n, m), pts = trajet(m);
+    const vis = cles.length === 1 && /^(2800-|2802-|vis )/.test(de(cles[0]).nom);
+    const duree = pts.length > 1 ? (vis ? DUREE.vis : DUREE.piece) * (pts.length - 1) ** 0.5 : 300;
+    plan.push({ cles, pts, t0: t, t1: t + duree, joindre: !!m.joindre });
+    t += duree + DUREE.pause;
+    for (const c of cles) {
+      const p = de(c); p.o.visible = true;
+      // un sous-ensemble qui rejoint le bras garde ses couleurs, sans la surbrillance des pièces nouvelles
+      p.o.material.color.copy(couleurRef[p.ref]); p.o.material.emissive.setHex(m.joindre ? 0 : 0x2a1405);
+    }
+  }
+  cadrer(n);
+  debut = performance.now();
+  afficherTexte(n);
+}
+const dv = new THREE.Vector3(), tr = new THREE.Matrix4();
+function animer(maintenant) {
+  const t = maintenant - debut;
+  for (const { cles, pts, t0, t1 } of plan) {
+    // avant son tour une pièce attend au bout de son chemin ; une pièce sans chemin apparaît à son tour
+    const u = Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+    const s = (1 - u) * (pts.length - 1), i = Math.min(Math.floor(s), pts.length - 2);
+    if (pts.length > 1) dv.lerpVectors(pts[i], pts[i + 1], s - i); else dv.set(0, 0, 0);
+    for (const c of cles) {
+      const p = de(c);
+      if (pts.length === 1) p.o.visible = t >= t0;
+      p.o.matrix.multiplyMatrices(tr.makeTranslation(dv.x, dv.y, dv.z), p.base);
+      p.o.matrixWorldNeedsUpdate = true;
+    }
+  }
+}
+
+// La caméra garde sa direction et vise ce qui est visible, chemins compris.
+const boite = new THREE.Box3(), coin = new THREE.Vector3();
+let visee = null;
+function cadrer(n) {
+  boite.makeEmpty();
+  for (const p of Object.values(piece)) if (p.o.visible) {
+    p.o.geometry.computeBoundingBox();
+    boite.union(p.o.geometry.boundingBox.clone().applyMatrix4(p.base));
+  }
+  for (const { cles, pts } of plan) {
+    const loin = pts.at(-1);
+    for (const c of cles) { const p = de(c); boite.union(p.o.geometry.boundingBox.clone().applyMatrix4(p.base).translate(loin)); }
+  }
+  const centre = boite.getCenter(new THREE.Vector3()), r = Math.max(30, boite.getSize(coin).length() / 2);
+  const dir = camera.position.clone().sub(ctrl.target).normalize();
+  const dist = r / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 0.95;
+  visee = { cible: centre, pos: centre.clone().addScaledVector(dir, dist), t: performance.now() };
+}
+function suivreCamera(maintenant) {
+  if (!visee) return;
+  const u = Math.min(1, (maintenant - visee.t) / 700), k = 0.12 + 0.88 * u;
+  ctrl.target.lerp(visee.cible, k); camera.position.lerp(visee.pos, k); ctrl.update();
+  if (u >= 1) visee = null;
+}
+
+// ── texte ──
+function afficherTexte(n) {
+  const e = ETAPES[n];
+  document.getElementById('num').textContent = `Étape ${n + 1} / ${ETAPES.length}`;
+  document.getElementById('titre').textContent = e.titre;
+  document.getElementById('atelier').innerHTML = e.atelier ? `<span class="atelier">à l'établi : ${e.atelier}</span>` : '';
+  document.getElementById('texte').textContent = e.texte;
+  document.getElementById('alerte').innerHTML = e.heurts.length
+    ? `<div class="alerte">Ne passe pas encore : ${[...new Set(e.heurts.map(h => `${h.piece} heurte ${h.contre}`))].join(' ; ')}.</div>` : '';
+  // les pièces de l'étape, par référence
+  const lignes = new Map();
+  for (const m of e.mouvements) if (!m.joindre) for (const c of m.cles) {
+    const r = de(c).ref; lignes.set(r, (lignes.get(r) ?? 0) + 1);
+  }
+  let html = lignes.size ? '<h2>Pièces</h2>' : '';
+  for (const [r, nb] of lignes) html += `<div class="ligne"><div class="pastille" style="background:#${couleurRef[r].getHexString()}"></div>
+    <div class="nombre">×${nb}</div><div><span class="ref">${affiche(r)}</span><span class="des">${designation(r)}</span></div></div>`;
+  document.getElementById('pieces').innerHTML = html;
+  document.getElementById('prec').disabled = n === 0;
+  document.getElementById('suiv').disabled = n === ETAPES.length - 1;
+  document.querySelectorAll('#sommaire div').forEach((d, i) => d.classList.toggle('courante', i === n));
+  try { localStorage.setItem('notice-bras-etape', n); } catch {}
+}
+document.getElementById('sommaire').innerHTML = '<h2>Étapes</h2>' + ETAPES.map((e, i) =>
+  `<div class="${e.heurts.length ? 'fausse' : ''}"><span class="n">${i + 1}</span>${e.titre}</div>`).join('');
+document.querySelectorAll('#sommaire div').forEach((d, i) => d.onclick = () => aller(i));
+function aller(n) { courante = Math.max(0, Math.min(ETAPES.length - 1, n)); preparer(courante); }
+document.getElementById('prec').onclick = () => aller(courante - 1);
+document.getElementById('suiv').onclick = () => aller(courante + 1);
+document.getElementById('rejouer').onclick = () => { debut = performance.now(); };
+addEventListener('keydown', e => { if (e.key === 'ArrowRight') aller(courante + 1); if (e.key === 'ArrowLeft') aller(courante - 1); });
+
+let depart = 0; try { depart = +(localStorage.getItem('notice-bras-etape') ?? 0) || 0; } catch {}
+aller(depart);
+window.aller = aller;
+function boucle(t) { animer(t); suivreCamera(t); soleil.position.copy(camera.position); rendu.render(scene, camera); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>
+</body>
+</html>
