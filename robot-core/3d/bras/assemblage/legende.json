@@ -1,0 +1,202 @@
+{
+ "1121-0006-0168": {
+  "role": "structure",
+  "nombre": 2,
+  "designation": "1121 Series Low-Side U-Channel (6 Hole, 168mm Length)"
+ },
+ "1123-0043-0096": {
+  "role": "structure",
+  "nombre": 2,
+  "designation": "1123 Series Pattern Plate (1 x 3 Hole, 43 x 96mm)"
+ },
+ "1123-0043-0072": {
+  "role": "structure",
+  "nombre": 2,
+  "designation": "1123 Series Pattern Plate (1 x 2 Hole, 43 x 72mm)"
+ },
+ "1108-0001-0002": {
+  "role": "structure",
+  "nombre": 2,
+  "designation": "1108 Series Flat Pattern Bracket (1-2)"
+ },
+ "1802-0043-0001": {
+  "role": "structure",
+  "nombre": 1,
+  "designation": "1802  Series Servo Frame (43mm Width, for Standard Size Servos)"
+ },
+ "1201-0027-0001": {
+  "role": "structure",
+  "nombre": 2,
+  "designation": "1201 Series Quad Block Pattern Mount (27-1)"
+ },
+ "1147-0001-0005": {
+  "role": "structure",
+  "nombre": 1,
+  "designation": "Threaded Steel L-Bracket (5 Hole) - 4 Pack"
+ },
+ "1116-0024-0040": {
+  "role": "structure",
+  "nombre": 1,
+  "designation": "1116 Series Grid Plate (3 x 5 Hole, 24 x 40mm)"
+ },
+ "4103-0032-0096": {
+  "role": "structure",
+  "nombre": 1,
+  "designation": "4103 Series goTUBE (96mm Length)"
+ },
+ "2312-0414-0072": {
+  "role": "transmission",
+  "nombre": 2,
+  "designation": "72 Tooth Hub-Mount Gear (MOD 0.8, 4mm Thick Acetal)"
+ },
+ "2312-0414-0048": {
+  "role": "transmission",
+  "nombre": 1,
+  "designation": "48 Tooth Hub-Mount Gear (MOD 0.8, 4mm Thick Acetal)"
+ },
+ "1906-0025-0032": {
+  "role": "transmission",
+  "nombre": 1,
+  "designation": "1906 Series Low-Profile Servo Hub (25 Tooth Spline, 32mm Diameter)"
+ },
+ "1908-0025-0032": {
+  "role": "transmission",
+  "nombre": 1,
+  "designation": "1908 Series Servo Hub (25 Tooth Spline, 32mm Diameter)"
+ },
+ "1311-0016-4008": {
+  "role": "transmission",
+  "nombre": 2,
+  "designation": "1311 Series Thru-Hole Sonic Hub (8mm REX® Bore)"
+ },
+ "1526-0032-0100": {
+  "role": "transmission",
+  "nombre": 2,
+  "designation": "1526 Series 32mm OD Plastic Pattern Spacer (10mm Length) - 2 Pack"
+ },
+ "1604-0043-0032": {
+  "role": "palier",
+  "nombre": 3,
+  "designation": "32mm Bore 2-Side, 2-Post Pillow Block (43mm Width)"
+ },
+ "1601-0039-0032": {
+  "role": "palier",
+  "nombre": 3,
+  "designation": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)"
+ },
+ "1601-0014-0004": {
+  "role": "palier",
+  "nombre": 4,
+  "designation": "4mm ID Flanged Ball Bearing (14mm OD, 5mm Thickness) - 2 Pack"
+ },
+ "2904-0004-0014": {
+  "role": "palier",
+  "nombre": 4,
+  "designation": "2904 Series Hole Reducer (4mm ID x 14mm OD) - 4 Pack"
+ },
+ "2000-0025-0002": {
+  "role": "servo",
+  "nombre": 1,
+  "designation": "2000 Series Dual Mode Servo (25-2, Torque)"
+ },
+ "D85MG": {
+  "role": "servo",
+  "nombre": 1,
+  "designation": "Hitec D85MG (servo du tube)"
+ },
+ "HS-65MG": {
+  "role": "servo",
+  "nombre": 1,
+  "designation": "Hitec HS-65MG (servo de pince)"
+ },
+ "IMPRIME:cloison": {
+  "role": "imprime",
+  "nombre": 1,
+  "designation": "cloison"
+ },
+ "2800-0004-0020": {
+  "role": "vis",
+  "nombre": 2,
+  "designation": "M4 x 0.7mm Zinc-Plated Socket Head Screw (20mm Length) - 25 Pack"
+ },
+ "2802-0004-0018": {
+  "role": "vis",
+  "nombre": 8,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 18mm Length) - 25 Pack"
+ },
+ "2802-0004-0016": {
+  "role": "vis",
+  "nombre": 8,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack"
+ },
+ "2800-0004-0014": {
+  "role": "vis",
+  "nombre": 4,
+  "designation": "M4 x 0.7mm Zinc-Plated Socket Head Screw (14mm Length)"
+ },
+ "2802-0004-0014": {
+  "role": "vis",
+  "nombre": 8,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 14mm Length) - 25 Pack"
+ },
+ "2800-0004-0010": {
+  "role": "vis",
+  "nombre": 4,
+  "designation": "M4 x 0.7mm Zinc-Plated Socket Head Screw (10mm Length)"
+ },
+ "2802-0004-0012": {
+  "role": "vis",
+  "nombre": 2,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+ },
+ "2802-0004-0010": {
+  "role": "vis",
+  "nombre": 8,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+ },
+ "2802-0004-0008": {
+  "role": "vis",
+  "nombre": 16,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+ },
+ "2802-0004-0005": {
+  "role": "vis",
+  "nombre": 2,
+  "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
+ },
+ "BRAS:vis de palonnier du D85MG": {
+  "role": "vis",
+  "nombre": 1,
+  "designation": "vis de palonnier du D85MG"
+ },
+ "2812-0004-0007": {
+  "role": "ecrou",
+  "nombre": 18,
+  "designation": "M4 x 0.7mm Nylock Nut"
+ },
+ "2801-0004-0008": {
+  "role": "rondelle",
+  "nombre": 12,
+  "designation": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD)"
+ },
+ "2807-0407-0500": {
+  "role": "rondelle",
+  "nombre": 10,
+  "designation": "2807 Series Stainless Steel Shim (4mm ID x 7mm OD, 0.50mm Thickness) - 12 Pack"
+ },
+ "1501-0006-0080": {
+  "role": "entretoise",
+  "nombre": 1,
+  "designation": "1501 Series M4 x 0.7mm Standoff (6mm OD, 8mm Length) - 4 Pack"
+ },
+ "1502-0006-0070": {
+  "role": "entretoise",
+  "nombre": 2,
+  "designation": "1502 Series 4mm ID Spacer (6mm OD, 7mm Length) - 4 Pack"
+ },
+ "1502-0006-0040": {
+  "role": "entretoise",
+  "nombre": 8,
+  "designation": "1502 Series 4mm ID Spacer (6mm OD, 4mm Length) - 4 Pack"
+ }
+}
