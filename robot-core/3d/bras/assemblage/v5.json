@@ -1,0 +1,660 @@
+{
+ "pieces": [
+  {
+   "nom": "liaison et moyeu en une pièce",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:liaison et moyeu",
+   "designation": "pièce imprimée : liaison et moyeu"
+  },
+  {
+   "nom": "cloison structurelle",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:cloison structurelle",
+   "designation": "pièce imprimée : cloison structurelle"
+  },
+  {
+   "nom": "pignon Slip-Fit 20 dents, alésage REX",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2303-4008-0020",
+   "designation": "2303 Series Steel, MOD 0.8 Pinion Gear (8mm REX® Bore, 20 Tooth)"
+  },
+  {
+   "nom": "engrenage laiton 2305, 20 dents",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2305-0025-0020",
+   "designation": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 20 Tooth)"
+  },
+  {
+   "nom": "goTUBE 48 mm de flexion, vissé sur le moyeu",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "4103-0032-0048",
+   "designation": "4103 Series goTUBE (48mm Length)"
+  },
+  {
+   "nom": "D85MG déplacé",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "D85MG",
+   "designation": "Hitec D85MG (servo du tube)"
+  },
+  {
+   "nom": "HS-65MG déplacé",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "HS-65MG",
+   "designation": "Hitec HS-65MG (servo de pince)"
+  },
+  {
+   "nom": "arbre REX 8 mm de flexion, 110 mm",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2102-0008-0110",
+   "designation": "2102 Series Stainless Steel REX® Shaft (8mm Diameter, 110mm Length)"
+  },
+  {
+   "nom": "1311-0016-4008#2 retourné pour l'arbre REX",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "1311-0016-4008",
+   "designation": "1311 Series Thru-Hole Sonic Hub (8mm REX® Bore)"
+  },
+  {
+   "nom": "2800-0004-0014#3 retourné pour l'arbre REX",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2800-0004-0014",
+   "designation": "M4 x 0.7mm Zinc-Plated Socket Head Screw (14mm Length)"
+  },
+  {
+   "nom": "2800-0004-0014#4 retourné pour l'arbre REX",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2800-0004-0014",
+   "designation": "M4 x 0.7mm Zinc-Plated Socket Head Screw (14mm Length)"
+  },
+  {
+   "nom": "1604-0043-0032#3 avancé de 8 mm",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "1604-0043-0032",
+   "designation": "32mm Bore 2-Side, 2-Post Pillow Block (43mm Width)"
+  },
+  {
+   "nom": "2802-0004-0008#1 avancé de 8 mm",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "2802-0004-0008#3 avancé de 8 mm",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "2802-0004-0008#5 avancé de 8 mm",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "2802-0004-0008#10 avancé de 8 mm",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "1601-0039-0032#2 avancé de 8 mm",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "1601-0039-0032",
+   "designation": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)"
+  },
+  {
+   "nom": "bague 2807-3236-0500 — retenue du tube vers l'avant",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2807-3236-0500",
+   "designation": "32mm ID Stainless Steel Shim (36mm OD, 0.50mm Thickness) - 12 Pack"
+  },
+  {
+   "nom": "bague 1500-0010-0032 — retenue du tube vers l'avant",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1500-0010-0032",
+   "designation": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack"
+  },
+  {
+   "nom": "bague 1500-0010-0032 — retenue du tube vers l'avant",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1500-0010-0032",
+   "designation": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack"
+  },
+  {
+   "nom": "pignon laiton 48 dents sur la cannelure du servo d'abduction",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2305-0025-0048",
+   "designation": "2305 Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 48 Tooth)"
+  },
+  {
+   "nom": "vis 2802-0004-0018 retournée — bloc 1201 → moyeu 1311 → goTUBE de flexion",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0018",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 18mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0018 retournée — bloc 1201 → moyeu 1311 → goTUBE de flexion",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0018",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 18mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0018 retournée — bloc 1201 → moyeu 1311 → goTUBE de flexion",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0018",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 18mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0018 retournée — bloc 1201 → moyeu 1311 → goTUBE de flexion",
+   "nature": "déplacée",
+   "etat": "déplacé",
+   "ref": "2802-0004-0018",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 18mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis vis M2 du D85MG",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "FOURNI:vis M2 du D85MG",
+   "designation": "vis M2 du D85MG, fournie avec le servo"
+  },
+  {
+   "nom": "vis vis M2 du D85MG",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "FOURNI:vis M2 du D85MG",
+   "designation": "vis M2 du D85MG, fournie avec le servo"
+  },
+  {
+   "nom": "vis vis M2 du HS-65MG",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "FOURNI:vis M2 du HS-65MG",
+   "designation": "vis M2 du HS-65MG, fournie avec le servo"
+  },
+  {
+   "nom": "vis vis M2 du HS-65MG",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "FOURNI:vis M2 du HS-65MG",
+   "designation": "vis M2 du HS-65MG, fournie avec le servo"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — profilé haut",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — profilé haut",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — profilé haut",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — profilé haut",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — profilé bas",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — profilé bas",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — profilé bas",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — profilé bas",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — plaque 96 y−",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque 96 y−",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — plaque 96 y−",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque 96 y−",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — plaque 96 y+",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque 96 y+",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0016 — palier 1604 avancé (bras)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0016",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — palier 1604 avancé (bras)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0016 — palier 1604 avancé (bras)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0016",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — palier 1604 avancé (bras)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 96 ↔ plaque 96 (entretoise 43 mm)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 96 ↔ plaque 96 (entretoise 43 mm)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "entretoise 1501-0006-0430 — plaque 96 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1501-0006-0430",
+   "designation": "1501 Series M4 x 0.7mm Standoff (6mm OD, 43mm Length) - 4 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 96 ↔ plaque 96 (entretoise 43 mm)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — plaque 96 ↔ plaque 96 (entretoise 43 mm)",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "entretoise 1501-0006-0430 — plaque 96 ↔ plaque 96",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1501-0006-0430",
+   "designation": "1501 Series M4 x 0.7mm Standoff (6mm OD, 43mm Length) - 4 Pack"
+  },
+  {
+   "nom": "plaque de bout du caisson",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:plaque de bout",
+   "designation": "pièce imprimée : plaque de bout"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "écrou 2812-0004-0007 — plaque de bout",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2812-0004-0007",
+   "designation": "M4 x 0.7mm Nylock Nut"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "câble du D85MG : 3 fils de Ø1.0 (231 mm dans le bras)",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:câble du D85MG",
+   "designation": "câble du D85MG (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
+  },
+  {
+   "nom": "prise du câble du D85MG",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:prise de servo",
+   "designation": "prise de servo (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
+  },
+  {
+   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (260 mm dans le bras)",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:câble du HS-65MG",
+   "designation": "câble du HS-65MG (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
+  },
+  {
+   "nom": "bout du câble du HS-65MG : prise à sertir après passage",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:prise à sertir",
+   "designation": "prise à sertir (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
+  },
+  {
+   "nom": "câble du servo d'abduction : 3 fils de Ø1.5 (139 mm dans le bras)",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:câble du servo d'abduction",
+   "designation": "câble du servo d'abduction (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
+  },
+  {
+   "nom": "prise du câble du servo d'abduction",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:prise de servo",
+   "designation": "prise de servo (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
+  },
+  {
+   "nom": "soudure du fil du HS-65MG sous gaine (rallonge 28 AWG)",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:soudure sous gaine",
+   "designation": "raccord soudé des 3 fils du HS-65MG à une nappe 28 AWG plus longue, sous gaine thermorétractable"
+  },
+  {
+   "nom": "palonnier du HS-65MG (bras de 8 mm)",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "FOURNI:palonnier du HS-65MG",
+   "designation": "palonnier du HS-65MG, fournie avec le servo"
+  },
+  {
+   "nom": "câble de pince (Ø1, du palonnier à la main)",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:câble de pince",
+   "designation": "câble de traction Ø1 (tresse ou acier gainé), tiré par le palonnier du HS-65MG"
+  },
+  {
+   "nom": "main : emplacement des doigts (non dessinés)",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:main (doigts non dessinés)",
+   "designation": "repère de la main : les doigts ne sont pas encore dessinés"
+  }
+ ],
+ "masquer": {
+  "palier, roulement et vis, avancés de 8 mm": [
+   "1604-0043-0032#3",
+   "1601-0039-0032#2",
+   "2802-0004-0008#1",
+   "2802-0004-0008#3",
+   "2802-0004-0008#5",
+   "2802-0004-0008#10"
+  ],
+  "barrette 1147 et sa visserie, supprimées": [
+   "1147-0001-0005#1",
+   "2802-0004-0012#1",
+   "2802-0004-0012#2",
+   "2802-0004-0005#1",
+   "2802-0004-0005#2",
+   "1502-0006-0070#1",
+   "1502-0006-0070#2"
+  ],
+  "D85MG, moyeu 1908, cloison et vis de palonnier, remplacés": [
+   "1908-0025-0032#1",
+   "D85MG#1",
+   "IMPRIME:cloison#1",
+   "BRAS:vis de palonnier du D85MG#1"
+  ],
+  "HS-65MG, déplacé": [
+   "HS-65MG#1"
+  ],
+  "entretoise 1501 en doublon de la cannelure du servo, retirée": [
+   "1501-0006-0080#1"
+  ],
+  "vis du moyeu 1311 côté corps, retournées pour tenir le goTUBE ; écrous supprimés": [
+   "2802-0004-0018#1",
+   "2802-0004-0018#3",
+   "2802-0004-0018#5",
+   "2802-0004-0018#6",
+   "2812-0004-0007#3",
+   "2812-0004-0007#12",
+   "2812-0004-0007#14",
+   "2812-0004-0007#1"
+  ],
+  "moyeu 1311 côté corps et ses vis de serrage, retournés pour entrer sur l'arbre REX": [
+   "1311-0016-4008#2",
+   "2800-0004-0014#3",
+   "2800-0004-0014#4"
+  ],
+  "pignon acétal, moyeu 1906 et ses 4 vis, remplacés par le pignon laiton sur la cannelure": [
+   "2312-0414-0048#1",
+   "1906-0025-0032#1",
+   "2802-0004-0008#2",
+   "2802-0004-0008#9",
+   "2802-0004-0008#13",
+   "2802-0004-0008#15"
+  ]
+ }
+}
