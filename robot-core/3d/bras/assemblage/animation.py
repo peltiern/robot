@@ -71,7 +71,7 @@ def groupe(nom, ref, centre):
     if ref.startswith(('2802-0004-0018', '2802-0004-0016', '2802-0004-0014', '2812-', '2801-', '2807-0407')) \
             and x < 22 and abs(z) < 33:
         return 'epaule'
-    if ref.startswith('2802-0004-0008') and 'plaque 1116' in nom:
+    if ref.startswith('2802-') and 'plaque 1116' in nom:
         return 'epaule'
     return 'caisson'
 

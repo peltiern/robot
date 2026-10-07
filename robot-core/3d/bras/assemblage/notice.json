@@ -2,7 +2,7 @@
  "etapes": [
   {
    "titre": "Les blocs d'épaule",
-   "texte": "Les deux blocs 1201 se posent face à face ; la plaque 1116 les relie à l'arrière par quatre vis M4 × 8 dans leurs taraudages.",
+   "texte": "Les deux blocs 1201 se posent face à face ; la plaque 1116 les relie à l'arrière par quatre vis M4 × 5 dans leurs taraudages (plus longues, elles buteraient sur les vis des couronnes).",
    "mouvements": [
     {
      "cles": [
@@ -42,16 +42,48 @@
     },
     {
      "cles": [
+      "v5-27"
+     ],
+     "chemin": [
+      [
+       [
+        -0.9993828083106143,
+        -0.035128371058020386,
+        0.0
+       ],
+       11.387694254042504
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-28"
+     ],
+     "chemin": [
+      [
+       [
+        -0.9993828088815526,
+        -0.035128354815136896,
+        0.0
+       ],
+       11.387694217105228
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
       "v5-29"
      ],
      "chemin": [
       [
        [
-        -0.9998065864854708,
-        -0.017460727332358924,
-        0.00905055917035179
+        -0.9993828039986001,
+        -0.03512849373223438,
+        0.0
        ],
-       14.255670156749389
+       11.387694279994822
       ]
      ],
      "tol": 5.0
@@ -63,43 +95,11 @@
      "chemin": [
       [
        [
-        -0.9998065870866102,
-        -0.017460708747128042,
-        0.009050528618400949
+        -0.9993828048159988,
+        -0.03512847047776647,
+        0.0
        ],
-       14.255670118981964
-      ]
-     ],
-     "tol": 5.0
-    },
-    {
-     "cles": [
-      "v5-31"
-     ],
-     "chemin": [
-      [
-       [
-        -0.9998065853443674,
-        -0.01746076997953774,
-        0.009050602949977888
-       ],
-       14.255669370882405
-      ]
-     ],
-     "tol": 5.0
-    },
-    {
-     "cles": [
-      "v5-32"
-     ],
-     "chemin": [
-      [
-       [
-        -0.9998065867246396,
-        -0.01746071049873501,
-        0.00905056522572822
-       ],
-       14.25566920069781
+       11.387694241574117
       ]
      ],
      "tol": 5.0
@@ -251,7 +251,7 @@
     },
     {
      "cles": [
-      "v5-21"
+      "v5-19"
      ],
      "chemin": [
       [
@@ -267,7 +267,7 @@
     },
     {
      "cles": [
-      "v5-22"
+      "v5-20"
      ],
      "chemin": [
       [
@@ -283,7 +283,7 @@
     },
     {
      "cles": [
-      "v5-23"
+      "v5-21"
      ],
      "chemin": [
       [
@@ -299,7 +299,7 @@
     },
     {
      "cles": [
-      "v5-24"
+      "v5-22"
      ],
      "chemin": [
       [
@@ -1278,7 +1278,7 @@
     },
     {
      "cles": [
-      "v5-20"
+      "v5-18"
      ],
      "chemin": [
       [
@@ -1412,7 +1412,7 @@
     },
     {
      "cles": [
-      "v5-25"
+      "v5-23"
      ],
      "chemin": [
       [
@@ -1428,7 +1428,7 @@
     },
     {
      "cles": [
-      "v5-26"
+      "v5-24"
      ],
      "chemin": [
       [
@@ -1515,7 +1515,7 @@
     },
     {
      "cles": [
-      "v5-16"
+      "v5-14"
      ],
      "chemin": [
       [
@@ -1613,9 +1613,9 @@
    "mouvements": [
     {
      "cles": [
-      "v5-17",
-      "v5-18",
-      "v5-19"
+      "v5-15",
+      "v5-16",
+      "v5-17"
      ],
      "chemin": [
       [
@@ -1765,7 +1765,7 @@
     },
     {
      "cles": [
-      "v5-27"
+      "v5-25"
      ],
      "chemin": [
       [
@@ -1781,7 +1781,7 @@
     },
     {
      "cles": [
-      "v5-28"
+      "v5-26"
      ],
      "chemin": [
       [
@@ -1860,7 +1860,7 @@
   },
   {
    "titre": "La plaque latérale y−",
-   "texte": "Les deux plaques 1123 du côté y− (96 et 72 mm) ferment le module d'un côté : trois vis M4 × 8 dans le cadre du servo, deux M4 × 12 dans les écrous de la cloison, deux M4 × 8 dans le palier du tube et quatre dans les paliers avant.",
+   "texte": "Les deux plaques 1123 du côté y− (96 et 72 mm) ferment le module d'un côté : trois vis M4 × 8 dans le cadre du servo, deux M4 × 12 dans les écrous de la cloison, deux M4 × 5 dans le palier du tube (plus longues, elles buteraient sur les vis qui le traversent) et quatre M4 × 8 dans les paliers avant.",
    "mouvements": [
     {
      "cles": [
@@ -1960,32 +1960,32 @@
     },
     {
      "cles": [
-      "v5-14"
+      "v5-31"
      ],
      "chemin": [
       [
        [
-        -0.012127090675673689,
-        -0.9998322318088243,
-        -0.01372741446629544
+        0.03466084060558793,
+        -0.9993978480208938,
+        0.0016023419486597135
        ],
-       14.255675603327049
+       11.382240355895126
       ]
      ],
      "tol": 5.0
     },
     {
      "cles": [
-      "v5-15"
+      "v5-32"
      ],
      "chemin": [
       [
        [
-        -0.0025437591529807063,
-        -0.9998514205408824,
-        -0.017048933449078974
+        0.03466111714990009,
+        -0.9993978386000764,
+        0.0016022357556095262
        ],
-       14.266638413090106
+       11.38224267519885
       ]
      ],
      "tol": 5.0

@@ -41,7 +41,11 @@ ETATS = {'imprimée': 'imprimé', 'achetée': 'ajouté', 'déplacée': 'déplac�
 # a un rebord à l'arrière et un lamage à l'avant où la collerette affleure (essai de retournement abandonné
 # le 2026-10-03, il venait d'un roulement compté deux fois).
 AVANCE = 8.0
-PALIER_AVANCE = ['1604-0043-0032#3', '2802-0004-0008#1', '2802-0004-0008#3', '2802-0004-0008#5', '2802-0004-0008#10']
+PALIER_AVANCE = ['1604-0043-0032#3', '2802-0004-0008#1', '2802-0004-0008#3']
+# Côté y−, les deux vis de la plaque 72 dans le palier croisaient les vis M4 × 16 qui traversent le palier vers
+# la cloison (même coin, y = −16) : M4 × 5 au lieu de M4 × 8, 1 mm de jeu, 2,5 mm de filet (2026-10-07).
+# (x, z) ; elles remplacent 2802-0004-0008#5 et #10, qui restent masquées avec le palier d'origine.
+VIS_PALIER_Y_MOINS = [(135.96, -16.0), (135.96, 16.0)]
 ROULEMENT = '1601-0039-0032#2'
 
 # Numéros de pièce de bras.stl remplacés par la v5 (layout5.py de la conversation, plus le micro-servo
@@ -85,6 +89,9 @@ BAGUES_TUBE = [('2807-3236-0500', 169.60, 0.5), ('1500-0010-0032', 170.10, 1.0),
 
 # La plaque 1116-0024-0040 ferme le bras côté épaule (x = −24) : elle s'appuie sur les deux blocs 1201,
 # taraudés en face de ses trous (y = ±16, z = ±8). Dans bras.stl elle n'était tenue par rien.
+# M4 × 5 et non M4 × 8 : plus longues, elles croisaient dans le coin des blocs les vis M4 × 16 des couronnes,
+# qui descendent jusqu'à z = ±6,4 ; 1 mm de jeu, 2,5 mm de filet. Les trous du milieu (z = 0), essayés le
+# 2026-10-07, ne sont pas taraudés et le câble du servo d'abduction passe derrière.
 FIXATIONS_PLAQUE_EPAULE = [(y, z) for y in (16.0, -16.0) for z in (8.0, -8.0)]
 
 
@@ -265,8 +272,11 @@ def pieces_v5():
     for p, d, L, ref in VIS_OREILLES:
         out.append(('vis ' + ref.split(':', 1)[1], 'visserie ajoutée', vis_m2(p, d, L), ref))
     for y, z in FIXATIONS_PLAQUE_EPAULE:
-        out.append(('vis 2802-0004-0008 — plaque 1116 ↔ bloc d\'épaule 1201', 'visserie ajoutée',
-                    poser_vis('2802-0004-0008', [-24.0 - 2.2, y, z], [1, 0, 0]), '2802-0004-0008'))
+        out.append(('vis 2802-0004-0005 — plaque 1116 ↔ bloc d\'épaule 1201', 'visserie ajoutée',
+                    poser_vis('2802-0004-0005', [-24.0 - 2.2, y, z], [1, 0, 0]), '2802-0004-0005'))
+    for x, z in VIS_PALIER_Y_MOINS:
+        out.append(('vis 2802-0004-0005 — plaque 72 y− ↔ palier avancé', 'visserie ajoutée',
+                    poser_vis('2802-0004-0005', [x, -(24.05 + 2.2), z], [0, 1, 0]), '2802-0004-0005'))
     for x, cote in FIXATIONS_CADRE:
         tete = [x, cote * (24.05 + 2.2), 0.0]                # dessus de tête, sur la face extérieure de la plaque
         out.append(('vis 2802-0004-0008 — cadre 1802 ↔ plaque 96', 'visserie ajoutée',

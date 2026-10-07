@@ -169,7 +169,7 @@ def etapes(P):
     # ── l'épaule ──
     etape('Les blocs d\'épaule',
           'Les deux blocs 1201 se posent face à face ; la plaque 1116 les relie à l\'arrière par quatre vis '
-          'M4 × 8 dans leurs taraudages.',
+          'M4 × 5 dans leurs taraudages (plus longues, elles buteraient sur les vis des couronnes).',
           poser(k('1201-0027-0001#1')), glisse(k('1201-0027-0001#2'), mY, 25),
           glisse(cles(r'^1116-'), mX, 20), visser(cles(r'plaque 1116 ↔ bloc')))
     etape('Le moyeu côté bras',
@@ -280,12 +280,12 @@ def etapes(P):
     # ── le caisson ──
     etape('La plaque latérale y−',
           'Les deux plaques 1123 du côté y− (96 et 72 mm) ferment le module d\'un côté : trois vis M4 × 8 dans le '
-          'cadre du servo, deux M4 × 12 dans les écrous de la cloison, deux M4 × 8 dans le palier du tube et quatre '
-          'dans les paliers avant.',
+          'cadre du servo, deux M4 × 12 dans les écrous de la cloison, deux M4 × 5 dans le palier du tube (plus '
+          'longues, elles buteraient sur les vis qui le traversent) et quatre M4 × 8 dans les paliers avant.',
           glisse(k('1123-0043-0096#1', '1123-0043-0072#1'), mY, 20),
           visser(cles(r'cadre 1802 ↔ plaque 96', lambda c: c[1] < 0)),
           visser(cles(r'^vis 2802-0004-0012 — plaque 96 y−')),
-          visser(k('v5-14', 'v5-15', '2802-0004-0008#4', '2802-0004-0008#7', '2802-0004-0008#8', '2802-0004-0008#16')),
+          visser(cles(r'plaque 72 y− ↔ palier avancé') + k('2802-0004-0008#4', '2802-0004-0008#7', '2802-0004-0008#8', '2802-0004-0008#16')),
           atelier='module')
     etape('La plaque latérale y+',
           'Deux entretoises de 43 mm vissées sur la plaque y− ; les deux plaques du côté y+ par-dessus, avec la même '
@@ -296,7 +296,7 @@ def etapes(P):
           visser(cles(r'cadre 1802 ↔ plaque 96', lambda c: c[1] > 0)),
           visser(cles(r'^vis 2802-0004-0012 — plaque 96 y\+')),
           visser(cles(r'entretoise 43 mm', lambda c: c[1] > 0)),
-          visser(k('v5-12', 'v5-13', '2802-0004-0008#6', '2802-0004-0008#11', '2802-0004-0008#12', '2802-0004-0008#14')),
+          visser(cles(r'2802-0004-0008#[13] avancé') + k('2802-0004-0008#6', '2802-0004-0008#11', '2802-0004-0008#12', '2802-0004-0008#14')),
           atelier='module')
     etape('Le module rejoint l\'épaule',
           'Le module glisse vers l\'arrière entre les deux plaques 1108, jusqu\'à ce que le pignon de 48 dents engrène '

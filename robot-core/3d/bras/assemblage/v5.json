@@ -99,20 +99,6 @@
    "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
   },
   {
-   "nom": "2802-0004-0008#5 avancé de 8 mm",
-   "nature": "déplacée",
-   "etat": "déplacé",
-   "ref": "2802-0004-0008",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
-  },
-  {
-   "nom": "2802-0004-0008#10 avancé de 8 mm",
-   "nature": "déplacée",
-   "etat": "déplacé",
-   "ref": "2802-0004-0008",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
-  },
-  {
    "nom": "1601-0039-0032#2 avancé de 8 mm",
    "nature": "déplacée",
    "etat": "déplacé",
@@ -204,32 +190,46 @@
    "designation": "vis M2 du HS-65MG, fournie avec le servo"
   },
   {
-   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nom": "vis 2802-0004-0005 — plaque 1116 ↔ bloc d'épaule 1201",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0008",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+   "ref": "2802-0004-0005",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
   },
   {
-   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nom": "vis 2802-0004-0005 — plaque 1116 ↔ bloc d'épaule 1201",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0008",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+   "ref": "2802-0004-0005",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
   },
   {
-   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nom": "vis 2802-0004-0005 — plaque 1116 ↔ bloc d'épaule 1201",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0008",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+   "ref": "2802-0004-0005",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
   },
   {
-   "nom": "vis 2802-0004-0008 — plaque 1116 ↔ bloc d'épaule 1201",
+   "nom": "vis 2802-0004-0005 — plaque 1116 ↔ bloc d'épaule 1201",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0008",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+   "ref": "2802-0004-0005",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0005 — plaque 72 y− ↔ palier avancé",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0005",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0005 — plaque 72 y− ↔ palier avancé",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0005",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack"
   },
   {
    "nom": "vis 2802-0004-0008 — cadre 1802 ↔ plaque 96",
