@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wall-E animé</title>
+<style>
+  :root { --fond: #eef0f3; --texte: #1d2129; --discret: #5b6270; --panneau: rgba(255,255,255,.95); --trait: #d5d9e0; --accent: #c8642a; }
+  html, body { margin: 0; height: 100%; background: var(--fond); color: var(--texte); font: 13px system-ui, sans-serif; }
+  #vue { position: fixed; inset: 0; }
+  .panneau { position: fixed; background: var(--panneau); border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+  #commandes { top: 12px; left: 12px; width: 300px; padding: 10px 12px; max-height: calc(100% - 24px); overflow-y: auto; box-sizing: border-box; }
+  h1 { font-size: 14px; margin: 0 0 6px; }
+  h2 { font-size: 12px; margin: 10px 0 4px; color: var(--discret); text-transform: uppercase; letter-spacing: .05em; }
+  .curseur { display: grid; grid-template-columns: 96px 1fr 44px; gap: 6px; align-items: center; margin: 2px 0; }
+  .curseur input { width: 100%; } .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--discret); }
+  .note { color: var(--discret); font-size: 11px; margin: 0 0 4px; }
+  button { font: inherit; padding: 3px 8px; border: 1px solid #b9bfca; background: #fff; border-radius: 5px; cursor: pointer; }
+  .boutons { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  #familles { top: 12px; right: 12px; padding: 8px 12px; }
+  #familles label { display: grid; grid-template-columns: 18px 14px 1fr; gap: 6px; align-items: center; margin: 3px 0; }
+  .pastille { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); }
+  #info { color: var(--discret); margin-top: 8px; border-top: 1px solid var(--trait); padding-top: 6px; min-height: 2.6em; }
+  #info b { color: var(--texte); }
+  @media (max-width: 760px) { #commandes { right: 12px; width: auto; max-height: 50%; } #familles { display: none; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<div id="vue"></div>
+<div id="commandes" class="panneau">
+  <h1>Wall-E animé</h1>
+  <div id="chargement">Chargement du robot (60 Mo)…</div>
+  <div id="axes"></div>
+  <div class="boutons">
+    <button id="export">pose de l'export</button><button id="repos">tout à zéro</button><button id="demo">démonstration</button>
+  </div>
+  <div id="info">Survole une pièce pour la nommer.</div>
+</div>
+<div id="familles" class="panneau"></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const RAD = Math.PI / 180, DEG = 180 / Math.PI, borne = (v, a, b) => Math.max(a, Math.min(b, v));
+const rendu = new THREE.WebGLRenderer({ antialias: true });
+rendu.setPixelRatio(devicePixelRatio); rendu.setSize(innerWidth, innerHeight); document.getElementById('vue').appendChild(rendu.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xeef0f3);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8890a0, 1.3));
+const soleil = new THREE.DirectionalLight(0xffffff, 1.4); scene.add(soleil);
+// repère de la maquette : x droite du robot, y haut, z arrière ; on le regarde de face, un peu de côté
+const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 5, 20000);
+camera.position.set(-700, 750, -1400);
+const ctrl = new OrbitControls(camera, rendu.domElement); ctrl.target.set(0, 380, 0); ctrl.update();
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); rendu.setSize(innerWidth, innerHeight); });
+
+const frais = f => f + '?t=' + Date.now();
+const D = await (await fetch(frais('robot-anime.json'), { cache: 'no-store' })).json();
+const C = D.cinematique;
+
+// ── les axes ──
+const AXES = [
+  { id: 'panoramique', nom: 'Panoramique', min: -95, max: 95, groupe: 'Tête' },
+  { id: 'inclinaison', nom: 'Inclinaison', min: -40, max: 53, groupe: 'Tête' },
+  { id: 'monterDescendre', nom: 'Monter', min: -10, max: 60, groupe: 'Tête' },
+  { id: 'oeilDroit', nom: 'Œil droit', min: -35, max: 14, groupe: 'Yeux' },
+  { id: 'oeilGauche', nom: 'Œil gauche', min: -35, max: 14, groupe: 'Yeux' },
+];
+AXES.push({ id: 'moteurDroit', nom: 'Moteur droit', min: -150, max: 150, groupe: 'Chenilles', unite: ' tr/min' },
+          { id: 'moteurGauche', nom: 'Moteur gauche', min: -150, max: 150, groupe: 'Chenilles', unite: ' tr/min' });
+for (const cote of ['droit', 'gauche'])
+  for (const [cmd, [a0, a1]] of Object.entries(D.courses))
+    AXES.push({ id: cmd + '_' + cote, nom: { flexion: 'Flexion', abduction: 'Abduction', tube: 'Rotation du tube', pince: 'Pince' }[cmd],
+                min: a0, max: a1, groupe: 'Bras ' + cote, cote, cmd });
+const NOTES = { 'Chenilles': 'Vitesse à la sortie du motoréducteur 5203 ; positif : en avant. Renvoi conique 14/28 vers l\'axe arrière et ses roues dentées.',
+  'Tête': 'Cinématique relevée en septembre et validée sur le robot. Monter : valeur du HUD.',
+  'Yeux': 'Nouveau mécanisme (servo porté par l\'œil), relevé dans le modèle et pas encore validé sur le robot. 0 : œil à plat ; positif : bord extérieur en haut.' };
+const EXPORT = { ...Object.fromEntries(AXES.map(a => [a.id, 0])), panoramique: C.export.panoramique,
+                 inclinaison: C.export.inclinaison, monterDescendre: C.export.monterDescendre,
+                 oeilDroit: D.yeux.droit.export, oeilGauche: D.yeux.gauche.export };
+const pose = { ...EXPORT };
+const curseurs = {};
+let titre = null;
+for (const a of AXES) {
+  if (a.groupe !== titre) {
+    titre = a.groupe;
+    document.getElementById('axes').insertAdjacentHTML('beforeend', `<h2>${titre}</h2>` + (NOTES[titre] ? `<p class="note">${NOTES[titre]}</p>` : ''));
+  }
+  const l = document.createElement('div'); l.className = 'curseur';
+  l.innerHTML = `<span>${a.nom}</span><input type="range" min="${a.min}" max="${a.max}" step="0.1"><span class="val"></span>`;
+  const r = l.querySelector('input');
+  r.oninput = () => { demo = null; pose[a.id] = +r.value; appliquer(); };
+  curseurs[a.id] = { r, v: l.querySelector('.val') };
+  document.getElementById('axes').appendChild(l);
+}
+
+// ── le robot ──
+const racine = await new Promise(ok => new GLTFLoader().load(frais('robot-anime.glb'), g => ok(g.scene)));
+scene.add(racine); document.getElementById('chargement').remove();
+const TEINTES = { bras_droit: 0x2a7fd0, bras_gauche: 0xd0602a, oeil_droit: 0xc9b98f, oeil_gauche: 0xc9b98f,
+                  palonnier_oeil_droit: 0xf0b000, palonnier_oeil_gauche: 0xf0b000, tringle_oeil_droit: 0xd8dde3,
+                  tringle_oeil_gauche: 0xd8dde3, chenilles: 0x56595f };
+const FAMILLE = g => g === 'chenilles' ? 'chenilles' : (g === 'caisse' || g === 'flexion_corps') ? 'caisse' : g.startsWith('bras_') ? g.replace('_', ' ')
+  : /oeil/.test(g) ? 'yeux' : 'cou et tête';
+const pieces = [], familles = new Map();
+racine.updateMatrixWorld(true);
+racine.traverse(o => {
+  if (!o.isMesh) return;
+  const n = D.noeuds[o.name]; if (!n) return;
+  o.material = new THREE.MeshStandardMaterial({ color: TEINTES[n.groupe] ?? 0xb4b9c2, metalness: 0.1, roughness: 0.65,
+                                                side: THREE.DoubleSide, flatShading: true });
+  o.userData = n;
+  if (n.groupe === 'tige_cad') { o.visible = false; return; }        // la tige du CAD n'est pas celle du robot
+  const base = o.matrixWorld.clone();
+  pieces.push({ o, base, n });
+  const f = FAMILLE(n.groupe); if (!familles.has(f)) familles.set(f, []); familles.get(f).push(o);
+});
+for (const { o } of pieces) { scene.attach(o); o.matrixAutoUpdate = false; }
+document.getElementById('familles').innerHTML = [...familles.keys()].sort().map(f =>
+  `<label><input type="checkbox" data-f="${f}" checked><span class="pastille" style="background:#${familles.get(f)[0].material.color.getHexString()}"></span>${f}</label>`).join('');
+const masquees = new Set();
+document.querySelectorAll('#familles input').forEach(i => i.onchange = () => {
+  i.checked ? masquees.delete(i.dataset.f) : masquees.add(i.dataset.f); appliquer(); });
+
+// ── monter / descendre : la loi de robot-walle.html (bras de 28, tige de 87, levier de 48) ──
+function monter(v) {
+  const m = C.monter, uv = p => [p[2], p[1]];
+  const O2 = uv(m.O2), B = uv(m.B);
+  const phi = (m.calage + m.sens * m.degParUnite * v) * RAD;
+  const M = [O2[0] + m.bras * Math.cos(phi), O2[1] + m.bras * Math.sin(phi)];
+  const vx = M[0] - B[0], vy = M[1] - B[1], q = Math.hypot(vx, vy);
+  const k = (q * q + m.levier * m.levier - m.tige * m.tige) / (2 * q * m.levier);
+  const levier = Math.atan2(vy, vx) + m.branche * Math.acos(borne(k, -1, 1));
+  return { theta: levier * DEG + 180, phi, M, R: [B[0] + m.levier * Math.cos(levier), B[1] + m.levier * Math.sin(levier)] };
+}
+const acier = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: 0.6, roughness: 0.35 });
+const brasMonter = new THREE.Group();
+const lame = new THREE.Mesh(new THREE.BoxGeometry(4, 8, 48), acier); lame.position.z = 8; brasMonter.add(lame);
+brasMonter.position.set(C.monter.xBras, C.monter.O2[1], C.monter.O2[2]);
+const geoTige = new THREE.CylinderGeometry(1.6, 1.6, 1, 12); geoTige.translate(0, 0.5, 0);
+const tige = new THREE.Mesh(geoTige, acier), rotuleA = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 12), acier), rotuleB = rotuleA.clone();
+const geoAxe = new THREE.CylinderGeometry(2, 2, 1, 12); geoAxe.translate(0, 0.5, 0);
+const axeRotule = new THREE.Mesh(geoAxe, acier);
+scene.add(brasMonter, tige, rotuleA, rotuleB, axeRotule);
+const V3 = THREE.Vector3;
+function tendre(objet, a, b) {
+  const d = b.clone().sub(a); objet.position.copy(a); objet.scale.set(1, d.length(), 1);
+  objet.quaternion.setFromUnitVectors(new V3(0, 1, 0), d.normalize());
+}
+
+// ── matrices ──
+const autour = (axe, angle, p) => new THREE.Matrix4().makeTranslation(p[0], p[1], p[2])
+  .multiply(new THREE.Matrix4().makeRotationAxis(new V3(...axe).normalize(), angle))
+  .multiply(new THREE.Matrix4().makeTranslation(-p[0], -p[1], -p[2]));
+const X = [1, 0, 0], Y = [0, 1, 0], Z = [0, 0, 1];
+// La tringlerie d'un œil, dans le plan (x, y) : l'œil tourne autour de O et porte son servo (axe S) ; le
+// palonnier tire, par la tringle, sur la rotule F vissée dans la tête. Angle de l'œil comme dans robot-walle.html.
+const dernierA = {};
+const tourner = (p, c, a) => [c[0] + (p[0] - c[0]) * Math.cos(a) - (p[1] - c[1]) * Math.sin(a),
+                              c[1] + (p[0] - c[0]) * Math.sin(a) + (p[1] - c[1]) * Math.cos(a)];
+function oeil(cote, phi) {
+  const t = D.yeux[cote], s = cote === 'droit' ? 1 : -1, a = s * (phi - t.export) * RAD;
+  const { O, F } = t, A0 = t.A, S0 = t.S, S = tourner(S0, O, a);
+  // A : sur le cercle du palonnier (S, r) et à la longueur de la tringle de F ; la solution la plus proche de la précédente
+  const r = Math.hypot(A0[0] - S0[0], A0[1] - S0[1]), L = Math.hypot(F[0] - A0[0], F[1] - A0[1]);
+  const dx = F[0] - S[0], dy = F[1] - S[1], d = Math.hypot(dx, dy);
+  if (d > r + L || d < Math.abs(r - L)) return null;                 // hors d'atteinte : la tringlerie bloque
+  const u = (r * r - L * L + d * d) / (2 * d), h = Math.sqrt(Math.max(0, r * r - u * u));
+  const px = S[0] + u * dx / d, py = S[1] + u * dy / d;
+  const sol = [[px + h * dy / d, py - h * dx / d], [px - h * dy / d, py + h * dx / d]];
+  const ref = dernierA[cote] ?? A0;
+  const A = sol.reduce((m, p) => Math.hypot(p[0] - ref[0], p[1] - ref[1]) < Math.hypot(m[0] - ref[0], m[1] - ref[1]) ? p : m);
+  dernierA[cote] = A;
+  const psi = Math.atan2(A[1] - S[1], A[0] - S[0]) - Math.atan2(A0[1] - S0[1], A0[0] - S0[0]);
+  const delta = Math.atan2(A[1] - F[1], A[0] - F[0]) - Math.atan2(A0[1] - F[1], A0[0] - F[0]);
+  const deplacer = (c0, c1, ang) => new THREE.Matrix4().makeTranslation(c1[0], c1[1], 0)
+    .multiply(new THREE.Matrix4().makeRotationZ(ang)).multiply(new THREE.Matrix4().makeTranslation(-c0[0], -c0[1], 0));
+  return { oeil: autour(Z, a, O), palonnier: deplacer(S0, S, psi), tringle: deplacer(F, F, delta), servo: (psi - a) * DEG };
+}
+// Les chenilles : les axes des maillons sont posés le long du chemin à un pas l'un de l'autre, à vol d'oiseau, comme
+// une vraie chaîne (robot_anime.pas_a_pas) ; chaque pièce d'un maillon suit son axe et la ligne vers l'axe voisin.
+// Les roues dentées se calent sur les axes engagés (un creux sous chaque axe) ; les petites roues et le moteur
+// tournent de l'avance.
+const RENVOI = 2;
+const CHEMINS = Object.fromEntries(Object.entries(D.chenilles).map(([c, ch]) => {
+  const P = ch.points, n = P.length, cum = [0];
+  for (let i = 1; i <= n; i++) cum.push(cum[i - 1] + Math.hypot(P[i % n][0] - P[i - 1][0], P[i % n][1] - P[i - 1][1]));
+  return [c, { ...ch, cum, L: cum[n] }];
+}));
+function axesChenille(ch, du) {
+  const P = ch.points, m = P.length, L = ch.L;
+  let u = ((ch.u0 + du) % L + L) % L, i = 0, hi = m;
+  while (hi - i > 1) { const k = (i + hi) >> 1; if (ch.cum[k] <= u) i = k; else hi = k; }
+  const f = (u - ch.cum[i]) / (ch.cum[i + 1] - ch.cum[i]);
+  let p = [P[i][0] + (P[(i + 1) % m][0] - P[i][0]) * f, P[i][1] + (P[(i + 1) % m][1] - P[i][1]) * f];
+  const out = [p];
+  if (!Number.isFinite(u)) return P.slice(0, ch.n);
+  for (let k = 1; k < ch.n; k++) {
+    let a = p, j = i;
+    for (let garde = 0; garde < m; garde++) {
+      const B = P[(j + 1) % m];
+      if (Math.hypot(B[0] - p[0], B[1] - p[1]) >= ch.pas) {
+        const d = [B[0] - a[0], B[1] - a[1]], w = [a[0] - p[0], a[1] - p[1]];
+        const A2 = d[0] * d[0] + d[1] * d[1], B2 = 2 * (d[0] * w[0] + d[1] * w[1]), C2 = w[0] * w[0] + w[1] * w[1] - ch.pas * ch.pas;
+        const t = (-B2 + Math.sqrt(Math.max(B2 * B2 - 4 * A2 * C2, 0))) / (2 * A2);
+        p = [a[0] + d[0] * t, a[1] + d[1] * t]; i = j % m; break;
+      }
+      a = B; j++;
+    }
+    out.push(p);
+  }
+  return out;
+}
+const avance = { droit: 0, gauche: 0 };                          // mm de chenille depuis l'export
+const etatChenille = {};
+function preparerChenilles() {
+  for (const c of ['droit', 'gauche']) {
+    const ch = CHEMINS[c], du = -ch.sens * avance[c], axes = axesChenille(ch, du);
+    const precedent = etatChenille[c];
+    // chaque roue dentée : la rotation qui met un creux sous chacun des axes engagés (moyenne à 12 dents), prise
+    // sur la branche la plus proche de la rotation attendue d'après l'avance
+    const dentees = {};
+    for (const { n } of pieces) {
+      const info = n.chenille;
+      if (!info || info.cote !== c || info.role !== 'dentee' || dentees[info.creux]) continue;
+      const [cy, cz] = info.centre;
+      let sx = 0, sy = 0;
+      for (const q of axes) {
+        if (Math.abs(Math.hypot(q[0] - cy, q[1] - cz) - info.rayon) > 0.05) continue;   // seulement les axes posés sur l'arc
+        const e = 12 * (Math.atan2(q[1] - cz, q[0] - cy) - info.creux);
+        sx += Math.cos(e); sy += Math.sin(e);
+      }
+      const brut = Math.atan2(sy, sx) / 12, dent = 2 * Math.PI / 12;
+      const attendu = precedent?.dentees[info.creux] !== undefined
+        ? precedent.dentees[info.creux] + ch.sens * (du - precedent.du) / info.rayon : brut;
+      dentees[info.creux] = brut + dent * Math.round((attendu - brut) / dent);
+    }
+    etatChenille[c] = { axes, du, dentees };
+  }
+}
+function chenille(info) {
+  const c = info.cote, ch = CHEMINS[c], e = etatChenille[c];
+  if (info.role === 'maillon') {
+    const A = e.axes[info.a], B = e.axes[info.b], [ya, za] = info.pa, [yb, zb] = info.pb;
+    const rot = Math.atan2(B[1] - A[1], B[0] - A[0]) - Math.atan2(zb - za, yb - ya);
+    return new THREE.Matrix4().makeTranslation(0, A[0], A[1]).multiply(new THREE.Matrix4().makeRotationX(rot))
+      .multiply(new THREE.Matrix4().makeTranslation(0, -ya, -za));
+  }
+  if (info.role === 'dentee') return autour(X, e.dentees[info.creux], [0, ...info.centre]);
+  const angle = ch.sens * e.du / info.rayon * (info.role === 'moteur' ? RENVOI : 1);
+  // le moteur tourne autour de son axe, le long de z : son centre est (x, y)
+  if (info.role === 'moteur') return autour(Z, angle, [info.centre[0], info.centre[1], 0]);
+  return autour(X, angle, [0, ...info.centre]);
+}
+// le bras : les ensembles d'animation.json, dans le repère du bras, ramenés dans celui de la maquette
+const BRAS = Object.fromEntries(Object.entries(D.bras).map(([c, m]) => {
+  const M = new THREE.Matrix4().set(...m.flat()); return [c, { M, Mi: M.clone().invert() }]; }));
+function articulations(cote) {
+  const G = {};
+  const de = g => {
+    if (G[g]) return G[g];
+    const d = D.bras_groupes[g];
+    // Le bras gauche est le même bras retourné d'un demi-tour sur son axe : son axe de flexion est inversé dans le
+    // robot. Sans ce signe, une flexion positive levait le bras droit et faisait plonger le gauche dans la caisse.
+    const signe = cote === 'gauche' && d.commande === 'flexion' ? -1 : 1;
+    const R = autour(d.axe, signe * (pose[d.commande + '_' + cote] ?? 0) * d.rapport * RAD, d.point);
+    return G[g] = d.parent ? de(d.parent).clone().multiply(R) : R;
+  };
+  for (const g of Object.keys(D.bras_groupes)) de(g);
+  const { M, Mi } = BRAS[cote];
+  for (const g in G) G[g] = M.clone().multiply(G[g]).multiply(Mi);
+  return G;
+}
+
+const derniersYeux = {};
+function appliquer() {
+  for (const a of AXES) { curseurs[a.id].r.value = pose[a.id]; curseurs[a.id].v.textContent = pose[a.id].toFixed(0) + (a.unite ?? '°'); }
+  const e = C.export, P = C.pivots;
+  const m = monter(pose.monterDescendre), m0 = monter(e.monterDescendre), L = C.monter.barre;
+  const dth = (m.theta - C.monter.theta0) * RAD;
+  const du = L * (Math.cos(m.theta * RAD) - Math.cos(C.monter.theta0 * RAD));
+  const dv = L * (Math.sin(m.theta * RAD) - Math.sin(C.monter.theta0 * RAD));
+  const chariot = new THREE.Matrix4().makeTranslation(0, dv, du);
+  const pan = chariot.clone().multiply(autour(Y, -(pose.panoramique - e.panoramique) * RAD, P.tete));
+  const tete = pan.clone().multiply(autour(X, (pose.inclinaison - e.inclinaison) * RAD, P.tete));
+  const M = { caisse: new THREE.Matrix4(), chenilles: new THREE.Matrix4(), chariot, panoramique: pan, tete,
+    pignon_inclinaison: tete.clone().multiply(autour(X, C.pignon.rapport * (pose.inclinaison - e.inclinaison) * RAD, P.pignon_inclinaison)),
+    palonnier_monter: autour(X, -(m.phi - m0.phi), P.palonnier_monter) };
+  for (const b of ['barre_avant', 'barre_milieu', 'barre_arriere']) M[b] = autour(X, -dth, P[b]);
+  for (const cote of ['droit', 'gauche']) {
+    const id = cote === 'droit' ? 'oeilDroit' : 'oeilGauche';
+    let o = oeil(cote, pose[id]);
+    if (!o) { pose[id] = derniersYeux[cote] ?? D.yeux[cote].export; o = oeil(cote, pose[id]); }   // la butée de la tringlerie
+    derniersYeux[cote] = pose[id];
+    M['oeil_' + cote] = tete.clone().multiply(o.oeil);
+    M['palonnier_oeil_' + cote] = tete.clone().multiply(o.palonnier);
+    M['tringle_oeil_' + cote] = tete.clone().multiply(o.tringle);
+  }
+  const A = { droit: articulations('droit'), gauche: articulations('gauche') };
+  preparerChenilles();
+  const auRepos = c => Object.keys(D.courses).every(k => pose[k + '_' + c] === 0);
+  for (const { o, base, n } of pieces) {
+    let T;
+    if (n.groupe.startsWith('bras_')) {
+      const c = n.groupe.slice(5);
+      // les câbles du bras sont dessinés au repos : on les cache quand le bras bouge
+      if (n.articulation === 'cable') { o.visible = auRepos(c) && !masquees.has(FAMILLE(n.groupe)); T = new THREE.Matrix4(); }
+      else { T = A[c][n.articulation] ?? new THREE.Matrix4(); o.visible = !masquees.has(FAMILLE(n.groupe)); }
+    } else {
+      T = n.chenille ? chenille(n.chenille) : (M[n.groupe] ?? new THREE.Matrix4()); o.visible = !masquees.has(FAMILLE(n.groupe));
+    }
+    o.matrix.multiplyMatrices(T, base); o.matrixWorldNeedsUpdate = true;
+  }
+  // la tige et le bras du monter du robot, comme dans robot-walle.html
+  brasMonter.rotation.x = -m.phi;
+  const a = new V3(C.monter.xBras, m.M[1], m.M[0]), b = new V3(C.monter.xBras, m.R[1], m.R[0]);
+  tendre(tige, a, b); rotuleA.position.copy(a); rotuleB.position.copy(b);
+  tendre(axeRotule, new V3(C.monter.xLevier, m.R[1], m.R[0]), b);
+}
+function poser(v) { Object.assign(pose, v); appliquer(); }
+document.getElementById('export').onclick = () => { demo = null; poser(EXPORT); };
+document.getElementById('repos').onclick = () => { demo = null; avance.droit = avance.gauche = 0; poser(Object.fromEntries(AXES.map(a => [a.id, 0]))); };
+let demo = null;
+document.getElementById('demo').onclick = () => { demo = demo === null ? performance.now() : null; };
+
+const rayon = new THREE.Raycaster(), souris = new THREE.Vector2(), info = document.getElementById('info');
+rendu.domElement.addEventListener('pointermove', ev => {
+  souris.set(ev.clientX / innerWidth * 2 - 1, -ev.clientY / innerHeight * 2 + 1);
+  rayon.setFromCamera(souris, camera);
+  const t = rayon.intersectObjects(pieces.map(p => p.o).filter(o => o.visible), false)[0];
+  if (t) info.innerHTML = `<b>${t.object.userData.piece}</b><br>${t.object.userData.groupe.replace(/_/g, ' ')}`;
+});
+poser(EXPORT);
+// La démonstration : chaque axe balaie une course à son rythme, sans collision (controle-collisions.js, 6 min de
+// démonstration rejouées tous les 0,2–0,25 s, le 2026-10-07). Ses limites :
+//  - flexion de −15 à 60° : plus bas, le bout du bras touche la caisse (dès −25°) ; plus haut, il entre dans l'œil
+//    quand la tête est basse et tournée de son côté ;
+//  - abduction de 2 à 22°, et le bras s'écarte en montant : vers l'intérieur (négatif) il touche les profilés de la
+//    caisse ; levé et serré, il entrait dans l'œil ;
+//  - yeux ensemble, de −26 à +8° : sous −31° ou au-dessus de +12°, leurs bords intérieurs se touchent ;
+//  - panoramique ±40°, inclinaison de −10 à 36° : tête basse, penchée et tournée, un œil touchait la caisse.
+function poseDemo(s) {
+  const onde = (a0, a1, T, ph = 0) => a0 + (a1 - a0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * s / T + ph));
+  const yeux = -9 + 17 * Math.sin(s * 1.3);
+  return { panoramique: 40 * Math.sin(s * 0.6), inclinaison: 13 + 23 * Math.sin(s * 0.9 + 1), monterDescendre: onde(0, 55, 12),
+           oeilDroit: yeux, oeilGauche: yeux,
+           flexion_droit: onde(-15, 60, 9), abduction_droit: onde(2, 22, 9), tube_droit: onde(-135, 135, 7), pince_droit: onde(-60, 60, 2.5),
+           flexion_gauche: onde(-15, 60, 9, Math.PI), abduction_gauche: onde(2, 22, 9, Math.PI), tube_gauche: onde(-135, 135, 7, 2), pince_gauche: onde(-60, 60, 2.5, 1),
+           moteurDroit: 100 * Math.sin(s * 0.25), moteurGauche: 100 * Math.sin(s * 0.25 + 0.6) };
+}
+window.poseDemo = poseDemo;
+let avant = null;
+(function boucle(t) {
+  // la boucle est d'abord appelée sans heure : sans ce garde-fou, l'avance des chenilles devenait NaN dès qu'un
+  // moteur tournait, et le calcul des maillons ne finissait plus (page figée, 2026-10-07)
+  t = t ?? performance.now();
+  const dt = avant === null ? 0 : Math.min(0.1, (t - avant) / 1000); avant = t;
+  if (demo !== null) poser(poseDemo((t - demo) / 1000));
+  // vitesse de la chenille = tours de l'axe arrière × circonférence au rayon des maillons sur ses roues dentées
+  let bouge = false;
+  for (const [c, id] of [['droit', 'moteurDroit'], ['gauche', 'moteurGauche']]) {
+    if (!pose[id]) continue;
+    avance[c] += pose[id] / 60 / RENVOI * 2 * Math.PI * CHEMINS[c].rayon_dente * dt; bouge = true;
+  }
+  if (bouge && demo === null) appliquer();
+  soleil.position.copy(camera.position); rendu.render(scene, camera); requestAnimationFrame(boucle);
+})();
+window.poser = poser; window.pose = pose; window.pieces = pieces; window.avance = avance; window.etatChenille = etatChenille;
+window.vueCamera = (pos, cible) => { camera.position.set(...pos); ctrl.target.set(...cible); ctrl.update(); };
+</script>
+</body>
+</html>
