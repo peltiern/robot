@@ -221,7 +221,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-8"
+      "v5-6"
      ],
      "chemin": [
       [
@@ -236,7 +236,7 @@
     },
     {
      "cles": [
-      "v5-4"
+      "v5-2"
      ],
      "chemin": [
       [
@@ -1397,7 +1397,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-5"
+      "v5-3"
      ],
      "chemin": [
       [
@@ -1444,7 +1444,7 @@
     },
     {
      "cles": [
-      "v5-3"
+      "v5-16"
      ],
      "chemin": [
       [
@@ -1468,7 +1468,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-11"
+      "v5-9"
      ],
      "chemin": [
       [
@@ -1515,7 +1515,7 @@
     },
     {
      "cles": [
-      "v5-14"
+      "v5-12"
      ],
      "chemin": [
       [
@@ -1584,12 +1584,12 @@
   },
   {
    "titre": "La liaison du tube",
-   "texte": "Le pignon Slip-Fit de 20 dents s'enfile sur l'embout REX de la liaison imprimée. L'ensemble entre dans le roulement par l'avant, le pignon passe dans l'alésage et vient engrener avec celui du D85MG ; la collerette de la liaison arrête l'ensemble contre le roulement.",
+   "texte": "Le pignon Slip-Fit de 20 dents (2322) se clipse sur l'embout REX de la liaison imprimée : on le pousse jusqu'à l'épaulement, les trois doigts fendus de l'embout plient et la lèvre revient derrière lui (tenir le fil du HS-65MG au centre). L'ensemble entre dans le roulement par l'avant, le pignon passe dans l'alésage et vient engrener avec celui du D85MG ; la collerette de la liaison arrête l'ensemble contre le roulement.",
    "mouvements": [
     {
      "cles": [
       "v5-0",
-      "v5-2"
+      "v5-17"
      ],
      "chemin": [
       [
@@ -1613,9 +1613,9 @@
    "mouvements": [
     {
      "cles": [
-      "v5-15",
-      "v5-16",
-      "v5-17"
+      "v5-13",
+      "v5-14",
+      "v5-15"
      ],
      "chemin": [
       [
@@ -1750,7 +1750,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-6"
+      "v5-4"
      ],
      "chemin": [
       [
@@ -2225,7 +2225,7 @@
     },
     {
      "cles": [
-      "v5-12"
+      "v5-10"
      ],
      "chemin": [
       [
@@ -2241,7 +2241,7 @@
     },
     {
      "cles": [
-      "v5-13"
+      "v5-11"
      ],
      "chemin": [
       [
@@ -2743,7 +2743,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-7"
+      "v5-5"
      ],
      "chemin": [
       [
@@ -2790,7 +2790,7 @@
     },
     {
      "cles": [
-      "v5-9"
+      "v5-7"
      ],
      "chemin": [
       [
@@ -2806,7 +2806,7 @@
     },
     {
      "cles": [
-      "v5-10"
+      "v5-8"
      ],
      "chemin": [
       [

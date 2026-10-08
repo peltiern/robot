@@ -151,7 +151,7 @@ def main():
         return (dist < tol).sum() > 20
     # Contacts qui tiennent une pièce sans vis : roulement dans son bloc, pignon sur son embout, engrenage
     # sur la cannelure, servo dans sa poche, tube dans ses roulements.
-    roulements = [n for n in structure if P[n][1].startswith(('1601-', '2904-', '2303-', '2305-', '4103-', '1906-', '1908-', 'D85MG', 'HS-65MG', '2102-'))]
+    roulements = [n for n in structure if P[n][1].startswith(('1601-', '2904-', '2303-', '2322-', '2305-', '4103-', '1906-', '1908-', 'D85MG', 'HS-65MG', '2102-'))]
     for r in roulements:
         for k in structure:
             if k != r and contact(r, k):

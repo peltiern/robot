@@ -26,8 +26,8 @@ PIECES = [
     ('moyeu_creux_REX_position_assemblage.stl', 'moyeu creux à embout REX', 'imprimée', 'IMPRIME:moyeu creux'),
     # Refusées par Nicolas le 2026-10-01 : la bride du goTUBE de flexion, et la barrette 1147 (ni
     # raccourcie ni d'origine).
-    ('REF_pignon_slipfit_position_assemblage.stl', 'pignon Slip-Fit 20 dents, alésage REX', 'achetée', '2303-4008-0020'),
-    ('REF_engr_servo_position_assemblage.stl', 'engrenage laiton 2305, 20 dents', 'achetée', '2305-0025-0020'),
+    # Le pignon Slip-Fit et l'engrenage du D85MG étaient deux disques approximatifs de la v5 : ils sont pris au
+    # catalogue (voir PIGNON_TUBE, ENGRENAGE_D85).
     ('REF_gotube_flexion_position_assemblage.stl', 'goTUBE 48 mm de flexion', 'achetée', '4103-0032-0048'),
     ('REF_servo_rose_position_assemblage.stl', 'D85MG déplacé', 'déplacée', 'D85MG'),
     ('REF_micro_servo_position_assemblage.stl', 'HS-65MG déplacé', 'déplacée', 'HS-65MG'),
@@ -155,6 +155,14 @@ RETIREES_PAR_NOM = {'vis du moyeu 1311 côté corps, retournées pour tenir le g
 PIGNON_ACETAL = ['2312-0414-0048#1', '1906-0025-0032#1', '2802-0004-0008#2', '2802-0004-0008#9',
                  '2802-0004-0008#13', '2802-0004-0008#15']
 PIGNON_LAITON = ('2305-0025-0048', (47.85, 0.0), -15.99)       # référence, axe de la cannelure, face côté servo
+# Engrenage laiton du D85MG et pignon Slip-Fit de la liaison, modèles du catalogue (2026-10-08). La v5 dessinait deux
+# disques de 5 mm à x 126–131, et nommait le pignon 2303-4008-0020 (14 mm avec moyeu : pas la place). L'engrenage
+# (6 mm, cannelure côté servo sur 3 mm, lamage de vis de l'autre côté) se pose sur le bossage de sortie du D85MG
+# (x 125,75 dans le modèle de Nicolas, où la cannelure ne dépasse que de 0,15 mm : à revoir sur le vrai servo) ; la
+# denture du pignon (7 mm : 6 mm de denture entre deux collets de 0,5) lui fait face, à 0,1 mm du palier avancé.
+# (référence, centre (y, z), face arrière en x, rotation sur son axe en degrés : alésage REX sur l'embout, dents en prise)
+ENGRENAGE_D85 = ('2305-0025-0020', (10.63, -12.0), 125.8, 8.1)
+PIGNON_TUBE = ('2322-4008-0020', (0.0, 0.0), 125.3, 30.0)
 
 
 def poser_vis(sku, tete, direction):
@@ -257,6 +265,15 @@ def pieces_v5():
     for sku, x0, ep in BAGUES_TUBE:
         out.append(('bague %s — retenue du tube vers l\'avant' % sku, 'visserie ajoutée',
                     poser_ecrou(sku, [x0 + ep / 2, 0.0, 0.0], [1, 0, 0]), sku))
+    for (sku, (y, z), face, tour), nom in ((ENGRENAGE_D85, 'engrenage laiton 2305, 20 dents'),
+                                     (PIGNON_TUBE, 'pignon Slip-Fit 20 dents, alésage REX')):
+        m = modele(sku, None)
+        b = m.bounds; c = (b[0] + b[1]) / 2
+        m.apply_translation([-c[0], -c[1], -b[0][2]])                                  # axe du modèle : z
+        m.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0]))   # z → x, alésage vers l'arrière
+        m.apply_transform(trimesh.transformations.rotation_matrix(np.radians(tour), [1, 0, 0]))
+        m.apply_translation([face, y, z])
+        out.append((nom, 'achetée', m, sku))
     sku, (xa, ya), face = PIGNON_LAITON
     m = modele(sku, None)
     m.apply_translation(-m.bounds.mean(0))

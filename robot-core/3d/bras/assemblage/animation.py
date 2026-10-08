@@ -57,7 +57,7 @@ def groupe(nom, ref, centre):
         return 'caisson'
     if 'palonnier' in nom:
         return 'palonnier'
-    if any(t in nom for t in TUBE) or ref in ('4103-0032-0096', '2303-4008-0020', 'HS-65MG') \
+    if any(t in nom for t in TUBE) or ref in ('4103-0032-0096', '2322-4008-0020', 'HS-65MG') \
             or 'liaison' in ref:
         return 'tube'
     if ref == '2305-0025-0048':
@@ -179,7 +179,7 @@ def poses(groupes, commandes):
 
 
 # Contacts voulus : ce qui roule, engrène ou porte, et qui garde le même jeu quel que soit l'angle.
-ENGRENEMENTS = [('2305-0025-0048', '2312-0414-0072'), ('2305-0025-0020', '2303-4008-0020')]
+ENGRENEMENTS = [('2305-0025-0048', '2312-0414-0072'), ('2305-0025-0020', '2322-4008-0020')]
 
 
 def balayer(pas=5.0):

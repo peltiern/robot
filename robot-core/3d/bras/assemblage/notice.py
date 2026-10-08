@@ -257,9 +257,10 @@ def etapes(P):
           glisse(cles(r'^1601-0039-0032#2'), X, 15), ecrou(cles(r'^écrou .*— palier'), X),
           [ecrou([e_], mX) for e_ in cles(r'^écrou .*— plaque 96 y−')], atelier='module')
     etape('La liaison du tube',
-          'Le pignon Slip-Fit de 20 dents s\'enfile sur l\'embout REX de la liaison imprimée. L\'ensemble entre dans '
-          'le roulement par l\'avant, le pignon passe dans l\'alésage et vient engrener avec celui du D85MG ; la '
-          'collerette de la liaison arrête l\'ensemble contre le roulement.',
+          'Le pignon Slip-Fit de 20 dents (2322) se clipse sur l\'embout REX de la liaison imprimée : on le pousse '
+          'jusqu\'à l\'épaulement, les trois doigts fendus de l\'embout plient et la lèvre revient derrière lui (tenir le '
+          'fil du HS-65MG au centre). L\'ensemble entre dans le roulement par l\'avant, le pignon passe dans l\'alésage et '
+          'vient engrener avec celui du D85MG ; la collerette de la liaison arrête l\'ensemble contre le roulement.',
           glisse(cles(r'^liaison et moyeu') + cles(r'^pignon Slip-Fit'), X, 60), atelier='module')
     etape('Le goTUBE du bras',
           'Une cale inox et deux bagues sur le bout du goTUBE de 96 mm, qui se visse sur la face avant de la '

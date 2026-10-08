@@ -15,20 +15,6 @@
    "designation": "pièce imprimée : cloison structurelle"
   },
   {
-   "nom": "pignon Slip-Fit 20 dents, alésage REX",
-   "nature": "achetée",
-   "etat": "ajouté",
-   "ref": "2303-4008-0020",
-   "designation": "2303 Series Steel, MOD 0.8 Pinion Gear (8mm REX® Bore, 20 Tooth)"
-  },
-  {
-   "nom": "engrenage laiton 2305, 20 dents",
-   "nature": "achetée",
-   "etat": "ajouté",
-   "ref": "2305-0025-0020",
-   "designation": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 20 Tooth)"
-  },
-  {
    "nom": "goTUBE 48 mm de flexion, vissé sur le moyeu",
    "nature": "achetée",
    "etat": "ajouté",
@@ -125,6 +111,20 @@
    "etat": "ajouté",
    "ref": "1500-0010-0032",
    "designation": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack"
+  },
+  {
+   "nom": "engrenage laiton 2305, 20 dents",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2305-0025-0020",
+   "designation": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 20 Tooth)"
+  },
+  {
+   "nom": "pignon Slip-Fit 20 dents, alésage REX",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2322-4008-0020",
+   "designation": "Slip-Fit Steel Pinion Gear (8mm REX® Bore, MOD 0.8, 20T)"
   },
   {
    "nom": "pignon laiton 48 dents sur la cannelure du servo d'abduction",
