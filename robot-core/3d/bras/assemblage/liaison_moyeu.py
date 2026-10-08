@@ -9,7 +9,7 @@ lui ajoute vers l'arrière, à travers le roulement du palier avancé (collerett
 lamage du bloc 1604) :
   - une collerette contre la face avant de la bague intérieure (elle arrête la pièce vers l'arrière) ;
   - une portée Ø31,8 dans le roulement ;
-  - un épaulement et un embout au profil REX pour le pignon Slip-Fit goBILDA de 20 dents, à sa place v5 ;
+  - un épaulement et un embout au profil REX pour le pignon Slip-Fit goBILDA de 20 dents (2322-4008-0020) ;
   - un alésage Ø4,5 de bout en bout pour le fil du micro-servo.
 
 Repère du bras (recaler.py). La liaison v5 est écrite dans un repère local d'origine x = −298,85.
@@ -26,8 +26,18 @@ DECALAGE = 298.85                       # repère local de la v5 -> repère du b
 
 ROULEMENT = (134.5, 139.55)             # bague intérieure du roulement du palier avancé (collerette à l'avant)
 R_PORTEE, R_COLLERETTE = 15.9, 17.3
-PIGNON = (126.0, 131.0)                 # pignon Slip-Fit 20 dents, place de la v5
-REX_PLATS, REX_D = 7.15, 8.0            # profil REX approché : hexagone ∩ cercle (à essayer à l'impression)
+# Pignon Slip-Fit 2322-4008-0020 (7 mm, sans moyeu) : la v5 dessinait un disque de 5 mm à x 126–131 sous la
+# référence 2303-4008-0020, un pignon de 14 mm à moyeu qui n'a pas la place (2026-10-08). Sa denture est en face de
+# celle de l'engrenage du D85MG (v5.ENGRENAGE_D85) ; la lèvre d'arrêt reste au-dessus du boîtier du D85MG, qui
+# monte jusqu'à x 124,75 autour de sa sortie.
+PIGNON = (125.3, 132.3)
+# Profil REX : hexagone ∩ cercle. L'alésage du vrai pignon 2322 mesure 7,00 mm sur plats et 8,08 sur les arrondis
+# (STEP du catalogue) ; la v5 donnait 7,15 sur plats, plus gros que l'alésage (2026-10-08). 0,1 mm de jeu sur les
+# plats, à essayer à l'impression.
+REX_PLATS, REX_D = 6.8, 7.9
+# Lèvre d'arrêt du pignon sur des doigts à ressort : 0,3 mm de prise sur les plats de l'alésage (rayon 3,5) ; en
+# montant, chaque doigt (6,5 mm de long, 1,2 à 1,7 d'épaisseur) plie de 0,35 mm, ~1,5 % d'allongement (PLA ~2,5 %).
+LEVRE = dict(r=3.8, rampe=0.4, epaisseur=0.5, fente=0.6, fin_fentes=1.0)
 # 6,8 et non 7,4 : la tête des dents de l'engrenage du D85MG passe à 7,36 mm de l'axe du tube, et
 # l'épaulement frottait à plat contre sa face en tournant en sens inverse (balayage du 2026-10-03).
 R_EPAULEMENT = 6.8
@@ -59,17 +69,29 @@ def liaison_v5():
 
 def construire():
     corps, x_bride, m = liaison_v5()
-    x0_rex = PIGNON[0] - 0.6                       # l'embout dépasse un peu derrière le pignon
+    x0_rex = PIGNON[0] - 0.5                       # l'embout dépasse un peu derrière le pignon
     moyeu = (rex(x0_rex, PIGNON[1] + 0.01)
              .union(xcyl(R_EPAULEMENT, PIGNON[1], ROULEMENT[0]))
              .union(xcyl(R_PORTEE, ROULEMENT[0], ROULEMENT[1] + 0.05))
              .union(xcyl(R_COLLERETTE, ROULEMENT[1] + 0.05, x_bride + 0.5)))
     # La collerette appuie sur la face avant de la bague intérieure : elle arrête la pièce vers l'arrière.
-    # Arrêt du pignon : une petite lèvre à clipser derrière lui (le pignon force dessus au montage).
-    levre = xcyl(REX_D / 2 + 0.35, x0_rex, x0_rex + 0.5).cut(
-        cq.Workplane("XY").box(20, 1.2, 20).translate((x0_rex + 0.25, 0, 0)))
+    # Arrêt du pignon vers l'arrière, sans frotter sur le D85MG (0,55 mm derrière lui) : une lèvre au bout de l'embout,
+    # rampe à 45° côté arrière, bord franc côté pignon. Elle accroche les plats de l'alésage (rayon 3,5) sans atteindre
+    # ses arrondis (4,04) ni le boîtier du servo (4,26). L'ancienne lèvre, un anneau sur un embout plein, n'avait aucun
+    # ressort : l'embout est maintenant fendu en trois doigts qui plient vers le trou du fil (Nicolas, 2026-10-08).
+    levre = xcyl(LEVRE['r'], x0_rex + LEVRE['rampe'], x0_rex + LEVRE['epaisseur']).union(
+        cq.Workplane("YZ").workplane(offset=x0_rex).circle(REX_PLATS / 2)
+        .workplane(offset=LEVRE['rampe']).circle(LEVRE['r']).loft())
     piece = corps.union(moyeu).union(levre)
     piece = piece.cut(xcyl(R_FIL, x0_rex - 1, x_bride + 4.5))
+    # trois fentes aux sommets de l'hexagone (chaque doigt garde deux plats pour entraîner le pignon), du bout de
+    # l'embout jusqu'à 1 mm de l'épaulement
+    long_fente = PIGNON[1] - LEVRE['fin_fentes'] - (x0_rex - 0.1)
+    for a in (0, 120, 240):
+        fente = (cq.Workplane("XY").box(long_fente, 6.0, LEVRE['fente'], centered=(False, False, True))
+                 .translate((x0_rex - 0.1, 0, 0))
+                 .rotate((0, 0, 0), (1, 0, 0), a))
+        piece = piece.cut(fente)
     d = DEGAGEMENT_ECROUS
     piece = piece.cut(xcyl(25.0, d['x0'], d['x1']).cut(xcyl(d['r'], d['x0'], d['x1'])))
     # Les coins bas de la poche du servo (y ±12,85, z −13,9) dépassent le disque des brides (r 17) : deux
