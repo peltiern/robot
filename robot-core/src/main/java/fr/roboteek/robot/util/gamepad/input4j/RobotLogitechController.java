@@ -14,6 +14,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
 /**
  * Contrôleur de manette Logitech : transforme les entrées manette en évènements du robot.
@@ -246,8 +247,10 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementPanoramique(value > 0 ? MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_DROITE : MouvementCouEvent.MOUVEMENTS_PANORAMIQUE.TOURNER_GAUCHE);
                 // Vitesse lue dans la configuration et non écrite ici : ce 40 était une unité
                 // moteur, et le cou compte en degrés de tête depuis le 2026-09-08. Le panoramique
-                // s'est retrouvé une fois et demie trop lent, l'inclinaison cinq fois.
-                mouvementCouEvent.setVitessePanoramique(phidgetsConfig().neckLeftRightMotorSpeed());
+                // s'est retrouvé une fois et demie trop lent, l'inclinaison cinq fois. Réglage
+                // propre à la manette, pas la vitesse du cou : celle-ci est le plafond des
+                // animations, et à 150 °/s la tête partait d'un coup (voir RobotConfig).
+                mouvementCouEvent.setVitessePanoramique(robotConfig().manetteCouPanoramiqueVitesse());
             }
             mouvementCouEvent.setSynchrone(false);
             applicationEventPublisher.publishEvent(mouvementCouEvent);
@@ -265,7 +268,7 @@ public class RobotLogitechController implements RobotGamepadController, Logitech
                 mouvementCouEvent.setMouvementInclinaison(MouvementCouEvent.MOUVEMENTS_INCLINAISON.STOPPER);
             } else {
                 mouvementCouEvent.setMouvementInclinaison(value > 0 ? MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_BAS : MouvementCouEvent.MOUVEMENTS_INCLINAISON.TOURNER_HAUT);
-                mouvementCouEvent.setVitesseInclinaison(phidgetsConfig().neckTiltMotorSpeed());
+                mouvementCouEvent.setVitesseInclinaison(robotConfig().manetteCouInclinaisonVitesse());
             }
             mouvementCouEvent.setSynchrone(false);
             applicationEventPublisher.publishEvent(mouvementCouEvent);
