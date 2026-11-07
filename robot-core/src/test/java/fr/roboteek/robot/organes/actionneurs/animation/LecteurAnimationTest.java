@@ -637,6 +637,69 @@ class LecteurAnimationTest {
                     "la lecture doit repartir du point d'origine, et non de la tête décalée par le curseur");
         }
 
+        /**
+         * La lecture en boucle de l'Atelier relance juste avant que le lecteur ne clôture : la
+         * relance clôture elle-même, et la suivante part de la pose finale. Le cou, lui, est
+         * simulé en retard — il répond encore l'avant-dernier échantillon, comme sur le robot.
+         */
+        @Test
+        void uneRelanceDansLeDernierTourPartDeLaPoseFinale() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+            double[] cou = {40};
+            lecteur.positionVisee(axe -> cou[0]);
+
+            lecteur.jouer(non(), 1450);
+            cou[0] = 41.2;
+            recus.cou.clear();
+            lecteur.jouer(immobile());
+
+            attendre(() -> !recus.cou.isEmpty());
+            Thread.sleep(150);
+            recus.cou.forEach(evenement -> assertEquals(40, evenement.getPositionPanoramique(), 0.001,
+                    "la relance doit repartir de la pose finale, pas de ce que croit le cou"));
+        }
+
+        /** Relancée quelques millisecondes après la fin, la tête n'a pas encore rejoint sa pose finale. */
+        @Test
+        void uneRelanceJusteApresLaFinPartDeLaPoseFinale() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+            double[] cou = {40};
+            lecteur.positionVisee(axe -> cou[0]);
+
+            lecteur.jouer(non(), 1450);
+            attendre(() -> !lecteur.enLecture());
+            cou[0] = 41.2;
+            recus.cou.clear();
+            lecteur.jouer(immobile());
+
+            assertEquals(40, premierCou(recus).getPositionPanoramique(), 0.001);
+        }
+
+        /** Si la manette a bougé la tête entre-temps, la pose finale ne dit plus où elle est. */
+        @Test
+        void laManetteEntreDeuxLecturesRendLaPoseFinaleCaduque() throws InterruptedException {
+            LecteurAnimation lecteur = contexte.getBean(LecteurAnimation.class);
+            lecteur.limites(limitesDuRobot());
+            MouvementsRecus recus = contexte.getBean(MouvementsRecus.class);
+            double[] cou = {40};
+            lecteur.positionVisee(axe -> cou[0]);
+
+            lecteur.jouer(non(), 1450);
+            attendre(() -> !lecteur.enLecture());
+            MouvementCouEvent manette = new MouvementCouEvent();
+            manette.setOrigine(OrigineMouvement.MANETTE);
+            contexte.publishEvent(manette);
+            cou[0] = 20;
+            recus.cou.clear();
+            lecteur.jouer(immobile());
+
+            assertEquals(20, premierCou(recus).getPositionPanoramique(), 0.001);
+        }
+
         /** Une animation arrêtée en urgence est perdue : la reprendre après réarmement ferait repartir la tête seule. */
         @Test
         void lArretDUrgenceAbandonneLAnimation() {

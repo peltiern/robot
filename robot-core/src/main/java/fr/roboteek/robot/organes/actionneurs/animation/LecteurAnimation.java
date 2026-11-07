@@ -97,7 +97,31 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      */
     private static final long FENETRE_CURSEUR_MS = 1000;
 
+    /**
+     * Délai pendant lequel la pose finale d'une lecture sert d'origine à la suivante, à la place
+     * de ce que disent le cou et les yeux.
+     * <p>
+     * Ils traitent leurs ordres sur leur propre fil, et une écriture USB prend une douzaine de
+     * millisecondes : interrogés juste après la pose finale, ils répondent encore la position
+     * d'avant. Le 2026-11-07, une relance arrivée 6 ms après la fin a ainsi pris pour origine
+     * l'avant-dernier échantillon. Au-delà de ce délai, ce sont eux qui savent.
+     */
+    private static final long FENETRE_ENCHAINEMENT_MS = 300;
+
     private final Clock horloge;
+
+    /**
+     * Entre la boucle, qui fait avancer et clôture une lecture, et {@link #jouer}, qui peut la
+     * clôturer à sa place quand la relance arrive dans son dernier tour : sans lui, la pose finale
+     * partirait deux fois, ou la boucle effacerait la lecture qu'on vient de lancer.
+     */
+    private final Object verrou = new Object();
+
+    /**
+     * La pose sur laquelle la dernière lecture s'est terminée, consommée par la lecture suivante.
+     * Effacée dès qu'autre chose que le lecteur bouge le cou : la tête n'y est alors plus.
+     */
+    private volatile FinDeLecture derniereFin;
 
     /**
      * Butées de chaque axe, relues à chaque lecture : la configuration Phidgets est rechargée à
@@ -260,11 +284,30 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         if (!running || arretUrgence || animation == null) {
             return false;
         }
+        synchronized (verrou) {
+            return lancer(animation, depuisMs);
+        }
+    }
+
+    /**
+     * Une relance qui tombe dans le dernier tour de la lecture en cours la clôture d'abord : pose
+     * finale exacte et bilan. C'est ce que fait la lecture en boucle de l'Atelier, qui relance dès
+     * que <i>son</i> horloge atteint la durée, 30 à 45 ms avant que le lecteur ne passe clôturer.
+     * Sans ça, une piste relative repartait du dernier échantillon, pris jusqu'à 100 ms avant la
+     * fin : 3,8° de dérive en dix relances, mesurés le 2026-11-07.
+     */
+    private boolean lancer(Animation animation, long depuisMs) {
+        Lecture precedente = lecture;
+        if (precedente != null && !precedente.cloturee
+                && horloge.millis() - precedente.instantDebut >= precedente.animation.dureeTotale() - periodeMs()) {
+            cloturer(precedente);
+        }
         limites = LimitesMoteur.parAxe(Configurations.phidgetsConfig());
         dernieresConsignesCurseur.clear();
         vitessesCurseur.clear();
         Map<Axe, Double> origines = new EnumMap<>(Axe.class);
         releverLesOrigines(animation, origines);
+        derniereFin = null;
         originesCurseur.clear();
         decalagesEnPlace.clear();
         long depuis = Math.max(0, Math.min(depuisMs, animation.dureeTotale()));
@@ -295,6 +338,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
     public void stopper() {
         Lecture enCours = lecture;
         lecture = null;
+        derniereFin = null;
         if (enCours != null) {
             couperLaBandeSon();
             logger.info("Animation « {} » interrompue", enCours.animation.nom());
@@ -362,6 +406,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         // Complète plutôt que remplace : une piste passée relative en plein tirage prend son
         // origine là où elle en est, les autres gardent la leur.
         releverLesOrigines(animation, originesCurseur);
+        derniereFin = null;
 
         Lecture ponctuelle = new Lecture(animation, 0, 0, Map.copyOf(originesCurseur));
         ponctuelle.dernieresConsignes.putAll(dernieresConsignesCurseur);
@@ -389,19 +434,24 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
     /**
      * Relève le point de départ des pistes relatives qui n'en ont pas encore : là où l'axe a été
-     * envoyé, moins l'écart que le curseur y a laissé.
+     * envoyé, moins l'écart que le curseur y a laissé. Juste après la fin d'une lecture, c'est la
+     * pose finale qu'elle vient d'envoyer, que le cou et les yeux n'ont peut-être pas encore
+     * appliquée (voir {@link #FENETRE_ENCHAINEMENT_MS}).
      * <p>
      * Une piste dont l'organe ne sait pas dire où il est n'a pas d'origine, et le lecteur ne la
      * jouera pas : la jouer depuis zéro ramènerait la tête face à l'avant, c'est-à-dire
      * exactement ce qu'une piste relative existe pour éviter.
      */
     private void releverLesOrigines(Animation animation, Map<Axe, Double> origines) {
+        FinDeLecture fin = derniereFin;
+        Map<Axe, Double> poseFinale = fin != null && horloge.millis() - fin.instant() < FENETRE_ENCHAINEMENT_MS
+                ? fin.pose() : Map.of();
         for (Piste piste : animation.pistes()) {
             Axe axe = piste.axe();
             if (!piste.relative() || piste.estVide() || origines.containsKey(axe)) {
                 continue;
             }
-            Double visee = positionVisee.apply(axe);
+            Double visee = poseFinale.containsKey(axe) ? poseFinale.get(axe) : positionVisee.apply(axe);
             if (visee == null) {
                 logger.warn("Animation « {} » : piste relative {} ignorée, la position de départ de l'axe est inconnue",
                         animation.nom(), axe.libelle());
@@ -443,8 +493,17 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         if (enCours == null || arretUrgence) {
             return PAUSE_AU_REPOS_MS;
         }
+        synchronized (verrou) {
+            return avancer(enCours);
+        }
+    }
 
+    private long avancer(Lecture enCours) {
         long budgetMs = periodeMs();
+        if (enCours.cloturee) {
+            // jouer() l'a clôturée entre-temps, pour lancer la suivante.
+            return budgetMs;
+        }
 
         long instant = horloge.millis() - enCours.instantDebut;
         if (instant < 0) {
@@ -452,10 +511,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             return budgetMs;
         }
         if (instant > enCours.animation.dureeTotale()) {
-            Map<Axe, Double> poseFinale = consignesFinales(enCours);
-            logger.info("Animation « {} » : pose finale {}", enCours.animation.nom(), poseFinale);
-            publier(enCours, poseFinale);
-            terminer(enCours);
+            cloturer(enCours);
             return budgetMs;
         }
 
@@ -498,6 +554,21 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      */
     Map<Axe, Double> consignesFinales(Lecture enCours) {
         return consignes(enCours, enCours.animation.dureeTotale(), 0);
+    }
+
+    /**
+     * Envoie la pose finale, la retient pour la lecture qui suivrait, et libère le lecteur. Une
+     * seule fois par lecture : la boucle et {@link #jouer} peuvent tous deux y arriver.
+     */
+    private void cloturer(Lecture enCours) {
+        enCours.cloturee = true;
+        Map<Axe, Double> poseFinale = consignesFinales(enCours);
+        logger.info("Animation « {} » : pose finale {}", enCours.animation.nom(), poseFinale);
+        publier(enCours, poseFinale);
+        // Toutes les dernières consignes, et non les seuls axes réécrits : un axe déjà arrivé
+        // n'est pas renvoyé, mais c'est bien là qu'il est.
+        derniereFin = new FinDeLecture(Map.copyOf(enCours.dernieresConsignes), horloge.millis());
+        terminer(enCours);
     }
 
     private Map<Axe, Double> consignes(Lecture enCours, long instant, double seuil) {
@@ -713,7 +784,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      * y compris quand celles-ci menaient cinq axes de front au lieu de trois.
      */
     private void terminer(Lecture enCours) {
-        lecture = null;
+        if (lecture == enCours) {
+            lecture = null;
+        }
         if (pisteSonore != null) {
             pisteSonore.laisserFinir();
         }
@@ -744,9 +817,15 @@ public class LecteurAnimation extends AbstractOrganeWithThread
      * en était partirait d'une posture que la manette a changée entre-temps, et le reste du geste
      * n'aurait plus de sens. Le filtre sur l'origine est aussi ce qui empêche le lecteur de
      * s'interrompre lui-même : il publie sur ce même bus.
+     * <p>
+     * Tout ordre de cou qui ne vient pas d'une animation — manette, regard — rend aussi caduque la
+     * pose finale retenue : la tête n'y est plus.
      */
     @EventListener
     public void handleMouvementCouEvent(MouvementCouEvent mouvementCouEvent) {
+        if (mouvementCouEvent.getOrigine() != OrigineMouvement.ANIMATION) {
+            derniereFin = null;
+        }
         if (mouvementCouEvent.getOrigine() != OrigineMouvement.MANETTE || lecture == null) {
             return;
         }
@@ -893,6 +972,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
          */
         int toursEnRetard;
 
+        /** Pose finale envoyée et bilan écrit : la boucle n'a plus rien à en faire. */
+        private boolean cloturee;
+
         Lecture(Animation animation, long instantDebut) {
             this(animation, instantDebut, 0);
         }
@@ -907,5 +989,9 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             this.attenteDuSon = attenteDuSon;
             this.origines = origines;
         }
+    }
+
+    /** La pose où une lecture a laissé chaque axe, et l'instant où elle l'a envoyée. */
+    private record FinDeLecture(Map<Axe, Double> pose, long instant) {
     }
 }
