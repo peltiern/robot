@@ -456,6 +456,23 @@ public interface RobotConfig extends Config {
     double animationVitesseTolerance();
 
     /**
+     * Ce que coûte, en millisecondes de lien USB, un canal écrit au moins une fois dans un tour.
+     * Avec {@link #animationCoutEcritureMs()}, c'est le modèle du banc du 2026-08-29 ; le lecteur
+     * s'en sert pour savoir combien de vitesses tiennent encore dans un tour après les positions.
+     */
+    @Key("robot.animation.cout.canal.ms")
+    @DefaultValue("5")
+    double animationCoutCanalMs();
+
+    /**
+     * Ce que coûte une écriture — position ou vitesse —, en millisecondes de lien USB. Monter si
+     * le banc cinq axes signale encore des tours en retard : le lecteur réécrira moins de vitesses.
+     */
+    @Key("robot.animation.cout.ecriture.ms")
+    @DefaultValue("12")
+    double animationCoutEcritureMs();
+
+    /**
      * Avance, en millisecondes, avec laquelle un son d'animation est lancé avant son instant.
      * <p>
      * C'est le temps que met {@code play} à se faire entendre sur le Jetson — démarrage du

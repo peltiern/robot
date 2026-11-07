@@ -1,6 +1,7 @@
 package fr.roboteek.robot.organes.actionneurs.animation;
 
 import fr.roboteek.robot.configuration.Configurations;
+import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.organes.actionneurs.Cou;
 import fr.roboteek.robot.organes.actionneurs.Yeux;
 import fr.roboteek.robot.organes.AbstractOrganeWithThread;
@@ -25,7 +26,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -49,8 +53,9 @@ import java.util.Optional;
  *   <li><b>un axe qui n'a pas bougé n'est pas réécrit</b> — un canal engagé mais non écrit ne coûte
  *       rien, mesuré, et c'est ce qui rend l'échelle tenable : une animation bouge rarement plus de
  *       deux ou trois axes à la fois ;</li>
- *   <li>la vitesse n'est réécrite que quand celle que demande la courbe sort d'une tolérance
- *       (voir {@link #allure}) : une écriture de vitesse coûte autant qu'une consigne de position.</li>
+ *   <li>la vitesse n'est réécrite que quand celle que demande la courbe sort d'une tolérance, et
+ *       seulement dans le temps que les positions laissent libre (voir {@link #repartirLesVitesses}) :
+ *       une écriture de vitesse coûte autant qu'une consigne de position.</li>
  * </ul>
  * <p>
  * <b>La vitesse se déduit des images-clés</b>, et non d'un réglage : deux points rapprochés font
@@ -334,8 +339,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             return false;
         }
         long maintenant = horloge.millis();
-        double cadence = Configurations.robotConfig().animationCadenceHertz();
-        long periode = (long) (1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI));
+        long periode = periodeMs();
         if (maintenant - dernierCurseur < periode) {
             return true;
         }
@@ -440,8 +444,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             return PAUSE_AU_REPOS_MS;
         }
 
-        double cadence = Configurations.robotConfig().animationCadenceHertz();
-        long budgetMs = (long) (1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI));
+        long budgetMs = periodeMs();
 
         long instant = horloge.millis() - enCours.instantDebut;
         if (instant < 0) {
@@ -499,6 +502,7 @@ public class LecteurAnimation extends AbstractOrganeWithThread
 
     private Map<Axe, Double> consignes(Lecture enCours, long instant, double seuil) {
         Map<Axe, Double> aCommander = new EnumMap<>(Axe.class);
+        List<Besoin> besoins = new ArrayList<>();
 
         for (Map.Entry<Axe, Double> entree : Interpolateur.positionsA(enCours.animation, instant).entrySet()) {
             Axe axe = entree.getKey();
@@ -517,47 +521,116 @@ public class LecteurAnimation extends AbstractOrganeWithThread
             if (precedente != null && (Math.abs(position - precedente) < seuil || position == precedente)) {
                 continue;
             }
-            enCours.vitesses.put(axe, allure(enCours, axe, position, instant));
+            besoins.add(besoin(enCours, axe, position, instant));
             aCommander.put(axe, position);
             enCours.dernieresConsignes.put(axe, position);
             enCours.instantsDernieresConsignes.put(axe, instant);
         }
+        repartirLesVitesses(enCours, besoins);
         return aCommander;
     }
 
     /**
-     * La vitesse à donner au servo pour rejoindre cette consigne : la distance depuis la
+     * Ce que la courbe demande à un axe pour rejoindre cette consigne : la distance depuis la
      * précédente, sur le temps écoulé depuis, avec la marge de {@code robot.animation.vitesse.marge}
      * et plafonnée par {@code robot.properties}.
-     * <p>
-     * La vitesse déjà écrite est <b>gardée</b> tant qu'elle suffit sans dépasser de plus de la
-     * tolérance ce qu'il faut : rendue identique, {@code PhidgetsServoMotor} ne la réécrit pas, et
-     * c'est une écriture USB d'économisée. Sur une courbe, la vitesse bouge surtout au départ et à
-     * l'arrivée d'un geste ; au milieu, elle tient d'un échantillon à l'autre.
      * <p>
      * Sans consigne précédente — premier échantillon d'une lecture, premier envoi d'un tirage de
      * curseur —, rien ne dit en combien de temps y aller : c'est le plafond.
      */
-    private double allure(Lecture enCours, Axe axe, double position, long instant) {
+    private Besoin besoin(Lecture enCours, Axe axe, double position, long instant) {
         LimitesMoteur limitesAxe = limites.get(axe);
         double plafond = limitesAxe != null ? limitesAxe.vitesseMax()
                 : enCours.animation.piste(axe).orElseThrow().vitesseParDefaut();
+        Double ecrite = enCours.vitessesEcrites.get(axe);
         Double precedente = enCours.dernieresConsignes.get(axe);
         Long instantPrecedent = enCours.instantsDernieresConsignes.get(axe);
         if (precedente == null || instantPrecedent == null || instant <= instantPrecedent) {
-            return plafond;
+            return new Besoin(axe, plafond, plafond, ecrite);
         }
-        double besoin = Math.abs(position - precedente) / ((instant - instantPrecedent) / 1000.0);
-        double suffisante = Math.min(besoin, plafond);
-        double voulue = Math.max(VITESSE_PLANCHER, Math.min(plafond, besoin * Configurations.robotConfig().animationVitesseMarge()));
+        double vitesse = Math.abs(position - precedente) / ((instant - instantPrecedent) / 1000.0);
+        double voulue = Math.max(VITESSE_PLANCHER, Math.min(plafond, vitesse * Configurations.robotConfig().animationVitesseMarge()));
+        return new Besoin(axe, Math.min(vitesse, plafond), voulue, ecrite);
+    }
 
-        Double ecrite = enCours.vitessesEcrites.get(axe);
-        if (ecrite != null && ecrite >= suffisante
-                && ecrite <= voulue * (1 + Configurations.robotConfig().animationVitesseTolerance())) {
-            return ecrite;
+    /**
+     * Décide quelles vitesses sont réécrites à ce tour.
+     * <p>
+     * La vitesse déjà écrite est <b>gardée</b> tant qu'elle suffit sans dépasser de plus de la
+     * tolérance ce qu'il faut : rendue identique, {@code PhidgetsServoMotor} ne la réécrit pas.
+     * Sur une courbe, la vitesse bouge surtout au départ et à l'arrivée d'un geste ; au milieu,
+     * elle tient d'un échantillon à l'autre.
+     * <p>
+     * Celles qui ne conviennent plus ne passent que dans le temps que <b>les positions laissent
+     * libre</b> sur le tour. Le 2026-09-30, le banc cinq axes a mis 39 tours sur 59 en retard : les
+     * cinq positions coûtent 85 ms, et cinq vitesses réécrites au même tour en ajoutaient 60. Les
+     * positions passent donc toujours — c'est le geste —, les vitesses dans ce qui reste, par
+     * urgence : d'abord l'axe dont la vitesse ne suffit plus (il traîne et manquera sa consigne),
+     * puis celui qui va beaucoup trop vite (il arrive, s'arrête et repart). Les autres attendent un
+     * tour suivant et gardent leur vitesse d'avant. À un, deux ou trois axes, tout passe.
+     * <p>
+     * Un axe qui n'a encore rien reçu de l'animation passe hors budget : le servo tient la vitesse
+     * qu'un autre lui a laissée — le regard, la manette — et le lecteur n'en sait rien.
+     */
+    private void repartirLesVitesses(Lecture enCours, List<Besoin> besoins) {
+        RobotConfig config = Configurations.robotConfig();
+        double tolerance = config.animationVitesseTolerance();
+        double coutEcriture = config.animationCoutEcritureMs();
+        double reste = periodeMs() - besoins.size() * (config.animationCoutCanalMs() + coutEcriture);
+
+        List<Besoin> enAttente = new ArrayList<>();
+        for (Besoin besoin : besoins) {
+            if (besoin.ecrite() == null) {
+                ecrireLaVitesse(enCours, besoin);
+                reste -= coutEcriture;
+            } else if (besoin.traine() || besoin.ecrite() > besoin.voulue() * (1 + tolerance)) {
+                enAttente.add(besoin);
+            } else {
+                enCours.vitesses.put(besoin.axe(), besoin.ecrite());
+            }
         }
-        enCours.vitessesEcrites.put(axe, voulue);
-        return voulue;
+
+        enAttente.sort(Comparator.comparing((Besoin besoin) -> !besoin.traine())
+                .thenComparing(Comparator.comparingDouble(Besoin::ecart).reversed()));
+        for (Besoin besoin : enAttente) {
+            if (reste >= coutEcriture) {
+                ecrireLaVitesse(enCours, besoin);
+                reste -= coutEcriture;
+            } else {
+                enCours.vitesses.put(besoin.axe(), besoin.ecrite());
+                enCours.vitessesReportees++;
+            }
+        }
+    }
+
+    private static void ecrireLaVitesse(Lecture enCours, Besoin besoin) {
+        enCours.vitesses.put(besoin.axe(), besoin.voulue());
+        enCours.vitessesEcrites.put(besoin.axe(), besoin.voulue());
+    }
+
+    /** La durée d'un tour, qui est aussi le budget du lien USB pour ce tour. */
+    private static long periodeMs() {
+        double cadence = Configurations.robotConfig().animationCadenceHertz();
+        return (long) (1000 / (cadence > 0 ? cadence : CADENCE_DE_REPLI));
+    }
+
+    /**
+     * Ce que la courbe demande à un axe pour ce tour, face à ce que le servo a déjà reçu.
+     *
+     * @param suffisante la vitesse sous laquelle l'axe manquerait sa consigne
+     * @param voulue     la vitesse à écrire si on la réécrit, marge comprise
+     * @param ecrite     la dernière vitesse écrite par l'animation, {@code null} s'il n'y en a pas
+     */
+    private record Besoin(Axe axe, double suffisante, double voulue, Double ecrite) {
+
+        boolean traine() {
+            return ecrite != null && ecrite < suffisante;
+        }
+
+        /** De combien la vitesse écrite est à côté : le rapport, dans un sens ou dans l'autre. */
+        double ecart() {
+            return traine() ? suffisante / ecrite : ecrite / voulue;
+        }
     }
 
     /**
@@ -657,6 +730,10 @@ public class LecteurAnimation extends AbstractOrganeWithThread
                     enCours.animation.nom(), enCours.toursTropLongs, enCours.tours);
         } else {
             logger.info("Animation « {} » terminée", enCours.animation.nom());
+        }
+        if (enCours.vitessesReportees > 0) {
+            logger.info("Animation « {} » : {} vitesse(s) reportée(s) d'un tour, faute de place sur le lien USB",
+                    enCours.animation.nom(), enCours.vitessesReportees);
         }
     }
 
@@ -786,8 +863,18 @@ public class LecteurAnimation extends AbstractOrganeWithThread
         /** L'instant de l'animation où chaque axe a reçu sa dernière consigne, pour en tirer la vitesse. */
         private final Map<Axe, Long> instantsDernieresConsignes = new EnumMap<>(Axe.class);
 
-        /** La dernière vitesse que chaque axe a reçue, gardée tant qu'elle convient (voir {@link #allure}). */
-        private final Map<Axe, Double> vitessesEcrites = new EnumMap<>(Axe.class);
+        /**
+         * La dernière vitesse que chaque axe a reçue, gardée tant qu'elle convient (voir
+         * {@link #repartirLesVitesses}). Visible dans le paquet : les tests y posent un axe à la traîne.
+         */
+        final Map<Axe, Double> vitessesEcrites = new EnumMap<>(Axe.class);
+
+        /**
+         * Vitesses qui auraient dû être réécrites et ont attendu, faute de place sur le tour. Ce
+         * n'est pas un défaut — c'est le budget qui joue —, mais un compte élevé dit qu'un geste
+         * a pu être joué un moment à une allure qui n'était plus la sienne.
+         */
+        int vitessesReportees;
 
         /**
          * La vitesse de chaque axe commandé au tour en cours, pour la publication qui suit. Visible
