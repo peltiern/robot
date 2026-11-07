@@ -486,6 +486,24 @@ public interface RobotConfig extends Config {
     long animationSonAvanceMs();
 
     /**
+     * Vitesse du panoramique à la manette, en degrés de tête par seconde.
+     * <p>
+     * Propre à la manette, et non la vitesse du cou : depuis que les animations tirent leur
+     * vitesse des images-clés, celle de {@code phidgets.neck.motor.pan.speed} n'est plus pour
+     * elles qu'un plafond, monté à 150 °/s pour leur donner du punch. La manette, elle, l'écrivait
+     * telle quelle avec une accélération de 2000 °/s² : la tête partait d'un coup, deux fois plus
+     * vite qu'avant (constaté le 2026-11-07). 100 et 60 °/s validés à la manette le même jour.
+     */
+    @Key("robot.manette.cou.panoramique.vitesse")
+    @DefaultValue("100")
+    double manetteCouPanoramiqueVitesse();
+
+    /** Vitesse de l'inclinaison à la manette, en degrés de tête par seconde (voir le panoramique). */
+    @Key("robot.manette.cou.inclinaison.vitesse")
+    @DefaultValue("60")
+    double manetteCouInclinaisonVitesse();
+
+    /**
      * Ce qui fait réagir le robot à une émotion : la chance de jouer une animation vaut l'intensité
      * multipliée par ce facteur.
      * <p>
