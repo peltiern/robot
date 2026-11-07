@@ -262,6 +262,72 @@ class LecteurAnimationTest {
         }
     }
 
+    /**
+     * Les vitesses ne passent que dans le temps que les positions laissent sur le tour : 5 ms par
+     * canal plus 12 par écriture, pour 100 ms. Cinq positions en prennent 85, il reste de quoi
+     * réécrire une vitesse ; trois en prennent 51, il en reste pour toutes.
+     */
+    @Nested
+    class BudgetDuLien {
+
+        private static final List<Axe> CINQ_AXES = List.of(Axe.COU_GAUCHE_DROITE, Axe.COU_HAUT_BAS,
+                Axe.COU_MONTER_DESCENDRE, Axe.OEIL_GAUCHE, Axe.OEIL_DROIT);
+
+        /** Chaque axe parcourt 5° en une seconde : le plafond posé au départ est bien trop vif. */
+        private LecteurAnimation.Lecture lancee(LecteurAnimation lecteur, List<Axe> axes) {
+            List<Piste> pistes = axes.stream()
+                    .map(axe -> piste(axe, new ImageCle(0, 0), new ImageCle(1000, 5)))
+                    .toList();
+            LecteurAnimation.Lecture lecture = new LecteurAnimation.Lecture(new Animation("Banc", 1000, pistes, List.of()), 0);
+            lecteur.consignes(lecture, 400);
+            return lecture;
+        }
+
+        private static long vitessesChangees(Map<Axe, Double> avant, Map<Axe, Double> apres) {
+            return avant.keySet().stream().filter(axe -> !avant.get(axe).equals(apres.get(axe))).count();
+        }
+
+        @Test
+        void aCinqAxesUneSeuleVitesseEstReecriteParTour() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = lancee(lecteur, CINQ_AXES);
+            Map<Axe, Double> avant = Map.copyOf(lecture.vitesses);
+
+            Map<Axe, Double> consignes = lecteur.consignes(lecture, 500);
+
+            assertEquals(5, consignes.size(), "les cinq positions passent toujours");
+            assertEquals(1, vitessesChangees(avant, lecture.vitesses));
+            assertTrue(lecture.vitessesReportees >= 3, "reportées : " + lecture.vitessesReportees);
+        }
+
+        /** Le comportement d'avant le budget : une animation à trois axes n'y voit aucune différence. */
+        @Test
+        void aTroisAxesToutesLesVitessesPassent() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = lancee(lecteur,
+                    List.of(Axe.COU_GAUCHE_DROITE, Axe.OEIL_GAUCHE, Axe.OEIL_DROIT));
+            Map<Axe, Double> avant = Map.copyOf(lecture.vitesses);
+
+            lecteur.consignes(lecture, 500);
+
+            assertEquals(3, vitessesChangees(avant, lecture.vitesses));
+            assertEquals(0, lecture.vitessesReportees);
+        }
+
+        /** Un axe qui traîne manque sa consigne ; un axe trop vif ne fait qu'un à-coup. */
+        @Test
+        void lAxeQuiTraineEstServiAvantLesAxesTropVifs() {
+            LecteurAnimation lecteur = lecteurCable();
+            LecteurAnimation.Lecture lecture = lancee(lecteur, CINQ_AXES);
+            lecture.vitessesEcrites.put(Axe.OEIL_DROIT, 1.0);
+
+            lecteur.consignes(lecture, 500);
+
+            assertTrue(lecture.vitesses.get(Axe.OEIL_DROIT) > 1, "l'œil droit à la traîne doit être servi");
+            assertEquals(40, lecture.vitesses.get(Axe.COU_GAUCHE_DROITE), 1e-9, "le panoramique trop vif attend");
+        }
+    }
+
     @Nested
     class Frugalite {
 
