@@ -1,11 +1,32 @@
 {
  "pieces": [
   {
-   "nom": "liaison et moyeu en une pièce",
+   "nom": "liaison, partie arrière (moyeu à embout REX)",
    "nature": "imprimée",
    "etat": "imprimé",
-   "ref": "IMPRIME:liaison et moyeu",
-   "designation": "pièce imprimée : liaison et moyeu"
+   "ref": "IMPRIME:liaison, partie arrière",
+   "designation": "pièce imprimée : liaison, partie arrière"
+  },
+  {
+   "nom": "liaison, berceau du HS-65MG",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:liaison, berceau",
+   "designation": "pièce imprimée : liaison, berceau"
+  },
+  {
+   "nom": "vis M2 × 6 — liaison, partie arrière ↔ berceau",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "VIS:vis M2 × 6 autotaraudeuse, comme celles des servos",
+   "designation": "vis M2 × 6 autotaraudeuse, comme celles des servos"
+  },
+  {
+   "nom": "vis M2 × 6 — liaison, partie arrière ↔ berceau",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "VIS:vis M2 × 6 autotaraudeuse, comme celles des servos",
+   "designation": "vis M2 × 6 autotaraudeuse, comme celles des servos"
   },
   {
    "nom": "cloison structurelle",
@@ -505,32 +526,32 @@
    "designation": "M4 x 0.7mm Nylock Nut"
   },
   {
-   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nom": "vis 2802-0004-0012 — liaison ↔ goTUBE du bras",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0010",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
   },
   {
-   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nom": "vis 2802-0004-0012 — liaison ↔ goTUBE du bras",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0010",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
   },
   {
-   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nom": "vis 2802-0004-0012 — liaison ↔ goTUBE du bras",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0010",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
   },
   {
-   "nom": "vis 2802-0004-0010 — liaison ↔ goTUBE du bras",
+   "nom": "vis 2802-0004-0012 — liaison ↔ goTUBE du bras",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "2802-0004-0010",
-   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
   },
   {
    "nom": "câble du D85MG : 3 fils de Ø1.0 (231 mm dans le bras)",
@@ -547,7 +568,7 @@
    "designation": "prise de servo (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
   },
   {
-   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (260 mm dans le bras)",
+   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (269 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du HS-65MG",
@@ -589,18 +610,179 @@
    "designation": "palonnier du HS-65MG, fournie avec le servo"
   },
   {
-   "nom": "câble de pince (Ø1, du palonnier à la main)",
+   "nom": "câble de pince (tresse PE 0,4 mm, du palonnier au fléau de la main)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble de pince",
-   "designation": "câble de traction Ø1 (tresse ou acier gainé), tiré par le palonnier du HS-65MG"
+   "designation": "tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
   },
   {
-   "nom": "main : emplacement des doigts (non dessinés)",
+   "nom": "main, poignet vissé au goTUBE",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, poignet vissé au goTUBE",
+   "designation": "pièce imprimée : main, poignet vissé au goTUBE"
+  },
+  {
+   "nom": "main, paume (joues de l'axe)",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, paume (joues de l'axe)",
+   "designation": "pièce imprimée : main, paume (joues de l'axe)"
+  },
+  {
+   "nom": "main, fléau du câble de pince",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, fléau du câble de pince",
+   "designation": "pièce imprimée : main, fléau du câble de pince"
+  },
+  {
+   "nom": "main, pouce : moyeu et poulie",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, pouce : moyeu et poulie",
+   "designation": "pièce imprimée : main, pouce : moyeu et poulie"
+  },
+  {
+   "nom": "main, doigts : doigt A (jointure et phalange)",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, doigts : doigt A (jointure et phalange)",
+   "designation": "pièce imprimée : main, doigts : doigt A (jointure et phalange)"
+  },
+  {
+   "nom": "main, doigts : doigt B (jointure, phalange et poulie)",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, doigts : doigt B (jointure, phalange et poulie)",
+   "designation": "pièce imprimée : main, doigts : doigt B (jointure, phalange et poulie)"
+  },
+  {
+   "nom": "main, doigts : cache de l'axe, côté A",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, doigts : cache de l'axe, côté A",
+   "designation": "pièce imprimée : main, doigts : cache de l'axe, côté A"
+  },
+  {
+   "nom": "main, doigts : cache de l'axe, côté B",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, doigts : cache de l'axe, côté B",
+   "designation": "pièce imprimée : main, doigts : cache de l'axe, côté B"
+  },
+  {
+   "nom": "main, pouce : pouce (pivot, base et bout)",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main, pouce : pouce (pivot, base et bout)",
+   "designation": "pièce imprimée : main, pouce : pouce (pivot, base et bout)"
+  },
+  {
+   "nom": "main, doigts : roulement de la jointure B",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1600-0410-0004",
+   "designation": "4mm ID Non-Flanged Ball Bearing (10mm OD, 4mm Thickness) - 2 Pack"
+  },
+  {
+   "nom": "main, doigts : roulement de la jointure A",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1600-0410-0004",
+   "designation": "4mm ID Non-Flanged Ball Bearing (10mm OD, 4mm Thickness) - 2 Pack"
+  },
+  {
+   "nom": "main, pouce : roulement côté A",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1600-0410-0004",
+   "designation": "4mm ID Non-Flanged Ball Bearing (10mm OD, 4mm Thickness) - 2 Pack"
+  },
+  {
+   "nom": "main, pouce : roulement côté B",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1600-0410-0004",
+   "designation": "4mm ID Non-Flanged Ball Bearing (10mm OD, 4mm Thickness) - 2 Pack"
+  },
+  {
+   "nom": "main : axe des doigts et du pouce",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "VIS:tige inox Ø4 mm, 44 mm (axe de la main)",
+   "designation": "tige inox Ø4 mm, 44 mm (axe de la main)"
+  },
+  {
+   "nom": "main : ressort de rappel du pouce",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm",
+   "designation": "ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm"
+  },
+  {
+   "nom": "main : ressort de rappel des doigts",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm",
+   "designation": "ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — main, poignet ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — main, poignet ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — main, poignet ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0008 — main, poignet ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — main, paume ↔ poignet",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0010 — main, paume ↔ poignet",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0010",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack"
+  },
+  {
+   "nom": "câble de pince, brin des doigts",
    "nature": "câblage",
    "etat": "câble",
-   "ref": "CABLE:main (doigts non dessinés)",
-   "designation": "repère de la main : les doigts ne sont pas encore dessinés"
+   "ref": "CABLE:câble de pince, brin doigts",
+   "designation": "tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
+  },
+  {
+   "nom": "câble de pince, brin du pouce",
+   "nature": "câblage",
+   "etat": "câble",
+   "ref": "CABLE:câble de pince, brin pouce",
+   "designation": "tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
   }
  ],
  "masquer": {

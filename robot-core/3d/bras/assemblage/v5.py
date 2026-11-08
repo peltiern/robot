@@ -30,7 +30,9 @@ PIECES = [
     # catalogue (voir PIGNON_TUBE, ENGRENAGE_D85).
     ('REF_gotube_flexion_position_assemblage.stl', 'goTUBE 48 mm de flexion', 'achetée', '4103-0032-0048'),
     ('REF_servo_rose_position_assemblage.stl', 'D85MG déplacé', 'déplacée', 'D85MG'),
-    ('REF_micro_servo_position_assemblage.stl', 'HS-65MG déplacé', 'déplacée', 'HS-65MG'),
+    # Le HS-65MG de la v5 (REF_micro_servo) n'avait pas de passe-fil et ses oreilles étaient 3 mm trop bas : on prend
+    # le modèle Hitec du catalogue (2026-10-17, voir POCHE_HS65).
+    ('catalogue : HS-65MG', 'HS-65MG déplacé', 'déplacée', 'HS-65MG'),
 ]
 # Pour la visionneuse : l'état d'une pièce du nouveau bras
 ETATS = {'imprimée': 'imprimé', 'achetée': 'ajouté', 'déplacée': 'déplacé', 'visserie ajoutée': 'ajouté',
@@ -101,8 +103,9 @@ FIXATIONS_PLAQUE_EPAULE = [(y, z) for y in (16.0, -16.0) for z in (8.0, -8.0)]
 VIS_OREILLES = [
     ((116.8, 10.63, 13.56), (-1, 0, 0), 8.0, 'FOURNI:vis M2 du D85MG'),
     ((116.8, 10.63, -22.14), (-1, 0, 0), 8.0, 'FOURNI:vis M2 du D85MG'),
-    ((154.5, 14.0, 4.1), (0, 0, -1), 6.0, 'FOURNI:vis M2 du HS-65MG'),
-    ((154.5, -14.0, 4.1), (0, 0, -1), 6.0, 'FOURNI:vis M2 du HS-65MG'),
+    # celle du côté câble (y−) dans le haut de la paroi y−, au-dessus de la fenêtre du câble (liaison_moyeu.COULOIR)
+    ((154.5, 14.0, 4.6), (0, 0, -1), 6.0, 'FOURNI:vis M2 du HS-65MG'),
+    ((154.5, -14.0, 4.6), (0, 0, -1), 6.0, 'FOURNI:vis M2 du HS-65MG'),
 ]
 
 
@@ -190,13 +193,11 @@ def poser_entretoise(sku, centre, direction):
     return m
 
 
-# Le HS-65MG vient du fichier de la v5 (REF_micro_servo), posé de travers : 5,1° de tangage (l'inclinaison de
-# bras.stl, que ce fichier n'a jamais perdue) et 10° de lacet dans sa poche ; une de ses oreilles tombait à côté
-# de sa vis (vu par Nicolas le 2026-10-04). On le redresse sur ses grandes faces, sans le déformer, et on le
-# pose dans la poche de la liaison : fond à z = −11,5 (Z_BOT), centré entre les parois (y = 0) et sur l'axe
-# de la poche (x = 154,5). Ses oreilles tombent alors à z = 2,5 sur le haut des parois, et la cannelure en
-# (154,5 ; −5,7), sommet à z = 14,6.
-POCHE_HS65 = dict(x=154.5, y=0.0, fond=-11.5)
+# Le HS-65MG est le modèle Hitec du catalogue, posé dans la poche de la liaison : longueur selon −y (passe-fil et
+# cannelure du côté câble, y−), hauteur selon z, centré sur l'axe de la poche (x = 154,5). Ses oreilles sont à 17 mm
+# du fond, et non 14 comme sur le modèle de la v5 (mesuré par Nicolas, 2026-10-17) : fond à z = −14,0 pour qu'elles
+# restent sur le haut des parois (z = 3,0). La cannelure tombe en (154,5 ; −5,7), sommet à z = 15,0.
+POCHE_HS65 = dict(x=154.5, y=0.0, fond=-14.0)
 
 # Arbre REX de flexion (2026-10-04) : de la face extérieure du moyeu 1311 côté y+ (y = +32) à 2 mm du bout du
 # goTUBE de flexion (y = −78), à travers les deux moyeux et l'alésage Ø14,7 du goTUBE. Ses plats tournés de
@@ -211,14 +212,10 @@ ARBRE_FLEXION = dict(sku='2102-0008-0110', y=(-78.0, 32.0), rotation=-15.0)
 MOYEU_RETOURNE = dict(pieces=['1311-0016-4008#2', '2800-0004-0014#3', '2800-0004-0014#4'], y_milieu=-28.05)
 
 
-def redresser_hs65(m):
-    m = m.copy(); m.merge_vertices()
-    a = m.facets_area; o = np.argsort(a)[::-1]
-    nz = m.facets_normal[o[0]]; nz = nz if nz[2] > 0 else -nz
-    nx = next(m.facets_normal[i] for i in o if abs(np.dot(m.facets_normal[i], nz)) < 0.2)
-    nx = nx - np.dot(nx, nz) * nz; nx /= np.linalg.norm(nx); nx = nx if nx[0] > 0 else -nx
-    R = np.eye(4); R[:3, :3] = np.vstack([nx, np.cross(nz, nx), nz])
-    m.apply_translation(-m.bounds.mean(0)); m.apply_transform(R)
+def hs65():
+    m = modele('HS-65MG', None)
+    R = np.eye(4); R[:3, :3] = [[0, 0, -1], [-1, 0, 0], [0, 1, 0]]     # longueur → −y, hauteur → z, épaisseur → −x
+    m.apply_transform(R)
     b = m.bounds
     m.apply_translation([POCHE_HS65['x'] - b[:, 0].mean(), POCHE_HS65['y'] - b[:, 1].mean(), POCHE_HS65['fond'] - b[0, 2]])
     return m
@@ -229,20 +226,28 @@ def pieces_v5():
     liaison fusionnée quand elles existent."""
     T = repere_bras()
     out = []
-    fusion = os.path.join(SORTIE, 'liaison', 'liaison_moyeu_position.stl')
+    fusion = os.path.join(SORTIE, 'liaison', 'liaison_berceau_position.stl')
     for f, nom, nature, ref in PIECES:
         if nom == 'moyeu creux à embout REX' and os.path.exists(fusion):
             continue                                   # fondu dans la liaison (liaison_moyeu.py)
         if nom == 'liaison 29 mm' and os.path.exists(fusion):
-            out.append(('liaison et moyeu en une pièce', 'imprimée', trimesh.load(fusion), 'IMPRIME:liaison et moyeu'))
+            # la liaison et le moyeu, imprimés en deux pièces coupées devant la bride arrière (liaison_moyeu.COUPE)
+            from liaison_moyeu import VIS_JONCTION, TETE_VIS
+            out.append(('liaison, partie arrière (moyeu à embout REX)', 'imprimée',
+                        trimesh.load(os.path.join(SORTIE, 'liaison', 'liaison_arriere_position.stl')), 'IMPRIME:liaison, partie arrière'))
+            out.append(('liaison, berceau du HS-65MG', 'imprimée', trimesh.load(fusion), 'IMPRIME:liaison, berceau'))
+            for x_, y_ in VIS_JONCTION:
+                out.append(('vis M2 × 6 — liaison, partie arrière ↔ berceau', 'visserie ajoutée',
+                            vis_m2((x_, y_, TETE_VIS['z0']), (0, 0, -1), 6.0), 'VIS:vis M2 × 6 autotaraudeuse, comme celles des servos'))
+            continue
+        if ref == 'HS-65MG':
+            out.append((nom, nature, hs65(), ref))
             continue
         if nom == 'cloison refaite' and os.path.exists(os.path.join(CLOISON, 'cloison_structurelle_position.stl')):
             out.append(('cloison structurelle', 'imprimée',
                         trimesh.load(os.path.join(CLOISON, 'cloison_structurelle_position.stl')), 'IMPRIME:cloison structurelle'))
             continue
         m = charger(f); m.apply_transform(T)
-        if ref == 'HS-65MG':
-            m = redresser_hs65(m)
         if ref == '4103-0032-0048':
             m.apply_translation([0, GOTUBE_FLEXION_RECUL, 0])       # contre le moyeu, sans bride
             nom = 'goTUBE 48 mm de flexion, vissé sur le moyeu'
@@ -319,15 +324,19 @@ def pieces_v5():
                         poser_ecrou(v['ecrou'], v['centre_ecrou'], v['direction']), v['ecrou']))
     # La liaison tient au goTUBE du bras par 4 vis M4, têtes noyées dans le lamage de la bride avant (fond à
     # x = 167,0, côté servo) ; elles manquaient au modèle jusqu'au 2026-10-04. 2,5 mm de bride, puis le
-    # taraudage du bout du goTUBE (Ø3,6, plus de 12 mm de profondeur) : 10 mm de vis, 7,5 mm de filet en prise.
+    # taraudage du bout du goTUBE (Ø3,6, plus de 12 mm de profondeur) : 12 mm de vis, 9,5 mm de filet en prise (la
+    # M4 × 12 entre sans forcer dans le vrai tube, essayé par Nicolas le 2026-11-08 ; la notice disait × 10).
     for y, z in VIS_LIAISON_GOTUBE:
-        out.append(('vis 2802-0004-0010 — liaison ↔ goTUBE du bras', 'visserie ajoutée',
-                    poser_vis('2802-0004-0010', [FOND_LAMAGE_LIAISON - 2.2, y, z], [1, 0, 0]), '2802-0004-0010'))
+        out.append(('vis 2802-0004-0012 — liaison ↔ goTUBE du bras', 'visserie ajoutée',
+                    poser_vis('2802-0004-0012', [FOND_LAMAGE_LIAISON - 2.2, y, z], [1, 0, 0]), '2802-0004-0012'))
     from cables import pieces_cables
     for nom, m, ref in pieces_cables():
         out.append((nom, 'câblage', m, ref))
     from animation import pieces_pince
     out.extend(pieces_pince())
+    if os.path.exists(os.path.join(SORTIE, 'pince', 'pince.json')):
+        from pince import pieces_main                  # la main, réduite du Motion Arm (pince.py)
+        out.extend(pieces_main())
     return out
 
 
@@ -353,12 +362,12 @@ def main():
             return 'pièce imprimée : ' + ref.split(':', 1)[1]
         if ref.startswith('FOURNI:'):
             return ref.split(':', 1)[1] + ', fournie avec le servo'
+        if ref.startswith('VIS:'):
+            return ref.split(':', 1)[1]
         if ref.startswith('CABLE:câble de pince'):
-            return 'câble de traction Ø1 (tresse ou acier gainé), tiré par le palonnier du HS-65MG'
+            return 'tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies'
         if ref.startswith('CABLE:soudure'):
             return 'raccord soudé des 3 fils du HS-65MG à une nappe 28 AWG plus longue, sous gaine thermorétractable'
-        if ref.startswith('CABLE:main'):
-            return 'repère de la main : les doigts ne sont pas encore dessinés'
         if ref.startswith('CABLE:'):
             return ref.split(':', 1)[1] + ' (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)'
         r = base.execute('select name from parts where sku in (?, ?)', (ref, 'parent-' + ref)).fetchone()

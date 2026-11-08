@@ -342,7 +342,8 @@ if __name__ == '__main__':
         controler(trimesh.load(os.path.join(DOSSIER, 'cloison_structurelle_position.stl')))
     elif sys.argv[1:] == ['controle-liaison']:
         # ce qui tourne avec la liaison n'est pas un obstacle : pignon, micro-servo, goTUBE du bras
-        controler(trimesh.load(os.path.join(SORTIE, 'liaison', 'liaison_moyeu_position.stl')),
+        controler(trimesh.util.concatenate([trimesh.load(os.path.join(SORTIE, 'liaison', 'liaison_%s_position.stl' % p))
+                                            for p in ('arriere', 'berceau')]),
                   exclure=('liaison', 'moyeu', 'pignon Slip-Fit', 'HS-65MG', 'vis vis M2 du HS-65MG', '4103-0032-0096'), tourne=True)
     else:
         main()

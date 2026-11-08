@@ -14,7 +14,7 @@ Ensembles, du corps vers la pince :
 
 Écrit animation.json (pour la visionneuse) sur le disque externe.
 """
-import json, math, os, sys
+import json, math, os, re, sys
 import numpy as np, trimesh
 from scipy.spatial import cKDTree
 
@@ -24,9 +24,9 @@ from recaler import SORTIE
 
 AXE_SERVO_ABDUCTION = (47.85, 0.0)                 # x, y de la cannelure du servo 2000 (axe Z)
 AXE_D85MG = None                                   # relevé sur le modèle (axe X)
-HS65_AXE = (154.5, -5.7)                           # x, y de la cannelure du HS-65MG (axe Z), dessus à z = 14,6
-# (recalés le 2026-10-04 sur le servo redressé ; avant, (154,0 ; −5,6) et 15,5, relevés sur le servo de travers)
-SOMMET_CANNELURE_HS65 = 14.6
+HS65_AXE = (154.5, -5.7)                           # x, y de la cannelure du HS-65MG (axe Z), dessus à z = 15,0
+# (14,6 sur le modèle de la v5 ; 15,0 sur le modèle Hitec, oreilles posées 0,5 mm plus haut, le 2026-10-17)
+SOMMET_CANNELURE_HS65 = 15.0
 PALONNIER = dict(longueur=8.0, z=SOMMET_CANNELURE_HS65 + 1.0)   # bras unique de 8 mm (rester dans Ø39 de la liaison)
 FENTE_LIAISON = (166.5, 0.0, 12.0)                 # lumière de la bride avant vers le canal +z du goTUBE
 BOUT_TUBE = 265.6
@@ -34,7 +34,9 @@ BOUT_TUBE = 265.6
 # dans l'épaule (balayer_cables, 2026-10-03). Et à +22° et non +23° : à +23°, la plaque 1123 touche le moyeu
 # 1311 côté y+, c'est la butée mécanique (0,45 mm de jeu à +22° ; vu le 2026-10-04, le balayage au pas de 5°
 # s'arrêtait à +19°). Butées à reporter dans l'organe du bras quand il existera.
-COURSES = dict(flexion=(-45, 180), abduction=(-12, 22), tube=(-135, 135), pince=(-60, 60))
+# Pince : de 0 (main ouverte, palonnier vers +y) à +60° (fermée, bouts du pouce et des doigts au contact), voir
+# pince.py. Au-delà de 0, le palonnier détend le câble sans rien ouvrir de plus.
+COURSES = dict(flexion=(-45, 180), abduction=(-12, 22), tube=(-135, 135), pince=(0, 60))
 RAPPORT_ABDUCTION = 72 / 48
 
 EPAULE = ('1201-', '1311-', '2312-0414-0072', '1526-', '1601-0014', '1116-', '4103-0032-0048',
@@ -57,6 +59,12 @@ def groupe(nom, ref, centre):
         return 'caisson'
     if 'palonnier' in nom:
         return 'palonnier'
+    # la main : doigts et pouce tournent sur l'axe de la paume, le reste (poignet, paume, axe) tourne avec le tube
+    court = re.sub(r'^v5 \d+ ', '', nom)             # clés d'audit.pieces_nouveau_bras : « v5 <k> <nom> »
+    if court.startswith('main, doigts'):
+        return 'doigts'
+    if court.startswith('main, pouce'):
+        return 'pouce'
     if any(t in nom for t in TUBE) or ref in ('4103-0032-0096', '2322-4008-0020', 'HS-65MG') \
             or 'liaison' in ref:
         return 'tube'
@@ -87,9 +95,10 @@ def bout_palonnier(angle_deg=0.0):
 
 
 def cable_de_pince(angle_deg=0.0):
-    """Du bout du palonnier, par la lumière de la bride avant, puis le canal +z du goTUBE jusqu'à la main."""
-    return [bout_palonnier(angle_deg), np.array(FENTE_LIAISON), np.array([175.0, 0.0, 11.2]),
-            np.array([BOUT_TUBE, 0.0, 11.2]), np.array([BOUT_TUBE + 6.0, 0.0, 11.2])]
+    """Du bout du palonnier, par la lumière de la bride avant, puis le canal +z du goTUBE (sans gaine) jusqu'au
+    fléau de la main (pince.py)."""
+    from pince import cable_servo
+    return [bout_palonnier(angle_deg), np.array(FENTE_LIAISON), np.array([175.0, 0.0, 11.0])] + cable_servo()
 
 
 def pieces_pince():
@@ -101,11 +110,9 @@ def pieces_pince():
     bras.apply_translation((x0, y0 + PALONNIER['longueur'] / 2, PALONNIER['z']))
     pal = trimesh.util.concatenate([moyeu, bras])
     from cables import cordon
-    cab = cordon(cable_de_pince(0.0), r=0.5)
-    main = trimesh.creation.cylinder(radius=14.0, segment=[(BOUT_TUBE + 6, 0, 0), (BOUT_TUBE + 9, 0, 0)], sections=48)
+    cab = cordon(cable_de_pince(0.0), r=0.2)
     return [('palonnier du HS-65MG (bras de 8 mm)', 'achetée', pal, 'FOURNI:palonnier du HS-65MG'),
-            ('câble de pince (Ø1, du palonnier à la main)', 'câblage', cab, 'CABLE:câble de pince'),
-            ('main : emplacement des doigts (non dessinés)', 'câblage', main, 'CABLE:main (doigts non dessinés)')]
+            ('câble de pince (tresse PE 0,4 mm, du palonnier au fléau de la main)', 'câblage', cab, 'CABLE:câble de pince')]
 
 
 def ecrire():
@@ -139,7 +146,11 @@ def ecrire():
                                groupes=groupes_points, rayon=FIL[nom] / 2))
     pince = cable_de_pince(0.0)
     cables.append(dict(nom='câble de pince', points=[list(map(float, p)) for p in pince],
-                       groupes=['palonnier'] + ['tube'] * (len(pince) - 1), rayon=0.5))
+                       groupes=['palonnier'] + ['tube'] * (len(pince) - 1), rayon=0.2))
+    from pince import brins, X_AXE, COTE_POUCE, RAPPORT as RAPPORT_MAIN
+    for nom, pts in brins().items():
+        cables.append(dict(nom='câble de pince, brin %s' % nom, points=[list(map(float, p)) for p in pts],
+                           groupes=['tube'] * len(pts), rayon=0.2))
     groupes = {
         'epaule': dict(parent=None, point=[0, 0, 0], axe=[0, 1, 0], commande='flexion', rapport=1),
         'caisson': dict(parent='epaule', point=[0, 0, 0], axe=[0, 0, 1], commande='abduction', rapport=1),
@@ -150,6 +161,13 @@ def ecrire():
                          rapport=-1),
         'palonnier': dict(parent='tube', point=[HS65_AXE[0], HS65_AXE[1], 0], axe=[0, 0, 1], commande='pince',
                           rapport=1),
+        # doigts et pouce sur l'axe de la paume, en sens contraires ; le rapport moyen suffit (le câble n'est pas
+        # tout à fait linéaire en l'angle du palonnier : 2,3° d'écart au plus). La symétrie du pouce côté corps
+        # inverse le sens de fermeture vu du bras.
+        'doigts': dict(parent='tube', point=[X_AXE, 0, 0], axe=[0, 0, 1], commande='pince',
+                       rapport=COTE_POUCE * RAPPORT_MAIN),
+        'pouce': dict(parent='tube', point=[X_AXE, 0, 0], axe=[0, 0, 1], commande='pince',
+                      rapport=-COTE_POUCE * RAPPORT_MAIN),
     }
     json.dump(dict(groupes=groupes, noeuds=noeuds, cables=cables, courses=COURSES),
               open(os.path.join(SORTIE, 'animation.json'), 'w'), ensure_ascii=False, indent=1)

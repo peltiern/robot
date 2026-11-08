@@ -108,7 +108,7 @@ const avant = [];
   for (const e of ETAPES) {
     avant.push(new Map(ou));
     for (const m of e.mouvements) {
-      if (m.joindre) { for (const [c, a] of ou) if (a === m.joindre) ou.set(c, null); }
+      if (m.joindre) { for (const [c, a] of ou) if (a === m.joindre) ou.set(c, e.atelier ?? null); }
       else for (const c of m.cles) ou.set(c, e.atelier);
     }
   }
@@ -228,7 +228,9 @@ document.getElementById('suiv').onclick = () => aller(courante + 1);
 document.getElementById('rejouer').onclick = () => { debut = performance.now(); };
 addEventListener('keydown', e => { if (e.key === 'ArrowRight') aller(courante + 1); if (e.key === 'ArrowLeft') aller(courante - 1); });
 
+// notice.html#29 ouvre l'étape 29 (numérotée comme à l'écran) ; sinon, la dernière étape vue
 let depart = 0; try { depart = +(localStorage.getItem('notice-bras-etape') ?? 0) || 0; } catch {}
+if (/^#\d+$/.test(location.hash)) depart = +location.hash.slice(1) - 1;
 aller(depart);
 window.aller = aller;
 function boucle(t) { animer(t); suivreCamera(t); soleil.position.copy(camera.position); rendu.render(scene, camera); requestAnimationFrame(boucle); }

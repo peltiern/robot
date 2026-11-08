@@ -7,7 +7,8 @@ côté corps laisse découverte une fenêtre de 6,7 × 16,9 mm sur les canaux ±
 prise de servo (7,85 × 2,42 × 15 mm, standard JR/Futaba/TJC8) y passe. Les canaux ±z, eux, sont bouchés.
 
 Le fil du HS-65MG tourne avec le tube : il passe dans l'axe (embout REX, Ø4,5) sans sa prise, qui est
-sertie après passage (option A retenue par Nicolas).
+sertie après passage (option A retenue par Nicolas). Dans la liaison, c'est une nappe plate de 4 mm, pliée deux
+fois à 45° (voir liaison_moyeu.HS65).
 
 Chaque câble est une suite de points ; on vérifie le jeu avec toutes les pièces (sauf son propre servo et,
 pour le HS-65MG, ce qui tourne avec lui), on mesure les longueurs, et on dessine fils et prises.
@@ -67,7 +68,11 @@ CABLES = {
         (93.0, -10.0, 9.5)] + DESSUS + TRONC[6:],
         prise_au_bout=True),
     'HS-65MG': dict(servo='HS-65MG', tourne=('liaison', 'HS-65MG', 'pignon Slip-Fit', '4103-0032-0096'), points=[
-        (155.0, -13.5, -10.0), (145.0, -13.5, -10.0), (143.0, -5.0, -3.0), (142.0, 0.0, 0.0), (125.0, 0.0, 0.0),
+        # sortie du passe-fil, montée dans la fente, 1er pli vers l'arrière dans le couloir, face de la bride
+        # arrière vers le centre, 2e pli vers l'alésage
+        (154.5, -13.5, -11.0), (154.5, -14.85, -10.4), (154.5, -14.85, -6.5), (151.0, -13.55, -6.5),
+        (145.2, -13.55, -6.5), (143.85, -12.0, -6.5), (143.85, 0.0, -6.5), (143.85, 0.0, -1.5), (141.0, 0.0, 0.0),
+        (125.0, 0.0, 0.0),
         (116.0, -2.0, 0.0), (97.0, -2.5, 0.0), (94.0, -4.0, 2.0), (93.0, -15.0, 7.0)] + DESSUS + TRONC[6:],
         prise_au_bout=False),
     # Descend hors du rayon de la couronne du haut (r > 29,6), passe devant le cadre 1802 (x < 26,7) et

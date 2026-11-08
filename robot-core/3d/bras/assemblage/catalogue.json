@@ -1,0 +1,596 @@
+{
+ "1108-0001-0002": {
+  "fournisseur": "goBILDA",
+  "nom": "1108 Series Flat Pattern Bracket (1-2)",
+  "url": "https://www.gobilda.com/1108-series-flat-pattern-bracket-1-2/",
+  "prix": 2.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 4.01,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/staffa-piatta-serie-1108-1-2/",
+   "nom": "Staffa piatta serie 1108 (1-2)"
+  }
+ },
+ "1116-0024-0040": {
+  "fournisseur": "goBILDA",
+  "nom": "1116 Series Grid Plate (3 x 5 Hole, 24 x 40mm)",
+  "url": "https://www.gobilda.com/1116-series-grid-plate-3-x-5-hole-24-x-40mm/",
+  "prix": 1.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 2.67,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/piastra-di-griglia-serie-1116-3-x-5-fori-24-x-40-mm/",
+   "nom": "Piastra di griglia serie 1116 (3 x 5 fori- 24 x 40 mm)"
+  }
+ },
+ "1121-0006-0168": {
+  "fournisseur": "goBILDA",
+  "nom": "1121 Series Low-Side U-Channel (6 Hole, 168mm Length)",
+  "url": "https://www.gobilda.com/1121-series-low-side-u-channel-6-hole-168mm-length/",
+  "prix": 8.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 12.06,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/canale-u-a-basso-profilo-serie-1121-6-fori-lunghezza-168mm/",
+   "nom": "Canale U a basso profilo serie 1121 (6 fori- lunghezza 168mm)"
+  }
+ },
+ "1123-0043-0072": {
+  "fournisseur": "goBILDA",
+  "nom": "1123 Series Pattern Plate (1 x 2 Hole, 43 x 72mm)",
+  "url": "https://www.gobilda.com/1123-series-pattern-plate-1-x-2-hole-43-x-72mm/",
+  "prix": 3.49,
+  "paquet": 1,
+  "steplab": {
+   "prix": 4.68,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/piatto-modello-serie-1123-1-x-2-foro-48-x-72-mm/",
+   "nom": "Piastra serie 1123 (1 x 2 foro- 43 x 72 mm)"
+  }
+ },
+ "1123-0043-0096": {
+  "fournisseur": "goBILDA",
+  "nom": "1123 Series Pattern Plate (1 x 3 Hole, 43 x 96mm)",
+  "url": "https://www.gobilda.com/1123-series-pattern-plate-1-x-3-hole-43-x-96mm/",
+  "prix": 3.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 5.35,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/piatto-modello-serie-1123-1-x-3-foro-43-x-96-mm/",
+   "nom": "Piastra serie 1123 (1 x 3 foro- 43 x 96 mm)"
+  }
+ },
+ "1147-0001-0005": {
+  "fournisseur": "goBILDA",
+  "nom": "Threaded Steel L-Bracket (5 Hole) - 4 Pack",
+  "url": "https://www.gobilda.com/threaded-steel-l-bracket-5-hole-4-pack/",
+  "prix": 7.99,
+  "paquet": 4
+ },
+ "1201-0027-0001": {
+  "fournisseur": "goBILDA",
+  "nom": "1201 Series Quad Block Pattern Mount (27-1)",
+  "url": "https://www.gobilda.com/1201-series-quad-block-pattern-mount-27-1/",
+  "prix": 6.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 9.38,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1201-series-quad-block-pattern-mount-27-1/",
+   "nom": "1201 Series Quad Block Pattern Mount (27-1)"
+  }
+ },
+ "1311-0016-4008": {
+  "fournisseur": "goBILDA",
+  "nom": "1311 Series Thru-Hole Sonic Hub (8mm REX® Bore)",
+  "url": "https://www.gobilda.com/1311-series-thru-hole-sonic-hub-8mm-rex-bore/",
+  "prix": 7.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 10.72,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1311-series-thru-hole-sonic-hub-8mm-rex-bore/",
+   "nom": "Hub sonico a foro passante serie 1311 (foro REX da 8 mm)"
+  }
+ },
+ "1500-0010-0032": {
+  "fournisseur": "goBILDA",
+  "nom": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack",
+  "url": "https://www.gobilda.com/1500-series-plastic-spacer-32mm-id-x-34mm-od-1mm-thickness-12-pack/",
+  "prix": 3.49,
+  "paquet": 12,
+  "steplab": {
+   "prix": 3.84,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1500-series-plastic-spacer-32mm-id-x-34mm-od-1mm-thickness-12-pack/",
+   "nom": "1500 Series Rondelle plastica (32mm ID x 34mm OD  1mm Thickness) - 12 Pack"
+  }
+ },
+ "1501-0006-0080": {
+  "fournisseur": "goBILDA",
+  "nom": "1501 Series M4 x 0.7mm Standoff (6mm OD, 8mm Length) - 4 Pack",
+  "url": "https://www.gobilda.com/1501-series-m4-x-0-7mm-standoff-6mm-od-8mm-length-4-pack/",
+  "prix": 2.69,
+  "paquet": 4,
+  "steplab": {
+   "prix": 2.81,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1501-series-m4-x-0-7mm-standoff-6mm-od-8mm-length-4-pack/",
+   "nom": "Distanziale M4 x 0,7 mm serie 1501 (diametro esterno 6 mm, lunghezza 8 mm) - 4 pezzi"
+  }
+ },
+ "1501-0006-0430": {
+  "fournisseur": "goBILDA",
+  "nom": "1501 Series M4 x 0.7mm Standoff (6mm OD, 43mm Length) - 4 Pack",
+  "url": "https://www.gobilda.com/1501-series-m4-x-0-7mm-standoff-6mm-od-43mm-length-4-pack/",
+  "prix": 4.99,
+  "paquet": 4,
+  "steplab": {
+   "prix": 5.88,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1501-series-m4-x-0-7mm-standoff-6mm-od-43mm-length-4-pack/",
+   "nom": "Distanziale M4 x 0,7 mm serie 1501 (diametro esterno 6 mm, lunghezza 43 mm) - 4 pezzi"
+  }
+ },
+ "1502-0006-0040": {
+  "fournisseur": "goBILDA",
+  "nom": "1502 Series 4mm ID Spacer (6mm OD, 4mm Length) - 4 Pack",
+  "url": "https://www.gobilda.com/1502-series-4mm-id-spacer-6mm-od-4mm-length-4-pack/",
+  "prix": 1.89,
+  "paquet": 4,
+  "steplab": {
+   "prix": 2.54,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-4mm-length-4-pack/",
+   "nom": "Distanziale ID 4mm serie 1502 (diametro esterno 6mm lunghezza 4mm) - 4 pezzi"
+  }
+ },
+ "1502-0006-0070": {
+  "fournisseur": "goBILDA",
+  "nom": "1502 Series 4mm ID Spacer (6mm OD, 7mm Length) - 4 Pack",
+  "url": "https://www.gobilda.com/1502-series-4mm-id-spacer-6mm-od-7mm-length-4-pack/",
+  "prix": 2.09,
+  "paquet": 4,
+  "steplab": {
+   "prix": 2.8,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-7mm-length-4-pack/",
+   "nom": "Distanziale ID 4 mm serie 1502 (lunghezza 6 mm diametro esterno 7 mm) - 4 pezzi"
+  }
+ },
+ "1526-0032-0100": {
+  "fournisseur": "goBILDA",
+  "nom": "1526 Series 32mm OD Plastic Pattern Spacer (10mm Length) - 2 Pack",
+  "url": "https://www.gobilda.com/1526-series-32mm-od-plastic-pattern-spacer-10mm-length-2-pack/",
+  "prix": 3.99,
+  "paquet": 2,
+  "steplab": {
+   "prix": 5.35,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/distanziatore-in-plastica-con-diametro-esterno-32-mm-serie-1526-lunghezza-10-mm-confezione-da-2/",
+   "nom": "Distanziatore in plastica con diametro esterno 32 mm serie 1526 (lunghezza 10 mm) - Confezione da 2"
+  }
+ },
+ "1601-0014-0004": {
+  "fournisseur": "goBILDA",
+  "nom": "4mm ID Flanged Ball Bearing (14mm OD, 5mm Thickness) - 2 Pack",
+  "url": "https://www.gobilda.com/4mm-id-flanged-ball-bearing-14mm-od-5mm-thickness-2-pack/",
+  "prix": 3.99,
+  "paquet": 2,
+  "steplab": {
+   "prix": 5.35,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/cuscinetto-a-sfere-flangiato-serie-1601-id-4-mm-x-diametro-esterno-14-mm-spessore-5-mm-confezione-da-2-pezzi/",
+   "nom": "Cuscinetto a sfere flangiato serie 1601 (ID 4 mm x diametro esterno 14 mm- spessore 5 mm) - Confezione da 2 pezzi"
+  }
+ },
+ "1601-0039-0032": {
+  "fournisseur": "goBILDA",
+  "nom": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)",
+  "url": "https://www.gobilda.com/32mm-id-flanged-ball-bearing-39mm-od-5mm-thickness/",
+  "prix": 11.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 14.51,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/cuscinetto-a-sfere-flangiato-serie-1601-id-32-mm-x-diametro-esterno-39-mm-spessore-5-mm-confezione-da-2-pezzi/",
+   "nom": "Cuscinetto a sfere flangiato serie 1601 (ID 32 mm x diametro esterno 39 mm, spessore 5 mm)"
+  }
+ },
+ "1604-0043-0032": {
+  "fournisseur": "goBILDA",
+  "nom": "32mm Bore 2-Side, 2-Post Pillow Block (43mm Width)",
+  "url": "https://www.gobilda.com/32mm-bore-2-side-2-post-pillow-block-43mm-width/",
+  "prix": 13.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 18.77,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/blocchetto-di-cuscino-2-lati-2-montanti-serie-1604-foro-32mm/",
+   "nom": "Blocchetto di Cuscino 2 lati- 2 montanti serie 1604 (foro 32mm)"
+  }
+ },
+ "1802-0043-0001": {
+  "fournisseur": "goBILDA",
+  "nom": "1802  Series Servo Frame (43mm Width, for Standard Size Servos)",
+  "url": "https://www.gobilda.com/1802-series-servo-frame-43mm-width-for-standard-size-servos/",
+  "prix": 7.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 10.72,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/telaio-servo-serie-1802-larghezza-43-mm-per-servocomandi-di-dimensioni-standard/",
+   "nom": "Telaio servo serie 1802 (larghezza 43 mm, per servocomandi di dimensioni standard)"
+  }
+ },
+ "1906-0025-0032": {
+  "fournisseur": "goBILDA",
+  "nom": "1906 Series Low-Profile Servo Hub (25 Tooth Spline, 32mm Diameter)",
+  "url": "https://www.gobilda.com/1906-series-lightweight-servo-hub-25-tooth-spline-32mm-diameter/",
+  "prix": 4.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 6.7,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/mozzo-servo-leggero-della-serie-1906-25-denti-con-scanalatura-diametro-32-mm/",
+   "nom": "Mozzo servo leggero della serie 1906 (25 denti con scanalatura- diametro 32 mm)"
+  }
+ },
+ "1908-0025-0032": {
+  "fournisseur": "goBILDA",
+  "nom": "1908 Series Servo Hub (25 Tooth Spline, 32mm Diameter)",
+  "url": "https://www.gobilda.com/1908-series-servo-hub-25-tooth-spline-32mm-diameter/",
+  "prix": 8.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 12.06,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/servo-hub-1908-series-25-denti-diametro-32-mm/",
+   "nom": "Servo Hub 1908 Series (25 denti- diametro 32 mm)"
+  }
+ },
+ "2000-0025-0002": {
+  "fournisseur": "goBILDA",
+  "nom": "2000 Series Dual Mode Servo (25-2, Torque)",
+  "url": "https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/",
+  "prix": 36.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 49.64,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2000-series-dual-mode-servo-25-2-torque/",
+   "nom": "2000 Series Dual Mode Servo (25-2, Torque)"
+  }
+ },
+ "2102-0008-0110": {
+  "fournisseur": "goBILDA",
+  "nom": "2102 Series Stainless Steel REX® Shaft (8mm Diameter, 110mm Length)",
+  "url": "https://www.gobilda.com/2102-series-stainless-steel-rex-shaft-8mm-diameter-110mm-length/",
+  "prix": 3.99,
+  "paquet": 1
+ },
+ "2305-0025-0020": {
+  "fournisseur": "goBILDA",
+  "nom": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 20 Tooth)",
+  "url": "https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-25-tooth-spline-20-tooth/",
+  "prix": 9.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 13.41,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/serie-2305-ottone-mod-0-8-servo-gear-25-denti-spline-20-denti/",
+   "nom": "Serie 2305 Ottone- MOD 0.8- Servo Gear (25 denti spline- 20 denti)"
+  }
+ },
+ "2305-0025-0048": {
+  "fournisseur": "goBILDA",
+  "nom": "2305 Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 48 Tooth)",
+  "url": "https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-25-tooth-spline-48-tooth/",
+  "prix": 12.99,
+  "paquet": 1
+ },
+ "2312-0414-0048": {
+  "fournisseur": "goBILDA",
+  "nom": "48 Tooth Hub-Mount Gear (MOD 0.8, 4mm Thick Acetal)",
+  "url": "https://www.gobilda.com/48-tooth-hub-mount-gear-mod-0-8-4mm-thick-acetal/",
+  "prix": 3.19,
+  "paquet": 1,
+  "steplab": {
+   "prix": 4.28,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/ingranaggio-in-acetale-48-denti-mod-0-8/",
+   "nom": "Ingranaggio in acetale 48 denti MOD 0.8"
+  }
+ },
+ "2312-0414-0072": {
+  "fournisseur": "goBILDA",
+  "nom": "72 Tooth Hub-Mount Gear (MOD 0.8, 4mm Thick Acetal)",
+  "url": "https://www.gobilda.com/72-tooth-hub-mount-gear-mod-0-8-4mm-thick-acetal/",
+  "prix": 4.39,
+  "paquet": 1,
+  "steplab": {
+   "prix": 5.89,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/ingranaggio-in-acetale-72-denti-mod-0-8/",
+   "nom": "Ingranaggio in acetale 72 denti MOD 0.8"
+  }
+ },
+ "2322-4008-0020": {
+  "fournisseur": "goBILDA",
+  "nom": "Slip-Fit Steel Pinion Gear (8mm REX® Bore, MOD 0.8, 20T)",
+  "url": "https://www.gobilda.com/slip-fit-steel-pinion-gear-8mm-rex-bore-mod-0-8-20t/",
+  "prix": 8.59,
+  "paquet": 1
+ },
+ "2800-0004-0010": {
+  "fournisseur": "goBILDA",
+  "nom": "M4 x 0.7mm Zinc-Plated Socket Head Screw (10mm Length)",
+  "url": "https://www.gobilda.com/m4-x-0-7mm-zinc-plated-socket-head-screw-10mm-length/",
+  "prix": null,
+  "paquet": 25,
+  "paquet_suppose": true,
+  "steplab": {
+   "prix": 4.55,
+   "dispo": false,
+   "url": "https://www.steplab.net/p/viti-a-brugola-zincate-m4-10mm-25-pezzi/",
+   "nom": "Viti a brugola zincate M4  10mm (25 pezzi)"
+  }
+ },
+ "2800-0004-0014": {
+  "fournisseur": "goBILDA",
+  "nom": "M4 x 0.7mm Zinc-Plated Socket Head Screw (14mm Length)",
+  "url": "https://www.gobilda.com/m4-x-0-7mm-zinc-plated-socket-head-screw-14mm-length/",
+  "prix": null,
+  "paquet": 25,
+  "paquet_suppose": true,
+  "steplab": {
+   "prix": 4.95,
+   "dispo": false,
+   "url": "https://www.steplab.net/p/viti-a-brugola-zincate-m4-14mm-25-pezzi/",
+   "nom": "Viti a brugola zincate M4  14mm (25 pezzi)"
+  }
+ },
+ "2800-0004-0020": {
+  "fournisseur": "goBILDA",
+  "nom": "M4 x 0.7mm Zinc-Plated Socket Head Screw (20mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/m4-x-0-7mm-zinc-plated-socket-head-screw-20mm-length-25-pack/",
+  "prix": 3.99,
+  "paquet": 25
+ },
+ "2801-0004-0008": {
+  "fournisseur": "goBILDA",
+  "nom": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD)",
+  "url": "https://www.gobilda.com/2801-series-zinc-plated-steel-washer-4mm-id-x-8mm-od/",
+  "prix": null,
+  "paquet": 25,
+  "paquet_suppose": true,
+  "steplab": {
+   "prix": 2.79,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2801-series-zinc-plated-steel-washer-4mm-id-x-8mm-od-25-pack/",
+   "nom": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD) - 25 Pack"
+  }
+ },
+ "2802-0004-0005": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 5mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-5mm-length-25-pack/",
+  "prix": 2.89,
+  "paquet": 25,
+  "steplab": {
+   "prix": 3.88,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-5mm-length-25-pack/",
+   "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm  5mm Length) - 25 Pack"
+  }
+ },
+ "2802-0004-0008": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-8mm-length-25-pack/",
+  "prix": 3.19,
+  "paquet": 25,
+  "steplab": {
+   "prix": 4.28,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-8mm-length-25-pack/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 8 mm) - confezione da 25 pezzi"
+  }
+ },
+ "2802-0004-0010": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 10mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-10mm-length-25-pack/",
+  "prix": 3.39,
+  "paquet": 25,
+  "steplab": {
+   "prix": 4.55,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-10mm-length-25-pack/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 10 mm) - confezione da 25 pezzi"
+  }
+ },
+ "2802-0004-0012": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-12mm-length-25-pack/",
+  "prix": 3.59,
+  "paquet": 25,
+  "steplab": {
+   "prix": 4.82,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-12mm-length-25-pack-2/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 12 mm) - confezione da 25 pezzi"
+  }
+ },
+ "2802-0004-0014": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 14mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-14mm-length-25-pack/",
+  "prix": 3.69,
+  "paquet": 25,
+  "steplab": {
+   "prix": 4.95,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-14mm-length-25-pack-2/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 14 mm) - Confezione da 25 pezzi"
+  }
+ },
+ "2802-0004-0016": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-16mm-length-25-pack/",
+  "prix": 3.79,
+  "paquet": 25,
+  "steplab": {
+   "prix": 5.09,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-16mm-length-25-pack-2/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 16 mm) - Confezione da 25 pezzi"
+  }
+ },
+ "2802-0004-0018": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 18mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-18mm-length-25-pack/",
+  "prix": 3.89,
+  "paquet": 25,
+  "steplab": {
+   "prix": 5.22,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-18mm-length-25-pack/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 18 mm) - Confezione da 25 pezzi"
+  }
+ },
+ "2807-0407-0500": {
+  "fournisseur": "goBILDA",
+  "nom": "2807 Series Stainless Steel Shim (4mm ID x 7mm OD, 0.50mm Thickness) - 12 Pack",
+  "url": "https://www.gobilda.com/2807-series-stainless-steel-shim-4mm-id-x-7mm-od-0-50mm-thickness-12-pack/",
+  "prix": 2.29,
+  "paquet": 12,
+  "steplab": {
+   "prix": 3.07,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/spessore-in-acciaio-inossidabile-serie-2807-diametro-4-mm-x-7-mm-spessore-050-mm-12-pezzi/",
+   "nom": "Spessore in acciaio inossidabile serie 2807 (diametro 4 mm x 7 mm- spessore 0-50 mm) - 12 pezzi"
+  }
+ },
+ "2807-3236-0500": {
+  "fournisseur": "goBILDA",
+  "nom": "32mm ID Stainless Steel Shim (36mm OD, 0.50mm Thickness) - 12 Pack",
+  "url": "https://www.gobilda.com/32mm-id-stainless-steel-shim-36mm-od-0-50mm-thickness-12-pack/",
+  "prix": 4.99,
+  "paquet": 12
+ },
+ "2812-0004-0007": {
+  "fournisseur": "goBILDA",
+  "nom": "M4 x 0.7mm Nylock Nut",
+  "url": "https://www.gobilda.com/m4-x-0-7mm-nylock-nut/",
+  "prix": null,
+  "paquet": 25,
+  "paquet_suppose": true,
+  "steplab": {
+   "prix": 4.01,
+   "dispo": false,
+   "url": "https://www.steplab.net/p/2812-series-zinc-plated-steel-nylon-insert-locknut-m4-x-0-7mm-7mm-hex-25-pack-2/",
+   "nom": "Dado con inserto in nylon in acciaio zincato serie 2812 (esagonale M4 x 0,7 mm 7 mm) - Confezione da 25 pezzi"
+  }
+ },
+ "2904-0004-0014": {
+  "fournisseur": "goBILDA",
+  "nom": "2904 Series Hole Reducer (4mm ID x 14mm OD) - 4 Pack",
+  "url": "https://www.gobilda.com/2904-series-hole-reducer-4mm-id-x-14mm-od-4-pack/",
+  "prix": 3.99,
+  "paquet": 4,
+  "steplab": {
+   "prix": 5.35,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2904-series-hole-reducer-4mm-id-x-14mm-od-4-pack-2/",
+   "nom": "2904 Series Hole Reducer (4mm ID x 14mm OD) - 4 Pack"
+  }
+ },
+ "4103-0032-0048": {
+  "fournisseur": "goBILDA",
+  "nom": "4103 Series goTUBE (48mm Length)",
+  "url": "https://www.gobilda.com/4103-series-gotube-48mm-length/",
+  "prix": 4.19,
+  "paquet": 1,
+  "steplab": {
+   "prix": 5.62,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/serie-4103-gotube-lunghezza-48mm/",
+   "nom": "Serie 4103 goTUBE (lunghezza 48mm)"
+  }
+ },
+ "4103-0032-0096": {
+  "fournisseur": "goBILDA",
+  "nom": "4103 Series goTUBE (96mm Length)",
+  "url": "https://www.gobilda.com/4103-series-gotube-96mm-length/",
+  "prix": 5.39,
+  "paquet": 1,
+  "steplab": {
+   "prix": 7.23,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/serie-4103-gotube-lunghezza-96-mm/",
+   "nom": "Serie 4103 goTUBE (lunghezza 96 mm)"
+  }
+ },
+ "BRAS:vis de palonnier du D85MG": {
+  "fournisseur": "fourni avec le servo"
+ },
+ "CABLE:câble de pince": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:câble du D85MG": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:câble du HS-65MG": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:câble du servo d'abduction": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:main (doigts non dessinés)": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:prise de servo": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:prise à sertir": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:soudure sous gaine": {
+  "fournisseur": "câblage"
+ },
+ "D85MG": {
+  "fournisseur": "Hitec"
+ },
+ "FOURNI:palonnier du HS-65MG": {
+  "fournisseur": "fourni avec le servo"
+ },
+ "FOURNI:vis M2 du D85MG": {
+  "fournisseur": "fourni avec le servo"
+ },
+ "FOURNI:vis M2 du HS-65MG": {
+  "fournisseur": "fourni avec le servo"
+ },
+ "HS-65MG": {
+  "fournisseur": "Hitec"
+ },
+ "IMPRIME:cloison": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:cloison structurelle": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:liaison et moyeu": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:plaque de bout": {
+  "fournisseur": "à imprimer"
+ }
+}

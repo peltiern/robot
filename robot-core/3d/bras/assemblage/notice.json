@@ -42,7 +42,7 @@
     },
     {
      "cles": [
-      "v5-27"
+      "v5-30"
      ],
      "chemin": [
       [
@@ -58,7 +58,7 @@
     },
     {
      "cles": [
-      "v5-28"
+      "v5-31"
      ],
      "chemin": [
       [
@@ -74,7 +74,7 @@
     },
     {
      "cles": [
-      "v5-29"
+      "v5-32"
      ],
      "chemin": [
       [
@@ -90,7 +90,7 @@
     },
     {
      "cles": [
-      "v5-30"
+      "v5-33"
      ],
      "chemin": [
       [
@@ -221,7 +221,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-6"
+      "v5-9"
      ],
      "chemin": [
       [
@@ -236,7 +236,7 @@
     },
     {
      "cles": [
-      "v5-2"
+      "v5-5"
      ],
      "chemin": [
       [
@@ -251,7 +251,7 @@
     },
     {
      "cles": [
-      "v5-19"
+      "v5-22"
      ],
      "chemin": [
       [
@@ -267,7 +267,7 @@
     },
     {
      "cles": [
-      "v5-20"
+      "v5-23"
      ],
      "chemin": [
       [
@@ -283,7 +283,7 @@
     },
     {
      "cles": [
-      "v5-21"
+      "v5-24"
      ],
      "chemin": [
       [
@@ -299,7 +299,7 @@
     },
     {
      "cles": [
-      "v5-22"
+      "v5-25"
      ],
      "chemin": [
       [
@@ -1278,7 +1278,7 @@
     },
     {
      "cles": [
-      "v5-18"
+      "v5-21"
      ],
      "chemin": [
       [
@@ -1302,13 +1302,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-1"
+      "v5-4"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-40"
+      "v5-43"
      ],
      "chemin": [
       [
@@ -1324,7 +1324,7 @@
     },
     {
      "cles": [
-      "v5-42"
+      "v5-45"
      ],
      "chemin": [
       [
@@ -1340,7 +1340,7 @@
     },
     {
      "cles": [
-      "v5-44"
+      "v5-47"
      ],
      "chemin": [
       [
@@ -1356,7 +1356,7 @@
     },
     {
      "cles": [
-      "v5-46"
+      "v5-49"
      ],
      "chemin": [
       [
@@ -1372,7 +1372,7 @@
     },
     {
      "cles": [
-      "v5-52"
+      "v5-55"
      ],
      "chemin": [
       [
@@ -1397,7 +1397,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-3"
+      "v5-6"
      ],
      "chemin": [
       [
@@ -1412,7 +1412,7 @@
     },
     {
      "cles": [
-      "v5-23"
+      "v5-26"
      ],
      "chemin": [
       [
@@ -1428,7 +1428,7 @@
     },
     {
      "cles": [
-      "v5-24"
+      "v5-27"
      ],
      "chemin": [
       [
@@ -1444,7 +1444,7 @@
     },
     {
      "cles": [
-      "v5-16"
+      "v5-19"
      ],
      "chemin": [
       [
@@ -1468,7 +1468,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-9"
+      "v5-12"
      ],
      "chemin": [
       [
@@ -1483,7 +1483,7 @@
     },
     {
      "cles": [
-      "v5-53"
+      "v5-56"
      ],
      "chemin": [
       [
@@ -1499,7 +1499,7 @@
     },
     {
      "cles": [
-      "v5-55"
+      "v5-58"
      ],
      "chemin": [
       [
@@ -1515,7 +1515,7 @@
     },
     {
      "cles": [
-      "v5-12"
+      "v5-15"
      ],
      "chemin": [
       [
@@ -1530,8 +1530,8 @@
     },
     {
      "cles": [
-      "v5-54",
-      "v5-56"
+      "v5-57",
+      "v5-59"
      ],
      "chemin": [
       [
@@ -1547,7 +1547,7 @@
     },
     {
      "cles": [
-      "v5-48"
+      "v5-51"
      ],
      "chemin": [
       [
@@ -1563,7 +1563,7 @@
     },
     {
      "cles": [
-      "v5-50"
+      "v5-53"
      ],
      "chemin": [
       [
@@ -1583,39 +1583,20 @@
    "heurts": []
   },
   {
-   "titre": "La liaison du tube",
-   "texte": "Le pignon Slip-Fit de 20 dents (2322) se clipse sur l'embout REX de la liaison imprimée : on le pousse jusqu'à l'épaulement, les trois doigts fendus de l'embout plient et la lèvre revient derrière lui (tenir le fil du HS-65MG au centre). L'ensemble entre dans le roulement par l'avant, le pignon passe dans l'alésage et vient engrener avec celui du D85MG ; la collerette de la liaison arrête l'ensemble contre le roulement.",
+   "titre": "Le goTUBE sur le berceau de la liaison, à l'établi",
+   "texte": "Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 96 mm : quatre vis M4 × 12 par l'intérieur, clé coudée par l'arrière du berceau, encore ouvert. Une cale inox et deux bagues sur le bout du goTUBE.",
    "mouvements": [
     {
      "cles": [
-      "v5-0",
-      "v5-17"
+      "v5-1"
      ],
-     "chemin": [
-      [
-       [
-        1.0,
-        0.0,
-        0.0
-       ],
-       60.0
-      ]
-     ]
-    }
-   ],
-   "atelier": "module",
-   "outils": null,
-   "heurts": []
-  },
-  {
-   "titre": "Le goTUBE du bras",
-   "texte": "Une cale inox et deux bagues sur le bout du goTUBE de 96 mm, qui se visse sur la face avant de la liaison : quatre vis M4 × 10 par l'intérieur de la liaison, clé coudée par la fenêtre du dessus.",
-   "mouvements": [
+     "chemin": []
+    },
     {
      "cles": [
-      "v5-13",
-      "v5-14",
-      "v5-15"
+      "v5-16",
+      "v5-17",
+      "v5-18"
      ],
      "chemin": [
       [
@@ -1645,79 +1626,79 @@
     },
     {
      "cles": [
-      "v5-72"
-     ],
-     "chemin": [
-      [
-       [
-        -1.0,
-        0.0,
-        0.0
-       ],
-       16.0
-      ],
-      [
-       [
-        0.0,
-        0.0,
-        1.0
-       ],
-       30.0
-      ]
-     ],
-     "tol": 5.0
-    },
-    {
-     "cles": [
-      "v5-73"
-     ],
-     "chemin": [
-      [
-       [
-        -1.0,
-        0.0,
-        0.0
-       ],
-       16.0
-      ],
-      [
-       [
-        0.0,
-        0.0,
-        1.0
-       ],
-       30.0
-      ]
-     ],
-     "tol": 5.0
-    },
-    {
-     "cles": [
-      "v5-74"
-     ],
-     "chemin": [
-      [
-       [
-        -1.0,
-        0.0,
-        0.0
-       ],
-       16.0
-      ],
-      [
-       [
-        0.0,
-        0.0,
-        1.0
-       ],
-       30.0
-      ]
-     ],
-     "tol": 5.0
-    },
-    {
-     "cles": [
       "v5-75"
+     ],
+     "chemin": [
+      [
+       [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       16.0
+      ],
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       30.0
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-76"
+     ],
+     "chemin": [
+      [
+       [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       16.0
+      ],
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       30.0
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-77"
+     ],
+     "chemin": [
+      [
+       [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       16.0
+      ],
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       30.0
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-78"
      ],
      "chemin": [
       [
@@ -1740,32 +1721,32 @@
      "tol": 5.0
     }
    ],
-   "atelier": "module",
+   "atelier": "liaison",
    "outils": null,
    "heurts": []
   },
   {
-   "titre": "Le servo de pince (HS-65MG)",
-   "texte": "Le fil du HS-65MG passe d'abord dans l'alésage de la liaison, sans sa prise (elle se sertit à la fin). Le servo descend dans la liaison, deux vis M2 dans les oreilles ; le palonnier sur la cannelure.",
+   "titre": "Le servo de pince (HS-65MG), à l'établi",
+   "texte": "Le servo entre dans le berceau par l'arrière, comme un tiroir, oreilles sur le haut des parois : le passe-fil et le bout du câble glissent dans la fente basse de la paroi y−. Deux vis M2 dans les oreilles. De l'extérieur, dans la fenêtre : le câble plat remonte contre le bout du servo, un pli à 45° le renvoie vers l'arrière, debout ; on le pousse dans le couloir de la paroi par la fente basse, et il ressort à l'arrière du berceau. Le palonnier sur la cannelure.",
    "mouvements": [
     {
      "cles": [
-      "v5-4"
+      "v5-7"
      ],
      "chemin": [
       [
        [
+        -1.0,
         0.0,
-        0.0,
-        1.0
+        0.0
        ],
-       40.0
+       30.0
       ]
      ]
     },
     {
      "cles": [
-      "v5-25"
+      "v5-28"
      ],
      "chemin": [
       [
@@ -1781,7 +1762,7 @@
     },
     {
      "cles": [
-      "v5-26"
+      "v5-29"
      ],
      "chemin": [
       [
@@ -1797,7 +1778,7 @@
     },
     {
      "cles": [
-      "v5-83"
+      "v5-86"
      ],
      "chemin": [
       [
@@ -1807,6 +1788,99 @@
         1.0
        ],
        15.0
+      ]
+     ]
+    }
+   ],
+   "atelier": "liaison",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La partie arrière de la liaison, à l'établi",
+   "texte": "Le fil du HS-65MG passe dans l'alésage de la partie arrière, par la gorge de sa face, sans sa prise (elle se sertit à la fin). Le câble se couche dans la gorge, tourné vers le centre ; un second pli à 45° le mène à l'alésage. On pousse la partie arrière à plat contre le berceau, en tirant le fil : sa dent glisse dans la rainure du fond, ses pattes dans les encoches du haut des parois. Une vis M2 × 6 dans chaque patte. Le pignon Slip-Fit de 20 dents (2322) se clipse sur l'embout REX : on le pousse jusqu'à l'épaulement, les trois doigts fendus de l'embout plient et la lèvre revient derrière lui (tenir le fil au centre).",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-0"
+     ],
+     "chemin": [
+      [
+       [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       30.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-2"
+     ],
+     "chemin": [
+      [
+       [
+        0.002156099382982853,
+        0.001170088403842473,
+        0.9999969910597621
+       ],
+       11.47038391876057
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-3"
+     ],
+     "chemin": [
+      [
+       [
+        0.0014553689925192821,
+        0.0020593870717048324,
+        0.9999968204079375
+       ],
+       11.470488430062995
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-20"
+     ],
+     "chemin": [
+      [
+       [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       20.0
+      ]
+     ]
+    }
+   ],
+   "atelier": "liaison",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La liaison du tube",
+   "texte": "L'ensemble (liaison, HS-65MG, goTUBE) entre dans le roulement par l'avant, le pignon passe dans l'alésage et vient engrener avec celui du D85MG ; la collerette de la liaison arrête l'ensemble contre le roulement.",
+   "mouvements": [
+    {
+     "joindre": "liaison",
+     "chemin": [
+      [
+       [
+        1,
+        0,
+        0
+       ],
+       60
       ]
      ]
     }
@@ -1880,7 +1954,7 @@
     },
     {
      "cles": [
-      "v5-34"
+      "v5-37"
      ],
      "chemin": [
       [
@@ -1896,7 +1970,7 @@
     },
     {
      "cles": [
-      "v5-36"
+      "v5-39"
      ],
      "chemin": [
       [
@@ -1912,7 +1986,7 @@
     },
     {
      "cles": [
-      "v5-38"
+      "v5-41"
      ],
      "chemin": [
       [
@@ -1928,7 +2002,7 @@
     },
     {
      "cles": [
-      "v5-47"
+      "v5-50"
      ],
      "chemin": [
       [
@@ -1944,7 +2018,7 @@
     },
     {
      "cles": [
-      "v5-49"
+      "v5-52"
      ],
      "chemin": [
       [
@@ -1960,7 +2034,7 @@
     },
     {
      "cles": [
-      "v5-31"
+      "v5-34"
      ],
      "chemin": [
       [
@@ -1976,7 +2050,7 @@
     },
     {
      "cles": [
-      "v5-32"
+      "v5-35"
      ],
      "chemin": [
       [
@@ -2065,8 +2139,8 @@
    "mouvements": [
     {
      "cles": [
-      "v5-59",
-      "v5-62"
+      "v5-62",
+      "v5-65"
      ],
      "chemin": [
       [
@@ -2081,7 +2155,7 @@
     },
     {
      "cles": [
-      "v5-57"
+      "v5-60"
      ],
      "chemin": [
       [
@@ -2097,7 +2171,7 @@
     },
     {
      "cles": [
-      "v5-60"
+      "v5-63"
      ],
      "chemin": [
       [
@@ -2129,7 +2203,7 @@
     },
     {
      "cles": [
-      "v5-33"
+      "v5-36"
      ],
      "chemin": [
       [
@@ -2145,7 +2219,7 @@
     },
     {
      "cles": [
-      "v5-35"
+      "v5-38"
      ],
      "chemin": [
       [
@@ -2161,7 +2235,7 @@
     },
     {
      "cles": [
-      "v5-37"
+      "v5-40"
      ],
      "chemin": [
       [
@@ -2177,7 +2251,7 @@
     },
     {
      "cles": [
-      "v5-51"
+      "v5-54"
      ],
      "chemin": [
       [
@@ -2193,7 +2267,7 @@
     },
     {
      "cles": [
-      "v5-58"
+      "v5-61"
      ],
      "chemin": [
       [
@@ -2209,7 +2283,7 @@
     },
     {
      "cles": [
-      "v5-61"
+      "v5-64"
      ],
      "chemin": [
       [
@@ -2225,7 +2299,7 @@
     },
     {
      "cles": [
-      "v5-10"
+      "v5-13"
      ],
      "chemin": [
       [
@@ -2241,7 +2315,7 @@
     },
     {
      "cles": [
-      "v5-11"
+      "v5-14"
      ],
      "chemin": [
       [
@@ -2649,7 +2723,7 @@
     },
     {
      "cles": [
-      "v5-39"
+      "v5-42"
      ],
      "chemin": [
       [
@@ -2665,7 +2739,7 @@
     },
     {
      "cles": [
-      "v5-41"
+      "v5-44"
      ],
      "chemin": [
       [
@@ -2681,7 +2755,7 @@
     },
     {
      "cles": [
-      "v5-43"
+      "v5-46"
      ],
      "chemin": [
       [
@@ -2697,7 +2771,7 @@
     },
     {
      "cles": [
-      "v5-45"
+      "v5-48"
      ],
      "chemin": [
       [
@@ -2722,13 +2796,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-76",
-      "v5-78",
-      "v5-80",
-      "v5-77",
-      "v5-81",
       "v5-79",
-      "v5-82"
+      "v5-81",
+      "v5-83",
+      "v5-80",
+      "v5-84",
+      "v5-82",
+      "v5-85"
      ],
      "chemin": []
     }
@@ -2743,7 +2817,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-5"
+      "v5-8"
      ],
      "chemin": [
       [
@@ -2790,7 +2864,7 @@
     },
     {
      "cles": [
-      "v5-7"
+      "v5-10"
      ],
      "chemin": [
       [
@@ -2806,7 +2880,7 @@
     },
     {
      "cles": [
-      "v5-8"
+      "v5-11"
      ],
      "chemin": [
       [
@@ -2831,13 +2905,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-63"
+      "v5-66"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-65"
+      "v5-68"
      ],
      "chemin": [
       [
@@ -2853,7 +2927,7 @@
     },
     {
      "cles": [
-      "v5-67"
+      "v5-70"
      ],
      "chemin": [
       [
@@ -2869,7 +2943,7 @@
     },
     {
      "cles": [
-      "v5-69"
+      "v5-72"
      ],
      "chemin": [
       [
@@ -2885,7 +2959,7 @@
     },
     {
      "cles": [
-      "v5-71"
+      "v5-74"
      ],
      "chemin": [
       [
@@ -2923,7 +2997,7 @@
     },
     {
      "cles": [
-      "v5-64"
+      "v5-67"
      ],
      "chemin": [
       [
@@ -2939,7 +3013,7 @@
     },
     {
      "cles": [
-      "v5-66"
+      "v5-69"
      ],
      "chemin": [
       [
@@ -2955,7 +3029,7 @@
     },
     {
      "cles": [
-      "v5-68"
+      "v5-71"
      ],
      "chemin": [
       [
@@ -2971,7 +3045,7 @@
     },
     {
      "cles": [
-      "v5-70"
+      "v5-73"
      ],
      "chemin": [
       [
@@ -2992,14 +3066,439 @@
   },
   {
    "titre": "Le câble de pince",
-   "texte": "Le câble de pince part du palonnier du HS-65MG et file dans le goTUBE jusqu'à la main (pas encore dessinée).",
+   "texte": "La tresse part du palonnier du HS-65MG, passe la lumière du berceau, file tout droit dans le canal du haut du goTUBE et sort au bout du tube ; on la laisse longue.",
    "mouvements": [
     {
      "cles": [
-      "v5-84",
-      "v5-85"
+      "v5-87"
      ],
      "chemin": []
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le poignet",
+   "texte": "Le poignet se pose sur le bout du goTUBE, son téton dans l'alésage central, la tresse passée dans le petit trou du fond, face au canal du haut. Quatre vis M4 × 8 par l'intérieur, dans les taraudages du bout du tube.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-88"
+     ],
+     "chemin": [
+      [
+       [
+        1.0,
+        0.0,
+        0.0
+       ],
+       40.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-104"
+     ],
+     "chemin": [
+      [
+       [
+        0.9998016907745785,
+        -0.017698128858215048,
+        -0.009129915619113976
+       ],
+       14.256422819339594
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-105"
+     ],
+     "chemin": [
+      [
+       [
+        0.9998016904061388,
+        -0.017698160910298025,
+        -0.009129893834043902
+       ],
+       14.25642296173283
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-106"
+     ],
+     "chemin": [
+      [
+       [
+        0.9998016904798688,
+        -0.01769815421951604,
+        -0.009129898729942397
+       ],
+       14.2564229026392
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-107"
+     ],
+     "chemin": [
+      [
+       [
+        0.9998016894729187,
+        -0.017698211476610666,
+        -0.009129898007461525
+       ],
+       14.256423118687087
+      ]
+     ],
+     "tol": 5.0
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le pouce, à l'établi",
+   "texte": "Le pouce est imprimé d'une pièce (base et bout figés) ; son pivot entre dans la fente du moyeu et s'y colle : tenon dans une mortaise, il ne peut pas tourner. Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier jusqu'à la poulie, le second affleurant. Le brin du pouce (une tresse d'environ 15 cm) entre dans le trou au fond de la gorge, ressort dans la poche du bord de la poulie et s'y bloque d'un triple nœud simple et d'une goutte de cyano ; on le tire pour rentrer le nœud dans la poche.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-91"
+     ],
+     "chemin": []
+    },
+    {
+     "cles": [
+      "v5-100"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       20.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-99"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       15.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-96"
+     ],
+     "chemin": []
+    }
+   ],
+   "atelier": "pouce",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le doigt A, à l'établi",
+   "texte": "Le doigt A est imprimé d'une pièce (jointure et phalange figée). Un roulement dans la jointure. Deux chevilles de filament 1,75 mm, longues de 11 mm, se collent dans les trous de sa face intérieure.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-92"
+     ],
+     "chemin": []
+    },
+    {
+     "cles": [
+      "v5-98"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       15.0
+      ]
+     ],
+     "tol": 3.0
+    }
+   ],
+   "atelier": "doigt A",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le doigt B, à l'établi",
+   "texte": "Le doigt B, d'une pièce lui aussi, porte la poulie des doigts ; son roulement entre à travers elle. Le brin des doigts se noue dans l'ancrage de cette poulie, comme celui du pouce.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-93"
+     ],
+     "chemin": []
+    },
+    {
+     "cles": [
+      "v5-97"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       15.0
+      ]
+     ],
+     "tol": 3.0
+    }
+   ],
+   "atelier": "doigt B",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le fléau et les brins",
+   "texte": "Une marque au feutre sur chaque brin, à 66,5 mm de son nœud de poulie. Chaque brin passe par le dessus dans sa fente de la paume (pas encore vissée), puis dans le trou du bout du fléau, et se bloque dessous à la marque : triple nœud simple sur une perle de pêche Ø 2 à 3 mm, une goutte de cyano. Le brin du pouce prend la fente et le trou les plus proches du milieu, celui des doigts ceux du bord. Puis la tresse du servo monte par le trou du milieu du fléau, par dessous, et se bloque au-dessus de la même façon : palonnier à 0°, tresse tendue, le dessus du fléau à 1,5 mm sous le bord du poignet. Une erreur d'un millimètre se rattrape en réglant la course du servo.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-90"
+     ],
+     "chemin": [
+      [
+       [
+        1.0,
+        0.0,
+        0.0
+       ],
+       25.0
+      ]
+     ],
+     "tol": 3.0
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La paume",
+   "texte": "La paume descend le long des brins et ferme la chambre du fléau : ses deux joues debout, côté canal pour la joue mince. Deux vis M4 × 10 entre les joues, dans les bossages du poignet.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-89"
+     ],
+     "chemin": [
+      [
+       [
+        1.0,
+        0.0,
+        0.0
+       ],
+       40.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-108"
+     ],
+     "chemin": [
+      [
+       [
+        0.999984502013092,
+        -0.005388070595664819,
+        0.0014015808520395831
+       ],
+       16.246965697470042
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-109"
+     ],
+     "chemin": [
+      [
+       [
+        0.999984502013092,
+        -0.005388070595664819,
+        0.0014015808520395831
+       ],
+       16.246965697470042
+      ]
+     ],
+     "tol": 5.0
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le pouce entre les joues",
+   "texte": "Le ressort du pouce sur le moyeu, côté joue A. Le pouce glisse entre les joues depuis son côté, roulements dans l'axe des trous des joues, son brin enroulé par-dessus la poulie.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-102"
+     ],
+     "chemin": []
+    },
+    {
+     "joindre": "pouce",
+     "chemin": [
+      [
+       [
+        0,
+        -1,
+        0
+       ],
+       45
+      ]
+     ]
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Les doigts sur la paume",
+   "texte": "Le ressort des doigts contre la joue A. Le doigt A vient de son côté, puis le doigt B du sien, son brin enroulé par-dessus la poulie : ses trous s'enfilent sur les chevilles du doigt A, faces encollées. C'est par là que le doigt A suit : seule la jointure B porte une poulie.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-103"
+     ],
+     "chemin": []
+    },
+    {
+     "joindre": "doigt A",
+     "chemin": [
+      [
+       [
+        0,
+        0,
+        -1
+       ],
+       50
+      ]
+     ]
+    },
+    {
+     "joindre": "doigt B",
+     "chemin": [
+      [
+       [
+        0,
+        0,
+        1
+       ],
+       50
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-110",
+      "v5-111"
+     ],
+     "chemin": []
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "L'axe",
+   "texte": "La tige Ø4 entre par le trou de la jointure B, traverse son roulement, la joue B, les roulements du pouce, la joue A, et s'arrête dans le roulement de la jointure A. Elle est serrée dans les joues.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-101"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       60.0
+      ]
+     ],
+     "tol": 3.0
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Les caches",
+   "texte": "Les caches de l'axe se collent sur les jointures.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-94"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-95"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
     }
    ],
    "atelier": null,

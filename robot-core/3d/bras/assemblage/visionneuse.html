@@ -35,6 +35,18 @@
   .pastille { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(0,0,0,.25); }
   .nombre { color: var(--discret); text-align: right; }
   .ref { font-weight: 600; } .des { display: block; color: var(--discret); font-size: 12px; }
+  .onglets { display: flex; gap: 4px; margin: 0 12px 6px; }
+  .onglets button, .outils button { font: inherit; padding: 3px 8px; border: 1px solid #b9bfca; background: #fff; border-radius: 5px; cursor: pointer; }
+  .onglets button.actif { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .outils { margin: 0 12px 6px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+  .outils input[type=number] { width: 42px; font: inherit; }
+  .bilan { margin: 0 12px 6px; padding: 6px 8px; border-radius: 6px; background: rgba(0,0,0,.04); }
+  .bilan b { color: var(--accent); }
+  .ligne.inv { grid-template-columns: 14px 30px 1fr 46px 40px; }
+  .ligne.inv input { width: 44px; font: inherit; text-align: right; }
+  .manque { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .manque.ok { color: #2e8b4a; } .manque.ko { color: #c83232; }
+  .des .four { color: var(--accent); }
   @media (max-width: 760px) { #legende { top: auto; left: 12px; width: auto; height: 38%; } #commandes { width: auto; right: 12px; } }
 </style>
 <script type="importmap">
@@ -105,6 +117,7 @@ const charger = f => new Promise(ok => new GLTFLoader().load(frais(f), g => { sc
 
 const legende = await json('legende.json');           // pièces goBILDA reprises du bras de Nicolas, par référence
 const v5 = await json('v5.json');                     // pièces ajoutées ou déplacées, et celles qui ne servent plus
+const catalogue = await json('catalogue.json');       // prix, paquet et lien goBILDA (catalogue.py)
 // Le chargeur retire « : » des noms de nœuds (IMPRIME:cloison#1 devient IMPRIMEcloison#1) : on compare
 // toujours des noms passés par la même moulinette.
 const propre = n => THREE.PropertyBinding.sanitizeNodeName(n);
@@ -137,11 +150,23 @@ nouveau.traverse(o => { if (!o.isMesh) return;
   objets.push(o); });
 
 // ── état de l'affichage ──
-const etat = { ouvert: false, transparent: false, choix: null, survol: null, ecart: 0 };
+const etat = { ouvert: false, transparent: false, choix: null, survol: null, ecart: 0, inventaire: false };
 const CAISSON = /^(1121-|1123-)/;
 const visible = o => !o.userData.raison && !(etat.ouvert && CAISSON.test(o.userData.ref ?? ''));
+
+// ── inventaire : ce que Nicolas a déjà, ce qui manque, et la commande qui s'en déduit ──
+// Le besoin d'un bras est compté sur toutes les pièces qui servent, caisson ouvert ou non.
+const besoinBras = {}; for (const o of objets) if (!o.userData.raison) besoinBras[o.userData.ref] = (besoinBras[o.userData.ref] ?? 0) + 1;
+const CLE = 'bras-walle-inventaire';
+const stock = (() => { try { return { bras: 1, ai: {}, filtre: false, ...JSON.parse(localStorage.getItem(CLE) ?? '{}') }; }
+                       catch { return { bras: 1, ai: {}, filtre: false }; } })();
+const garder = () => { try { localStorage.setItem(CLE, JSON.stringify(stock)); } catch {} };
+const besoin = r => (besoinBras[r] ?? 0) * stock.bras;
+const manque = r => Math.max(0, besoin(r) - (stock.ai[r] ?? 0));
+const VERT = new THREE.Color(0x2e9d4f), ROUGE = new THREE.Color(0xd23c3c);
 const couleurDe = o => {
   const u = o.userData;
+  if (etat.inventaire) return manque(u.ref) ? ROUGE : VERT;
   if ((u.ref ?? '').startsWith('CABLE:')) return new THREE.Color(couleurCable(u.nom + ' ' + u.ref) ?? COULEUR_CABLE);
   return couleurRef[u.ref] ?? new THREE.Color(0x888888);
 };
@@ -175,24 +200,141 @@ function construireLegende() {
     if (!lignes.has(r)) lignes.set(r, { ref: r, n: 0, o });
     lignes.get(r).n++;
   }
-  let html = '<h2>Bras de Wall-E</h2><p class="aide">Les pièces du bras, par famille. Un clic sur une ligne la met en évidence.</p>';
+  const inv = etat.inventaire;
+  let html = `<div class="onglets"><button data-o="0" class="${inv ? '' : 'actif'}">Nomenclature</button>`
+    + `<button data-o="1" class="${inv ? 'actif' : ''}">Inventaire et commande</button></div>`;
+  if (!inv) html += '<p class="aide">Les pièces du bras, par famille. Un clic sur une ligne la met en évidence.</p>';
+  else {
+    // toutes les pièces qui servent, même celles du caisson masqué
+    lignes.clear();
+    for (const o of objets) if (!o.userData.raison && !lignes.has(o.userData.ref)) lignes.set(o.userData.ref, { ref: o.userData.ref, o });
+    for (const l of lignes.values()) l.n = besoin(l.ref);
+    if (stock.filtre) for (const r of [...lignes.keys()]) if (!manque(r)) lignes.delete(r);
+    html += `<p class="aide">Note ce que tu as déjà dans la colonne « j'ai » (un clic sur le besoin le recopie). Dans la vue,
+      en vert ce qui est complet, en rouge ce qui manque. Tout reste dans ce navigateur ; « sauver » en fait un fichier.</p>
+      <div class="outils"><label>bras à construire <input type="number" id="nb-bras" min="1" max="4" value="${stock.bras}"></label>
+      <label><input type="checkbox" id="filtre" ${stock.filtre ? 'checked' : ''}> seulement ce qui manque</label></div>
+      <div class="bilan" id="bilan"></div>
+      <div class="outils"><button id="copier">copier la commande</button><button id="csv">CSV</button>
+      <button id="sauver">sauver</button><button id="charger">charger</button><button id="raz">tout effacer</button>
+      <input type="file" id="fichier" accept=".json" hidden></div>`;
+  }
   for (const [titre] of FAMILLES) {
     const liste = [...lignes.values()].filter(l => famille(l.ref) === titre);
     if (!liste.length) continue;
     const total = liste.reduce((s, l) => s + l.n, 0);
     html += `<div class="groupe">${titre}<span class="compte">${total} pièce${total > 1 ? 's' : ''}</span></div>`;
     for (const l of liste.sort((a, b) => a.ref.localeCompare(b.ref))) {
-      html += `<div class="ligne" data-k="${l.ref}"><div class="pastille" style="background:#${couleurDe(l.o).getHexString()}"></div>
-        <div class="nombre">×${l.n}</div><div><span class="ref">${affiche(l.ref)}</span><span class="des">${designation(l.ref)}</span></div></div>`;
+      const pastille = `<div class="pastille" style="background:#${couleurDe(l.o).getHexString()}"></div>`;
+      const nom = `<div><span class="ref">${affiche(l.ref)}</span><span class="des">${designation(l.ref)}${inv ? conditionnement(l.ref) : ''}</span></div>`;
+      html += inv
+        ? `<div class="ligne inv" data-k="${l.ref}">${pastille}<div class="nombre" title="j'ai tout">×${l.n}</div>${nom}
+           <input type="number" min="0" value="${stock.ai[l.ref] ?? 0}" title="j'ai"><div class="manque"></div></div>`
+        : `<div class="ligne" data-k="${l.ref}">${pastille}<div class="nombre">×${l.n}</div>${nom}</div>`;
     }
   }
   boite.innerHTML = html;
+  boite.querySelectorAll('.onglets button').forEach(b => b.onclick = () => { etat.inventaire = b.dataset.o === '1'; tout(); });
   boite.querySelectorAll('.ligne').forEach(l => {
     l.classList.toggle('choisie', l.dataset.k === etat.choix);
     l.onmouseenter = () => { etat.survol = l.dataset.k; decrire(l.dataset.k); appliquer(); };
     l.onmouseleave = () => { etat.survol = null; appliquer(); };
     l.onclick = () => { etat.choix = etat.choix === l.dataset.k ? null : l.dataset.k; construireLegende(); appliquer(); };
   });
+  if (inv) brancherInventaire();
+}
+
+// ── inventaire ──
+// Nicolas commande chez steplab.net : prix TTC en euros repris par catalogue.py. Ce que steplab n'a pas reste à
+// commander ailleurs (goBILDA en direct), avec son prix en dollars pour mémoire.
+const euros = x => x.toFixed(2).replace('.', ',') + ' €';
+const dollars = x => x.toFixed(2).replace('.', ',') + ' $';
+function conditionnement(r) {
+  const c = catalogue[r];
+  if (c?.fournisseur !== 'goBILDA') return `<br><span class="four">${c?.fournisseur ?? 'hors catalogue'}</span>`;
+  const paquet = c.paquet > 1 ? ` · par ${c.paquet}${c.paquet_suppose ? ' (supposé)' : ''}` : '';
+  const s = c.steplab;
+  if (!s) return `<br><span class="four">absent de steplab${paquet}${c.prix ? ' · goBILDA ' + dollars(c.prix) : ''}</span>`;
+  return `<br><span class="four">steplab${paquet} · ${euros(s.prix)} TTC${s.dispo ? '' : ' · en rupture'}</span>`;
+}
+function commande() {
+  const steplab = [], absentes = [], ailleurs = [];
+  for (const r of Object.keys(besoinBras).sort()) {
+    const n = manque(r); if (!n) continue;
+    const c = catalogue[r] ?? { fournisseur: 'hors catalogue' };
+    if (c.fournisseur !== 'goBILDA') { ailleurs.push({ r, n, c }); continue; }
+    const paquets = Math.ceil(n / c.paquet);
+    (c.steplab ? steplab : absentes).push({ r, n, c, paquets, total: c.steplab ? paquets * c.steplab.prix : null });
+  }
+  return { steplab, absentes, ailleurs, total: steplab.reduce((s, l) => s + l.total, 0) };
+}
+const quantite = l => `×${l.paquets}${l.c.paquet > 1 ? ` paquet${l.paquets > 1 ? 's' : ''} de ${l.c.paquet}` : ''}`;
+function texteCommande() {
+  const { steplab, absentes, ailleurs, total } = commande();
+  const t = [`Commande steplab.net — bras de Wall-E (${stock.bras} bras)`, ''];
+  for (const l of steplab) t.push(`${l.r}  ${quantite(l)}  (il manque ${l.n})  ${euros(l.total)}${l.c.steplab.dispo ? '' : '  EN RUPTURE'}`
+    + `  — ${l.c.steplab.url}`);
+  t.push('', `Total TTC : ${euros(total)} (hors frais de port)`);
+  if (absentes.length) {
+    t.push('', 'Absentes de steplab (goBILDA en direct) :');
+    for (const l of absentes) t.push(`${l.r}  ${quantite(l)}  (il manque ${l.n})  — ${l.c.nom}  ${l.c.url}`);
+  }
+  if (ailleurs.length) { t.push('', 'Hors goBILDA :'); for (const l of ailleurs) t.push(`${affiche(l.r)}  ×${l.n}  (${l.c.fournisseur})`); }
+  return t.join('\n');
+}
+function telecharger(nom, texte, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([texte], { type })); a.download = nom; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function majInventaire() {
+  for (const l of boite.querySelectorAll('.ligne.inv')) {
+    const r = l.dataset.k, n = manque(r), m = l.querySelector('.manque');
+    m.textContent = n ? '−' + n : '✓'; m.className = 'manque ' + (n ? 'ko' : 'ok');
+    l.querySelector('.pastille').style.background = '#' + (n ? ROUGE : VERT).getHexString();
+  }
+  const { steplab, absentes, ailleurs, total } = commande(), rupture = steplab.filter(l => !l.c.steplab.dispo).length;
+  document.getElementById('bilan').innerHTML = !steplab.length && !absentes.length && !ailleurs.length ? '<b>Rien ne manque.</b>'
+    : `<b>${steplab.length}</b> référence${steplab.length > 1 ? 's' : ''} à commander chez steplab : <b>${euros(total)} TTC</b>`
+      + (rupture ? `, dont ${rupture} en rupture` : '')
+      + (absentes.length ? `<br><b>${absentes.length}</b> absente${absentes.length > 1 ? 's' : ''} de steplab : ${absentes.map(l => l.r).join(', ')}` : '')
+      + (ailleurs.length ? `<br>${ailleurs.length} hors goBILDA (servos Hitec, câblage, impression…)` : '');
+  appliquer();
+}
+function brancherInventaire() {
+  for (const l of boite.querySelectorAll('.ligne.inv')) {
+    const r = l.dataset.k, champ = l.querySelector('input');
+    champ.onclick = e => e.stopPropagation();
+    champ.oninput = () => { stock.ai[r] = Math.max(0, +champ.value || 0); garder(); majInventaire(); };
+    l.querySelector('.nombre').onclick = e => { e.stopPropagation(); champ.value = stock.ai[r] = besoin(r); garder(); majInventaire(); };
+  }
+  document.getElementById('nb-bras').onchange = e => { stock.bras = Math.max(1, +e.target.value || 1); garder(); tout(); };
+  document.getElementById('filtre').onchange = e => { stock.filtre = e.target.checked; garder(); tout(); };
+  document.getElementById('copier').onclick = async e => {
+    try { await navigator.clipboard.writeText(texteCommande()); e.target.textContent = 'copiée ✓'; }
+    catch { telecharger('commande-bras.txt', texteCommande(), 'text/plain'); }
+  };
+  document.getElementById('csv').onclick = () => {
+    const nb = x => x === null || x === undefined ? '' : String(x).replace('.', ',');
+    const lignes = [['référence', 'désignation', 'fournisseur', 'besoin', "j'ai", 'manque', 'paquet', 'paquets à commander',
+                     'prix TTC du paquet (€)', 'total TTC (€)', 'disponible', 'lien']];
+    for (const r of Object.keys(besoinBras).sort()) {
+      const c = catalogue[r] ?? {}, n = manque(r), go = c.fournisseur === 'goBILDA', s = c.steplab, p = go ? Math.ceil(n / c.paquet) : '';
+      lignes.push([affiche(r), designation(r), s ? 'steplab' : go ? 'goBILDA (absent de steplab)' : c.fournisseur ?? '',
+                   besoin(r), stock.ai[r] ?? 0, n, go ? c.paquet : '', p, s ? nb(s.prix) : '', s ? nb((p * s.prix).toFixed(2)) : '',
+                   s ? (s.dispo ? 'oui' : 'rupture') : '', s?.url ?? c.url ?? '']);
+    }
+    // point-virgule et virgule décimale : ce qu'attend un tableur réglé en français
+    telecharger('commande-bras.csv', '﻿' + lignes.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n'), 'text/csv');
+  };
+  document.getElementById('sauver').onclick = () => telecharger('inventaire-bras.json', JSON.stringify(stock, null, 1), 'application/json');
+  const fichier = document.getElementById('fichier');
+  document.getElementById('charger').onclick = () => fichier.click();
+  fichier.onchange = async () => {
+    try { Object.assign(stock, JSON.parse(await fichier.files[0].text())); garder(); tout(); } catch { alert("Ce fichier n'est pas un inventaire."); }
+  };
+  document.getElementById('raz').onclick = () => { if (confirm("Effacer tout l'inventaire ?")) { stock.ai = {}; garder(); tout(); } };
+  majInventaire();
 }
 function decrire(ref) { info.innerHTML = `<b>${affiche(ref)}</b> — ${famille(ref).toLowerCase()}<br>${designation(ref)}`; }
 function tout() { etat.choix = null; construireLegende(); appliquer(); }

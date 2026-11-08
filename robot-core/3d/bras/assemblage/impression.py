@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Fichiers à imprimer des trois pièces imprimées du bras : chacune est reprise telle qu'elle est dans le bras
+Fichiers à imprimer des quatre pièces imprimées du bras : chacune est reprise telle qu'elle est dans le bras
 (jeux d'impression compris), couchée sur la face qui laisse le moins de surplomb, posée à z = 0 au centre du
 plateau.
 
   - cloison : face arrière (x = 97,2) sur le plateau, comme la cloison de la v5 ; seuls restent des ponts
     courts (13 mm au plus, au-dessus du passage du fil du D85MG) ;
-  - liaison : face avant (x = 170, celle du goTUBE) sur le plateau : portée du roulement et embout REX
-    sortent ronds. Le fond de la poche du HS-65MG devient un pont de 37 mm : supports dans la poche,
-    retirés par la fenêtre du dessus (couchée sur son fond comme la v5, la portée et l'embout seraient
-    en surplomb et pas ronds) ;
-  - plaque de bout : face extérieure (x = 192) sur le plateau ; les poches d'écrous font des ponts de 7 mm.
+  - liaison, partie arrière : face de la coupe (x = 145,4) vers le plateau, embout REX en haut : portée du
+    roulement et embout sortent ronds ; elle repose sur le bout de ses pattes et de son tenon, supports sous la
+    bride (couchée sur son méplat, la portée et l'embout seraient en surplomb et pas ronds) ;
+  - liaison, berceau : face avant (x = 169,5, celle du goTUBE) sur le plateau ; ouvert à l'arrière depuis la
+    coupe, il n'a plus de pont au-dessus de la poche ;
+  - plaque de bout : face extérieure (x = 192) sur le plateau ; les poches d'écrous font des ponts de 7 mm ;
 
 Écrit impression/*.stl sur le disque externe.
 """
@@ -25,7 +26,8 @@ DOSSIER = os.path.join(SORTIE, 'impression')
 # (fichier dans le repère du bras, direction du bras qui va vers le plateau, fichier à imprimer)
 PIECES = [
     ('cloison/cloison_structurelle_position.stl', (-1, 0, 0), 'cloison_IMPRESSION.stl'),
-    ('liaison/liaison_moyeu_position.stl', (1, 0, 0), 'liaison_IMPRESSION.stl'),
+    ('liaison/liaison_arriere_position.stl', (1, 0, 0), 'liaison_arriere_IMPRESSION.stl'),
+    ('liaison/liaison_berceau_position.stl', (1, 0, 0), 'liaison_berceau_IMPRESSION.stl'),
     ('plaque_bout/plaque_bout_position.stl', (1, 0, 0), 'plaque_bout_IMPRESSION.stl'),
 ]
 

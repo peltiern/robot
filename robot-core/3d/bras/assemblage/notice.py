@@ -22,6 +22,7 @@ import numpy as np, trimesh, manifold3d as mf
 ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ICI)
 from recaler import SORTIE
+from pince import COTE_POUCE
 
 TOLERANCE = 1.0          # mm³ partagés au-delà de ce qu'ils partagent à leur place
 PAS = 1.0                # mm
@@ -88,9 +89,9 @@ def verifier(etapes, P):
     heurts, vues = [], set()
     for n, e in enumerate(etapes, 1):
         for mvt in e['mouvements']:
-            if mvt.get('joindre'):                       # un sous-ensemble monté à part rejoint le bras
+            if mvt.get('joindre'):                       # un sous-ensemble monté à part rejoint le bras (ou un autre)
                 bouge = poses.pop(mvt['joindre'])
-                obstacles = poses[None]
+                obstacles = poses.setdefault(e.get('atelier'), [])
             else:
                 bouge = mvt['cles']
                 for k in bouge:
@@ -116,7 +117,7 @@ def verifier(etapes, P):
                             if v > pire: pire, ou = v, np.linalg.norm(p)
                         if pire > mvt.get('tol', TOLERANCE):
                             heurts.append((n, e['titre'], k, P[k]['nom'], o, P[o]['nom'], round(pire, 1), ou))
-            (poses[None] if mvt.get('joindre') else obstacles).extend(bouge)
+            obstacles.extend(bouge)
     oubliees = [k for k in P if k not in vues]
     return heurts, oubliees
 
@@ -256,22 +257,34 @@ def etapes(P):
           [dict(glisse([v], mX, 50), tol=5.0) for v in cles(r'^vis 2802-0004-0016 — palier')],
           glisse(cles(r'^1601-0039-0032#2'), X, 15), ecrou(cles(r'^écrou .*— palier'), X),
           [ecrou([e_], mX) for e_ in cles(r'^écrou .*— plaque 96 y−')], atelier='module')
+    etape('Le goTUBE sur le berceau de la liaison, à l\'établi',
+          'Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 96 mm : '
+          'quatre vis M4 × 12 par l\'intérieur, clé coudée par l\'arrière du berceau, encore ouvert. Une cale inox et '
+          'deux bagues sur le bout du goTUBE.',
+          poser(cles(r'^liaison, berceau')), glisse(cles(r'^bague '), X, 100), glisse(cles(r'^4103-0032-0096'), X, 100),
+          [dict(glisse([v], mX, 16, (Z, 30)), tol=5.0) for v in cles(r'liaison ↔ goTUBE')], atelier='liaison')
+    etape('Le servo de pince (HS-65MG), à l\'établi',
+          'Le servo entre dans le berceau par l\'arrière, comme un tiroir, oreilles sur le haut des parois : le passe-fil '
+          'et le bout du câble glissent dans la fente basse de la paroi y−. Deux vis M2 dans les oreilles. De '
+          'l\'extérieur, dans la fenêtre : le câble plat remonte contre le bout du servo, un pli à 45° le renvoie vers '
+          'l\'arrière, debout ; on le pousse dans le couloir de la paroi par la fente basse, et il ressort à l\'arrière '
+          'du berceau. Le palonnier sur la cannelure.',
+          glisse(cles(r'^HS-65MG'), mX, 30), visser(cles(r'vis M2 du HS-65MG')),
+          glisse(cles(r'^palonnier'), Z, 15), atelier='liaison')
+    etape('La partie arrière de la liaison, à l\'établi',
+          'Le fil du HS-65MG passe dans l\'alésage de la partie arrière, par la gorge de sa face, sans sa prise (elle se '
+          'sertit à la fin). Le câble se couche dans la gorge, tourné vers le centre ; un second pli à 45° le mène à '
+          'l\'alésage. On pousse la partie arrière à plat contre le berceau, en tirant le fil : sa dent glisse dans la '
+          'rainure du fond, ses pattes dans les encoches du haut des parois. Une vis M2 × 6 '
+          'dans chaque patte. Le pignon Slip-Fit de 20 dents (2322) se clipse sur l\'embout REX : on le pousse jusqu\'à '
+          'l\'épaulement, les trois doigts fendus de l\'embout plient et la lèvre revient derrière lui (tenir le fil au '
+          'centre).',
+          glisse(cles(r'^liaison, partie arrière'), mX, 30), visser(cles(r'partie arrière ↔ berceau')),
+          glisse(cles(r'^pignon Slip-Fit'), mX, 20), atelier='liaison')
     etape('La liaison du tube',
-          'Le pignon Slip-Fit de 20 dents (2322) se clipse sur l\'embout REX de la liaison imprimée : on le pousse '
-          'jusqu\'à l\'épaulement, les trois doigts fendus de l\'embout plient et la lèvre revient derrière lui (tenir le '
-          'fil du HS-65MG au centre). L\'ensemble entre dans le roulement par l\'avant, le pignon passe dans l\'alésage et '
-          'vient engrener avec celui du D85MG ; la collerette de la liaison arrête l\'ensemble contre le roulement.',
-          glisse(cles(r'^liaison et moyeu') + cles(r'^pignon Slip-Fit'), X, 60), atelier='module')
-    etape('Le goTUBE du bras',
-          'Une cale inox et deux bagues sur le bout du goTUBE de 96 mm, qui se visse sur la face avant de la '
-          'liaison : quatre vis M4 × 10 par l\'intérieur de la liaison, clé coudée par la fenêtre du dessus.',
-          glisse(cles(r'^bague '), X, 100), glisse(cles(r'^4103-0032-0096'), X, 100),
-          [dict(glisse([v], mX, 16, (Z, 30)), tol=5.0) for v in cles(r'liaison ↔ goTUBE')], atelier='module')
-    etape('Le servo de pince (HS-65MG)',
-          'Le fil du HS-65MG passe d\'abord dans l\'alésage de la liaison, sans sa prise (elle se sertit à la fin). '
-          'Le servo descend dans la liaison, deux vis M2 dans les oreilles ; le palonnier sur la cannelure.',
-          glisse(cles(r'^HS-65MG'), Z, 40), visser(cles(r'vis M2 du HS-65MG')),
-          glisse(cles(r'^palonnier'), Z, 15), atelier='module')
+          'L\'ensemble (liaison, HS-65MG, goTUBE) entre dans le roulement par l\'avant, le pignon passe dans l\'alésage '
+          'et vient engrener avec celui du D85MG ; la collerette de la liaison arrête l\'ensemble contre le roulement.',
+          dict(joindre='liaison', chemin=[[[1, 0, 0], 60]]), atelier='module')
     etape('Les paliers avant',
           'Chaque roulement dans son palier 1604, collerette à l\'avant ; les deux paliers s\'enfilent sur le tube '
           'par l\'avant.',
@@ -341,9 +354,72 @@ def etapes(P):
           'les trous des profilés.',
           dict(joindre='plaque de bout', chemin=[[[1, 0, 0], 90]]),
           visser(cles(r'^vis 2802-0004-0010 — plaque de bout')))
+    # ── la main (pince.py) ──
     etape('Le câble de pince',
-          'Le câble de pince part du palonnier du HS-65MG et file dans le goTUBE jusqu\'à la main (pas encore dessinée).',
-          poser(cles(r'^câble de pince') + cles(r'^main')))
+          'La tresse part du palonnier du HS-65MG, passe la lumière du berceau, file tout droit dans le canal du haut du '
+          'goTUBE et sort au bout du tube ; on la laisse longue.',
+          poser(cles(r'^câble de pince \(')))
+    etape('Le poignet',
+          'Le poignet se pose sur le bout du goTUBE, son téton dans l\'alésage central, la tresse passée dans le petit '
+          'trou du fond, face au canal du haut. Quatre vis M4 × 8 par l\'intérieur, dans les taraudages du bout du tube.',
+          glisse(cles(r'^main, poignet'), X, 40), visser(cles(r'— main, poignet ↔ goTUBE')))
+    # Les brins se nouent au fléau AVANT la paume : une fois vissée, elle ferme la chambre et plus rien n'y passe
+    # (l'ordre « brins à la fin » de la première notice, 2026-11-08, ne pouvait pas se monter)
+    NOEUD = 'triple nœud simple sur une perle de pêche Ø 2 à 3 mm, une goutte de cyano'
+    etape('Le pouce, à l\'établi',
+          'Le pouce est imprimé d\'une pièce (base et bout figés) ; son pivot entre dans la fente du moyeu et s\'y '
+          'colle : tenon dans une mortaise, il ne peut pas tourner. Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier '
+          'jusqu\'à la poulie, le second affleurant. Le brin du pouce (une tresse d\'environ 15 cm) entre dans le trou '
+          'au fond de la gorge, ressort dans la poche du bord de la poulie et s\'y bloque d\'un triple nœud simple et '
+          'd\'une goutte de cyano ; on le tire pour rentrer le nœud dans la poche.',
+          poser(cles(r'^main, pouce : moyeu')),
+          dict(glisse(cles(r'^main, pouce : roulement côté B'), mZ, 20), tol=3.0),
+          dict(glisse(cles(r'^main, pouce : roulement côté A'), mZ, 15), tol=3.0),
+          poser(cles(r'^main, pouce : pouce')), atelier='pouce')
+    etape('Le doigt A, à l\'établi',
+          'Le doigt A est imprimé d\'une pièce (jointure et phalange figée). Un roulement dans la jointure. Deux '
+          'chevilles de filament 1,75 mm, longues de 11 mm, se collent dans les trous de sa face intérieure.',
+          poser(cles(r'^main, doigts : doigt A')),
+          dict(glisse(cles(r'^main, doigts : roulement de la jointure A'), Z, 15), tol=3.0), atelier='doigt A')
+    etape('Le doigt B, à l\'établi',
+          'Le doigt B, d\'une pièce lui aussi, porte la poulie des doigts ; son roulement entre à travers elle. '
+          'Le brin des doigts se noue dans l\'ancrage de cette poulie, comme celui du pouce.',
+          poser(cles(r'^main, doigts : doigt B')),
+          dict(glisse(cles(r'^main, doigts : roulement de la jointure B'), mZ, 15), tol=3.0), atelier='doigt B')
+    etape('Le fléau et les brins',
+          'Une marque au feutre sur chaque brin, à 66,5 mm de son nœud de poulie. Chaque brin passe par le dessus dans '
+          'sa fente de la paume (pas encore vissée), puis dans le trou du bout du fléau, et se bloque dessous à la '
+          'marque : ' + NOEUD + '. Le brin du pouce prend la fente et le trou les plus proches du milieu, celui des '
+          'doigts ceux du bord. Puis la tresse du servo monte par le trou du milieu du fléau, par dessous, et se bloque '
+          'au-dessus de la même façon : palonnier à 0°, tresse tendue, le dessus du fléau à 1,5 mm sous le bord du '
+          'poignet. Une erreur d\'un millimètre se rattrape en réglant la course du servo.',
+          dict(glisse(cles(r'^main, fléau'), X, 25), tol=3.0))
+    etape('La paume',
+          'La paume descend le long des brins et ferme la chambre du fléau : ses deux joues debout, côté canal pour la '
+          'joue mince. Deux vis M4 × 10 entre les joues, dans les bossages du poignet.',
+          glisse(cles(r'^main, paume'), X, 40), visser(cles(r'— main, paume ↔ poignet')))
+    etape('Le pouce entre les joues',
+          'Le ressort du pouce sur le moyeu, côté joue A. Le pouce glisse entre les joues depuis son côté, roulements '
+          'dans l\'axe des trous des joues, son brin enroulé par-dessus la poulie.',
+          poser(cles(r'^main : ressort de rappel du pouce')),
+          dict(joindre='pouce', chemin=[[[0, COTE_POUCE, 0], 45]]))
+    etape('Les doigts sur la paume',
+          'Le ressort des doigts contre la joue A. Le doigt A vient de son côté, puis le doigt B du sien, son brin '
+          'enroulé par-dessus la poulie : ses trous s\'enfilent sur les chevilles du doigt A, faces encollées. C\'est '
+          'par là que le doigt A suit : seule la jointure B porte une poulie.',
+          poser(cles(r'^main : ressort de rappel des doigts')),
+          dict(joindre='doigt A', chemin=[[[0, 0, -1], 50]]), dict(joindre='doigt B', chemin=[[[0, 0, 1], 50]]),
+          # les brins, noués depuis l'étape du fléau, ne se dessinent qu'ici, main en place : posés plus tôt dans leur
+          # position finale, ils ne suivraient pas leur poulie quand pouce et doigt B entrent, et le contrôle les heurte
+          poser(cles(r'^câble de pince, brin')))
+    etape('L\'axe',
+          'La tige Ø4 entre par le trou de la jointure B, traverse son roulement, la joue B, les roulements du pouce, la '
+          'joue A, et s\'arrête dans le roulement de la jointure A. Elle est serrée dans les joues.',
+          dict(glisse(cles(r'^main : axe'), Z, 60), tol=3.0))
+    etape('Les caches',
+          'Les caches de l\'axe se collent sur les jointures.',
+          dict(glisse(cles(r'^main, doigts : cache de l\'axe, côté A'), mZ, 10), tol=3.0),
+          dict(glisse(cles(r'^main, doigts : cache de l\'axe, côté B'), Z, 10), tol=3.0))
     return E
 
 
