@@ -198,6 +198,11 @@ def poses(groupes, commandes):
 
 # Contacts voulus : ce qui roule, engrène ou porte, et qui garde le même jeu quel que soit l'angle.
 ENGRENEMENTS = [('2305-0025-0048', '2312-0414-0072'), ('2305-0025-0020', '2322-4008-0020')]
+# Un ressort de rappel se tord : sa patte mobile suit le pouce ou le doigt A, ce que son maillage figé ne montre pas,
+# et la pièce le traverse en fermant. Ce couple-là ne compte pas.
+_RESSORT = 'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm'
+ENGRENEMENTS += [(_RESSORT, 'IMPRIME:main, pouce : pouce, moyeu et poulie'),
+                 (_RESSORT, 'IMPRIME:main, doigts : doigt A (jointure et phalange)')]
 
 
 def balayer(pas=5.0):

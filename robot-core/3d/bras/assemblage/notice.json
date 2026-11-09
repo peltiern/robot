@@ -3100,7 +3100,7 @@
     },
     {
      "cles": [
-      "v5-104"
+      "v5-107"
      ],
      "chemin": [
       [
@@ -3116,7 +3116,7 @@
     },
     {
      "cles": [
-      "v5-105"
+      "v5-108"
      ],
      "chemin": [
       [
@@ -3132,7 +3132,7 @@
     },
     {
      "cles": [
-      "v5-106"
+      "v5-109"
      ],
      "chemin": [
       [
@@ -3148,7 +3148,7 @@
     },
     {
      "cles": [
-      "v5-107"
+      "v5-110"
      ],
      "chemin": [
       [
@@ -3169,17 +3169,17 @@
   },
   {
    "titre": "Le pouce, à l'établi",
-   "texte": "Le pouce est imprimé d'une pièce (base et bout figés) ; son pivot entre dans la fente du moyeu et s'y colle : tenon dans une mortaise, il ne peut pas tourner. Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier jusqu'à la poulie, le second affleurant. Le brin du pouce (une tresse d'environ 15 cm) entre dans le trou au fond de la gorge, ressort dans la poche du bord de la poulie et s'y bloque d'un triple nœud simple et d'une goutte de cyano ; on le tire pour rentrer le nœud dans la poche.",
+   "texte": "Le pouce est imprimé d'une pièce avec son moyeu et sa poulie (base et bout figés ; des supports sous le pouce, qui déborde du moyeu des deux côtés). Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier jusqu'à la poulie, le second affleurant. Le brin du pouce (une tresse d'environ 15 cm) entre dans le trou au fond de la gorge, ressort dans la poche du bord de la poulie et s'y bloque d'un nœud en huit fait trois fois, plus gros que le trou ; on le tire pour rentrer le nœud dans la poche. Enfin le ressort du pouce. Les deux ressorts s'enroulent à la main, en fil inox 1.4310 Ø 0,6 sur la queue d'un foret Ø 3,5 : 4 spires jointives, l'un dans un sens, l'autre dans l'autre (ils sont le miroir l'un de l'autre). À la pince plate, chaque bout part droit des spires puis se coude à angle droit, le long de l'axe : une patte courte (2 mm puis 2 mm, dans la joue) et une longue (4,5 mm puis 3 mm, dans la pièce qui tourne). La longue se pique dans le petit trou de la face A du moyeu.",
    "mouvements": [
     {
      "cles": [
-      "v5-91"
+      "v5-95"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-100"
+      "v5-99"
      ],
      "chemin": [
       [
@@ -3195,7 +3195,7 @@
     },
     {
      "cles": [
-      "v5-99"
+      "v5-98"
      ],
      "chemin": [
       [
@@ -3211,9 +3211,19 @@
     },
     {
      "cles": [
-      "v5-96"
+      "v5-101"
      ],
-     "chemin": []
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
     }
    ],
    "atelier": "pouce",
@@ -3222,17 +3232,17 @@
   },
   {
    "titre": "Le doigt A, à l'établi",
-   "texte": "Le doigt A est imprimé d'une pièce (jointure et phalange figée). Un roulement dans la jointure. Deux chevilles de filament 1,75 mm, longues de 11 mm, se collent dans les trous de sa face intérieure.",
+   "texte": "Le doigt A est imprimé d'une pièce (jointure et phalange figée). Un roulement dans la jointure. Deux chevilles de filament 1,75 mm, longues de 11 mm, s'enfoncent au maillet dans les trous de sa face intérieure, où elles serrent : pas de colle. Le ressort des doigts : sa patte la plus longue se pique dans le petit trou de la face intérieure de la jointure, près du roulement.",
    "mouvements": [
     {
      "cles": [
-      "v5-92"
+      "v5-91"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-98"
+      "v5-97"
      ],
      "chemin": [
       [
@@ -3242,6 +3252,22 @@
         1.0
        ],
        15.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-102"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       10.0
       ]
      ],
      "tol": 3.0
@@ -3257,13 +3283,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-93"
+      "v5-92"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-97"
+      "v5-96"
      ],
      "chemin": [
       [
@@ -3284,7 +3310,7 @@
   },
   {
    "titre": "Le fléau et les brins",
-   "texte": "Une marque au feutre sur chaque brin, à 66,5 mm de son nœud de poulie. Chaque brin passe par le dessus dans sa fente de la paume (pas encore vissée), puis dans le trou du bout du fléau, et se bloque dessous à la marque : triple nœud simple sur une perle de pêche Ø 2 à 3 mm, une goutte de cyano. Le brin du pouce prend la fente et le trou les plus proches du milieu, celui des doigts ceux du bord. Puis la tresse du servo monte par le trou du milieu du fléau, par dessous, et se bloque au-dessus de la même façon : palonnier à 0°, tresse tendue, le dessus du fléau à 1,5 mm sous le bord du poignet. Une erreur d'un millimètre se rattrape en réglant la course du servo.",
+   "texte": "Une marque au feutre sur chaque brin, à 66,5 mm de son nœud de poulie. Chaque brin passe par le dessus dans sa fente de la paume (pas encore vissée), puis dans le trou du bout du fléau, et se bloque dessous à la marque : nœud en huit fait trois fois, sur une perle de pêche Ø 2 à 3 mm. Le brin du pouce prend la fente et le trou les plus proches du milieu, celui des doigts ceux du bord. Puis la tresse du servo monte par le trou du milieu du fléau, par dessous, et se bloque au-dessus de la même façon : palonnier à 0°, tresse tendue, le dessus du fléau à 1,5 mm sous le bord du poignet. Une erreur d'un millimètre se rattrape en réglant la course du servo.",
    "mouvements": [
     {
      "cles": [
@@ -3328,7 +3354,7 @@
     },
     {
      "cles": [
-      "v5-108"
+      "v5-111"
      ],
      "chemin": [
       [
@@ -3344,7 +3370,7 @@
     },
     {
      "cles": [
-      "v5-109"
+      "v5-112"
      ],
      "chemin": [
       [
@@ -3365,14 +3391,8 @@
   },
   {
    "titre": "Le pouce entre les joues",
-   "texte": "Le ressort du pouce sur le moyeu, côté joue A. Le pouce glisse entre les joues depuis son côté, roulements dans l'axe des trous des joues, son brin enroulé par-dessus la poulie.",
+   "texte": "Le pouce glisse entre les joues depuis son côté, roulements dans l'axe des trous des joues, son brin enroulé par-dessus la poulie, ouvert d'environ 12° de plus qu'au repos : la patte libre du ressort entre dans la rainure de la joue A par son bout ouvert et va jusqu'au fond. On ramène le pouce au repos : le ressort s'arme et tient sa patte au fond de la rainure.",
    "mouvements": [
-    {
-     "cles": [
-      "v5-102"
-     ],
-     "chemin": []
-    },
     {
      "joindre": "pouce",
      "chemin": [
@@ -3393,14 +3413,8 @@
   },
   {
    "titre": "Les doigts sur la paume",
-   "texte": "Le ressort des doigts contre la joue A. Le doigt A vient de son côté, puis le doigt B du sien, son brin enroulé par-dessus la poulie : ses trous s'enfilent sur les chevilles du doigt A, faces encollées. C'est par là que le doigt A suit : seule la jointure B porte une poulie.",
+   "texte": "Le doigt A vient de son côté, ouvert d'environ 30° de plus qu'au repos : la patte libre du ressort se pique dans le trou de la face extérieure de la joue A. On le ramène au repos, ce qui arme le ressort, et on l'y tient. Puis le doigt B vient du sien, son brin enroulé par-dessus la poulie : ses trous s'enfilent sur les chevilles du doigt A, à force, faces l'une contre l'autre. C'est par là que le doigt A suit : seule la jointure B porte une poulie.",
    "mouvements": [
-    {
-     "cles": [
-      "v5-103"
-     ],
-     "chemin": []
-    },
     {
      "joindre": "doigt A",
      "chemin": [
@@ -3429,8 +3443,8 @@
     },
     {
      "cles": [
-      "v5-110",
-      "v5-111"
+      "v5-113",
+      "v5-114"
      ],
      "chemin": []
     }
@@ -3445,7 +3459,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-101"
+      "v5-100"
      ],
      "chemin": [
       [
@@ -3466,11 +3480,11 @@
   },
   {
    "titre": "Les caches",
-   "texte": "Les caches de l'axe se collent sur les jointures.",
+   "texte": "Les caches tiennent par aimant, sans colle : on peut les ôter pour atteindre l'axe. Une rondelle 2801-0004-0008 se serre dans la poche au fond du siège de chaque jointure, un aimant 2912-0005-0001 dans la poche de chaque cache (il entre à force ; son sens est indifférent). Pour ôter un cache, un ongle dans l'encoche du bord du siège.",
    "mouvements": [
     {
      "cles": [
-      "v5-94"
+      "v5-103"
      ],
      "chemin": [
       [
@@ -3486,7 +3500,41 @@
     },
     {
      "cles": [
-      "v5-95"
+      "v5-105"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-93",
+      "v5-104"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-94",
+      "v5-106"
      ],
      "chemin": [
       [

@@ -175,6 +175,19 @@
    "nom": "Distanziatore in plastica con diametro esterno 32 mm serie 1526 (lunghezza 10 mm) - Confezione da 2"
   }
  },
+ "1600-0410-0004": {
+  "fournisseur": "goBILDA",
+  "nom": "4mm ID Non-Flanged Ball Bearing (10mm OD, 4mm Thickness) - 2 Pack",
+  "url": "https://www.gobilda.com/4mm-id-non-flanged-ball-bearing-10mm-od-4mm-thickness-2-pack/",
+  "prix": 3.99,
+  "paquet": 2,
+  "steplab": {
+   "prix": 5.35,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1600-series-non-flanged-ball-bearing-4mm-id-x-10mm-od-4mm-thickness-2-pack-2/",
+   "nom": "Cuscinetto a sfere non flangiato serie 1600 (spessore 4mm ID x 10mm OD 4mm) - 2 pezzi"
+  }
+ },
  "1601-0014-0004": {
   "fournisseur": "goBILDA",
   "nom": "4mm ID Flanged Ball Bearing (14mm OD, 5mm Thickness) - 2 Pack",
@@ -513,6 +526,19 @@
    "nom": "2904 Series Hole Reducer (4mm ID x 14mm OD) - 4 Pack"
   }
  },
+ "2912-0005-0001": {
+  "fournisseur": "goBILDA",
+  "nom": "2912 Series Neodymium Magnet (5mm Diameter, 1.5mm Thickness) - 2 Pack",
+  "url": "https://www.gobilda.com/2912-series-neodymium-magnet-5mm-diameter-1-5mm-thickness-2-pack/",
+  "prix": 2.99,
+  "paquet": 2,
+  "steplab": {
+   "prix": 4.01,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2912-series-neodymium-magnet-5mm-diameter-1-5mm-thickness-2-pack-2/",
+   "nom": "2912 Series Neodymium Magnet (5mm Diameter  1.5mm Thickness) - 2 Pack"
+  }
+ },
  "4103-0032-0048": {
   "fournisseur": "goBILDA",
   "nom": "4103 Series goTUBE (48mm Length)",
@@ -545,6 +571,12 @@
  "CABLE:câble de pince": {
   "fournisseur": "câblage"
  },
+ "CABLE:câble de pince, brin doigts": {
+  "fournisseur": "câblage"
+ },
+ "CABLE:câble de pince, brin pouce": {
+  "fournisseur": "câblage"
+ },
  "CABLE:câble du D85MG": {
   "fournisseur": "câblage"
  },
@@ -552,9 +584,6 @@
   "fournisseur": "câblage"
  },
  "CABLE:câble du servo d'abduction": {
-  "fournisseur": "câblage"
- },
- "CABLE:main (doigts non dessinés)": {
   "fournisseur": "câblage"
  },
  "CABLE:prise de servo": {
@@ -587,10 +616,48 @@
  "IMPRIME:cloison structurelle": {
   "fournisseur": "à imprimer"
  },
- "IMPRIME:liaison et moyeu": {
+ "IMPRIME:liaison, berceau": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:liaison, partie arrière": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, doigts : cache de l'axe, côté A": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, doigts : cache de l'axe, côté B": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, doigts : doigt A (jointure et phalange)": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, doigts : doigt B (jointure, phalange et poulie)": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, fléau du câble de pince": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, paume (joues de l'axe)": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, poignet vissé au goTUBE": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main, pouce : pouce, moyeu et poulie": {
   "fournisseur": "à imprimer"
  },
  "IMPRIME:plaque de bout": {
   "fournisseur": "à imprimer"
+ },
+ "VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm": {
+  "fournisseur": "fait main",
+  "achat": "fil inox à ressort 1.4310 Ø 0,6 mm, 2 m (un rouleau pour les deux ressorts) — Evek-GmbH sur Amazon, 5,90 € + 10,90 € de port (choisi le 2026-11-09)",
+  "url": "https://www.amazon.fr/dp/B091PQFT28"
+ },
+ "VIS:tige inox Ø4 mm, 44 mm (axe de la main)": {
+  "fournisseur": "inconnu"
+ },
+ "VIS:vis M2 × 6 autotaraudeuse, comme celles des servos": {
+  "fournisseur": "inconnu"
  }
 }

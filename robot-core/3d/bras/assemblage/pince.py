@@ -4,9 +4,9 @@ La main du bras : doigts et pouce du « WALL•E Motion Arm » (wallebuilders.cl
 paume dessinée ici, vissée au bout du goTUBE du bras.
 
 Ce qui vient du Motion Arm, réduit à 0,7 : les deux doigts (jointure et phalange fusionnées, phalange figée), leurs
-caches, et le pouce d'une pièce (sauf son moyeu). Ce qui est dessiné ici : le poignet (base vissée au goTUBE, chambre du fléau),
-la paume (deux joues qui tiennent l'axe), le moyeu du pouce avec sa poulie, la poulie des doigts sur la jointure B,
-le fléau.
+caches, et le pouce, d'une pièce avec son moyeu. Ce qui est dessiné ici : le poignet (base vissée au goTUBE, chambre
+du fléau), la paume (deux joues qui tiennent l'axe), le moyeu du pouce avec sa poulie, la poulie des doigts sur la
+jointure B, le fléau. Aucune colle (Nicolas, 2026-11-09).
 
 Le mécanisme (choix B1 de Nicolas, 2026-11-08) : doigts et pouce tournent sur le même axe Ø4 fixe, en sens
 contraires. Un seul câble, celui du HS-65MG, tire le milieu d'un fléau flottant dans le poignet ; chaque bout du
@@ -26,7 +26,7 @@ le sens de fermeture vu du bras.
 
 Écrit dans SORTIE/pince/ : <pièce>_position.stl (repère du bras) et .step pour les pièces imprimées.
 """
-import json, math, os, sys
+import functools, json, math, os, sys
 import numpy as np
 import cadquery as cq
 from OCP.gp import gp_Trsf
@@ -59,9 +59,7 @@ POULIE_DOIGTS = (13.75, 17.25)                    # sur la jointure B, d'une pi�
 JOUE_B = (8.5, 13.25)
 POULIE_POUCE = (4.5, 8.0)                         # d'une pièce avec le moyeu du pouce
 MOYEU_POUCE = (-4.5, 4.5)
-RESSORT_POUCE = (-8.0, -4.5)
-JOUE_A = (-13.5, -8.5)
-RESSORT_DOIGTS = (-18.0, -14.0)
+JOUE_A = (-13.5, -8.5)                            # entre elle et le moyeu, entre elle et la jointure A : les ressorts
 R_JOUE = 6.0
 R_POULIE, R_GORGE, GORGE = 10.5, 9.0, 1.2         # flasques, fond de gorge, largeur de gorge
 R_ENROULEMENT = R_GORGE + 0.2                     # tresse PE de 0,4 mm au fond de la gorge
@@ -71,6 +69,30 @@ R_ENROULEMENT = R_GORGE + 0.2                     # tresse PE de 0,4 mm au fond 
 # 216°). Le premier ancrage (2026-11-08) était un trou parallèle à l'axe, bouché d'un côté par le moyeu ou la
 # jointure, à 0,5 mm de la joue de l'autre, et sous le fond de gorge : la tresse ne pouvait ni y entrer ni s'y nouer.
 ANCRAGE = dict(r_trou=0.5, r_poche=1.3, ecart=60.0, r_entree=9.6, r_poche_fond=6.8, r_bout=7.3)
+
+# Ressorts de rappel : fil 0,6 enroulé à la main, spires jointives (voir catalogue.py). La première version (2026-11-08)
+# ne dessinait que les spires sur l'axe : rien ne les retenait en rotation, ils ne pouvaient rien rouvrir (remarqué
+# par Nicolas le 2026-11-09). Chacun a une patte dans la joue A, fixe, et l'autre dans la pièce qu'il rouvre ; elles
+# partent droit des spires puis se coudent le long de l'axe. Le doigt A arrive le long de l'axe : sa patte fixe se
+# pique dans un trou de la joue. Le pouce arrive par le côté : un trou l'aurait bloqué, sa patte fixe glisse dans une
+# rainure ouverte de ce côté-là, et le ressort la pousse vers le fond.
+# Pour armer, la pièce se monte ouverte de PRECHARGE au-delà du repos, ressort libre, puis on la ramène. Le pouce ne
+# s'ouvre que d'une quinzaine de degrés de plus avant de toucher la paume (contrôle du 2026-11-09) ; les doigts, de
+# 40° sans rien toucher.
+# Angles dans H, main ouverte. Patte mobile à 7 mm de l'axe : au-delà du roulement (Ø10) qui affleure sur la face de
+# la pièce, là où moyeu et jointure sont pleins.
+PATTES = dict(r_fixe=4.5, r_mobile=7.0, a_mobile=-140.0, r_trou=0.5, fixe=1.5, mobile=2.5)   # patte fixe à 0°
+PRECHARGE = dict(pouce=12.0, doigts=30.0)
+SPIRES = 4
+REF_RESSORT = 'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm'
+
+# Caches d'axe tenus par aimant plutôt que collés (Nicolas, 2026-11-09) : démontables, ils rendent l'axe accessible.
+# L'axe inox ne s'aimante pas et s'arrête 19 mm plus bas : l'aimant goBILDA Ø5 × 1,5 du cache tient sur une rondelle
+# 2801 en acier zingué (4 × 8 × 1) logée au fond du siège, dans l'axe. L'aimant dépasse du cache de 0,2 mm, dans le
+# jeu qui sépare le cache du fond du siège (0,7 mm côté A, 0,5 côté B). Une encoche dans le bord du siège laisse passer un ongle.
+FOND_SIEGE = {-1: -41.5, +1: 40.5}                # fond du siège du cache, jointure A / B
+CACHE = dict(aimant=(2.6, 1.3), rondelle=(4.1, 1.0), depasse=0.2, encoche=1.5,
+             noms={-1: 'Finger-End-Cap_2', +1: 'Finger-End-Cap_1'})
 
 # Roulements goBILDA 1600-0410-0004 (4 × 10 × 4) : un dans chaque jointure, deux dans le moyeu du pouce. L'axe Ø4
 # est fixe, serré dans les joues ; il est enfilé par la jointure B, sous le cache.
@@ -106,15 +128,81 @@ def tourner_ma():
     return T
 
 
-def ma(nom):
-    """Un solide du Motion Arm, réduit à l'échelle et posé dans le repère H."""
+# Les pièces du Motion Arm gardent les trous de sa visserie : canal de la vis M3 × 55 de l'articulation des doigts,
+# inserts M4 au fond du logement de moyeu, vis M3 × 18 et inserts des moitiés du pouce… Chez nous, phalanges et pouce
+# sont d'une pièce et l'entraînement passe par nos poulies : ces trous ne servent plus et se voyaient (remarqué par
+# Nicolas le 2026-11-09). Ils sont bouchés sur les pièces du Motion Arm, avant fusion et avant nos propres perçages.
+# Un trou = toutes les faces atteintes de proche en proche depuis une ouverture d'une face (contour intérieur) sans
+# sortir du tube de cette ouverture ; OCC les retire et prolonge les faces voisines. Les ouvertures de plus de 9,6 mm
+# restent (siège du cache d'axe, 11,7 mm). Une première détection par faces cylindriques prenait les congés concaves
+# pour des trous.
+TROU_MAX = 9.6
+
+
+def _faces_du_trou(f, w, t, carte):
+    c = w.Center(); n = f.normalAt(c); r = t / 2 + 0.3
+
+    def dans(g):
+        for p in [cq.Vector(v.toTuple()) for v in g.Vertices()] + [g.Center()]:
+            d = p - c
+            if (d - n * d.dot(n)).Length > r:
+                return False
+        return True
+    faces, pile = [], [cq.Face(v) for e in w.Edges() for v in carte.FindFromKey(e.wrapped)]
+    while pile:
+        g = pile.pop()
+        if g.isSame(f) or any(g.isSame(x) for x in faces) or not dans(g):
+            continue
+        faces.append(g)
+        pile += [cq.Face(v) for e in g.Edges() for v in carte.FindFromKey(e.wrapped)]
+    return faces
+
+
+def boucher(s):
+    """Le solide sans ses trous de moins de TROU_MAX ; un trou que OCC ne sait pas retirer reste."""
+    from OCP.BRepAlgoAPI import BRepAlgoAPI_Defeaturing
+    from OCP.TopExp import TopExp
+    from OCP.TopTools import TopTools_IndexedDataMapOfShapeListOfShape
+    from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE
+    essayes = set()
+    while True:
+        carte = TopTools_IndexedDataMapOfShapeListOfShape()
+        TopExp.MapShapesAndAncestors_s(s.wrapped, TopAbs_EDGE, TopAbs_FACE, carte)
+        for f in s.Faces():
+            for w in f.innerWires():
+                bb = w.BoundingBox(); t = max(bb.xlen, bb.ylen, bb.zlen)
+                cle = tuple(round(x, 2) for x in w.Center().toTuple())
+                if t > TROU_MAX or cle in essayes:
+                    continue
+                essayes.add(cle)
+                faces = _faces_du_trou(f, w, t, carte)
+                d = BRepAlgoAPI_Defeaturing(); d.SetShape(s.wrapped)
+                for g in faces:
+                    d.AddFaceToRemove(g.wrapped)
+                d.Build()
+                if d.IsDone():
+                    n = cq.Shape.cast(d.Shape())
+                    if n.isValid() and len(n.Solids()) == 1 and n.Volume() > s.Volume() + 1e-3:
+                        s = n
+                        break           # la topologie a changé : on reprend la recherche
+            else:
+                continue
+            break
+        else:
+            return s
+
+
+@functools.lru_cache(maxsize=None)
+def ma(nom, bouche=False):
+    """Un solide du Motion Arm, réduit à l'échelle et posé dans le repère H ; bouche : sans les trous de sa visserie."""
     s = cq.importers.importStep(os.path.join(MA, nom + '.step')).val()
     # Upper-Finger-A porte des faces dégénérées (aire nulle) : le maillage n'était pas fermé, et les contrôles de
     # trajet de la notice se seraient rabattus sur l'enveloppe convexe
     f = ShapeFix_FixSmallFace(); f.Init(s.wrapped); f.SetPrecision(0.05); f.Perform()
     s = cq.Shape.cast(f.FixShape())
     s = s.translate(cq.Vector(-MA_AXE[0], -MA_AXE[1], -MA_AXE[2])).scale(ECHELLE)
-    return cq.Shape.cast(BRepBuilderAPI_Transform(s.wrapped, tourner_ma(), True).Shape())
+    s = cq.Shape.cast(BRepBuilderAPI_Transform(s.wrapped, tourner_ma(), True).Shape())
+    return boucher(s) if bouche else s
 
 
 def wcyl(r, w0, w1, u=0.0, v=0.0):
@@ -188,6 +276,12 @@ def paume():
                   .fuse(boite(PLANCHER[1] - 0.5, 0.0, -R_JOUE, R_JOUE, w0, w1)))
         p = p.fuse(profil)
     p = p.cut(wcyl(R_AXE_SERRE, JOUE_A[0] - 1, JOUE_B[1] + 1))
+    # pattes fixes des ressorts : trou dans la face extérieure de la joue A (doigts), rainure dans sa face intérieure
+    # (pouce), ouverte du côté d'où vient le pouce ; la paume n'est pas retournée, ce côté-là est COTE_POUCE
+    u, r, f = PATTES['r_fixe'], PATTES['r_trou'], PATTES['fixe']
+    p = p.cut(wcyl(r, JOUE_A[0] - 0.01, JOUE_A[0] + f, u))
+    p = p.cut(wcyl(r, JOUE_A[1] - f, JOUE_A[1] + 0.01, u)
+              .fuse(boite(u - r, u + r, min(0, COTE_POUCE * R_JOUE), max(0, COTE_POUCE * R_JOUE), JOUE_A[1] - f, JOUE_A[1] + 0.01)))
     for v, w in VIS_PAUME:
         p = p.cut(ucyl(2.2, PLANCHER[0] - 1, PLANCHER[1] + 1, v, w))
     # fentes des deux brins : sous chaque plan de poulie, étirées en v (le brin descend en biais vers le fléau)
@@ -204,28 +298,47 @@ def fleau():
     return f
 
 
-def moyeu_pouce():
-    """Le pivot A du pouce, réduit et rogné entre les joues, autour de deux roulements, et la poulie du pouce."""
+def grossi(s):
+    g = s.Center()
+    return s.translate(-g).scale(1.02).translate(g)
+
+
+def pouce_et_moyeu():
+    """Le pouce et son moyeu d'une pièce : le pivot A du pouce, réduit et rogné entre les joues, autour de deux
+    roulements, la poulie du pouce, et le pouce. Séparés (2026-11-08), le pouce se collait dans une fente du moyeu
+    dont il ne pouvait sortir qu'en s'éloignant de l'axe, et que seule la colle retenait ; les joues de cette fente,
+    rognées dans le pivot du Motion Arm, ne faisaient que 0,6 et 0,2 mm."""
     pivot = ma('Thumb-Pivot-A_1').intersect(boite(-60, 60, -60, 60, *MOYEU_POUCE))
     # Un seul logement traversant : les deux roulements entrent par le côté A, le second jusqu'à la poulie, dont
     # l'alésage Ø7 ne porte que sur leur bague extérieure (la bague intérieure reste avec l'axe fixe).
     m = pivot.fuse(wcyl(7.5, *MOYEU_POUCE)).fuse(poulie(*POULIE_POUCE, 3.5, +1))
+    p = pouce()
+    m = m.fuse(p)
+    if len(m.Solids()) > 1:                      # le jeu du Motion Arm entre tenon et fente
+        m = m.fuse(grossi(pivot).intersect(grossi(p)))
     m = percer_ancrage(m, *POULIE_POUCE, +1)
+    m = m.cut(wcyl(PATTES['r_trou'], MOYEU_POUCE[0] - 0.01, MOYEU_POUCE[0] + PATTES['mobile'], *patte_mobile('pouce')))
     return m.cut(wcyl(ROULEMENT['r'], MOYEU_POUCE[0] - 0.01, MOYEU_POUCE[1]))
+
+
+def patte_mobile(ensemble):
+    """(u, v) du trou de la patte mobile dans la pièce, pose du Motion Arm (vers_bras l'ouvre ensuite)."""
+    a = math.radians(PATTES['a_mobile'] - {'doigts': -OUVERTURE, 'pouce': OUVERTURE}[ensemble])
+    return PATTES['r_mobile'] * math.cos(a), PATTES['r_mobile'] * math.sin(a)
 
 
 def jointure(nom, cote):
     """Jointure d'un doigt : le logement du moyeu 1314 du Motion Arm est rebouché autour de l'axe, puis repercé
     pour un roulement et pour enfiler l'axe depuis l'extérieur (sous le cache)."""
-    j = ma(nom)
+    j = ma(nom, True)
     if cote > 0:
         # la poulie laisse passer le roulement (alésage Ø10,2) jusqu'à son logement dans la jointure
-        j = j.fuse(wcyl(9.0, JOINTURE_B, 40.5)).fuse(poulie(*POULIE_DOIGTS, ROULEMENT['r'] + 0.1, -1))
+        j = j.fuse(wcyl(9.0, JOINTURE_B, FOND_SIEGE[+1])).fuse(poulie(*POULIE_DOIGTS, ROULEMENT['r'] + 0.1, -1))
         j = percer_ancrage(j, *POULIE_DOIGTS, -1)
         w0, w1 = LOGEMENTS_DOIGTS[0]
         j = j.cut(wcyl(ROULEMENT['r'], w0, w1)).cut(wcyl(R_AXE_LIBRE, POULIE_DOIGTS[0] - 1, 46))
     else:
-        j = j.fuse(wcyl(9.0, -41.5, JOINTURE_A))
+        j = j.fuse(wcyl(9.0, FOND_SIEGE[-1], JOINTURE_A))
         w0, w1 = LOGEMENTS_DOIGTS[1]
         j = j.cut(wcyl(ROULEMENT['r'], w0, w1)).cut(wcyl(R_AXE_LIBRE, -47, w1))
     return j
@@ -234,13 +347,14 @@ def jointure(nom, cote):
 # Liaison des deux doigts. Dans le Motion Arm, ils étaient serrés sur un même moyeu ; ici chacun tourne sur son
 # roulement et seule la jointure B porte une poulie : sans liaison, le doigt A ne fermait pas (vu le 2026-11-08, après
 # une première notice qui les disait « collés » alors qu'un jeu de 1,3 mm les séparait). Les faces planes du doigt B
-# tournées vers A sont prolongées jusqu'à elles (cale), et deux chevilles en filament 1,75 mm collées dans des trous
-# Ø1,9 portent l'effort ; la colle ne fait que tenir les deux doigts serrés l'un contre l'autre.
+# tournées vers A sont prolongées jusqu'à elles (cale), et deux chevilles en filament 1,75 mm portent l'effort. Sans
+# colle (Nicolas, 2026-11-09), elles sont serrées dans des trous Ø1,7 : seul leur frottement empêche les doigts de
+# s'écarter le long de l'axe, et rien ne les y pousse (ils encadrent la paume).
 # Les jointures ne sont pas pleines derrière la face : les deux chevilles sont aux points (pose du Motion Arm, repère
 # H) où les deux doigts ont de la matière tout autour du trou sur toute sa profondeur, les plus éloignés l'un de
 # l'autre (28,5 mm ; recherche sur une grille de 1,5 mm le 2026-11-08). Le premier choix, géométrique, tombait dans
 # des creux.
-CHEVILLE = dict(r=0.95, profondeur=6.0, axes=[(46.14, -13.27), (19.14, -4.27)])
+CHEVILLE = dict(r=0.85, profondeur=6.0, axes=[(46.14, -13.27), (19.14, -4.27)])
 
 
 def _faces_regard(s, signe):
@@ -260,8 +374,8 @@ def _empreinte(f):
 def liaison_doigts():
     """(cales à fusionner au doigt B, axes des chevilles en (u, v), plan de contact w) — dans H."""
     from shapely.ops import unary_union
-    A = [ma('Upper-Finger-A_1'), ma('Lower-Finger-A_1')]
-    B = [ma('Upper-Finger-B_1'), ma('Lower-Finger-B_1')]
+    A = [ma('Upper-Finger-A_1', True), ma('Lower-Finger-A_1', True)]
+    B = [ma('Upper-Finger-B_1', True), ma('Lower-Finger-B_1', True)]
     fa = [(f, _empreinte(f)) for s in A for f in _faces_regard(s, +1)]
     cales, contacts = [], []
     for s in B:
@@ -285,7 +399,7 @@ def doigt(cote):
     """Un doigt d'une pièce : jointure, phalange et cache de phalange fusionnés (la phalange est figée ; collée sur
     le cylindre d'articulation du Motion Arm, seule la colle l'aurait empêchée de pivoter)."""
     l, k = ('A', 2) if cote < 0 else ('B', 1)
-    d = jointure('Upper-Finger-%s_1' % l, cote).fuse(ma('Lower-Finger-%s_1' % l)).fuse(ma('Knuckel-Rod-Cap_%d' % k))
+    d = jointure('Upper-Finger-%s_1' % l, cote).fuse(ma('Lower-Finger-%s_1' % l, True)).fuse(ma('Knuckel-Rod-Cap_%d' % k, True))
     cales, chevilles, w = liaison_doigts()
     if cote > 0:
         for c in cales:
@@ -293,18 +407,43 @@ def doigt(cote):
     for u, v in chevilles:
         w0, w1 = (w - CHEVILLE['profondeur'], w + 0.01) if cote < 0 else (w - 0.01, w + CHEVILLE['profondeur'])
         d = d.cut(wcyl(CHEVILLE['r'], w0, w1, u, v))
+    if cote < 0:
+        d = d.cut(wcyl(PATTES['r_trou'], JOINTURE_A - PATTES['mobile'], JOINTURE_A + 0.01, *patte_mobile('doigts')))
+    # rondelle du cache au fond du siège, encoche pour l'ongle au bord du siège, côté paume
+    fond, (r, p), wf = FOND_SIEGE[cote], CACHE['rondelle'], face_cache(cote)
+    d = d.cut(wcyl(r, fond - 0.01, fond + p) if cote < 0 else wcyl(r, fond - p, fond + 0.01))
+    cx, cy, R = bord_cache(cote)
+    d = d.cut(wcyl(CACHE['encoche'], -50, wf, cx - R, cy) if cote < 0 else wcyl(CACHE['encoche'], wf, 50, cx - R, cy))
     return d.clean()
+
+
+def face_cache(cote):
+    """w de la face intérieure du cache, prise dans l'axe (le cache du Motion Arm est un peu incliné)."""
+    bb = ma(CACHE['noms'][cote]).intersect(wcyl(0.05, -60, 60)).BoundingBox()
+    return bb.zmax if cote < 0 else bb.zmin
+
+
+def bord_cache(cote):
+    """(u, v) du centre et rayon du bord du cache, pose du Motion Arm."""
+    f = max((f for f in ma(CACHE['noms'][cote]).Faces() if f.geomType() == 'CYLINDER'), key=lambda f: f.Area())
+    c = f._geomAdaptor().Cylinder()
+    return c.Location().X(), c.Location().Y(), c.Radius()
+
+
+def cache(cote):
+    """Cache d'axe du Motion Arm, poche de l'aimant dans sa face intérieure, dans l'axe."""
+    (r, p), w = CACHE['aimant'], face_cache(cote)
+    return ma(CACHE['noms'][cote]).cut(wcyl(r, w - p, w + 0.01) if cote < 0 else wcyl(r, w - 0.01, w + p))
 
 
 def pouce():
     """Le pouce d'une pièce : pivot, bases, bouts, goupille et son cache fusionnés (le bout s'articulait sur la base
-    par un cylindre et la goupille : collé, seule la colle l'aurait tenu). Le pivot entre dans la fente du moyeu,
-    tenon dans une mortaise : collé là, il ne peut pas tourner.
+    par un cylindre et la goupille : collé, seule la colle l'aurait tenu). Son moyeu s'y fusionne ensuite.
 
     Les pièces du Motion Arm gardent leurs jeux de fonctionnement (0,14 mm dans l'articulation base/bout autour de
     la goupille, 0,04 mm entre pivot et base) : fusionnées telles quelles, elles restaient trois morceaux.
     L'épaississement d'OCC échoue sur ces formes ; les jeux sont donc comblés à la main."""
-    S = {n: ma(n) for n in ('Thumb-Pivot-B_1', 'Upper-Thumb-A_1', 'Upper-Thumb-B_1', 'Lower-Thumb-A_1',
+    S = {n: ma(n, True) for n in ('Thumb-Pivot-B_1', 'Upper-Thumb-A_1', 'Upper-Thumb-B_1', 'Lower-Thumb-A_1',
                             'Lower-Thumb-B_1', 'Thumb-Pin_1', 'Thumb-Pin-Cap_1')}
     p = S['Thumb-Pivot-B_1']
     for n, s in S.items():
@@ -318,9 +457,6 @@ def pouce():
     p = p.fuse(cq.Solid.makeCylinder(c.Radius() + 0.2, lg, f.Center() - axe * (lg / 2), axe))
     # pivot/base : là où leurs copies grossies de 2 % se recouvrent, c'est-à-dire dans le jeu qui les sépare ;
     # le tenon garde sa taille dans la mortaise du moyeu
-    def grossi(s):
-        g = s.Center()
-        return s.translate(-g).scale(1.02).translate(g)
     p = p.fuse(grossi(S['Thumb-Pivot-B_1']).intersect(grossi(S['Upper-Thumb-A_1'])))
     return p.clean()
 
@@ -330,12 +466,11 @@ IMPRIMEES = {
     'poignet': (poignet, 'tube'),
     'paume': (paume, 'tube'),
     'fleau': (fleau, 'tube'),
-    'pouce_moyeu': (moyeu_pouce, 'pouce'),
     'doigt_A': (lambda: doigt(-1), 'doigts'),
     'doigt_B': (lambda: doigt(+1), 'doigts'),
-    'doigt_A_cache': (lambda: ma('Finger-End-Cap_2'), 'doigts'),
-    'doigt_B_cache': (lambda: ma('Finger-End-Cap_1'), 'doigts'),
-    'pouce': (pouce, 'pouce'),
+    'doigt_A_cache': (lambda: cache(-1), 'doigts'),
+    'doigt_B_cache': (lambda: cache(+1), 'doigts'),
+    'pouce': (pouce_et_moyeu, 'pouce'),
 }
 
 
@@ -383,12 +518,11 @@ NOMS = {
     'poignet': 'main, poignet vissé au goTUBE',
     'paume': 'main, paume (joues de l\'axe)',
     'fleau': 'main, fléau du câble de pince',
-    'pouce_moyeu': 'main, pouce : moyeu et poulie',
     'doigt_A': 'main, doigts : doigt A (jointure et phalange)',
     'doigt_B': 'main, doigts : doigt B (jointure, phalange et poulie)',
     'doigt_A_cache': 'main, doigts : cache de l\'axe, côté A',
     'doigt_B_cache': 'main, doigts : cache de l\'axe, côté B',
-    'pouce': 'main, pouce : pouce (pivot, base et bout)',
+    'pouce': 'main, pouce : pouce, moyeu et poulie',
 }
 U_FLEAU = PLANCHER[0] - 1.5 - FLEAU['u']           # dessous du fléau, main ouverte
 
@@ -424,15 +558,31 @@ def cable_servo():
     return [np.array([BOUT_TUBE, 0.0, CANAL_Z]), en_bras(FOND[1], 0.0, CANAL_Z), en_bras(U_FLEAU, 0.0, FLEAU['trous'][1])]
 
 
-def ressort(w0, w1):
-    """Ressort de torsion, dessiné en spires jointives (fil 0,6, Ø intérieur 4,5) ; ses branches restent à poser
-    quand Nicolas aura les ressorts en main."""
-    spires = []
-    n = max(1, int((w1 - w0) / 0.6))
-    for k in range(n):
-        t = trimesh.creation.torus(major_radius=2.55, minor_radius=0.3, major_sections=24, minor_sections=8)
-        t.apply_translation((X_AXE, 0, w0 + 0.3 + k * 0.6)); spires.append(t)
-    return trimesh.util.concatenate(spires)
+def ressort(ensemble):
+    """Ressort posé, main ouverte : patte fixe au fond de son trou dans la joue A, spires jointives au milieu du jeu,
+    patte mobile dans la pièce. Les spires vont de l'une à l'autre dans le sens où la pièce ferme : en se chargeant,
+    le ressort se serre. Le maillage reste figé : sa patte mobile ne suit pas la pièce quand la main se ferme."""
+    if ensemble == 'pouce':
+        w_joue, w_piece, s = JOUE_A[1], MOYEU_POUCE[0], -1          # le pouce ferme en tournant de −RAPPORT
+    else:
+        w_joue, w_piece, s = JOUE_A[0], JOINTURE_A, +1
+    d = 1 if w_piece > w_joue else -1
+    fil, rs, pas = 0.3, 2.55, 0.6
+    am = math.radians(PATTES['a_mobile'])
+    tour = SPIRES * 360 + (s * PATTES['a_mobile']) % 360
+    long = tour / 360 * pas
+    w0 = (w_joue + w_piece) / 2 - d * long / 2
+    pts = [(PATTES['r_fixe'], 0, w_joue - d * (PATTES['fixe'] - 0.2)), (PATTES['r_fixe'], 0, w0)]
+    for t in np.linspace(0, tour, int(tour / 15) + 1):
+        a = math.radians(s * t)
+        pts.append((rs * math.cos(a), rs * math.sin(a), w0 + d * long * t / tour))
+    w1 = pts[-1][2]
+    pts += [(PATTES['r_mobile'] * math.cos(am), PATTES['r_mobile'] * math.sin(am), w1),
+            (PATTES['r_mobile'] * math.cos(am), PATTES['r_mobile'] * math.sin(am), w_piece + d * (PATTES['mobile'] - 0.2))]
+    pts = [en_bras(*p) for p in pts]
+    morceaux = [trimesh.creation.icosphere(1, fil).apply_translation(p) for p in pts]
+    morceaux += [trimesh.creation.cylinder(fil, segment=[a, b], sections=8) for a, b in zip(pts, pts[1:])]
+    return trimesh.boolean.union(morceaux, engine='manifold')
 
 
 def pieces_main():
@@ -455,9 +605,15 @@ def pieces_main():
     axe = trimesh.creation.cylinder(radius=2.0, segment=[en_bras(0, 0, AXE[0]), en_bras(0, 0, AXE[1])], sections=24)
     out.append(('main : axe des doigts et du pouce', 'visserie ajoutée', axe,
                 'VIS:tige inox Ø4 mm, %d mm (axe de la main)' % round(AXE[1] - AXE[0])))
-    for nom, (w0, w1) in (('main : ressort de rappel du pouce', RESSORT_POUCE),
-                          ('main : ressort de rappel des doigts', RESSORT_DOIGTS)):
-        out.append((nom, 'visserie ajoutée', ressort(w0, w1), 'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm'))
+    for nom, ens in (('main : ressort de rappel du pouce', 'pouce'), ('main : ressort de rappel des doigts', 'doigts')):
+        out.append((nom, 'visserie ajoutée', ressort(ens), REF_RESSORT))
+    for cote, l in ((-1, 'A'), (+1, 'B')):
+        r = trimesh.creation.annulus(r_min=2.0, r_max=4.0, height=1.0, sections=32)
+        r.apply_translation(en_bras(0, 0, FOND_SIEGE[cote] - cote * 0.5))
+        out.append(('main, doigts : rondelle du cache, côté ' + l, 'visserie ajoutée', r, '2801-0004-0008'))
+        a = trimesh.creation.cylinder(radius=2.5, height=1.5, sections=32)
+        a.apply_translation(en_bras(0, 0, face_cache(cote) + cote * (0.75 - CACHE['depasse'])))
+        out.append(('main, doigts : aimant du cache, côté ' + l, 'visserie ajoutée', a, '2912-0005-0001'))
     for v, w in VIS_TUBE:
         out.append(('vis 2802-0004-0008 — main, poignet ↔ goTUBE', 'visserie ajoutée',
                     poser_vis('2802-0004-0008', en_bras(FOND[1] + 2.2, v, w), [-1, 0, 0]), '2802-0004-0008'))

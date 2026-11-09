@@ -24,6 +24,15 @@ BASE = os.path.join(os.path.dirname(SORTIE), 'catalogue_gobilda', 'gobilda.db')
 # Ce qui ne se commande pas chez goBILDA : imprimé, fourni avec un servo, câblage, servos Hitec.
 AILLEURS = {'IMPRIME': 'à imprimer', 'FOURNI': 'fourni avec le servo', 'BRAS': 'fourni avec le servo',
             'CABLE': 'câblage', 'D85MG': 'Hitec', 'HS-65MG': 'Hitec'}
+# Achats hors goBILDA choisis avec Nicolas : ce qu'on achète (achat) n'est pas toujours la pièce du modèle (les
+# ressorts de la main s'enroulent à la main dans un fil à ressort ; un rouleau suffit pour les deux).
+HORS_GOBILDA = {
+    'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm': dict(
+        fournisseur='fait main',
+        achat='fil inox à ressort 1.4310 Ø 0,6 mm, 2 m (un rouleau pour les deux ressorts) — Evek-GmbH sur Amazon, '
+              '5,90 € + 10,90 € de port (choisi le 2026-11-09)',
+        url='https://www.amazon.fr/dp/B091PQFT28'),
+}
 
 
 def fiche(base, ref):
@@ -58,6 +67,9 @@ def main():
     base = sqlite3.connect(BASE)
     catalogue = {}
     for ref in refs:
+        if ref in HORS_GOBILDA:
+            catalogue[ref] = HORS_GOBILDA[ref]
+            continue
         ailleurs = AILLEURS.get(ref.split(':')[0])
         if ailleurs:
             catalogue[ref] = dict(fournisseur=ailleurs)

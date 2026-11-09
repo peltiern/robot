@@ -251,7 +251,8 @@ const euros = x => x.toFixed(2).replace('.', ',') + ' €';
 const dollars = x => x.toFixed(2).replace('.', ',') + ' $';
 function conditionnement(r) {
   const c = catalogue[r];
-  if (c?.fournisseur !== 'goBILDA') return `<br><span class="four">${c?.fournisseur ?? 'hors catalogue'}</span>`;
+  if (c?.fournisseur !== 'goBILDA') return `<br><span class="four">${c?.fournisseur ?? 'hors catalogue'}`
+    + (c?.achat ? ` · <a href="${c.url}" target="_blank" rel="noopener">${c.achat}</a>` : '') + '</span>';
   const paquet = c.paquet > 1 ? ` · par ${c.paquet}${c.paquet_suppose ? ' (supposé)' : ''}` : '';
   const s = c.steplab;
   if (!s) return `<br><span class="four">absent de steplab${paquet}${c.prix ? ' · goBILDA ' + dollars(c.prix) : ''}</span>`;
@@ -279,7 +280,11 @@ function texteCommande() {
     t.push('', 'Absentes de steplab (goBILDA en direct) :');
     for (const l of absentes) t.push(`${l.r}  ${quantite(l)}  (il manque ${l.n})  — ${l.c.nom}  ${l.c.url}`);
   }
-  if (ailleurs.length) { t.push('', 'Hors goBILDA :'); for (const l of ailleurs) t.push(`${affiche(l.r)}  ×${l.n}  (${l.c.fournisseur})`); }
+  if (ailleurs.length) {
+    t.push('', 'Hors goBILDA :');
+    for (const l of ailleurs) t.push(`${affiche(l.r)}  ×${l.n}  (${l.c.fournisseur})`
+      + (l.c.achat ? `  → à acheter : ${l.c.achat}  ${l.c.url}` : ''));
+  }
   return t.join('\n');
 }
 function telecharger(nom, texte, type) {

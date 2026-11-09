@@ -638,13 +638,6 @@
    "designation": "pièce imprimée : main, fléau du câble de pince"
   },
   {
-   "nom": "main, pouce : moyeu et poulie",
-   "nature": "imprimée",
-   "etat": "imprimé",
-   "ref": "IMPRIME:main, pouce : moyeu et poulie",
-   "designation": "pièce imprimée : main, pouce : moyeu et poulie"
-  },
-  {
    "nom": "main, doigts : doigt A (jointure et phalange)",
    "nature": "imprimée",
    "etat": "imprimé",
@@ -673,11 +666,11 @@
    "designation": "pièce imprimée : main, doigts : cache de l'axe, côté B"
   },
   {
-   "nom": "main, pouce : pouce (pivot, base et bout)",
+   "nom": "main, pouce : pouce, moyeu et poulie",
    "nature": "imprimée",
    "etat": "imprimé",
-   "ref": "IMPRIME:main, pouce : pouce (pivot, base et bout)",
-   "designation": "pièce imprimée : main, pouce : pouce (pivot, base et bout)"
+   "ref": "IMPRIME:main, pouce : pouce, moyeu et poulie",
+   "designation": "pièce imprimée : main, pouce : pouce, moyeu et poulie"
   },
   {
    "nom": "main, doigts : roulement de la jointure B",
@@ -727,6 +720,34 @@
    "etat": "ajouté",
    "ref": "VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm",
    "designation": "ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm"
+  },
+  {
+   "nom": "main, doigts : rondelle du cache, côté A",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2801-0004-0008",
+   "designation": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD)"
+  },
+  {
+   "nom": "main, doigts : aimant du cache, côté A",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2912-0005-0001",
+   "designation": "2912 Series Neodymium Magnet (5mm Diameter, 1.5mm Thickness) - 2 Pack"
+  },
+  {
+   "nom": "main, doigts : rondelle du cache, côté B",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2801-0004-0008",
+   "designation": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD)"
+  },
+  {
+   "nom": "main, doigts : aimant du cache, côté B",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2912-0005-0001",
+   "designation": "2912 Series Neodymium Magnet (5mm Diameter, 1.5mm Thickness) - 2 Pack"
   },
   {
    "nom": "vis 2802-0004-0008 — main, poignet ↔ goTUBE",

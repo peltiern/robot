@@ -22,7 +22,7 @@ import numpy as np, trimesh, manifold3d as mf
 ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ICI)
 from recaler import SORTIE
-from pince import COTE_POUCE
+from pince import COTE_POUCE, PRECHARGE, SPIRES
 
 TOLERANCE = 1.0          # mm³ partagés au-delà de ce qu'ils partagent à leur place
 PAS = 1.0                # mm
@@ -365,22 +365,31 @@ def etapes(P):
           glisse(cles(r'^main, poignet'), X, 40), visser(cles(r'— main, poignet ↔ goTUBE')))
     # Les brins se nouent au fléau AVANT la paume : une fois vissée, elle ferme la chambre et plus rien n'y passe
     # (l'ordre « brins à la fin » de la première notice, 2026-11-08, ne pouvait pas se monter)
-    NOEUD = 'triple nœud simple sur une perle de pêche Ø 2 à 3 mm, une goutte de cyano'
+    # aucune colle (Nicolas, 2026-11-09) : chaque nœud est retenu par une poche ou une perle, qu'il ne peut pas passer
+    NOEUD = 'nœud en huit fait trois fois, sur une perle de pêche Ø 2 à 3 mm'
     etape('Le pouce, à l\'établi',
-          'Le pouce est imprimé d\'une pièce (base et bout figés) ; son pivot entre dans la fente du moyeu et s\'y '
-          'colle : tenon dans une mortaise, il ne peut pas tourner. Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier '
+          'Le pouce est imprimé d\'une pièce avec son moyeu et sa poulie (base et bout figés ; des supports sous le '
+          'pouce, qui déborde du moyeu des deux côtés). Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier '
           'jusqu\'à la poulie, le second affleurant. Le brin du pouce (une tresse d\'environ 15 cm) entre dans le trou '
-          'au fond de la gorge, ressort dans la poche du bord de la poulie et s\'y bloque d\'un triple nœud simple et '
-          'd\'une goutte de cyano ; on le tire pour rentrer le nœud dans la poche.',
-          poser(cles(r'^main, pouce : moyeu')),
+          'au fond de la gorge, ressort dans la poche du bord de la poulie et s\'y bloque d\'un nœud en huit fait trois '
+          'fois, plus gros que le trou ; on le tire pour rentrer le nœud dans la poche. Enfin le ressort du pouce. Les deux '
+          'ressorts s\'enroulent à la main, en fil inox 1.4310 Ø 0,6 sur la queue d\'un foret Ø 3,5 : %d spires '
+          'jointives, l\'un dans un sens, l\'autre dans l\'autre (ils sont le miroir l\'un de l\'autre). À la pince '
+          'plate, chaque bout part droit des spires puis se coude à angle droit, le long de l\'axe : une patte courte '
+          '(2 mm puis 2 mm, dans la joue) et une longue (4,5 mm puis 3 mm, dans la pièce qui tourne). La longue se '
+          'pique dans le petit trou de la face A du moyeu.' % SPIRES,
+          poser(cles(r'^main, pouce : pouce')),
           dict(glisse(cles(r'^main, pouce : roulement côté B'), mZ, 20), tol=3.0),
           dict(glisse(cles(r'^main, pouce : roulement côté A'), mZ, 15), tol=3.0),
-          poser(cles(r'^main, pouce : pouce')), atelier='pouce')
+          dict(glisse(cles(r'^main : ressort de rappel du pouce'), mZ, 10), tol=3.0), atelier='pouce')
     etape('Le doigt A, à l\'établi',
           'Le doigt A est imprimé d\'une pièce (jointure et phalange figée). Un roulement dans la jointure. Deux '
-          'chevilles de filament 1,75 mm, longues de 11 mm, se collent dans les trous de sa face intérieure.',
+          'chevilles de filament 1,75 mm, longues de 11 mm, s\'enfoncent au maillet dans les trous de sa face intérieure, où elles serrent : pas de colle. Le '
+          'ressort des doigts : sa patte la plus longue se pique dans le petit trou de la face intérieure de la '
+          'jointure, près du roulement.',
           poser(cles(r'^main, doigts : doigt A')),
-          dict(glisse(cles(r'^main, doigts : roulement de la jointure A'), Z, 15), tol=3.0), atelier='doigt A')
+          dict(glisse(cles(r'^main, doigts : roulement de la jointure A'), Z, 15), tol=3.0),
+          dict(glisse(cles(r'^main : ressort de rappel des doigts'), Z, 10), tol=3.0), atelier='doigt A')
     etape('Le doigt B, à l\'établi',
           'Le doigt B, d\'une pièce lui aussi, porte la poulie des doigts ; son roulement entre à travers elle. '
           'Le brin des doigts se noue dans l\'ancrage de cette poulie, comme celui du pouce.',
@@ -399,15 +408,17 @@ def etapes(P):
           'joue mince. Deux vis M4 × 10 entre les joues, dans les bossages du poignet.',
           glisse(cles(r'^main, paume'), X, 40), visser(cles(r'— main, paume ↔ poignet')))
     etape('Le pouce entre les joues',
-          'Le ressort du pouce sur le moyeu, côté joue A. Le pouce glisse entre les joues depuis son côté, roulements '
-          'dans l\'axe des trous des joues, son brin enroulé par-dessus la poulie.',
-          poser(cles(r'^main : ressort de rappel du pouce')),
+          'Le pouce glisse entre les joues depuis son côté, roulements dans l\'axe des trous des joues, son brin '
+          'enroulé par-dessus la poulie, ouvert d\'environ %d° de plus qu\'au repos : la patte libre du ressort entre '
+          'dans la rainure de la joue A par son bout ouvert et va jusqu\'au fond. On ramène le pouce au repos : le '
+          'ressort s\'arme et tient sa patte au fond de la rainure.' % PRECHARGE['pouce'],
           dict(joindre='pouce', chemin=[[[0, COTE_POUCE, 0], 45]]))
     etape('Les doigts sur la paume',
-          'Le ressort des doigts contre la joue A. Le doigt A vient de son côté, puis le doigt B du sien, son brin '
-          'enroulé par-dessus la poulie : ses trous s\'enfilent sur les chevilles du doigt A, faces encollées. C\'est '
-          'par là que le doigt A suit : seule la jointure B porte une poulie.',
-          poser(cles(r'^main : ressort de rappel des doigts')),
+          'Le doigt A vient de son côté, ouvert d\'environ %d° de plus qu\'au repos : la patte libre du ressort se '
+          'pique dans le trou de la face extérieure de la joue A. On le ramène au repos, ce qui arme le ressort, et on '
+          'l\'y tient. Puis le doigt B vient du sien, son brin enroulé par-dessus la poulie : ses trous s\'enfilent sur '
+          'les chevilles du doigt A, à force, faces l\'une contre l\'autre. C\'est par là que le doigt A suit : seule la jointure B porte une '
+          'poulie.' % PRECHARGE['doigts'],
           dict(joindre='doigt A', chemin=[[[0, 0, -1], 50]]), dict(joindre='doigt B', chemin=[[[0, 0, 1], 50]]),
           # les brins, noués depuis l'étape du fléau, ne se dessinent qu'ici, main en place : posés plus tôt dans leur
           # position finale, ils ne suivraient pas leur poulie quand pouce et doigt B entrent, et le contrôle les heurte
@@ -417,9 +428,14 @@ def etapes(P):
           'joue A, et s\'arrête dans le roulement de la jointure A. Elle est serrée dans les joues.',
           dict(glisse(cles(r'^main : axe'), Z, 60), tol=3.0))
     etape('Les caches',
-          'Les caches de l\'axe se collent sur les jointures.',
-          dict(glisse(cles(r'^main, doigts : cache de l\'axe, côté A'), mZ, 10), tol=3.0),
-          dict(glisse(cles(r'^main, doigts : cache de l\'axe, côté B'), Z, 10), tol=3.0))
+          'Les caches tiennent par aimant, sans colle : on peut les ôter pour atteindre l\'axe. Une rondelle '
+          '2801-0004-0008 se serre dans la poche au fond du siège de chaque jointure, un aimant 2912-0005-0001 dans '
+          'la poche de chaque cache (il entre à force ; son sens est indifférent). Pour '
+          'ôter un cache, un ongle dans l\'encoche du bord du siège.',
+          dict(glisse(cles(r'^main, doigts : rondelle du cache, côté A'), mZ, 10), tol=3.0),
+          dict(glisse(cles(r'^main, doigts : rondelle du cache, côté B'), Z, 10), tol=3.0),
+          dict(glisse(cles(r'^main, doigts : (cache de l\'axe|aimant du cache), côté A'), mZ, 10), tol=3.0),
+          dict(glisse(cles(r'^main, doigts : (cache de l\'axe|aimant du cache), côté B'), Z, 10), tol=3.0))
     return E
 
 
