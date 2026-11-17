@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Implantation de la caisse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Mise en page : un établi — la vue 3D au centre, la fiche de l'implantation à côté, la comparaison dessous. */
+:root {
+  --fond: #f2f4f6; --plan: #ffffff; --encre: #18212b; --sourd: #5a6775; --trait: #d6dce3; --accent: #2c5fc4;
+  --ok: #1f8a5b; --ok-fond: #e3f3ea; --alerte: #b5541a; --alerte-fond: #fbeadf; --rouge: #c0392b;
+  --c-puissance: #d9971c; --c-calcul: #3f74d6; --c-phidgets: #1e9b8f; --c-capteurs: #8f5fd0; --c-audio: #d0577a;
+  --f-titre: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-texte: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-donnee: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --scene: #e8ecf0;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --fond: #0e1318; --plan: #151c24; --encre: #e3e8ee; --sourd: #93a0ae; --trait: #29333e; --accent: #79a3f2;
+  --ok: #4cc28c; --ok-fond: #143226; --alerte: #f0995c; --alerte-fond: #3a2416; --rouge: #ef6b5c; --scene: #121920;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --fond: #0e1318; --plan: #151c24; --encre: #e3e8ee; --sourd: #93a0ae; --trait: #29333e; --accent: #79a3f2;
+  --ok: #4cc28c; --ok-fond: #143226; --alerte: #f0995c; --alerte-fond: #3a2416; --rouge: #ef6b5c; --scene: #121920;
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fond); color: var(--encre); font-family: var(--f-texte); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1320px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--f-titre); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: 2.1rem; line-height: 1.1; }
+h2 { font-size: 1.45rem; }
+h3 { font-size: 1.1rem; }
+p { margin: 0; }
+.chapeau { display: grid; gap: 10px; max-width: 72ch; }
+.chapeau p { color: var(--sourd); }
+.etiquette { font-family: var(--f-titre); text-transform: uppercase; letter-spacing: .08em; font-size: .78rem; color: var(--sourd); font-weight: 600; }
+.donnee { font-family: var(--f-donnee); font-variant-numeric: tabular-nums; }
+
+.onglets { display: flex; flex-wrap: wrap; gap: 8px; }
+.onglet { font: inherit; cursor: pointer; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; text-align: left;
+  padding: 10px 14px; border-radius: 8px; border: 1px solid var(--trait); background: var(--plan); color: var(--encre); min-width: 180px; flex: 1 1 200px; }
+.onglet b { font-family: var(--f-titre); font-size: 1.6rem; line-height: 1; grid-row: span 2; color: var(--sourd); }
+.onglet span { font-family: var(--f-titre); font-weight: 600; font-size: 1.1rem; }
+.onglet small { color: var(--sourd); font-size: .82rem; }
+.onglet[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.onglet[aria-selected="true"] b { color: var(--accent); }
+.onglet:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.etabli { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
+@media (max-width: 960px) { .etabli { grid-template-columns: minmax(0, 1fr); } }
+
+.vue { position: relative; height: min(640px, 72vh); min-height: 380px; border-radius: 10px; overflow: hidden; border: 1px solid var(--trait); background: var(--scene); }
+.vue canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.outils { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
+.outils > * { pointer-events: auto; }
+.groupe { display: inline-flex; background: var(--plan); border: 1px solid var(--trait); border-radius: 7px; overflow: hidden; }
+.groupe button, .bascule { font: 500 .82rem var(--f-texte); color: var(--encre); background: transparent; border: 0; padding: 6px 10px; cursor: pointer; }
+.groupe button + button { border-left: 1px solid var(--trait); }
+.groupe button[aria-pressed="true"] { background: var(--accent); color: var(--plan); }
+.bascule { background: var(--plan); border: 1px solid var(--trait); border-radius: 7px; }
+.bascule[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.bascule.tiroir { font-weight: 600; }
+.chargement { position: absolute; inset: 0; display: grid; place-items: center; color: var(--sourd); font-size: .9rem; pointer-events: none; }
+.legende { position: absolute; left: 10px; bottom: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .78rem; color: var(--sourd); pointer-events: none; }
+.legende i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.repere { position: absolute; right: 12px; bottom: 34px; font: .74rem var(--f-donnee); color: var(--sourd); text-align: right; pointer-events: none; }
+.label3d { font: 600 .72rem var(--f-texte); color: var(--encre); background: color-mix(in srgb, var(--plan) 88%, transparent); border: 1px solid var(--trait);
+  padding: 1px 6px; border-radius: 4px; white-space: nowrap; pointer-events: none; transform: translateY(-14px); }
+.label3d.choisi { border-color: var(--accent); color: var(--accent); }
+.sans-etiquettes .label3d { display: none; }
+
+.fiche { display: grid; gap: 16px; background: var(--plan); border: 1px solid var(--trait); border-radius: 10px; padding: 18px; }
+.fiche > section { display: grid; gap: 8px; }
+.fiche > section + section { border-top: 1px solid var(--trait); padding-top: 14px; }
+.mesures { display: grid; gap: 8px; }
+.mesure { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; }
+.mesure .valeur { font-family: var(--f-donnee); font-variant-numeric: tabular-nums; font-size: .9rem; }
+.mesure small { grid-column: 1 / -1; color: var(--sourd); font-size: .8rem; }
+.pastille { display: inline-block; font: 600 .75rem var(--f-texte); padding: 1px 8px; border-radius: 999px; }
+.pastille.ok { background: var(--ok-fond); color: var(--ok); }
+.pastille.alerte { background: var(--alerte-fond); color: var(--alerte); }
+.barres { display: grid; gap: 4px; }
+.barre { display: grid; grid-template-columns: 70px minmax(0, 1fr) 56px; gap: 8px; align-items: center; font-size: .8rem; }
+.barre .piste { height: 6px; background: var(--trait); border-radius: 3px; overflow: hidden; }
+.barre .piste i { display: block; height: 100%; border-radius: 3px; }
+.barre .donnee { text-align: right; font-size: .78rem; }
+ul.liste { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: .9rem; }
+ul.pour li::marker { content: "+  "; color: var(--ok); font-weight: 700; }
+ul.contre li::marker { content: "−  "; color: var(--alerte); font-weight: 700; }
+.acces { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 10px; font-size: .88rem; }
+.acces dt { color: var(--sourd); }
+.acces dd { margin: 0; }
+.module-choisi { display: grid; gap: 6px; }
+.module-choisi .nom { display: flex; align-items: center; gap: 8px; font-family: var(--f-titre); font-weight: 600; font-size: 1.15rem; }
+.module-choisi .nom i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.module-choisi p { font-size: .9rem; }
+.module-choisi .cotes { color: var(--sourd); font-size: .82rem; }
+.vide { color: var(--sourd); font-size: .88rem; }
+
+.bas { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 960px) { .bas { grid-template-columns: minmax(0, 1fr); } }
+.carte { background: var(--plan); border: 1px solid var(--trait); border-radius: 10px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.defile { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .88rem; min-width: 520px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--trait); vertical-align: top; }
+thead th { font-family: var(--f-titre); font-size: 1rem; font-weight: 600; }
+tbody th { font-weight: 500; color: var(--sourd); width: 34%; }
+td.donnee { font-size: .84rem; }
+td.mieux { color: var(--ok); font-weight: 600; }
+.reco { border-left: 3px solid var(--accent); padding-left: 14px; display: grid; gap: 8px; }
+ol.etapes { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.note { color: var(--sourd); font-size: .82rem; }
+.sources a { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header class="chapeau">
+    <span class="etiquette">Wall-E · caisse goRAIL 336 mm · relevé du modèle animé</span>
+    <h1>Implantation de la caisse</h1>
+    <p>La caisse offre un cube libre de 288 mm de côté entre les goRAIL. Seul son tiers supérieur est déjà pris : le servo du monter et son parallélogramme au centre, les servos de flexion des épaules à l'arrière. Trois façons d'y ranger l'électronique, contrôlées sur le modèle : chevauchements, longueur de câble, distance de la centrale inertielle aux courants forts. Les composants sont les modèles 3D publiés par goBILDA, Phidgets, NVIDIA et Seeed ; le cadre autour de chacun est le volume réservé.</p>
+  </header>
+
+  <nav class="onglets" role="tablist" aria-label="Implantations" id="onglets"></nav>
+
+  <div class="etabli">
+    <div class="vue" id="vue">
+      <div class="chargement" id="chargement">Chargement du robot et des composants (16 Mo)…</div>
+      <div class="outils">
+        <div class="groupe" role="group" aria-label="Point de vue" id="points-de-vue">
+          <button type="button" data-vue="arriere" aria-pressed="true">3/4 arrière</button>
+          <button type="button" data-vue="dessus" aria-pressed="false">Dessus</button>
+          <button type="button" data-vue="cote" aria-pressed="false">Côté</button>
+          <button type="button" data-vue="face" aria-pressed="false">Face</button>
+        </div>
+        <button type="button" class="bascule" id="b-reels" aria-pressed="true">Modèles des fabricants</button>
+        <button type="button" class="bascule" id="b-robot" aria-pressed="true">Robot autour</button>
+        <button type="button" class="bascule" id="b-zones" aria-pressed="true">Zones occupées</button>
+        <button type="button" class="bascule" id="b-cables" aria-pressed="false">Câbles</button>
+        <button type="button" class="bascule" id="b-etiquettes" aria-pressed="true">Étiquettes</button>
+        <button type="button" class="bascule tiroir" id="b-tiroir" aria-pressed="false" hidden>Sortir le tiroir</button>
+      </div>
+      <div class="repere">avant = face aux yeux · cliquer un module</div>
+      <div class="legende" id="legende"></div>
+    </div>
+
+    <aside class="fiche" id="fiche" aria-live="polite"></aside>
+  </div>
+
+  <div class="bas">
+    <section class="carte">
+      <h2>Les trois côte à côte</h2>
+      <div class="defile"><table id="comparaison"></table></div>
+      <p class="note">Câbles : trajet en équerre entre les centres des modules, une estimation pour comparer, pas un routage. Le centre de gravité ne compte que l'électronique (1,66 kg) ; la batterie est au plancher dans les trois cas, il ne départage donc pas.</p>
+    </section>
+
+    <section class="carte">
+      <h2>Ce que je ferais</h2>
+      <div class="reco">
+        <p><strong>Les parois (B)</strong>, si la caisse doit de toute façon recevoir l'habillage de Wall-E : les panneaux deviennent les supports, chaque module est contre ce qu'il pilote, rien n'est enfermé, et la porte arrière donne la batterie et les ports du Jetson.</p>
+        <p>Le tiroir (C) ne vaut sa mécanique que si l'électronique sort souvent sur la table.</p>
+      </div>
+      <h3>Par où commencer</h3>
+      <ol class="etapes">
+        <li>Le plancher, la batterie et son dock en arrière : c'est la même chose dans les trois solutions, rien n'est encore tranché.</li>
+        <li>L'arrêt d'urgence et la chaîne de puissance juste à côté, câbles gros et courts.</li>
+        <li>La centrale inertielle au centre du plancher, à plat, flèche X vers l'avant, et un essai chenilles en marche / à l'arrêt sur <span class="donnee">champMagnetique</span> pour choisir IMU ou AHRS.</li>
+        <li>Puis le haut : Jetson, Phidgets, haut-parleur, selon la solution retenue.</li>
+      </ol>
+      <h3>À trancher ou à mesurer</h3>
+      <ul class="liste">
+        <li>La caisse aura-t-elle des panneaux ? C'est ce qui fait pencher vers B.</li>
+        <li>L'arrêt d'urgence coupe-t-il tout, ou les moteurs seulement en laissant le Jetson allumé ? Ça change l'endroit où il s'intercale.</li>
+        <li>Références du haut-parleur et de l'arrêt d'urgence : volumes réservés pour l'instant.</li>
+        <li>Sans modèle publié : la batterie DCB184 (un bloc à ses cotes, posé sur le vrai dock), le haut-parleur et l'arrêt d'urgence. Leurs cotes sont marquées ≈.</li>
+        <li>Le ventilateur du Jetson : 15 mm réservés au-dessus du radiateur, à confirmer.</li>
+      </ul>
+      <p class="note sources">Modèles : <a href="https://www.gobilda.com/gobilda-smart-dock-for-20v-battery-dewalt-20v-max-compatible/" target="_blank" rel="noopener">Smart Dock</a>, <a href="https://www.gobilda.com/xt30-power-distribution-board-xt30-input-8-x-xt30-outputs/" target="_blank" rel="noopener">PDB XT30</a> et <a href="https://www.gobilda.com/6a-bec-voltage-regulator-6-24v-input-5v-6v-8-4v-12v-output-xt30-connectors-v2/" target="_blank" rel="noopener">BEC 6 A</a> chez goBILDA ; <a href="https://www.phidgets.com/?prodid=643" target="_blank" rel="noopener">HUB0000</a>, <a href="https://www.phidgets.com/?prodid=1281" target="_blank" rel="noopener">RCC1000</a>, <a href="https://www.phidgets.com/?prodid=965" target="_blank" rel="noopener">DCC1000</a> et MOT1102 chez Phidgets ; <a href="https://www.waveshare.com/w/upload/b/bb/P3450_P3449_A02_P3448_A02_3D_CAD_STEP_model.zip" target="_blank" rel="noopener">Jetson Nano</a> (miroir Waveshare du STEP NVIDIA) ; <a href="https://wiki.seeedstudio.com/ReSpeaker_Mic_Array_v2.0/" target="_blank" rel="noopener">ReSpeaker</a> chez Seeed. Caisse et zones occupées : relevées dans robot-anime.glb.</p>
+    </section>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { MODULES, IMPLANTATIONS, INTERDITS, INTERIEUR, POINTS, LIENS, boite, controler } from './calculs.js';
+
+const COURT = { batterie: 'Batterie', arret: 'Arrêt d\'urgence', bec12: 'BEC 12 V', pdb12: 'PDB 12 V', bec5: 'BEC 5 V', pdb5: 'PDB 5 V',
+  jetson: 'Jetson Nano', hub: 'Hub VINT', rcc: 'RCC1000', dcc_d: 'DCC droit', dcc_g: 'DCC gauche', imu: 'MOT1102', hp: 'Haut-parleur', respeaker: 'ReSpeaker' };
+const CATEGORIES = { puissance: 'Puissance', calcul: 'Calcul', phidgets: 'Phidgets', capteurs: 'Capteur', audio: 'Audio' };
+const TYPES_CABLE = { puissance: 'puissance', moteur: 'moteurs', usb: 'USB', vint: 'VINT', servo: 'servos' };
+const COUL_CABLE = { puissance: '#d84a2b', moteur: '#a0522d', usb: '#3f74d6', vint: '#1e9b8f', servo: '#8f5fd0' };
+const SORTIE_TIROIR = 240;
+const lent = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const coulCat = c => css('--c-' + c);
+const ids = Object.keys(IMPLANTATIONS);
+const RES = Object.fromEntries(ids.map(i => [i, controler(i)]));
+const fmt = (v, d = 0) => v.toLocaleString('fr-FR', { maximumFractionDigits: d, minimumFractionDigits: d });
+
+let courante = ids.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'parois';
+let choisi = null, tiroirSorti = false;
+
+// ---------- scène ----------
+const vue = document.getElementById('vue');
+const rendu = new THREE.WebGLRenderer({ antialias: true });
+rendu.setPixelRatio(Math.min(devicePixelRatio, 2));
+vue.prepend(rendu.domElement);
+const rendu2d = new CSS2DRenderer();
+Object.assign(rendu2d.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none' });
+vue.appendChild(rendu2d.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(35, 1, 5, 6000);
+const controles = new OrbitControls(camera, rendu.domElement);
+controles.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.6));
+const soleil = new THREE.DirectionalLight(0xffffff, 1.6); soleil.position.set(400, 900, 600); scene.add(soleil);
+const contre = new THREE.DirectionalLight(0xffffff, 0.6); contre.position.set(-500, 300, -400); scene.add(contre);
+
+const POINTS_DE_VUE = {
+  arriere: [[560, 700, 760], [0, 270, 0]], dessus: [[0, 1250, 40], [0, 270, 0]],
+  cote: [[1050, 320, 0], [0, 290, 0]], face: [[0, 360, -1050], [0, 290, 0]],
+};
+function regarder(nom, doux = true) {
+  const [p, c] = POINTS_DE_VUE[nom];
+  if (!doux || !lent) { camera.position.set(...p); controles.target.set(...c); return; }
+  anime(camera.position.clone(), new THREE.Vector3(...p), controles.target.clone(), new THREE.Vector3(...c));
+}
+let vol = null;
+function anime(p0, p1, c0, c1) { vol = { p0, p1, c0, c1, t: 0 }; }
+regarder('arriere', false);
+
+function teinteScene() {
+  scene.background = new THREE.Color(css('--scene'));
+  for (const [id, p] of porteurs) p.userData.volume.material.color.set(coulCat(MODULES[id].cat));
+  apparence();
+}
+
+// le robot autour, en fantôme
+const fantomes = [];
+// Dans le dépôt, le .glb est à côté de la page ; publiée en artifact, elle n'a droit qu'à sa copie en base64.
+function chargerGlb(nom) {
+  return fetch(nom).then(r => { if (!r.ok) throw r.status; return r.arrayBuffer(); })
+    .catch(() => fetch(nom + '.txt').then(r => { if (!r.ok) throw r.status; return r.text(); }).then(b64 => {
+      const bin = atob(b64.trim()), octets = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) octets[i] = bin.charCodeAt(i);
+      return octets.buffer;
+    }))
+    .then(tampon => new Promise((ok, ko) => new GLTFLoader().parse(tampon, '', ok, ko)));
+}
+
+chargerGlb('robot-leger.glb').then(g => {
+  g.scene.traverse(o => {
+    if (!o.isMesh) return;
+    const caisse = o.name === 'caisse';
+    o.material = new THREE.MeshStandardMaterial({ color: caisse ? 0x9aa6b2 : 0xaab3bd, flatShading: true, roughness: .7, metalness: .2,
+      transparent: !caisse, opacity: caisse ? 1 : .22, depthWrite: caisse, side: THREE.DoubleSide });
+    o.renderOrder = caisse ? 0 : 2;
+    fantomes.push(o);
+  });
+  scene.add(g.scene);
+  charge();
+}).catch(() => { document.getElementById('chargement').textContent = 'Le robot n\'a pas pu être chargé ; les modules restent visibles.'; });
+
+// zones déjà occupées
+const zones = new THREE.Group(); scene.add(zones);
+for (const z of INTERDITS) {
+  const t = z.max.map((v, i) => v - z.min[i]), c = z.max.map((v, i) => (v + z.min[i]) / 2);
+  const g = new THREE.BoxGeometry(...t);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xd9412b, transparent: true, opacity: .16, depthWrite: false }));
+  m.position.set(...c); m.renderOrder = 3;
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), new THREE.LineBasicMaterial({ color: 0xd9412b })));
+  zones.add(m);
+}
+// le volume utile, en pointillé
+{
+  const t = INTERIEUR.max.map((v, i) => v - INTERIEUR.min[i]), c = INTERIEUR.max.map((v, i) => (v + INTERIEUR.min[i]) / 2);
+  const l = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...t)), new THREE.LineDashedMaterial({ color: 0x5a6775, dashSize: 8, gapSize: 6 }));
+  l.position.set(...c); l.computeLineDistances(); scene.add(l);
+}
+
+// modules : un porteur par module, dont le repère local est celui des modèles —
+// face d'appui en y = 0, côté composants vers +y, longueur selon x.
+const VEC = { x: [1, 0, 0], '-x': [-1, 0, 0], y: [0, 1, 0], z: [0, 0, 1], '-z': [0, 0, -1] };
+const porteurs = new Map();
+const unite = new THREE.BoxGeometry(1, 1, 1), aretes = new THREE.EdgesGeometry(unite);
+for (const id of Object.keys(MODULES)) {
+  const M = MODULES[id], [L, l, e] = M.dims;
+  const geo = id === 'arret' ? new THREE.CylinderGeometry(L / 2, L / 2, e, 40) : new THREE.BoxGeometry(L, e, l);
+  const volume = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: coulCat(M.cat), roughness: .55, metalness: .05, transparent: true }));
+  volume.position.y = e / 2; volume.userData.id = id;
+  const bord = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), new THREE.LineBasicMaterial({ color: 0x1a2028, transparent: true, opacity: .6 }));
+  volume.add(bord);
+  const p = new THREE.Group(); p.add(volume);
+  const d = document.createElement('div'); d.className = 'label3d'; d.textContent = COURT[id];
+  const lab = new CSS2DObject(d); lab.position.set(0, e, 0); p.add(lab);
+  p.userData = { id, volume, bord, label: d, modele: null };
+  const c = cible(id); p.position.copy(c.o); p.quaternion.copy(c.q);
+  scene.add(p); porteurs.set(id, p);
+}
+
+let reels = true;
+function apparence() {
+  for (const [id, p] of porteurs) {
+    const avec = reels && p.userData.modele, m = p.userData.volume.material;
+    m.opacity = avec ? .1 : 1; m.depthWrite = !avec;
+    m.emissive.set(id === choisi ? 0x3355aa : 0x000000); m.emissiveIntensity = id === choisi ? .45 : 0;
+    const b = p.userData.bord.material;
+    b.color.set(id === choisi ? css('--accent') : avec ? coulCat(MODULES[id].cat) : '#1a2028'); b.opacity = avec || id === choisi ? 1 : .6;
+    if (p.userData.modele) p.userData.modele.visible = reels;
+  }
+}
+
+// les modèles des fabricants, convertis depuis leurs STEP
+const enAttente = { n: 2 };
+function charge() { if (--enAttente.n === 0) document.getElementById('chargement').hidden = true; }
+chargerGlb('composants.glb').then(g => {
+  for (const [id, p] of porteurs) {
+    const nom = MODULES[id].modele; if (!nom) continue;
+    const source = g.scene.getObjectByName(nom); if (!source) continue;
+    const m = source.clone(); m.position.set(0, 0, 0);
+    m.traverse(o => { if (o.isMesh) o.userData.id = id; });
+    p.add(m); p.userData.modele = m;
+  }
+  apparence(); charge();
+}).catch(() => { charge(); });
+
+// plaques de l'implantation courante
+const plaques = new THREE.Group(); scene.add(plaques);
+function poserPlaques() {
+  plaques.clear();
+  for (const p of IMPLANTATIONS[courante].plaques) {
+    const m = new THREE.Mesh(unite, new THREE.MeshStandardMaterial({ color: 0x8a96a3, transparent: true, opacity: .35, depthWrite: false, roughness: .9 }));
+    m.position.set(...p.c); m.scale.set(...p.t); m.renderOrder = 2; m.userData.tiroir = !!p.tiroir; m.userData.c = p.c;
+    m.add(new THREE.LineSegments(aretes, new THREE.LineBasicMaterial({ color: 0x6b7784, transparent: true, opacity: .6 })));
+    plaques.add(m);
+  }
+}
+
+// câbles en équerre, comme l'estimation
+const cables = new THREE.Group(); cables.visible = false; scene.add(cables);
+function tracerCables() {
+  cables.clear();
+  const pos = id => {
+    if (POINTS[id]) return new THREE.Vector3(...POINTS[id].p);
+    return porteurs.get(id).userData.volume.getWorldPosition(new THREE.Vector3());
+  };
+  for (const [type, a, b] of LIENS) {
+    const p = pos(a), q = pos(b);
+    const pts = [p, new THREE.Vector3(q.x, p.y, p.z), new THREE.Vector3(q.x, p.y, q.z), q];
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: COUL_CABLE[type], depthTest: false, transparent: true, opacity: .9 }));
+    l.renderOrder = 5; cables.add(l);
+  }
+}
+
+// transition entre implantations
+let transition = null;
+function cible(id) {
+  const b = boite(courante, id), e = MODULES[id].dims[2];
+  const X = new THREE.Vector3(...VEC[b.long]), Y = new THREE.Vector3(...VEC[b.n]), Z = new THREE.Vector3().crossVectors(X, Y);
+  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(X, Y, Z));
+  const o = new THREE.Vector3(...b.c).addScaledVector(Y, -e / 2);
+  if (tiroirSorti && b.tiroir) o.z += SORTIE_TIROIR;
+  return { o, q };
+}
+function deplacer() {
+  const depart = new Map([...porteurs].map(([id, p]) => [id, { o: p.position.clone(), q: p.quaternion.clone() }]));
+  const arrivee = new Map([...porteurs.keys()].map(id => [id, cible(id)]));
+  transition = { depart, arrivee, t: lent ? 0 : 1 };
+  for (const p of plaques.children) p.position.z = p.userData.c[2] + (tiroirSorti && p.userData.tiroir ? SORTIE_TIROIR : 0);
+}
+
+// sélection
+const lanceur = new THREE.Raycaster(), souris = new THREE.Vector2();
+let appui = null;
+rendu.domElement.addEventListener('pointerdown', e => { appui = [e.clientX, e.clientY]; });
+rendu.domElement.addEventListener('pointerup', e => {
+  if (!appui || Math.hypot(e.clientX - appui[0], e.clientY - appui[1]) > 5) return;
+  const r = rendu.domElement.getBoundingClientRect();
+  souris.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  lanceur.setFromCamera(souris, camera);
+  const t = lanceur.intersectObjects([...porteurs.values()].map(p => p.userData.volume), false)[0];
+  choisir(t ? t.object.userData.id : null);
+});
+function choisir(id) {
+  choisi = id;
+  for (const [k, p] of porteurs) p.userData.label.classList.toggle('choisi', k === id);
+  apparence(); remplirModule();
+}
+
+// boucle
+const horloge = new THREE.Clock();
+function boucle() {
+  const dt = horloge.getDelta();
+  if (transition) {
+    transition.t = Math.min(1, transition.t + dt / .7);
+    const e = 1 - Math.pow(1 - transition.t, 3);
+    for (const [id, p] of porteurs) {
+      const a = transition.depart.get(id), b = transition.arrivee.get(id);
+      p.position.lerpVectors(a.o, b.o, e); p.quaternion.slerpQuaternions(a.q, b.q, e);
+    }
+    if (cables.visible) tracerCables();
+    if (transition.t >= 1) { transition = null; tracerCables(); }
+  }
+  if (vol) {
+    vol.t = Math.min(1, vol.t + dt / .8);
+    const e = 1 - Math.pow(1 - vol.t, 3);
+    camera.position.lerpVectors(vol.p0, vol.p1, e); controles.target.lerpVectors(vol.c0, vol.c1, e);
+    if (vol.t >= 1) vol = null;
+  }
+  controles.update();
+  rendu.render(scene, camera); rendu2d.render(scene, camera);
+  requestAnimationFrame(boucle);
+}
+new ResizeObserver(() => {
+  const w = vue.clientWidth, h = vue.clientHeight;
+  rendu.setSize(w, h, false); rendu2d.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}).observe(vue);
+
+// ---------- panneaux ----------
+const onglets = document.getElementById('onglets');
+for (const id of ids) {
+  const I = IMPLANTATIONS[id];
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'onglet'; b.setAttribute('role', 'tab'); b.id = 'onglet-' + id; b.dataset.id = id;
+  b.innerHTML = `<b>${I.lettre}</b><span>${I.nom}</span><small>${RES[id].conflits.length ? RES[id].conflits.length + ' conflit(s)' : 'aucun conflit'} · ${fmt(Object.values(RES[id].cables).reduce((a, v) => a + v, 0) / 1000, 1)} m de câble</small>`;
+  b.addEventListener('click', () => { location.hash = id; });
+  onglets.appendChild(b);
+}
+
+document.getElementById('legende').innerHTML = Object.entries(CATEGORIES)
+  .map(([k, v]) => `<span><i style="background:var(--c-${k})"></i>${v}</span>`).join('') +
+  '<span><i style="background:#d9412b;opacity:.5"></i>Déjà occupé</span>';
+
+const maxCable = Object.fromEntries(Object.keys(TYPES_CABLE).map(t => [t, Math.max(...ids.map(i => RES[i].cables[t]))]));
+
+function remplirFiche() {
+  const I = IMPLANTATIONS[courante], R = RES[courante];
+  const imuOk = R.imu.d >= 50;
+  const total = Object.values(R.cables).reduce((a, v) => a + v, 0);
+  document.getElementById('fiche').innerHTML = `
+    <section>
+      <span class="etiquette">Implantation ${I.lettre}</span>
+      <h2>${I.nom}</h2>
+      <p>${I.resume}</p>
+    </section>
+    <section class="mesures">
+      <div class="mesure"><span>Chevauchements</span>
+        <span>${R.conflits.length ? `<span class="pastille alerte">${R.conflits.length}</span>` : '<span class="pastille ok">aucun</span>'}</span>
+        <small>${R.conflits.length ? R.conflits.join(' · ') : 'Entre modules, avec les plaques, le cou et les épaules.'}</small></div>
+      <div class="mesure"><span>Centrale inertielle</span>
+        <span class="pastille ${imuOk ? 'ok' : 'alerte'}">${fmt(R.imu.d)} mm</span>
+        <small>du perturbateur le plus proche : ${R.imu.nom}. À ${fmt(R.imuCentre)} mm de l'axe vertical du robot.</small></div>
+      <div class="mesure"><span>Centre de gravité de l'électronique</span><span class="valeur">${fmt(R.cdg)} mm</span>
+        <small>au-dessus du sol, pour ${fmt(R.masse / 1000, 2)} kg</small></div>
+      <div class="mesure"><span>Câbles, estimation</span><span class="valeur">${fmt(total / 1000, 1)} m</span></div>
+      <div class="barres">${Object.entries(TYPES_CABLE).map(([t, n]) => `
+        <div class="barre"><span>${n}</span><span class="piste"><i style="width:${100 * R.cables[t] / maxCable[t]}%;background:${COUL_CABLE[t]}"></i></span><span class="donnee">${fmt(R.cables[t] / 1000, 2)} m</span></div>`).join('')}
+      </div>
+    </section>
+    <section>
+      <span class="etiquette">Accès</span>
+      <dl class="acces"><dt>Batterie</dt><dd>${I.acces.batterie}</dd><dt>Jetson</dt><dd>${I.acces.jetson}</dd><dt>Phidgets</dt><dd>${I.acces.phidgets}</dd></dl>
+    </section>
+    <section>
+      <ul class="liste pour">${I.pour.map(t => `<li>${t}</li>`).join('')}</ul>
+      <ul class="liste contre">${I.contre.map(t => `<li>${t}</li>`).join('')}</ul>
+    </section>
+    <section class="module-choisi" id="module-choisi"></section>`;
+  remplirModule();
+}
+
+function remplirModule() {
+  const el = document.getElementById('module-choisi');
+  if (!el) return;
+  if (!choisi) { el.innerHTML = '<span class="etiquette">Module</span><p class="vide">Cliquer un module dans la vue pour voir ses cotes et pourquoi il est là.</p>'; return; }
+  const M = MODULES[choisi], b = boite(courante, choisi);
+  const bas = b.c[1] - b.t[1] / 2;
+  el.innerHTML = `<span class="etiquette">Module · ${CATEGORIES[M.cat]}</span>
+    <div class="nom"><i style="background:var(--c-${M.cat})"></i>${M.nom}</div>
+    <div class="cotes donnee">${M.approx ? '≈ ' : ''}${M.dims.map(v => fmt(v)).join(' × ')} mm · ${fmt(M.masse)} g · posé à ${fmt(bas)} mm du sol${M.dehors ? ' · hors caisse' : ''}${b.tiroir ? ' · sur le tiroir' : ''}</div>
+    <p>${M.note}</p>
+    <p class="cotes">Modèle : ${M.source}</p>`;
+}
+
+function remplirComparaison() {
+  const tot = i => Object.values(RES[i].cables).reduce((a, v) => a + v, 0);
+  const lignes = [
+    ['Chevauchements', i => RES[i].conflits.length ? RES[i].conflits.length : 'aucun', null],
+    ['Câble, total', i => fmt(tot(i) / 1000, 1) + ' m', i => -tot(i)],
+    ['Câble des moteurs', i => fmt(RES[i].cables.moteur / 1000, 2) + ' m', i => -RES[i].cables.moteur],
+    ['Câble des servos', i => fmt(RES[i].cables.servo / 1000, 2) + ' m', i => -RES[i].cables.servo],
+    ['Centrale ↔ perturbateur', i => fmt(RES[i].imu.d) + ' mm', i => RES[i].imu.d],
+    ['Batterie', i => IMPLANTATIONS[i].acces.batterie, null],
+    ['Jetson', i => IMPLANTATIONS[i].acces.jetson, null],
+    ['Structure à ajouter', i => IMPLANTATIONS[i].plaques.map(p => p.nom).join(', '), null],
+  ];
+  const tab = document.getElementById('comparaison');
+  tab.innerHTML = `<thead><tr><th></th>${ids.map(i => `<th>${IMPLANTATIONS[i].lettre} · ${IMPLANTATIONS[i].nom}</th>`).join('')}</tr></thead><tbody>` +
+    lignes.map(([n, f, score]) => {
+      const meilleur = score ? ids.reduce((a, i) => score(i) > score(a) ? i : a) : null;
+      return `<tr><th scope="row">${n}</th>${ids.map(i => `<td class="${score ? 'donnee' : ''}${i === meilleur ? ' mieux' : ''}">${f(i)}</td>`).join('')}</tr>`;
+    }).join('') + '</tbody>';
+}
+
+// ---------- commandes ----------
+function bascule(id, f) {
+  const b = document.getElementById(id);
+  b.addEventListener('click', () => { const v = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', v); f(v); });
+}
+bascule('b-reels', v => { reels = v; apparence(); });
+bascule('b-robot', v => fantomes.forEach(o => o.visible = v));
+bascule('b-zones', v => zones.visible = v);
+bascule('b-cables', v => { cables.visible = v; tracerCables(); });
+bascule('b-etiquettes', v => vue.classList.toggle('sans-etiquettes', !v));
+const bTiroir = document.getElementById('b-tiroir');
+bTiroir.addEventListener('click', () => {
+  tiroirSorti = !tiroirSorti; bTiroir.setAttribute('aria-pressed', tiroirSorti);
+  bTiroir.textContent = tiroirSorti ? 'Rentrer le tiroir' : 'Sortir le tiroir';
+  deplacer();
+});
+document.getElementById('points-de-vue').addEventListener('click', e => {
+  const n = e.target.dataset?.vue; if (!n) return;
+  for (const b of e.currentTarget.querySelectorAll('button')) b.setAttribute('aria-pressed', b === e.target);
+  regarder(n);
+});
+
+function aller(id) {
+  courante = id;
+  for (const b of onglets.children) b.setAttribute('aria-selected', b.dataset.id === id);
+  if (id !== 'tiroir' && tiroirSorti) { tiroirSorti = false; bTiroir.setAttribute('aria-pressed', false); bTiroir.textContent = 'Sortir le tiroir'; }
+  bTiroir.hidden = id !== 'tiroir';
+  poserPlaques(); deplacer(); remplirFiche();
+}
+addEventListener('hashchange', () => { const h = location.hash.slice(1); if (ids.includes(h)) aller(h); });
+
+new MutationObserver(teinteScene).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', teinteScene);
+
+remplirComparaison();
+aller(courante);
+teinteScene();
+tracerCables();
+boucle();
+</script>
+</body>
+</html>
