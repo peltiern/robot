@@ -113,32 +113,18 @@
    "designation": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)"
   },
   {
-   "nom": "bague 2807-3236-0500 — retenue du tube vers l'avant",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "2807-3236-0500",
-   "designation": "32mm ID Stainless Steel Shim (36mm OD, 0.50mm Thickness) - 12 Pack"
-  },
-  {
-   "nom": "bague 1500-0010-0032 — retenue du tube vers l'avant",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "1500-0010-0032",
-   "designation": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack"
-  },
-  {
-   "nom": "bague 1500-0010-0032 — retenue du tube vers l'avant",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "1500-0010-0032",
-   "designation": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack"
+   "nom": "bague fendue du goTUBE — retenue du tube vers l'avant",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:bague fendue du goTUBE",
+   "designation": "pièce imprimée : bague fendue du goTUBE"
   },
   {
    "nom": "engrenage laiton 2305, 20 dents",
    "nature": "achetée",
    "etat": "ajouté",
-   "ref": "2305-0025-0020",
-   "designation": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 20 Tooth)"
+   "ref": "2305-0024-0020",
+   "designation": "2305 Series Brass, MOD 0.8, Servo Gear (24 Tooth Spline, 20 Tooth)"
   },
   {
    "nom": "pignon Slip-Fit 20 dents, alésage REX",
@@ -610,11 +596,11 @@
    "designation": "palonnier du HS-65MG, fournie avec le servo"
   },
   {
-   "nom": "câble de pince (tresse PE 0,4 mm, du palonnier au fléau de la main)",
+   "nom": "câble de pince (tresse PE 33/100, du palonnier au fléau de la main)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble de pince",
-   "designation": "tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
+   "designation": "tresse de pêche PE Caperlan TX4 33/100, 27,5 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
   },
   {
    "nom": "main, poignet vissé au goTUBE",
@@ -673,6 +659,13 @@
    "designation": "pièce imprimée : main, pouce : pouce, moyeu et poulie"
   },
   {
+   "nom": "main : bague d'appui du roulement du pouce",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:main : bague d'appui du roulement du pouce",
+   "designation": "pièce imprimée : main : bague d'appui du roulement du pouce"
+  },
+  {
    "nom": "main, doigts : roulement de la jointure B",
    "nature": "achetée",
    "etat": "ajouté",
@@ -704,8 +697,8 @@
    "nom": "main : axe des doigts et du pouce",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
-   "ref": "VIS:tige inox Ø4 mm, 44 mm (axe de la main)",
-   "designation": "tige inox Ø4 mm, 44 mm (axe de la main)"
+   "ref": "VIS:tige acier Ø4 mm, 78 mm (axe de la main)",
+   "designation": "tige acier Ø4 mm, 78 mm (axe de la main)"
   },
   {
    "nom": "main : ressort de rappel du pouce",
@@ -778,6 +771,20 @@
    "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
   },
   {
+   "nom": "main, doigts : vis 2802-0004-0050, doigt A ↔ doigt B",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0050",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 50mm Length) - 25 Pack"
+  },
+  {
+   "nom": "main, doigts : vis 2802-0004-0050, doigt A ↔ doigt B",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0050",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 50mm Length) - 25 Pack"
+  },
+  {
    "nom": "vis 2802-0004-0010 — main, paume ↔ poignet",
    "nature": "visserie ajoutée",
    "etat": "ajouté",
@@ -796,14 +803,14 @@
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble de pince, brin doigts",
-   "designation": "tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
+   "designation": "tresse de pêche PE Caperlan TX4 33/100, 27,5 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
   },
   {
    "nom": "câble de pince, brin du pouce",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble de pince, brin pouce",
-   "designation": "tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
+   "designation": "tresse de pêche PE Caperlan TX4 33/100, 27,5 kg : du palonnier du HS-65MG au fléau, puis aux poulies"
   }
  ],
  "masquer": {

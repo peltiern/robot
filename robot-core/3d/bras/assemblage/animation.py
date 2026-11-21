@@ -70,7 +70,7 @@ def groupe(nom, ref, centre):
         return 'tube'
     if ref == '2305-0025-0048':
         return 'pignon'
-    if ref == '2305-0025-0020':
+    if ref == '2305-0024-0020':
         return 'engr_d85'
     if ref.startswith(EPAULE) or 'retournée' in nom:
         return 'epaule'
@@ -112,7 +112,7 @@ def pieces_pince():
     from cables import cordon
     cab = cordon(cable_de_pince(0.0), r=0.2)
     return [('palonnier du HS-65MG (bras de 8 mm)', 'achetée', pal, 'FOURNI:palonnier du HS-65MG'),
-            ('câble de pince (tresse PE 0,4 mm, du palonnier au fléau de la main)', 'câblage', cab, 'CABLE:câble de pince')]
+            ('câble de pince (tresse PE 33/100, du palonnier au fléau de la main)', 'câblage', cab, 'CABLE:câble de pince')]
 
 
 def ecrire():
@@ -197,7 +197,7 @@ def poses(groupes, commandes):
 
 
 # Contacts voulus : ce qui roule, engrène ou porte, et qui garde le même jeu quel que soit l'angle.
-ENGRENEMENTS = [('2305-0025-0048', '2312-0414-0072'), ('2305-0025-0020', '2322-4008-0020')]
+ENGRENEMENTS = [('2305-0025-0048', '2312-0414-0072'), ('2305-0024-0020', '2322-4008-0020')]
 # Un ressort de rappel se tord : sa patte mobile suit le pouce ou le doigt A, ce que son maillage figé ne montre pas,
 # et la pièce le traverse en fermant. Ce couple-là ne compte pas.
 _RESSORT = 'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm'

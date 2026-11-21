@@ -259,8 +259,9 @@ def etapes(P):
           [ecrou([e_], mX) for e_ in cles(r'^écrou .*— plaque 96 y−')], atelier='module')
     etape('Le goTUBE sur le berceau de la liaison, à l\'établi',
           'Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 96 mm : '
-          'quatre vis M4 × 12 par l\'intérieur, clé coudée par l\'arrière du berceau, encore ouvert. Une cale inox et '
-          'deux bagues sur le bout du goTUBE.',
+          'quatre vis M4 × 12 par l\'intérieur, clé coudée par l\'arrière du berceau, encore ouvert. La bague fendue '
+          'imprimée se clipse de côté sur le goTUBE, contre le berceau, lèvre vers l\'avant : c\'est elle qui empêche '
+          'le tube de glisser vers la main. Elle se pose aussi plus tard, bras monté, sans rien démonter.',
           poser(cles(r'^liaison, berceau')), glisse(cles(r'^bague '), X, 100), glisse(cles(r'^4103-0032-0096'), X, 100),
           [dict(glisse([v], mX, 16, (Z, 30)), tol=5.0) for v in cles(r'liaison ↔ goTUBE')], atelier='liaison')
     etape('Le servo de pince (HS-65MG), à l\'établi',
@@ -355,9 +356,17 @@ def etapes(P):
           dict(joindre='plaque de bout', chemin=[[[1, 0, 0], 90]]),
           visser(cles(r'^vis 2802-0004-0010 — plaque de bout')))
     # ── la main (pince.py) ──
+    # aucune colle (Nicolas, 2026-11-09) : chaque nœud est retenu par une poche ou une perle, qu'il ne peut pas passer
+    # la « perle » est un bout de gaine PTFE 1 × 2 mm (Nicolas l'avait déjà) : Ø 2 bloque dans les trous du fléau, qui
+    # sortent vers Ø 1,4, et tient sous les bouts du fléau, où une perle de Ø 3 frôlait le fond de la chambre en fin de course
+    NOEUD = ('nœud en huit fait trois fois, derrière une « perle » : un bout de 2 mm coupé au cutter dans la gaine PTFE '
+             '1 × 2 mm, enfilé avant le nœud (une perle dure de Ø 2 à 2,5 mm convient aussi, pas plus grosse). Tirer fort '
+             'pour vérifier que le nœud ne traverse pas la perle')
     etape('Le câble de pince',
-          'La tresse part du palonnier du HS-65MG, passe la lumière du berceau, file tout droit dans le canal du haut du '
-          'goTUBE et sort au bout du tube ; on la laisse longue.',
+          'La tresse s\'attache au bout du bras du palonnier du HS-65MG : elle monte par-dessous dans le trou du bout, '
+          'et se bloque dessus : ' + NOEUD + '. Le nœud reste au-dessus du bras : dessous, le boîtier du servo n\'est '
+          'qu\'à 3 mm, alors qu\'au-dessus il reste plus de 2 mm sur toute la course. Puis la tresse passe la lumière '
+          'du berceau, file tout droit dans le canal du haut du goTUBE et sort au bout du tube ; on la laisse longue.',
           poser(cles(r'^câble de pince \(')))
     etape('Le poignet',
           'Le poignet se pose sur le bout du goTUBE, son téton dans l\'alésage central, la tresse passée dans le petit '
@@ -365,8 +374,6 @@ def etapes(P):
           glisse(cles(r'^main, poignet'), X, 40), visser(cles(r'— main, poignet ↔ goTUBE')))
     # Les brins se nouent au fléau AVANT la paume : une fois vissée, elle ferme la chambre et plus rien n'y passe
     # (l'ordre « brins à la fin » de la première notice, 2026-11-08, ne pouvait pas se monter)
-    # aucune colle (Nicolas, 2026-11-09) : chaque nœud est retenu par une poche ou une perle, qu'il ne peut pas passer
-    NOEUD = 'nœud en huit fait trois fois, sur une perle de pêche Ø 2 à 3 mm'
     etape('Le pouce, à l\'établi',
           'Le pouce est imprimé d\'une pièce avec son moyeu et sa poulie (base et bout figés ; des supports sous le '
           'pouce, qui déborde du moyeu des deux côtés). Deux roulements 1600-0410-0004 entrent par le côté A du moyeu : le premier '
@@ -377,21 +384,34 @@ def etapes(P):
           'jointives, l\'un dans un sens, l\'autre dans l\'autre (ils sont le miroir l\'un de l\'autre). À la pince '
           'plate, chaque bout part droit des spires puis se coude à angle droit, le long de l\'axe : une patte courte '
           '(2 mm puis 2 mm, dans la joue) et une longue (4,5 mm puis 3 mm, dans la pièce qui tourne). La longue se '
-          'pique dans le petit trou de la face A du moyeu.' % SPIRES,
+          'pique dans le petit trou de la face A du moyeu. Côté poulie, la bague d\'appui (imprimée, Ø6,4, un nez de '
+          'Ø5,1) entre dans l\'alésage de la poulie, nez en premier, contre la bague intérieure du roulement : une '
+          'pointe de graisse la retient le temps que l\'axe la traverse. C\'est elle qui porte la poussée du brin, '
+          'au lieu de la poulie contre la joue B.' % SPIRES,
           poser(cles(r'^main, pouce : pouce')),
           dict(glisse(cles(r'^main, pouce : roulement côté B'), mZ, 20), tol=3.0),
           dict(glisse(cles(r'^main, pouce : roulement côté A'), mZ, 15), tol=3.0),
-          dict(glisse(cles(r'^main : ressort de rappel du pouce'), mZ, 10), tol=3.0), atelier='pouce')
+          dict(glisse(cles(r'^main : ressort de rappel du pouce'), mZ, 10), tol=3.0),
+          dict(glisse(cles(r"^main : bague d'appui"), Z, 10), tol=3.0), atelier='pouce')
     etape('Le doigt A, à l\'établi',
-          'Le doigt A est imprimé d\'une pièce (jointure et phalange figée). Un roulement dans la jointure. Deux '
-          'chevilles de filament 1,75 mm, longues de 11 mm, s\'enfoncent au maillet dans les trous de sa face intérieure, où elles serrent : pas de colle. Le '
-          'ressort des doigts : sa patte la plus longue se pique dans le petit trou de la face intérieure de la '
-          'jointure, près du roulement.',
+          'Le doigt A est imprimé d\'une pièce (jointure et phalange figée). Un roulement dans la jointure. '
+          'Les doigts A et B sont les deux moitiés d\'un même doigt, coupé en deux tranches le long de l\'axe : '
+          'écartées près de l\'axe, où passent la paume et le pouce, elles se touchent à plat plus loin, au milieu du '
+          'doigt. Sur cette face plate du doigt A (pas sur la jointure), deux trous Ø1,7, l\'un vers la base du doigt, '
+          'l\'autre 28,5 mm plus loin vers le bout : deux chevilles de filament PLA 1,75 mm, coupées droites à 11 mm, '
+          's\'y enfoncent au maillet de moitié, où elles serrent : pas de colle. Un trou bouché à l\'impression se '
+          'rouvre au foret de 1,5 mm tourné à la main. Le ressort des doigts : sa patte la plus longue se pique dans le '
+          'petit trou Ø1 de la face intérieure de la jointure, près du roulement (pas dans un trou de cheville). '
+          'Les deux trous Ø4,8 qui traversent le doigt de part en part, lamés sur sa face extérieure, sont ceux des vis '
+          'qui le serreront au doigt B.',
           poser(cles(r'^main, doigts : doigt A')),
           dict(glisse(cles(r'^main, doigts : roulement de la jointure A'), Z, 15), tol=3.0),
           dict(glisse(cles(r'^main : ressort de rappel des doigts'), Z, 10), tol=3.0), atelier='doigt A')
     etape('Le doigt B, à l\'établi',
           'Le doigt B, d\'une pièce lui aussi, porte la poulie des doigts ; son roulement entre à travers elle. '
+          'Ses faces plates tournées vers le doigt A sont prolongées en cales, qui viennent contre la face du doigt A ; '
+          'les deux trous Ø1,7 des chevilles y sont, en face de ceux du doigt A (même conseil s\'ils sont bouchés), '
+          'ainsi que deux avant-trous Ø3,5 pour les vis. '
           'Le brin des doigts se noue dans l\'ancrage de cette poulie, comme celui du pouce.',
           poser(cles(r'^main, doigts : doigt B')),
           dict(glisse(cles(r'^main, doigts : roulement de la jointure B'), mZ, 15), tol=3.0), atelier='doigt B')
@@ -400,12 +420,14 @@ def etapes(P):
           'sa fente de la paume (pas encore vissée), puis dans le trou du bout du fléau, et se bloque dessous à la '
           'marque : ' + NOEUD + '. Le brin du pouce prend la fente et le trou les plus proches du milieu, celui des '
           'doigts ceux du bord. Puis la tresse du servo monte par le trou du milieu du fléau, par dessous, et se bloque '
-          'au-dessus de la même façon : palonnier à 0°, tresse tendue, le dessus du fléau à 1,5 mm sous le bord du '
+          'au-dessus de la même façon, sa perle de gaine logée dans le chambrage : palonnier à 0°, tresse tendue, le dessus du fléau à 1,5 mm sous le bord du '
           'poignet. Une erreur d\'un millimètre se rattrape en réglant la course du servo.',
           dict(glisse(cles(r'^main, fléau'), X, 25), tol=3.0))
     etape('La paume',
           'La paume descend le long des brins et ferme la chambre du fléau : ses deux joues debout, côté canal pour la '
-          'joue mince. Deux vis M4 × 10 entre les joues, dans les bossages du poignet.',
+          'joue mince. Deux vis M4 × 10 entre les joues, dans les bossages du poignet. Le petit tube qui prolonge la '
+          'joue B vers l\'extérieur autour du trou de l\'axe est l\'appui du roulement du doigt B : il entrera dans '
+          'l\'alésage de sa poulie.',
           glisse(cles(r'^main, paume'), X, 40), visser(cles(r'— main, paume ↔ poignet')))
     etape('Le pouce entre les joues',
           'Le pouce glisse entre les joues depuis son côté, roulements dans l\'axe des trous des joues, son brin '
@@ -417,16 +439,24 @@ def etapes(P):
           'Le doigt A vient de son côté, ouvert d\'environ %d° de plus qu\'au repos : la patte libre du ressort se '
           'pique dans le trou de la face extérieure de la joue A. On le ramène au repos, ce qui arme le ressort, et on '
           'l\'y tient. Puis le doigt B vient du sien, son brin enroulé par-dessus la poulie : ses trous s\'enfilent sur '
-          'les chevilles du doigt A, à force, faces l\'une contre l\'autre. C\'est par là que le doigt A suit : seule la jointure B porte une '
-          'poulie.' % PRECHARGE['doigts'],
+          'les chevilles du doigt A, à force, jusqu\'à ce que ses cales soient à plat contre la face du doigt A. C\'est '
+          'par les chevilles que le doigt A suit : seule la jointure B porte une poulie. Deux vis M4 × 50 (2802-0004-0050) '
+          'traversent le doigt A depuis sa face extérieure et se taraudent dans B, jusqu\'à ce que leur tête soit au '
+          'fond du lamage, sans forcer au-delà. Ce sont elles qui empêchent A de quitter B quand la main se retourne ; '
+          'les chevilles seules ne le tenaient que par frottement.' % PRECHARGE['doigts'],
           dict(joindre='doigt A', chemin=[[[0, 0, -1], 50]]), dict(joindre='doigt B', chemin=[[[0, 0, 1], 50]]),
+          visser(cles(r'^main, doigts : vis 2802-0004-0050')),
           # les brins, noués depuis l'étape du fléau, ne se dessinent qu'ici, main en place : posés plus tôt dans leur
           # position finale, ils ne suivraient pas leur poulie quand pouce et doigt B entrent, et le contrôle les heurte
           poser(cles(r'^câble de pince, brin')))
     etape('L\'axe',
-          'La tige Ø4 entre par le trou de la jointure B, traverse son roulement, la joue B, les roulements du pouce, la '
-          'joue A, et s\'arrête dans le roulement de la jointure A. Elle est serrée dans les joues.',
-          dict(glisse(cles(r'^main : axe'), Z, 60), tol=3.0))
+          'La tige Ø4 × 78 entre par le siège du cache B et traverse tout : le doigt B, son roulement, la joue B, les '
+          'roulements du pouce, la joue A, le roulement et le doigt A. Elle force dans les joues : si elle ne passe '
+          'pas à la main, repasser les trous des joues au foret de 4 tourné à la main. On la centre, chaque bout à '
+          '2 mm sous le fond de son siège : la rondelle de l\'étape suivante doit entrer à plat dans sa poche. Ce '
+          'sont les caches qui l\'empêchent de sortir. Le doigt tourne autour d\'elle sur toute sa longueur : s\'il '
+          'frotte, repasser son trou au foret de 4,5.',
+          dict(glisse(cles(r'^main : axe'), Z, 80), tol=3.0))
     etape('Les caches',
           'Les caches tiennent par aimant, sans colle : on peut les ôter pour atteindre l\'axe. Une rondelle '
           '2801-0004-0008 se serre dans la poche au fond du siège de chaque jointure, un aimant 2912-0005-0001 dans '

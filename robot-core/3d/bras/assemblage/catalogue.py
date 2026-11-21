@@ -30,9 +30,29 @@ HORS_GOBILDA = {
     'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm': dict(
         fournisseur='fait main',
         achat='fil inox à ressort 1.4310 Ø 0,6 mm, 2 m (un rouleau pour les deux ressorts) — Evek-GmbH sur Amazon, '
-              '5,90 € + 10,90 € de port (choisi le 2026-11-09)',
+              '5,90 € + 10,90 € de port (choisi le 2026-11-09, commandé le 2026-11-19)',
         url='https://www.amazon.fr/dp/B091PQFT28'),
+    # Tresse PE plutôt que du câble inox gainé (raide : il saute de la gorge et casse à force de plier sur Ø 18) ou
+    # qu'un fil à bracelet (élastique ou nylon : ils s'allongent, et toute la course tient en 6,56 mm de câble).
+    # 33/100 au lieu de 0,4 : rien de plus gros chez Decathlon dans cette gamme, et 27,5 kg pour 5 kg de traction.
+    'CABLE:câble de pince': dict(
+        fournisseur='Decathlon',
+        achat='tresse de pêche PE Caperlan TX4 kaki, 33/100 (27,5 kg), 150 m — une bobine pour le câble et les deux brins ; '
+              'perles des nœuds : bouts de gaine PTFE 1 × 2 mm (déjà là) (acheté le 2026-11-19)',
+        url='https://www.decathlon.fr/p/tresse-peche-aux-leurres-4-brins-tx4-kaki/362170/c109m8933473'),
 }
+# Les deux vis de la jonction liaison arrière ↔ berceau : prises dans les sachets des servos Hitec, déjà vissées
+# (Nicolas, 2026-11-18). Rien à acheter.
+HORS_GOBILDA['VIS:vis M2 × 6 autotaraudeuse, comme celles des servos'] = dict(
+    fournisseur='fourni avec le servo', achat='sachets des servos Hitec (2 vis, déjà posées le 2026-11-18)')
+# L'axe de la main : acier étiré verni plutôt qu'inox brut, calibré (il serre dans les joues, entre dans les roulements) ;
+# l'aluminium du même rayon, trop tendre, se marquerait dans les roulements. Acheté par Nicolas le 2026-11-19.
+HORS_GOBILDA['VIS:tige acier Ø4 mm, 78 mm (axe de la main)'] = dict(
+    fournisseur='Castorama',
+    achat='rond acier étiré verni CQFD Ø4 mm, 1 m, à couper à 78 mm (acheté le 2026-11-19)',
+    url='https://www.castorama.fr/rond-acier-etire-verni-4-mm-1-m/3232630704554_CAFR.prd')
+for _brin in ('doigts', 'pouce'):
+    HORS_GOBILDA['CABLE:câble de pince, brin ' + _brin] = dict(fournisseur='Decathlon', achat='même bobine que le câble de pince')
 
 
 def fiche(base, ref):

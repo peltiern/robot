@@ -97,19 +97,6 @@
    "nom": "Hub sonico a foro passante serie 1311 (foro REX da 8 mm)"
   }
  },
- "1500-0010-0032": {
-  "fournisseur": "goBILDA",
-  "nom": "1500 Series Plastic Spacer (32mm ID x 34mm OD, 1mm Thickness) - 12 Pack",
-  "url": "https://www.gobilda.com/1500-series-plastic-spacer-32mm-id-x-34mm-od-1mm-thickness-12-pack/",
-  "prix": 3.49,
-  "paquet": 12,
-  "steplab": {
-   "prix": 3.84,
-   "dispo": true,
-   "url": "https://www.steplab.net/p/1500-series-plastic-spacer-32mm-id-x-34mm-od-1mm-thickness-12-pack/",
-   "nom": "1500 Series Rondelle plastica (32mm ID x 34mm OD  1mm Thickness) - 12 Pack"
-  }
- },
  "1501-0006-0080": {
   "fournisseur": "goBILDA",
   "nom": "1501 Series M4 x 0.7mm Standoff (6mm OD, 8mm Length) - 4 Pack",
@@ -120,7 +107,7 @@
    "prix": 2.81,
    "dispo": true,
    "url": "https://www.steplab.net/p/1501-series-m4-x-0-7mm-standoff-6mm-od-8mm-length-4-pack/",
-   "nom": "Distanziale M4 x 0,7 mm serie 1501 (diametro esterno 6 mm, lunghezza 8 mm) - 4 pezzi"
+   "nom": "Distanziale M4 x 0,7 mm serie 1501 (diametro esterno 6 mm, lunghezza 8 mm) &#8211; 4 pezzi"
   }
  },
  "1501-0006-0430": {
@@ -133,7 +120,7 @@
    "prix": 5.88,
    "dispo": true,
    "url": "https://www.steplab.net/p/1501-series-m4-x-0-7mm-standoff-6mm-od-43mm-length-4-pack/",
-   "nom": "Distanziale M4 x 0,7 mm serie 1501 (diametro esterno 6 mm, lunghezza 43 mm) - 4 pezzi"
+   "nom": "Distanziale M4 x 0,7 mm serie 1501 (diametro esterno 6 mm, lunghezza 43 mm) &#8211; 4 pezzi"
   }
  },
  "1502-0006-0040": {
@@ -146,7 +133,7 @@
    "prix": 2.54,
    "dispo": true,
    "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-4mm-length-4-pack/",
-   "nom": "Distanziale ID 4mm serie 1502 (diametro esterno 6mm lunghezza 4mm) - 4 pezzi"
+   "nom": "Distanziale ID 4mm serie 1502 (diametro esterno 6mm lunghezza 4mm) &#8211; 4 pezzi"
   }
  },
  "1502-0006-0070": {
@@ -159,7 +146,7 @@
    "prix": 2.8,
    "dispo": true,
    "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-7mm-length-4-pack/",
-   "nom": "Distanziale ID 4 mm serie 1502 (lunghezza 6 mm diametro esterno 7 mm) - 4 pezzi"
+   "nom": "Distanziale ID 4 mm serie 1502 (lunghezza 6 mm diametro esterno 7 mm) &#8211; 4 pezzi"
   }
  },
  "1526-0032-0100": {
@@ -172,7 +159,7 @@
    "prix": 5.35,
    "dispo": true,
    "url": "https://www.steplab.net/p/distanziatore-in-plastica-con-diametro-esterno-32-mm-serie-1526-lunghezza-10-mm-confezione-da-2/",
-   "nom": "Distanziatore in plastica con diametro esterno 32 mm serie 1526 (lunghezza 10 mm) - Confezione da 2"
+   "nom": "Distanziatore in plastica con diametro esterno 32 mm serie 1526 (lunghezza 10 mm) &#8211; Confezione da 2"
   }
  },
  "1600-0410-0004": {
@@ -185,7 +172,7 @@
    "prix": 5.35,
    "dispo": true,
    "url": "https://www.steplab.net/p/1600-series-non-flanged-ball-bearing-4mm-id-x-10mm-od-4mm-thickness-2-pack-2/",
-   "nom": "Cuscinetto a sfere non flangiato serie 1600 (spessore 4mm ID x 10mm OD 4mm) - 2 pezzi"
+   "nom": "Cuscinetto a sfere non flangiato serie 1600 (spessore 4mm ID x 10mm OD 4mm) &#8211; 2 pezzi"
   }
  },
  "1601-0014-0004": {
@@ -198,7 +185,7 @@
    "prix": 5.35,
    "dispo": true,
    "url": "https://www.steplab.net/p/cuscinetto-a-sfere-flangiato-serie-1601-id-4-mm-x-diametro-esterno-14-mm-spessore-5-mm-confezione-da-2-pezzi/",
-   "nom": "Cuscinetto a sfere flangiato serie 1601 (ID 4 mm x diametro esterno 14 mm- spessore 5 mm) - Confezione da 2 pezzi"
+   "nom": "Cuscinetto a sfere flangiato serie 1601 (ID 4 mm x diametro esterno 14 mm- spessore 5 mm) &#8211; Confezione da 2 pezzi"
   }
  },
  "1601-0039-0032": {
@@ -286,17 +273,17 @@
   "prix": 3.99,
   "paquet": 1
  },
- "2305-0025-0020": {
+ "2305-0024-0020": {
   "fournisseur": "goBILDA",
-  "nom": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 20 Tooth)",
-  "url": "https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-25-tooth-spline-20-tooth/",
+  "nom": "2305 Series Brass, MOD 0.8, Servo Gear (24 Tooth Spline, 20 Tooth)",
+  "url": "https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-24-tooth-spline-20-tooth/",
   "prix": 9.99,
   "paquet": 1,
   "steplab": {
    "prix": 13.41,
    "dispo": true,
-   "url": "https://www.steplab.net/p/serie-2305-ottone-mod-0-8-servo-gear-25-denti-spline-20-denti/",
-   "nom": "Serie 2305 Ottone- MOD 0.8- Servo Gear (25 denti spline- 20 denti)"
+   "url": "https://www.steplab.net/p/serie-2305-ottone-mod-0-8-servo-gear-24-denti-spline-20-denti/",
+   "nom": "Serie 2305 Ottone- MOD 0.8- Servo Gear (24 denti spline- 20 denti)"
   }
  },
  "2305-0025-0048": {
@@ -372,7 +359,13 @@
   "nom": "M4 x 0.7mm Zinc-Plated Socket Head Screw (20mm Length) - 25 Pack",
   "url": "https://www.gobilda.com/m4-x-0-7mm-zinc-plated-socket-head-screw-20mm-length-25-pack/",
   "prix": 3.99,
-  "paquet": 25
+  "paquet": 25,
+  "steplab": {
+   "prix": 5.6,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/vite-a-testa-cilindrica-con-esagono-incassato-m4-x-07mm-zincata-lunghezza-20mm-confezione-da-25-pezzi/",
+   "nom": "Vite a testa cilindrica con esagono incassato M4 x 0,7mm zincata (lunghezza 20mm) &#8211; confezione da 25 pezzi"
+  }
  },
  "2801-0004-0008": {
   "fournisseur": "goBILDA",
@@ -385,7 +378,7 @@
    "prix": 2.79,
    "dispo": true,
    "url": "https://www.steplab.net/p/2801-series-zinc-plated-steel-washer-4mm-id-x-8mm-od-25-pack/",
-   "nom": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD) - 25 Pack"
+   "nom": "2801 Series Zinc Plated Steel Washer (4mm ID x 8mm OD) &#8211; 25 Pack"
   }
  },
  "2802-0004-0005": {
@@ -398,7 +391,7 @@
    "prix": 3.88,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-5mm-length-25-pack/",
-   "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm  5mm Length) - 25 Pack"
+   "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm  5mm Length) &#8211; 25 Pack"
   }
  },
  "2802-0004-0008": {
@@ -411,7 +404,7 @@
    "prix": 4.28,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-8mm-length-25-pack/",
-   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 8 mm) - confezione da 25 pezzi"
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 8 mm) &#8211; confezione da 25 pezzi"
   }
  },
  "2802-0004-0010": {
@@ -424,7 +417,7 @@
    "prix": 4.55,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-10mm-length-25-pack/",
-   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 10 mm) - confezione da 25 pezzi"
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 10 mm) &#8211; confezione da 25 pezzi"
   }
  },
  "2802-0004-0012": {
@@ -437,7 +430,7 @@
    "prix": 4.82,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-12mm-length-25-pack-2/",
-   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 12 mm) - confezione da 25 pezzi"
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (lunghezza M4 x 0,7 mm 12 mm) &#8211; confezione da 25 pezzi"
   }
  },
  "2802-0004-0014": {
@@ -450,7 +443,7 @@
    "prix": 4.95,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-14mm-length-25-pack-2/",
-   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 14 mm) - Confezione da 25 pezzi"
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 14 mm) &#8211; Confezione da 25 pezzi"
   }
  },
  "2802-0004-0016": {
@@ -463,7 +456,7 @@
    "prix": 5.09,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-16mm-length-25-pack-2/",
-   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 16 mm) - Confezione da 25 pezzi"
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 16 mm) &#8211; Confezione da 25 pezzi"
   }
  },
  "2802-0004-0018": {
@@ -476,7 +469,20 @@
    "prix": 5.22,
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-18mm-length-25-pack/",
-   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 18 mm) - Confezione da 25 pezzi"
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 18 mm) &#8211; Confezione da 25 pezzi"
+  }
+ },
+ "2802-0004-0050": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 50mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-50mm-length-25-pack/",
+  "prix": 5.19,
+  "paquet": 25,
+  "steplab": {
+   "prix": 6.96,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-50mm-length-25-pack/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 50 mm) &#8211; Confezione da 25 pezzi"
   }
  },
  "2807-0407-0500": {
@@ -489,15 +495,8 @@
    "prix": 3.07,
    "dispo": true,
    "url": "https://www.steplab.net/p/spessore-in-acciaio-inossidabile-serie-2807-diametro-4-mm-x-7-mm-spessore-050-mm-12-pezzi/",
-   "nom": "Spessore in acciaio inossidabile serie 2807 (diametro 4 mm x 7 mm- spessore 0-50 mm) - 12 pezzi"
+   "nom": "Spessore in acciaio inossidabile serie 2807 (diametro 4 mm x 7 mm- spessore 0-50 mm) &#8211; 12 pezzi"
   }
- },
- "2807-3236-0500": {
-  "fournisseur": "goBILDA",
-  "nom": "32mm ID Stainless Steel Shim (36mm OD, 0.50mm Thickness) - 12 Pack",
-  "url": "https://www.gobilda.com/32mm-id-stainless-steel-shim-36mm-od-0-50mm-thickness-12-pack/",
-  "prix": 4.99,
-  "paquet": 12
  },
  "2812-0004-0007": {
   "fournisseur": "goBILDA",
@@ -510,7 +509,7 @@
    "prix": 4.01,
    "dispo": false,
    "url": "https://www.steplab.net/p/2812-series-zinc-plated-steel-nylon-insert-locknut-m4-x-0-7mm-7mm-hex-25-pack-2/",
-   "nom": "Dado con inserto in nylon in acciaio zincato serie 2812 (esagonale M4 x 0,7 mm 7 mm) - Confezione da 25 pezzi"
+   "nom": "Dado con inserto in nylon in acciaio zincato serie 2812 (esagonale M4 x 0,7 mm 7 mm) &#8211; Confezione da 25 pezzi"
   }
  },
  "2904-0004-0014": {
@@ -523,7 +522,7 @@
    "prix": 5.35,
    "dispo": true,
    "url": "https://www.steplab.net/p/2904-series-hole-reducer-4mm-id-x-14mm-od-4-pack-2/",
-   "nom": "2904 Series Hole Reducer (4mm ID x 14mm OD) - 4 Pack"
+   "nom": "2904 Series Hole Reducer (4mm ID x 14mm OD) &#8211; 4 Pack"
   }
  },
  "2912-0005-0001": {
@@ -536,7 +535,7 @@
    "prix": 4.01,
    "dispo": true,
    "url": "https://www.steplab.net/p/2912-series-neodymium-magnet-5mm-diameter-1-5mm-thickness-2-pack-2/",
-   "nom": "2912 Series Neodymium Magnet (5mm Diameter  1.5mm Thickness) - 2 Pack"
+   "nom": "2912 Series Neodymium Magnet (5mm Diameter  1.5mm Thickness) &#8211; 2 Pack"
   }
  },
  "4103-0032-0048": {
@@ -569,13 +568,17 @@
   "fournisseur": "fourni avec le servo"
  },
  "CABLE:câble de pince": {
-  "fournisseur": "câblage"
+  "fournisseur": "Decathlon",
+  "achat": "tresse de pêche PE Caperlan TX4 kaki, 33/100 (27,5 kg), 150 m — une bobine pour le câble et les deux brins ; perles des nœuds : bouts de gaine PTFE 1 × 2 mm (déjà là) (acheté le 2026-11-19)",
+  "url": "https://www.decathlon.fr/p/tresse-peche-aux-leurres-4-brins-tx4-kaki/362170/c109m8933473"
  },
  "CABLE:câble de pince, brin doigts": {
-  "fournisseur": "câblage"
+  "fournisseur": "Decathlon",
+  "achat": "même bobine que le câble de pince"
  },
  "CABLE:câble de pince, brin pouce": {
-  "fournisseur": "câblage"
+  "fournisseur": "Decathlon",
+  "achat": "même bobine que le câble de pince"
  },
  "CABLE:câble du D85MG": {
   "fournisseur": "câblage"
@@ -610,6 +613,9 @@
  "HS-65MG": {
   "fournisseur": "Hitec"
  },
+ "IMPRIME:bague fendue du goTUBE": {
+  "fournisseur": "à imprimer"
+ },
  "IMPRIME:cloison": {
   "fournisseur": "à imprimer"
  },
@@ -620,6 +626,9 @@
   "fournisseur": "à imprimer"
  },
  "IMPRIME:liaison, partie arrière": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:main : bague d'appui du roulement du pouce": {
   "fournisseur": "à imprimer"
  },
  "IMPRIME:main, doigts : cache de l'axe, côté A": {
@@ -651,13 +660,16 @@
  },
  "VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm": {
   "fournisseur": "fait main",
-  "achat": "fil inox à ressort 1.4310 Ø 0,6 mm, 2 m (un rouleau pour les deux ressorts) — Evek-GmbH sur Amazon, 5,90 € + 10,90 € de port (choisi le 2026-11-09)",
+  "achat": "fil inox à ressort 1.4310 Ø 0,6 mm, 2 m (un rouleau pour les deux ressorts) — Evek-GmbH sur Amazon, 5,90 € + 10,90 € de port (choisi le 2026-11-09, commandé le 2026-11-19)",
   "url": "https://www.amazon.fr/dp/B091PQFT28"
  },
- "VIS:tige inox Ø4 mm, 44 mm (axe de la main)": {
-  "fournisseur": "inconnu"
+ "VIS:tige acier Ø4 mm, 78 mm (axe de la main)": {
+  "fournisseur": "Castorama",
+  "achat": "rond acier étiré verni CQFD Ø4 mm, 1 m, à couper à 78 mm (acheté le 2026-11-19)",
+  "url": "https://www.castorama.fr/rond-acier-etire-verni-4-mm-1-m/3232630704554_CAFR.prd"
  },
  "VIS:vis M2 × 6 autotaraudeuse, comme celles des servos": {
-  "fournisseur": "inconnu"
+  "fournisseur": "fourni avec le servo",
+  "achat": "sachets des servos Hitec (2 vis, déjà posées le 2026-11-18)"
  }
 }

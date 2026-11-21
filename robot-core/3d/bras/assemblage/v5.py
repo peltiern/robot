@@ -86,7 +86,11 @@ FIXATIONS_CADRE = [(x, s) for x in (35.95, 59.95, 84.0) for s in (1, -1)]      #
 # roulement du palier à x = 172 (face arrière à 172,48), rien n'arrêtait le tube s'il était tiré (2,9 mm
 # de glissement). Cale inox côté liaison (Ø36, ne touche que ce qui tourne), puis deux bagues plastique
 # Ø34 qui n'appuient que sur la bague intérieure. Reste ≈ 0,4 mm de jeu, à régler au montage par cales.
-BAGUES_TUBE = [('2807-3236-0500', 169.60, 0.5), ('1500-0010-0032', 170.10, 1.0), ('1500-0010-0032', 171.10, 1.0)]
+# Sur le vrai bras (2026-11-11), Nicolas n'avait ni la cale ni les bagues, et le tube glissait de 3 mm ; fermées,
+# elles ne s'enfilent qu'en démontant les paliers avant. Elles sont remplacées par une bague imprimée fendue, qui se
+# clipse de côté sur le goTUBE (ouverture de 30 mm pour un tube de 32) : large contre le berceau, elle n'appuie côté
+# roulement que par une lèvre Ø34, sur la bague intérieure seule. Jeu de 0,28 mm avec le roulement.
+BAGUE_TUBE = dict(x0=169.55, levre=171.55, x1=172.20, r_int=16.0, r_ext=18.5, r_levre=17.0, ouverture=30.0)
 
 
 # La plaque 1116-0024-0040 ferme le bras côté épaule (x = −24) : elle s'appuie sur les deux blocs 1201,
@@ -164,7 +168,11 @@ PIGNON_LAITON = ('2305-0025-0048', (47.85, 0.0), -15.99)       # référence, ax
 # (x 125,75 dans le modèle de Nicolas, où la cannelure ne dépasse que de 0,15 mm : à revoir sur le vrai servo) ; la
 # denture du pignon (7 mm : 6 mm de denture entre deux collets de 0,5) lui fait face, à 0,1 mm du palier avancé.
 # (référence, centre (y, z), face arrière en x, rotation sur son axe en degrés : alésage REX sur l'embout, dents en prise)
-ENGRENAGE_D85 = ('2305-0025-0020', (10.63, -12.0), 125.8, 8.1)
+# Cannelure du D85MG : 24 dents (H24T, Ø 5,76 ; fiche « Horn & Spline » de Hitec et fiche du vendeur, 2026-11-21),
+# pas les 25 des servos goBILDA : l'engrenage à commander est le 2305-0024-0020. goBILDA ne publie pas son STEP ; il
+# ne diffère du 2305-0025-0020 que par la cannelure intérieure, dont on reprend donc le modèle.
+ENGRENAGE_D85 = ('2305-0024-0020', (10.63, -12.0), 125.8, 8.1)
+MODELE_DE = {'2305-0024-0020': '2305-0025-0020'}
 PIGNON_TUBE = ('2322-4008-0020', (0.0, 0.0), 125.3, 30.0)
 
 
@@ -174,6 +182,23 @@ def poser_vis(sku, tete, direction):
     t0, d0, *_ = axe_de_vis(m)
     R = trimesh.geometry.align_vectors(d0, direction)
     m.apply_translation(-t0); m.apply_transform(R); m.apply_translation(tete)
+    return m
+
+
+def bague_tube():
+    """La bague fendue, dans le repère du bras ; écrit aussi liaison/bague_tube_position.stl."""
+    from shapely.geometry import Point, box
+    B = BAGUE_TUBE
+
+    def tranche(r_ext, x0, x1):
+        c = Point(0, 0).buffer(r_ext, 64).difference(Point(0, 0).buffer(B['r_int'], 64))
+        c = c.difference(box(0, -B['ouverture'] / 2, r_ext + 1, B['ouverture'] / 2))
+        m = trimesh.creation.extrude_polygon(c, x1 - x0)
+        m.apply_transform(np.array([[0, 0, 1, x0], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1]], float))
+        return m
+    m = trimesh.boolean.union([tranche(B['r_ext'], B['x0'], B['levre'] + 0.01),
+                               tranche(B['r_levre'], B['levre'], B['x1'])], engine='manifold')
+    m.export(os.path.join(SORTIE, 'liaison', 'bague_tube_position.stl'))
     return m
 
 
@@ -267,12 +292,11 @@ def pieces_v5():
         u = U[n]; m = modele(u['source'], u['filtre']); m.apply_transform(np.array(u['matrice']))
         m.apply_translation([AVANCE, 0, 0])
         out.append(('%s avancé de 8 mm' % n, 'déplacée', m, n.split('#')[0]))
-    for sku, x0, ep in BAGUES_TUBE:
-        out.append(('bague %s — retenue du tube vers l\'avant' % sku, 'visserie ajoutée',
-                    poser_ecrou(sku, [x0 + ep / 2, 0.0, 0.0], [1, 0, 0]), sku))
+    out.append(('bague fendue du goTUBE — retenue du tube vers l\'avant', 'imprimée', bague_tube(),
+                'IMPRIME:bague fendue du goTUBE'))
     for (sku, (y, z), face, tour), nom in ((ENGRENAGE_D85, 'engrenage laiton 2305, 20 dents'),
                                      (PIGNON_TUBE, 'pignon Slip-Fit 20 dents, alésage REX')):
-        m = modele(sku, None)
+        m = modele(MODELE_DE.get(sku, sku), None)
         b = m.bounds; c = (b[0] + b[1]) / 2
         m.apply_translation([-c[0], -c[1], -b[0][2]])                                  # axe du modèle : z
         m.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0]))   # z → x, alésage vers l'arrière
@@ -365,7 +389,7 @@ def main():
         if ref.startswith('VIS:'):
             return ref.split(':', 1)[1]
         if ref.startswith('CABLE:câble de pince'):
-            return 'tresse de pêche PE (Dyneema) 0,4 mm, 30 à 40 kg : du palonnier du HS-65MG au fléau, puis aux poulies'
+            return 'tresse de pêche PE Caperlan TX4 33/100, 27,5 kg : du palonnier du HS-65MG au fléau, puis aux poulies'
         if ref.startswith('CABLE:soudure'):
             return 'raccord soudé des 3 fils du HS-65MG à une nappe 28 AWG plus longue, sous gaine thermorétractable'
         if ref.startswith('CABLE:'):

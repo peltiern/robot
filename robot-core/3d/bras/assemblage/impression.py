@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fichiers à imprimer des quatre pièces imprimées du bras : chacune est reprise telle qu'elle est dans le bras
+Fichiers à imprimer des cinq pièces imprimées du bras (la main a les siennes, dans pince/) : chacune est reprise telle qu'elle est dans le bras
 (jeux d'impression compris), couchée sur la face qui laisse le moins de surplomb, posée à z = 0 au centre du
 plateau.
 
@@ -12,6 +12,7 @@ plateau.
   - liaison, berceau : face avant (x = 169,5, celle du goTUBE) sur le plateau ; ouvert à l'arrière depuis la
     coupe, il n'a plus de pont au-dessus de la poche ;
   - plaque de bout : face extérieure (x = 192) sur le plateau ; les poches d'écrous font des ponts de 7 mm ;
+  - bague fendue du goTUBE : face large (x = 169,55, contre le berceau) sur le plateau, la lèvre en haut ;
 
 Écrit impression/*.stl sur le disque externe.
 """
@@ -29,6 +30,7 @@ PIECES = [
     ('liaison/liaison_arriere_position.stl', (1, 0, 0), 'liaison_arriere_IMPRESSION.stl'),
     ('liaison/liaison_berceau_position.stl', (1, 0, 0), 'liaison_berceau_IMPRESSION.stl'),
     ('plaque_bout/plaque_bout_position.stl', (1, 0, 0), 'plaque_bout_IMPRESSION.stl'),
+    ('liaison/bague_tube_position.stl', (-1, 0, 0), 'bague_tube_IMPRESSION.stl'),
 ]
 
 

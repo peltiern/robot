@@ -62,7 +62,8 @@ MOYEU_POUCE = (-4.5, 4.5)
 JOUE_A = (-13.5, -8.5)                            # entre elle et le moyeu, entre elle et la jointure A : les ressorts
 R_JOUE = 6.0
 R_POULIE, R_GORGE, GORGE = 10.5, 9.0, 1.2         # flasques, fond de gorge, largeur de gorge
-R_ENROULEMENT = R_GORGE + 0.2                     # tresse PE de 0,4 mm au fond de la gorge
+R_ENROULEMENT = R_GORGE + 0.2                     # tresse PE au fond de la gorge (dessinée pour 0,4 ; la 33/100 choisie
+#                                                   s'enroule 0,035 mm plus bas, 0,4 % de course : négligé)
 # Ancrage d'un brin dans sa poulie : la tresse quitte la gorge au bout de son enroulement (φ = ±90° dans H, pose du
 # Motion Arm) par un trou Ø1 tiré en corde dans le plan de la gorge, et ressort 60° plus loin dans une poche radiale
 # Ø2,6 où loge son nœud. Poche et trou restent dans l'arc que la tresse ne couvre jamais (elle s'enroule sur 175° à
@@ -87,26 +88,46 @@ SPIRES = 4
 REF_RESSORT = 'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm'
 
 # Caches d'axe tenus par aimant plutôt que collés (Nicolas, 2026-11-09) : démontables, ils rendent l'axe accessible.
-# L'axe inox ne s'aimante pas et s'arrête 19 mm plus bas : l'aimant goBILDA Ø5 × 1,5 du cache tient sur une rondelle
-# 2801 en acier zingué (4 × 8 × 1) logée au fond du siège, dans l'axe. L'aimant dépasse du cache de 0,2 mm, dans le
+# L'aimant goBILDA Ø5 × 1,5 du cache tient sur une rondelle 2801 en acier zingué (4 × 8 × 1) logée au fond du siège,
+# dans l'axe ; l'axe s'arrête 1 mm sous la rondelle. L'aimant dépasse du cache de 0,2 mm, dans le
 # jeu qui sépare le cache du fond du siège (0,7 mm côté A, 0,5 côté B). Une encoche dans le bord du siège laisse passer un ongle.
 FOND_SIEGE = {-1: -41.5, +1: 40.5}                # fond du siège du cache, jointure A / B
 CACHE = dict(aimant=(2.6, 1.3), rondelle=(4.1, 1.0), depasse=0.2, encoche=1.5,
              noms={-1: 'Finger-End-Cap_2', +1: 'Finger-End-Cap_1'})
 
 # Roulements goBILDA 1600-0410-0004 (4 × 10 × 4) : un dans chaque jointure, deux dans le moyeu du pouce. L'axe Ø4
-# est fixe, serré dans les joues ; il est enfilé par la jointure B, sous le cache.
+# est fixe, serré dans les joues ; il est enfilé par la jointure B, sous le cache. Il court d'une rondelle de cache à
+# l'autre (Nicolas, 2026-11-21) : arrêté au roulement des jointures (43,75 mm), seul le serrage des joues le tenait,
+# il fallait un poussoir pour l'amener à 19 mm de profondeur, et une joue alésée trop large le laissait filer hors d'un
+# roulement. Long, ce sont les caches qui le retiennent, et les joues peuvent être repassées au foret de 4.
 ROULEMENT = dict(r=5.0, ep=4.0)
 LOGEMENTS_DOIGTS = [(JOINTURE_B, JOINTURE_B + 4.0), (JOINTURE_A - 4.0, JOINTURE_A)]
 LOGEMENTS_POUCE = [(MOYEU_POUCE[0], MOYEU_POUCE[0] + 4.0), (MOYEU_POUCE[1] - 4.0, MOYEU_POUCE[1])]
-AXE = (JOINTURE_A - 4.0, JOINTURE_B + 4.0)        # tige inox Ø4 × 44
+AXE = (FOND_SIEGE[-1] + CACHE['rondelle'][1] + 1.0, FOND_SIEGE[+1] - CACHE['rondelle'][1] - 1.0)   # Ø4 × 78
 R_AXE_SERRE, R_AXE_LIBRE = 1.95, 2.3
+# Appuis des roulements. Les roulements glissent sur l'axe : rien ne calait doigts et pouce le long de l'axe, et les
+# deux brins, qui descendent vers le fléau en biais d'environ 5°, plaquent les deux poulies contre la joue B, plastique
+# sur plastique (jeu de 0,5 mm ; vu par Nicolas le 2026-11-16). La poussée passe maintenant par la bague intérieure du
+# roulement, immobile comme l'axe, jusqu'à la joue : côté doigts, un bossage de la joue B traverse l'alésage Ø10,2 de
+# la poulie ; côté pouce, une bague imprimée libre dans l'alésage Ø7 de sa poulie, parce que le pouce entre de côté
+# entre les joues et qu'un bossage l'aurait arrêté. Les deux ne touchent que la bague intérieure (Ø5,2 ; le flasque
+# commence à Ø5,5).
+APPUI = dict(r=2.55, jeu=0.1, nez=0.8, r_bague=3.2, r_alesage=2.1)   # bague Ø6,4 : l'alésage Ø7 sort plus petit à l'impression
 
 # Le fléau : sous le canal +z du goTUBE (z 6,8 → 15,2, milieu 11), entre les deux plans de poulie.
 # Ses trous des bouts sont presque à l'aplomb des poulies : un brin qui dérive en w frotte sur la joue B (contrôle du
-# 2026-11-08 : avec des trous à 8,9 et 13,1, les deux brins passaient au ras de ses faces). Le milieu (10,5) reste
-# sous le canal (11). Ses bouts dépassent les trous de 0,3 mm : tangents, ils ouvraient le maillage.
-FLEAU = dict(w=(6.1, 14.9), v=1.6, u=3.0, trous=(7.0, 10.5, 14.0))
+# 2026-11-08 : avec des trous à 8,9 et 13,1, les deux brins passaient au ras de ses faces). Le milieu reste sous le
+# canal (11), à égale distance des bouts : le fléau partage l'effort en deux moitiés.
+# Le premier, 3,2 × 3 mm à trous Ø1,2 et 0,3 mm de paroi aux bouts, est sorti de l'imprimante les trous presque
+# bouchés (Nicolas, 2026-11-14) : une buse de 0,4 referme un trou de cette taille, et une paroi plus mince qu'une ligne
+# d'extrusion mord dessus. Trous dessinés à Ø1,8 (ils sortent vers Ø1,4 ; une perle de Ø2 tient encore), 0,7 mm de
+# paroi dessinée aux bouts, 5 mm de large. La longueur, elle, est tenue par la chambre (Ø30,8) : trou des doigts rentré
+# de 14 à 13,6, et bouts taillés en arc autour du milieu : à bouts carrés, il frottait la paroi penché de 5° (main qui
+# se ferme d'un côté avant l'autre), l'ancien restait libre au-delà de 20°. Le fléau ne fait 5 mm de haut qu'au milieu, où il plie : sous les bouts pendent
+# les nœuds et leurs perles, et en bout de course il descend de 6,56 mm vers le fond de la chambre. La perle de la
+# tresse du servo se loge dans un chambrage du dessus : posée dessus, elle touchait le plancher, 1,5 mm plus haut.
+FLEAU = dict(w=(5.4, 15.2), v=2.5, u=5.0, u_bouts=3.0, milieu=1.7, coin=1.5, r_trou=0.9, trous=(7.0, 10.3, 13.6),
+             chambrage=(1.6, 2.0), arc=5.0)
 CHAMBRE = dict(w=(5.0, 15.5), v=6.0)
 CANAL_Z = 11.0
 
@@ -275,7 +296,8 @@ def paume():
         profil = (cq.Workplane("XY").workplane(offset=w0).center(0, 0).circle(R_JOUE).extrude(w1 - w0).val()
                   .fuse(boite(PLANCHER[1] - 0.5, 0.0, -R_JOUE, R_JOUE, w0, w1)))
         p = p.fuse(profil)
-    p = p.cut(wcyl(R_AXE_SERRE, JOUE_A[0] - 1, JOUE_B[1] + 1))
+    p = p.fuse(wcyl(APPUI['r'], JOUE_B[1] - 0.01, JOINTURE_B - APPUI['jeu']))       # appui du roulement du doigt B
+    p = p.cut(wcyl(R_AXE_SERRE, JOUE_A[0] - 1, JOINTURE_B + 1))
     # pattes fixes des ressorts : trou dans la face extérieure de la joue A (doigts), rainure dans sa face intérieure
     # (pouce), ouverte du côté d'où vient le pouce ; la paume n'est pas retournée, ce côté-là est COTE_POUCE
     u, r, f = PATTES['r_fixe'], PATTES['r_trou'], PATTES['fixe']
@@ -284,18 +306,38 @@ def paume():
               .fuse(boite(u - r, u + r, min(0, COTE_POUCE * R_JOUE), max(0, COTE_POUCE * R_JOUE), JOUE_A[1] - f, JOUE_A[1] + 0.01)))
     for v, w in VIS_PAUME:
         p = p.cut(ucyl(2.2, PLANCHER[0] - 1, PLANCHER[1] + 1, v, w))
-    # fentes des deux brins : sous chaque plan de poulie, étirées en v (le brin descend en biais vers le fléau)
-    for w0, w1 in ((POULIE_POUCE[0] + 0.15, JOUE_B[0] - 0.65), (JOUE_B[1] + 0.25, POULIE_DOIGTS[1] - 0.65)):
+    # fentes des deux brins : sous chaque plan de poulie, étirées en v (le brin descend en biais vers le fléau).
+    # Celle des doigts s'ouvre sur le bord du plancher : arrêtée à 16,6, elle détachait une lamelle de 0,4 mm entre
+    # elle et le bord (R_POIGNET = 17), une île de 6 mm³ que l'impression laissait dans le vide (vu par Nicolas le
+    # 2026-11-11). Elle commence au ras de la joue B : le trou des doigts du fléau rentré à 13,6, le brin passait à
+    # 0,1 mm de son bord.
+    for w0, w1 in ((POULIE_POUCE[0] + 0.15, JOUE_B[0] - 0.65), (JOUE_B[1] + 0.05, R_POIGNET + 1)):
         p = p.cut(boite(PLANCHER[0] - 1, PLANCHER[1] + 1, -R_GORGE - 1.5, R_GORGE + 1.5, w0, w1))
     return p
 
 
+def bague_pouce():
+    """Bague d'appui du roulement côté B du pouce, contre la joue B : un nez qui ne touche que la bague intérieure,
+    un corps centré par l'alésage Ø7 de la poulie."""
+    w0, w1 = MOYEU_POUCE[1] + APPUI['jeu'], JOUE_B[0]
+    b = wcyl(APPUI['r'], w0, w0 + APPUI['nez']).fuse(wcyl(APPUI['r_bague'], w0 + APPUI['nez'], w1))
+    return b.cut(wcyl(APPUI['r_alesage'], w0 - 1, w1 + 1)).clean()
+
+
 def fleau():
-    u0 = PLANCHER[0] - 1.5 - FLEAU['u']
-    f = boite(u0, u0 + FLEAU['u'], -FLEAU['v'], FLEAU['v'], *FLEAU['w'])
+    haut = PLANCHER[0] - 1.5
+    w0, w1 = FLEAU['w']
+    f = (cq.Workplane("YZ").workplane(offset=haut - FLEAU['u_bouts']).center(0, (w0 + w1) / 2)
+         .rect(2 * FLEAU['v'], w1 - w0).extrude(FLEAU['u_bouts']).edges("|X").fillet(FLEAU['coin']).val())
+    m = FLEAU['trous'][1]
+    f = f.fuse(boite(haut - FLEAU['u'], haut - FLEAU['u_bouts'] + 0.01, -FLEAU['v'], FLEAU['v'],
+                     m - FLEAU['milieu'], m + FLEAU['milieu']))
     for w in FLEAU['trous']:
-        f = f.cut(ucyl(0.6, u0 - 1, u0 + FLEAU['u'] + 1, 0.0, w))
-    return f
+        f = f.cut(ucyl(FLEAU['r_trou'], haut - FLEAU['u'] - 1, haut + 1, 0.0, w))
+    arc = cq.Workplane("XZ").center(haut - FLEAU['u_bouts'] / 2, m).circle(FLEAU['arc']).extrude(FLEAU['v'] + 1, both=True).val()
+    f = f.intersect(arc)
+    r, p = FLEAU['chambrage']
+    return f.cut(ucyl(r, haut - p, haut + 1, 0.0, m))
 
 
 def grossi(s):
@@ -355,6 +397,17 @@ def jointure(nom, cote):
 # l'autre (28,5 mm ; recherche sur une grille de 1,5 mm le 2026-11-08). Le premier choix, géométrique, tombait dans
 # des creux.
 CHEVILLE = dict(r=0.85, profondeur=6.0, axes=[(46.14, -13.27), (19.14, -4.27)])
+# Les chevilles ne tiennent A contre B que par frottement : axe vertical, doigt A en dessous, tout son poids (30 à 50 g)
+# les tire hors de leurs trous, et rien d'autre ne le retient le long de l'axe (doute de Nicolas, 2026-11-21). Deux vis
+# M4 × 50 (Nicolas en a ; une 55 donnait 14 mm de filet) traversent A depuis sa face extérieure et se taraudent dans B,
+# tête bombée noyée dans un lamage, 8,8 mm de filet dans B (plus de deux diamètres). Elles ne peuvent être que sur la nervure où A est plein jusqu'à sa face extérieure et touche B (recherche
+# par rayons le long de l'axe, 2026-11-21 ; ailleurs A est creux derrière la face de contact), d'où leur écart de 17 mm.
+# Les chevilles restent : elles calent les deux doigts pendant qu'on visse. Passage Ø4,8 et non 4,5 : les trous de
+# Nicolas sortent plus petits que dessinés (le fléau, presque bouché), et celui-ci fait 41 mm de long. Les perçages
+# dépassent le plan de contact de 1 mm : arrêtés à sa hauteur mesurée sur l'axe, ils laissaient en travers du trou une
+# peau de moins de 0,1 mm, la face de contact étant un peu inclinée (vu le 2026-11-21).
+VIS_DOIGTS = dict(ref='2802-0004-0050', tete=2.2, axes=[(20.93, -10.05), (38.13, -9.80)],
+                  r_passage=2.4, r_avant_trou=1.75, r_lamage=4.1, lamage=2.5, filet=16.0)
 
 
 def _faces_regard(s, signe):
@@ -409,6 +462,13 @@ def doigt(cote):
         d = d.cut(wcyl(CHEVILLE['r'], w0, w1, u, v))
     if cote < 0:
         d = d.cut(wcyl(PATTES['r_trou'], JOINTURE_A - PATTES['mobile'], JOINTURE_A + 0.01, *patte_mobile('doigts')))
+    V = VIS_DOIGTS
+    for u, v in V['axes']:
+        bb = d.intersect(wcyl(0.05, -60, 60, u, v)).BoundingBox()
+        if cote < 0:     # passage et lamage depuis la face extérieure de A
+            d = d.cut(wcyl(V['r_lamage'], bb.zmin - 1, bb.zmin + V['lamage'], u, v)).cut(wcyl(V['r_passage'], bb.zmin - 1, bb.zmax + 1.0, u, v))
+        else:            # avant-trou dans B, depuis la face de contact
+            d = d.cut(wcyl(V['r_avant_trou'], bb.zmin - 1.0, bb.zmin + V['filet'], u, v))
     # rondelle du cache au fond du siège, encoche pour l'ongle au bord du siège, côté paume
     fond, (r, p), wf = FOND_SIEGE[cote], CACHE['rondelle'], face_cache(cote)
     d = d.cut(wcyl(r, fond - 0.01, fond + p) if cote < 0 else wcyl(r, fond - p, fond + 0.01))
@@ -466,6 +526,7 @@ IMPRIMEES = {
     'poignet': (poignet, 'tube'),
     'paume': (paume, 'tube'),
     'fleau': (fleau, 'tube'),
+    'bague_pouce': (bague_pouce, 'tube'),
     'doigt_A': (lambda: doigt(-1), 'doigts'),
     'doigt_B': (lambda: doigt(+1), 'doigts'),
     'doigt_A_cache': (lambda: cache(-1), 'doigts'),
@@ -523,6 +584,7 @@ NOMS = {
     'doigt_A_cache': 'main, doigts : cache de l\'axe, côté A',
     'doigt_B_cache': 'main, doigts : cache de l\'axe, côté B',
     'pouce': 'main, pouce : pouce, moyeu et poulie',
+    'bague_pouce': 'main : bague d\'appui du roulement du pouce',
 }
 U_FLEAU = PLANCHER[0] - 1.5 - FLEAU['u']           # dessous du fléau, main ouverte
 
@@ -604,7 +666,7 @@ def pieces_main():
         out.append((nom, 'achetée', m, '1600-0410-0004'))
     axe = trimesh.creation.cylinder(radius=2.0, segment=[en_bras(0, 0, AXE[0]), en_bras(0, 0, AXE[1])], sections=24)
     out.append(('main : axe des doigts et du pouce', 'visserie ajoutée', axe,
-                'VIS:tige inox Ø4 mm, %d mm (axe de la main)' % round(AXE[1] - AXE[0])))
+                'VIS:tige acier Ø4 mm, %d mm (axe de la main)' % round(AXE[1] - AXE[0])))
     for nom, ens in (('main : ressort de rappel du pouce', 'pouce'), ('main : ressort de rappel des doigts', 'doigts')):
         out.append((nom, 'visserie ajoutée', ressort(ens), REF_RESSORT))
     for cote, l in ((-1, 'A'), (+1, 'B')):
@@ -617,6 +679,15 @@ def pieces_main():
     for v, w in VIS_TUBE:
         out.append(('vis 2802-0004-0008 — main, poignet ↔ goTUBE', 'visserie ajoutée',
                     poser_vis('2802-0004-0008', en_bras(FOND[1] + 2.2, v, w), [-1, 0, 0]), '2802-0004-0008'))
+    # la tête porte sur le fond du lamage : un rayon entre le passage et le bord du lamage le trouve
+    V, fa = VIS_DOIGTS, trimesh.load(os.path.join(DOSSIER, 'doigt_A_position.stl'))
+    c, s_ = math.cos(math.radians(-OUVERTURE)), math.sin(math.radians(-OUVERTURE))
+    for u, v in V['axes']:
+        u, v = c * u - s_ * v, s_ * u + c * v           # pose ouverte, comme vers_bras
+        o = en_bras(u + (V['r_passage'] + V['r_lamage']) / 2, v, -60)
+        fond = fa.ray.intersects_location([o], [[0, 0, 1]])[0][:, 2].min()
+        out.append(('main, doigts : vis %s, doigt A ↔ doigt B' % V['ref'], 'visserie ajoutée',
+                    poser_vis(V['ref'], en_bras(u, v, fond - V['tete']), [0, 0, 1]), V['ref']))
     for v, w in VIS_PAUME:
         out.append(('vis 2802-0004-0010 — main, paume ↔ poignet', 'visserie ajoutée',
                     poser_vis('2802-0004-0010', en_bras(PLANCHER[1] + 2.2, v, w), [-1, 0, 0]), '2802-0004-0010'))
