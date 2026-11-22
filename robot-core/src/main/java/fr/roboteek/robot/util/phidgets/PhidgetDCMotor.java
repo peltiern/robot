@@ -11,6 +11,12 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
     /** Moteur Phidget associé. */
     private DCMotor motor;
 
+    /**
+     * Encodeur du moteur, branché sur l'entrée encodeur du même DCC1000 (même port du hub), ou
+     * {@code null} s'il n'a pas pu être ouvert : le moteur doit rester pilotable sans lui.
+     */
+    private Encoder encodeur;
+
     /** Accélération par défaut. */
     private double accelerationParDefaut;
 
@@ -31,6 +37,38 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
         } catch (PhidgetException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        }
+        ouvrirEncodeur(deviceSerialNumber, hubPort);
+    }
+
+    private void ouvrirEncodeur(int deviceSerialNumber, int hubPort) {
+        try {
+            encodeur = new Encoder();
+            encodeur.setDeviceSerialNumber(deviceSerialNumber);
+            encodeur.setHubPort(hubPort);
+            encodeur.addAttachListener(this);
+            encodeur.addDetachListener(this);
+            encodeur.open(5000);
+        } catch (PhidgetException e) {
+            logger.warn("Encodeur du moteur du port {} introuvable : {}", hubPort, e.getMessage());
+            encodeur = null;
+        }
+    }
+
+    /**
+     * Compteur cumulé de l'encodeur, ou {@code null} s'il est illisible (absent, détaché).
+     * <p>
+     * Lit la dernière valeur remontée par la carte, sans aller-retour USB : on peut l'appeler à
+     * chaque relevé sans peser sur le lien, déjà chargé par les servos.
+     */
+    public Long getPositionEncodeur() {
+        if (encodeur == null) {
+            return null;
+        }
+        try {
+            return encodeur.getPosition();
+        } catch (PhidgetException e) {
+            return null;
         }
     }
 
@@ -78,6 +116,9 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
 
     public void close() {
         try {
+            if (encodeur != null) {
+                encodeur.close();
+            }
             motor.close();
         } catch (PhidgetException e) {
             e.printStackTrace();
@@ -93,6 +134,13 @@ public class PhidgetDCMotor implements AttachListener, DetachListener {
                 motor.setAcceleration(accelerationParDefaut);
                 motor.setTargetVelocity(0);
                 logger.debug("Moteur DC {} attaché", motor.getHubPort());
+            } else if (attachEvent.getSource() == encodeur) {
+                // Réglés à chaque attachement : une carte rebranchée revient à ses valeurs d'usine.
+                // Le mode d'entrée est celui de l'ébauche de 2025, jamais confirmé sur le robot.
+                encodeur.setIOMode(EncoderIOMode.OPEN_COLLECTOR_2K2);
+                encodeur.setDataInterval(encodeur.getMinDataInterval());
+                logger.debug("Encodeur {} attaché, relevé toutes les {} ms",
+                        encodeur.getHubPort(), encodeur.getDataInterval());
             }
 
         } catch (PhidgetException e) {

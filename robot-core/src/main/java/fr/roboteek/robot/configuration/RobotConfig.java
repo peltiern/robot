@@ -560,4 +560,38 @@ public interface RobotConfig extends Config {
     @Key("robot.reconnaissance.pause.max.s")
     @DefaultValue("30")
     long reconnaissancePauseMaxS();
+
+    /**
+     * Tops d'encodeur pour un mètre roulé. Mesuré au mètre ruban le 2026-11-22 : 15 742 tops en
+     * moyenne pour 1,30 m, puis vérifié à 0,9 % près sur 1,32 m. Le calcul d'après l'ébauche de
+     * 2025 (barbotin de 98 mm, 12 951) se trompait de 7 % : la chenille enroulée sur le barbotin
+     * avance plus que son diamètre ne le laisse croire. Le rapport de 0,5 est bon (un tour de
+     * barbotin compte environ 3990 tops).
+     */
+    @Key("robot.chenilles.encodeur.tops.par.metre")
+    @DefaultValue("12110")
+    double chenillesEncodeurTopsParMetre();
+
+    /**
+     * Écart entre les chenilles, en mm. Ne sert qu'au cap déduit des encodeurs, qui sera faux en
+     * virage de toute façon : les chenilles glissent, et la voie « effective » est plus large que
+     * la voie mesurée.
+     */
+    @Key("robot.chenilles.voie.mm")
+    @DefaultValue("380")
+    double chenillesVoieMm();
+
+    /**
+     * Sens de comptage de chaque encodeur, pour que la marche avant compte en positif. Relevé sur le
+     * robot le 2026-11-22 : en marche avant, le droit compte à rebours et le gauche à l'endroit,
+     * l'inverse de ce que supposait l'ébauche de 2025. Il dépend du câblage (A et B permutés
+     * inversent le sens) : à revérifier après toute ressoudure.
+     */
+    @Key("robot.chenilles.encodeur.gauche.sens.inverse")
+    @DefaultValue("false")
+    boolean chenillesEncodeurGaucheSensInverse();
+
+    @Key("robot.chenilles.encodeur.droit.sens.inverse")
+    @DefaultValue("true")
+    boolean chenillesEncodeurDroitSensInverse();
 }

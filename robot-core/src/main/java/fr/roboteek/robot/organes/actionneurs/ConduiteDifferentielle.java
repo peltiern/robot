@@ -4,7 +4,9 @@ import fr.roboteek.robot.configuration.phidgets.PhidgetsConfig;
 import fr.roboteek.robot.organes.AbstractOrgane;
 import fr.roboteek.robot.securite.NatureOrgane;
 import fr.roboteek.robot.securite.OrganeSurveille;
+import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
+import fr.roboteek.robot.systemenerveux.event.EncodeursChenillesEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Component;
 import java.util.function.BooleanSupplier;
 
 import static fr.roboteek.robot.configuration.Configurations.phidgetsConfig;
+import static fr.roboteek.robot.configuration.Configurations.robotConfig;
 
 /**
  * Conduite différentielle (chenilles) du robot.
@@ -65,6 +68,33 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
      * Non nul : la vitesse remontée par le contrôleur n'est pas rigoureusement zéro à l'arrêt.
      */
     private static final double SEUIL_VITESSE_MOUVEMENT = 0.02;
+
+    /**
+     * Période du relevé des encodeurs : 20 relevés par seconde, le rythme prévu pour l'odométrie.
+     * Tout {@code RobotEvent} part aussi sur le websocket : on relève à rythme fixe plutôt qu'à
+     * chaque top, et on ne publie que si les chenilles ont bougé.
+     */
+    private static final long PERIODE_RELEVE_ENCODEURS_MS = 50;
+
+    /**
+     * Temps sans un top au bout duquel les chenilles sont jugées arrêtées. Plusieurs relevés et non
+     * un seul : la carte ne rafraîchit peut-être pas ses compteurs à chaque relevé, et une chenille
+     * tournée lentement à la main marque de courtes pauses.
+     */
+    private static final long DELAI_ARRET_MS = 500;
+
+    /** Compteurs du dernier relevé, redressés ; {@code null} avant le premier relevé lisible. */
+    private Long topsGauche;
+    private Long topsDroits;
+
+    /** Compteurs au dernier arrêt, pour dire ce qu'a compté le mouvement qui vient de finir. */
+    private long topsGaucheAuDernierArret;
+    private long topsDroitsAuDernierArret;
+
+    /** Relevés successifs sans un top, remis à zéro dès que ça bouge. */
+    private int relevesImmobiles;
+
+    private boolean chenillesEnMouvement = false;
 
     /** Surveillance de chaque chenille, une panne pouvant parfaitement n'en toucher qu'une. */
     private final ChenilleSurveillee chenilleGauche =
@@ -221,6 +251,52 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
     @Override
     public int getPhase() {
         return RobotLifecyclePhases.ACTIONNEURS_AVEC_MOTEUR;
+    }
+
+    // --- Encodeurs ---
+
+    /**
+     * Relève les deux encodeurs et publie leurs compteurs tant que les chenilles bougent, plus un
+     * dernier relevé marqué « arrêt » quand elles s'immobilisent.
+     * <p>
+     * Le premier relevé est publié tel quel : il sert de référence à qui calcule la pose.
+     */
+    @Scheduled(fixedRate = PERIODE_RELEVE_ENCODEURS_MS)
+    public void releverEncodeurs() {
+        if (!running) {
+            return;
+        }
+        Long brutGauche = moteurGauche.getPositionEncodeur();
+        Long brutDroit = moteurDroit.getPositionEncodeur();
+        if (brutGauche == null || brutDroit == null) {
+            return;
+        }
+        RobotConfig config = robotConfig();
+        long gauche = config.chenillesEncodeurGaucheSensInverse() ? -brutGauche : brutGauche;
+        long droit = config.chenillesEncodeurDroitSensInverse() ? -brutDroit : brutDroit;
+
+        if (topsGauche == null) {
+            topsGaucheAuDernierArret = gauche;
+            topsDroitsAuDernierArret = droit;
+            retenirEtPublier(gauche, droit, false);
+        } else if (gauche != topsGauche || droit != topsDroits) {
+            chenillesEnMouvement = true;
+            relevesImmobiles = 0;
+            retenirEtPublier(gauche, droit, false);
+        } else if (chenillesEnMouvement && ++relevesImmobiles * PERIODE_RELEVE_ENCODEURS_MS >= DELAI_ARRET_MS) {
+            chenillesEnMouvement = false;
+            logger.info("Chenilles arrêtées, ce mouvement : gauche {} tops, droite {} tops (cumul : {}, {})",
+                    gauche - topsGaucheAuDernierArret, droit - topsDroitsAuDernierArret, gauche, droit);
+            topsGaucheAuDernierArret = gauche;
+            topsDroitsAuDernierArret = droit;
+            retenirEtPublier(gauche, droit, true);
+        }
+    }
+
+    private void retenirEtPublier(long gauche, long droit, boolean arret) {
+        topsGauche = gauche;
+        topsDroits = droit;
+        applicationEventPublisher.publishEvent(new EncodeursChenillesEvent(gauche, droit, arret));
     }
 
     // --- Surveillance (watchdog + pastilles d'état de l'interface) ---
