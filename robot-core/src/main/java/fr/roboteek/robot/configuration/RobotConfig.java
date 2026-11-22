@@ -594,4 +594,12 @@ public interface RobotConfig extends Config {
     @Key("robot.chenilles.encodeur.droit.sens.inverse")
     @DefaultValue("true")
     boolean chenillesEncodeurDroitSensInverse();
+
+    /**
+     * Vitesse de croisière d'un trajet en distance, de 0 à 1 (avant la vitesse maximale des
+     * chenilles). 0,6 donne environ 10 cm/s : 90 cm en 9,4 s le 2026-11-22.
+     */
+    @Key("robot.chenilles.trajet.vitesse")
+    @DefaultValue("0.6")
+    double chenillesTrajetVitesse();
 }

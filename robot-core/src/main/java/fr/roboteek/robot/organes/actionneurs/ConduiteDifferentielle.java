@@ -8,6 +8,9 @@ import fr.roboteek.robot.configuration.RobotConfig;
 import fr.roboteek.robot.systemenerveux.event.ArretUrgenceEvent;
 import fr.roboteek.robot.systemenerveux.event.EncodeursChenillesEvent;
 import fr.roboteek.robot.systemenerveux.event.MouvementRoueEvent;
+import fr.roboteek.robot.systemenerveux.event.TrajetRectiligneEvent;
+import fr.roboteek.robot.services.navigation.GeometrieChenilles;
+import fr.roboteek.robot.services.navigation.TrajetRectiligne;
 import fr.roboteek.robot.systemenerveux.spring.RobotEventsConfig;
 import fr.roboteek.robot.systemenerveux.spring.RobotLifecyclePhases;
 import fr.roboteek.robot.util.phidgets.PhidgetDCMotor;
@@ -96,6 +99,18 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
 
     private boolean chenillesEnMouvement = false;
 
+    /**
+     * Trajet en distance en cours, ou {@code null}. Ce verrou est aussi celui des ordres de la
+     * manette et de l'arrêt d'urgence : sans lui, une consigne du trajet calculée juste avant un
+     * ordre manuel pourrait être appliquée juste après, et la chenille repartirait à la vitesse du
+     * trajet au lieu de celle de la manette.
+     */
+    private TrajetRectiligne trajet;
+
+    /** Compteurs au départ du trajet, pris au premier relevé qui le suit. */
+    private Long trajetOrigineGauche;
+    private Long trajetOrigineDroite;
+
     /** Surveillance de chaque chenille, une panne pouvant parfaitement n'en toucher qu'une. */
     private final ChenilleSurveillee chenilleGauche =
             new ChenilleSurveillee("chenille-gauche", "Chenille gauche", this::isRunning);
@@ -162,11 +177,13 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
      */
     @EventListener
     @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
-    public void handleMouvementRoueEvent(MouvementRoueEvent mouvementRoueEvent) {
+    public synchronized void handleMouvementRoueEvent(MouvementRoueEvent mouvementRoueEvent) {
         if (!running || arretUrgence) {
             return;
         }
         logger.debug("{}", mouvementRoueEvent);
+        // Qui touche aux chenilles reprend la main
+        abandonnerTrajet("ordre de chenilles reçu");
         if (mouvementRoueEvent.getMouvementRoue() == MouvementRoueEvent.MOUVEMENTS_ROUE.AVANCER) {
             avancer(mouvementRoueEvent.getVitesseGlobale(), mouvementRoueEvent.getAccelerationGlobale());
         } else if (mouvementRoueEvent.getMouvementRoue() == MouvementRoueEvent.MOUVEMENTS_ROUE.RECULER) {
@@ -191,13 +208,65 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
      * partir loin toute seule.
      */
     @EventListener
-    public void handleArretUrgenceEvent(ArretUrgenceEvent evenement) {
+    public synchronized void handleArretUrgenceEvent(ArretUrgenceEvent evenement) {
         arretUrgence = evenement.isActif();
         if (!running || !evenement.isActif()) {
             return;
         }
         logger.warn("ConduiteDifferentielle : arrêt d'urgence, coupure des moteurs");
+        abandonnerTrajet("arrêt d'urgence");
         stopperRoues();
+    }
+
+    /**
+     * Lance un trajet en ligne droite. Il ne démarre qu'au relevé d'encodeurs suivant, qui en prend
+     * l'origine : ce sont les seuls compteurs à jour, et ils ne se lisent que sur ce fil.
+     */
+    @EventListener
+    @Async(RobotEventsConfig.ROBOT_EVENT_EXECUTOR)
+    public synchronized void handleTrajetRectiligneEvent(TrajetRectiligneEvent evenement) {
+        if (!running || arretUrgence) {
+            logger.warn("Trajet de {} mm refusé : conduite {}", evenement.getDistanceMm(),
+                    arretUrgence ? "en arrêt d'urgence" : "arrêtée");
+            return;
+        }
+        trajet = new TrajetRectiligne(evenement.getDistanceMm(), robotConfig().chenillesTrajetVitesse());
+        trajetOrigineGauche = null;
+        trajetOrigineDroite = null;
+        logger.info("Trajet : {} de {} mm", evenement.getDistanceMm() < 0 ? "reculer" : "avancer",
+                Math.abs(evenement.getDistanceMm()));
+    }
+
+    /** Applique la consigne du trajet en cours pour ce relevé, ou l'arrête s'il est fini. */
+    private synchronized void piloterTrajet(long gauche, long droit, RobotConfig config) {
+        if (trajet == null || arretUrgence) {
+            return;
+        }
+        if (trajetOrigineGauche == null) {
+            trajetOrigineGauche = gauche;
+            trajetOrigineDroite = droit;
+        }
+        GeometrieChenilles geometrie = GeometrieChenilles.depuis(config);
+        double gaucheMm = geometrie.millimetres(gauche - trajetOrigineGauche);
+        double droiteMm = geometrie.millimetres(droit - trajetOrigineDroite);
+        TrajetRectiligne.Consigne consigne = trajet.suivante(gaucheMm, droiteMm, System.currentTimeMillis());
+        if (consigne.estFinie()) {
+            stopperRoues();
+            logger.info("Trajet terminé ({}) : gauche {} mm, droite {} mm pour {} mm demandés",
+                    consigne.fin(), Math.round(gaucheMm), Math.round(droiteMm), Math.round(trajet.distanceMm()));
+            trajet = null;
+            return;
+        }
+        tournerRoueGauche(consigne.gauche(), null);
+        tournerRoueDroite(consigne.droite(), null);
+    }
+
+    /** Oublie le trajet en cours, sans toucher aux moteurs : c'est à l'appelant de dire quoi en faire. */
+    private void abandonnerTrajet(String raison) {
+        if (trajet != null) {
+            logger.info("Trajet de {} mm interrompu : {}", Math.round(trajet.distanceMm()), raison);
+            trajet = null;
+        }
     }
 
     @Override
@@ -239,6 +308,9 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
     @Override
     public void stop() {
         running = false;
+        synchronized (this) {
+            abandonnerTrajet("arrêt de la conduite");
+        }
         arreter();
         logger.info("ConduiteDifferentielle arrêtée");
     }
@@ -274,6 +346,7 @@ public class ConduiteDifferentielle extends AbstractOrgane implements SmartLifec
         RobotConfig config = robotConfig();
         long gauche = config.chenillesEncodeurGaucheSensInverse() ? -brutGauche : brutGauche;
         long droit = config.chenillesEncodeurDroitSensInverse() ? -brutDroit : brutDroit;
+        piloterTrajet(gauche, droit, config);
 
         if (topsGauche == null) {
             topsGaucheAuDernierArret = gauche;
