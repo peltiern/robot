@@ -13,6 +13,7 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ICI)
 from recaler import SORTIE, repere_bras, modele
 from liaisons import axe_de_vis
+import epaule                                    # épaule reculée de 8 mm, roue alu de 90 dents (epaule.py)
 
 CLOISON = os.path.join(SORTIE, 'cloison')
 
@@ -79,7 +80,8 @@ def charger(f):
 # Le cadre 1802 du servo d'abduction se visse dans les trous oblongs (5,4 × 4) de la ligne médiane des
 # plaques de 96 mm, 3 vis par côté (relevé de Nicolas sur le vrai bras, confirmé par fixations.py une fois
 # les oblongs pris en compte). Vis bombée M4 × 8 dans les taraudages des tranches du cadre.
-FIXATIONS_CADRE = [(x, s) for x in (35.95, 59.95, 84.0) for s in (1, -1)]      # (x, côté y)
+# Depuis le 2026-11-24 le cadre est poussé de 0,65 mm vers l'épaule dans ces oblongs (epaule.POUSSE_SERVO).
+FIXATIONS_CADRE = [(x - epaule.POUSSE_SERVO, s) for x in (35.95, 59.95, 84.0) for s in (1, -1)]      # (x, côté y)
 
 
 # Retenue du tube vers l'avant : entre la face avant de la liaison (x = 169,55) et la bague intérieure du
@@ -161,7 +163,8 @@ RETIREES_PAR_NOM = {'vis du moyeu 1311 côté corps, retournées pour tenir le g
 # est abandonné).
 PIGNON_ACETAL = ['2312-0414-0048#1', '1906-0025-0032#1', '2802-0004-0008#2', '2802-0004-0008#9',
                  '2802-0004-0008#13', '2802-0004-0008#15']
-PIGNON_LAITON = ('2305-0025-0048', (47.85, 0.0), -15.99)       # référence, axe de la cannelure, face côté servo
+# Depuis le 2026-11-24 il engrène avec la roue alu de 90 dents de l'épaule reculée (epaule.py), le servo poussé de 0,65 mm.
+PIGNON_LAITON = ('2305-0025-0048', epaule.AXE_SERVO, -15.99)       # référence, axe de la cannelure, face côté servo
 # Engrenage laiton du D85MG et pignon Slip-Fit de la liaison, modèles du catalogue (2026-10-08). La v5 dessinait deux
 # disques de 5 mm à x 126–131, et nommait le pignon 2303-4008-0020 (14 mm avec moyeu : pas la place). L'engrenage
 # (6 mm, cannelure côté servo sur 3 mm, lamage de vis de l'autre côté) se pose sur le bossage de sortie du D85MG
@@ -275,18 +278,19 @@ def pieces_v5():
         m = charger(f); m.apply_transform(T)
         if ref == '4103-0032-0048':
             m.apply_translation([0, GOTUBE_FLEXION_RECUL, 0])       # contre le moyeu, sans bride
+            epaule.reculer(m)
             nom = 'goTUBE 48 mm de flexion, vissé sur le moyeu'
         out.append((nom, nature, m, ref))
     m = modele(ARBRE_FLEXION['sku'], None)
     m.apply_translation(-m.bounds.mean(0))
     m.apply_transform(trimesh.transformations.rotation_matrix(np.radians(ARBRE_FLEXION['rotation']), [0, 1, 0]))
     m.apply_translation([0, sum(ARBRE_FLEXION['y']) / 2, 0])
-    out.append(('arbre REX 8 mm de flexion, 110 mm', 'achetée', m, ARBRE_FLEXION['sku']))
-    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
+    out.append(('arbre REX 8 mm de flexion, 110 mm', 'achetée', epaule.reculer(m), ARBRE_FLEXION['sku']))
+    a = epaule.unites()
     U = {u['nom']: u for u in a['unites']}
     for n in MOYEU_RETOURNE['pieces']:
         u = U[n]; m = modele(u['source'], u['filtre']); m.apply_transform(np.array(u['matrice']))
-        m.apply_transform(trimesh.transformations.rotation_matrix(np.pi, [0, 0, 1], [0, MOYEU_RETOURNE['y_milieu'], 0]))
+        m.apply_transform(trimesh.transformations.rotation_matrix(np.pi, [0, 0, 1], [epaule.AXE[0], MOYEU_RETOURNE['y_milieu'], 0]))
         out.append(('%s retourné pour l\'arbre REX' % n, 'déplacée', m, n.split('#')[0]))
     for n in PALIER_AVANCE + [ROULEMENT]:
         u = U[n]; m = modele(u['source'], u['filtre']); m.apply_transform(np.array(u['matrice']))
@@ -309,6 +313,7 @@ def pieces_v5():
     m.apply_transform(trimesh.transformations.rotation_matrix(np.pi, [1, 0, 0]))   # cannelure vers le servo (+z)
     m.apply_translation([xa, ya, face - m.extents[2] / 2])
     out.append(('pignon laiton 48 dents sur la cannelure du servo d\'abduction', 'achetée', m, sku))
+    out.extend(epaule.pieces())
     for nv, ne in VIS_RETOURNEES.items():
         ecrou = modele(U[ne]['source'], U[ne]['filtre']); ecrou.apply_transform(np.array(U[ne]['matrice']))
         appui = ecrou.bounds[0][1]                       # face de l'écrou contre le bloc (côté moyeu)
@@ -319,7 +324,7 @@ def pieces_v5():
         out.append(('vis ' + ref.split(':', 1)[1], 'visserie ajoutée', vis_m2(p, d, L), ref))
     for y, z in FIXATIONS_PLAQUE_EPAULE:
         out.append(('vis 2802-0004-0005 — plaque 1116 ↔ bloc d\'épaule 1201', 'visserie ajoutée',
-                    poser_vis('2802-0004-0005', [-24.0 - 2.2, y, z], [1, 0, 0]), '2802-0004-0005'))
+                    poser_vis('2802-0004-0005', [-24.0 - 2.2 - epaule.RECUL, y, z], [1, 0, 0]), '2802-0004-0005'))
     for x, z in VIS_PALIER_Y_MOINS:
         out.append(('vis 2802-0004-0005 — plaque 72 y− ↔ palier avancé', 'visserie ajoutée',
                     poser_vis('2802-0004-0005', [x, -(24.05 + 2.2), z], [0, 1, 0]), '2802-0004-0005'))
@@ -372,13 +377,15 @@ def main():
         scene.add_geometry(m, node_name='v5-%d' % k, geom_name='v5-%d' % k)
         print('%-55s %-17s %s' % (nom, nature, np.round(m.bounds, 1).tolist()))
     scene.export(os.path.join(SORTIE, 'bras-v5.glb'))
-    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
+    a = epaule.unites()
     masquer = {}
     for raison, ids in REMPLACEES.items():
         masquer[raison] = [u['nom'] for u in a['unites'] if set(u['pieces']) & set(ids)]
     masquer.update(RETIREES_PAR_NOM)
     masquer['moyeu 1311 côté corps et ses vis de serrage, retournés pour entrer sur l\'arbre REX'] = list(MOYEU_RETOURNE['pieces'])
     masquer['pignon acétal, moyeu 1906 et ses 4 vis, remplacés par le pignon laiton sur la cannelure'] = list(PIGNON_ACETAL)
+    masquer['couronne acétal du bas et ses entretoises de 4 mm, remplacées par la roue alu de 90 dents et des entretoises de 5 mm'] = \
+        [epaule.COURONNE_BAS] + list(epaule.ENTRETOISES_BAS)
     base = sqlite3.connect(os.path.join(SORTIE, '..', 'catalogue_gobilda', 'gobilda.db'))
     autres = {'D85MG': 'Hitec D85MG (servo du tube)', 'HS-65MG': 'Hitec HS-65MG (servo de pince)'}
     def designation(ref):

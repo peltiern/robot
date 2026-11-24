@@ -56,7 +56,8 @@ def faces(m):
 
 
 def main():
-    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
+    from epaule import unites                     # épaule et pivot reculés de 8 mm (epaule.py)
+    a = unites()
     pieces = pieces_du_bras()
     U = {u['nom']: u for u in a['unites']}
     TOLES = [n for n in U if n.startswith(('1121-', '1123-', '1108-'))]

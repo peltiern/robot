@@ -39,7 +39,8 @@ def ecrire_legende(unites):
 
 
 def main():
-    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
+    from epaule import unites                     # épaule et pivot reculés de 8 mm (epaule.py)
+    a = unites()
     pieces = pieces_du_bras()
     scene = trimesh.Scene()
     for u in a['unites']:

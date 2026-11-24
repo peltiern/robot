@@ -74,7 +74,10 @@ def epaule(pieces, bras):
     Y = -a if np.dot(a, vers_corps) > 0 else a                       # −Y vers le corps
     Z = np.cross(X, Y)
     T = np.eye(4); T[:3, 0], T[:3, 1], T[:3, 2], T[:3, 3] = X, Y, Z, O
-    return T
+    # Depuis le 2026-11-24 l'axe d'épaule du nouveau bras est en x = −8 de son repère (epaule.py) : c'est lui, et
+    # non l'origine, qui se pose sur l'arbre de l'ancien. Le bras sort de 8 mm de plus.
+    from epaule import AXE
+    return T @ trimesh.transformations.translation_matrix([-AXE[0], 0.0, 0.0])
 
 
 def nouveau_bras():

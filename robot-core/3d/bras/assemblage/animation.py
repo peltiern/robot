@@ -4,10 +4,12 @@ Les mouvements du bras : à quel ensemble mobile appartient chaque pièce, autou
 et le contrôle « rien ne frotte » sur toute la course de chaque mouvement.
 
 Ensembles, du corps vers la pince :
-  épaule   — tourne en flexion autour de l'axe REX (Y) : blocs 1201, moyeux 1311, couronnes, entretoises 1526,
-             roulements d'abduction, goTUBE de flexion et leur visserie ;
-  caisson  — tourne en abduction autour de Z (par l'origine) par rapport à l'épaule : tout le reste du bras ;
-  pignon   — pignon laiton 48 dents, tourne sur l'axe du servo d'abduction (roule sur la couronne fixe, 72/48) ;
+  épaule   — tourne en flexion autour de l'axe REX (Y) : blocs 1201, moyeux 1311, couronne du haut, roue alu de
+             l'abduction, entretoises 1526, roulements d'abduction, goTUBE de flexion et leur visserie ;
+  caisson  — tourne en abduction autour de Z par rapport à l'épaule : tout le reste du bras ;
+  pignon   — pignon laiton 48 dents, tourne sur l'axe du servo d'abduction (roule sur la roue alu fixe, 90/48) ;
+
+Depuis le 2026-11-24, l'épaule et le pivot sont reculés de 8 mm (epaule.py) : les deux axes passent en x = −8.
   engr_d85 — engrenage laiton 20 dents du D85MG, tourne sur l'axe du D85MG (1:1 avec le tube, sens inverse) ;
   tube     — tourne autour de X : liaison, goTUBE du bras, pignon Slip-Fit, HS-65MG et ce qui le suit ;
   palonnier — bras du HS-65MG, tourne sur l'axe du servo (Z dans le repère du tube) et tire le câble de pince.
@@ -22,7 +24,7 @@ ICI = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ICI)
 from recaler import SORTIE
 
-AXE_SERVO_ABDUCTION = (47.85, 0.0)                 # x, y de la cannelure du servo 2000 (axe Z)
+from epaule import AXE as AXE_EPAULE, AXE_SERVO as AXE_SERVO_ABDUCTION, RAPPORT as RAPPORT_ABDUCTION   # (epaule.py)
 AXE_D85MG = None                                   # relevé sur le modèle (axe X)
 HS65_AXE = (154.5, -5.7)                           # x, y de la cannelure du HS-65MG (axe Z), dessus à z = 15,0
 # (14,6 sur le modèle de la v5 ; 15,0 sur le modèle Hitec, oreilles posées 0,5 mm plus haut, le 2026-10-17)
@@ -34,12 +36,15 @@ BOUT_TUBE = 265.6
 # dans l'épaule (balayer_cables, 2026-10-03). Et à +22° et non +23° : à +23°, la plaque 1123 touche le moyeu
 # 1311 côté y+, c'est la butée mécanique (0,45 mm de jeu à +22° ; vu le 2026-10-04, le balayage au pas de 5°
 # s'arrêtait à +19°). Butées à reporter dans l'organe du bras quand il existera.
+# Depuis le recul de l'épaule (2026-11-24, epaule.py), ces deux raisons tombent : la plaque 1123 ne touche plus rien
+# avant −32° (goTUBE de flexion) ni avant +45° ; c'est le câble du servo d'abduction, à son passage entre caisson et
+# épaule, qui limite, propre de −20° à +30° et contre les blocs à −30° / +45°. La course reste −12° / +22° tant que
+# Nicolas n'a pas choisi de l'élargir.
 # Pince : de 0 (main ouverte, palonnier vers +y) à +60° (fermée, bouts du pouce et des doigts au contact), voir
 # pince.py. Au-delà de 0, le palonnier détend le câble sans rien ouvrir de plus.
 COURSES = dict(flexion=(-45, 180), abduction=(-12, 22), tube=(-135, 135), pince=(0, 60))
-RAPPORT_ABDUCTION = 72 / 48
 
-EPAULE = ('1201-', '1311-', '2312-0414-0072', '1526-', '1601-0014', '1116-', '4103-0032-0048',
+EPAULE = ('1201-', '1311-', '2312-0414-0072', '2302-0014-0090', '1502-0006-0050', '1526-', '1601-0014', '1116-', '4103-0032-0048',
           '2800-0004-0014', '1502-0006-0040', '2102-')
 TUBE = ('liaison', 'HS-65MG', 'pignon Slip-Fit', '4103-0032-0096', 'bague ', 'vis M2 du HS-65MG',
         'palonnier', 'câble de pince', 'main')
@@ -132,7 +137,7 @@ def ecrire():
         x, y, z = p
         if cable == 'HS-65MG' and x > 124.5 and abs(y) < 16 and abs(z) < 16:
             return 'tube'
-        if x < 23 and abs(z) < 33:
+        if x < 23 + AXE_EPAULE[0] and abs(z) < 33:          # l'épaule s'arrête 8 mm plus tôt (epaule.py)
             return 'epaule'
         if y < -32:
             return 'epaule'
@@ -152,8 +157,8 @@ def ecrire():
         cables.append(dict(nom='câble de pince, brin %s' % nom, points=[list(map(float, p)) for p in pts],
                            groupes=['tube'] * len(pts), rayon=0.2))
     groupes = {
-        'epaule': dict(parent=None, point=[0, 0, 0], axe=[0, 1, 0], commande='flexion', rapport=1),
-        'caisson': dict(parent='epaule', point=[0, 0, 0], axe=[0, 0, 1], commande='abduction', rapport=1),
+        'epaule': dict(parent=None, point=list(AXE_EPAULE), axe=[0, 1, 0], commande='flexion', rapport=1),
+        'caisson': dict(parent='epaule', point=list(AXE_EPAULE), axe=[0, 0, 1], commande='abduction', rapport=1),
         'pignon': dict(parent='caisson', point=[AXE_SERVO_ABDUCTION[0], AXE_SERVO_ABDUCTION[1], 0], axe=[0, 0, 1],
                        commande='abduction', rapport=RAPPORT_ABDUCTION),
         'tube': dict(parent='caisson', point=[0, 0, 0], axe=[1, 0, 0], commande='tube', rapport=1),
@@ -197,7 +202,7 @@ def poses(groupes, commandes):
 
 
 # Contacts voulus : ce qui roule, engrène ou porte, et qui garde le même jeu quel que soit l'angle.
-ENGRENEMENTS = [('2305-0025-0048', '2312-0414-0072'), ('2305-0024-0020', '2322-4008-0020')]
+ENGRENEMENTS = [('2305-0025-0048', '2302-0014-0090'), ('2305-0024-0020', '2322-4008-0020')]
 # Un ressort de rappel se tord : sa patte mobile suit le pouce ou le doigt A, ce que son maillage figé ne montre pas,
 # et la pièce le traverse en fermant. Ce couple-là ne compte pas.
 _RESSORT = 'VIS:ressort de torsion, fil 0,6 mm, Ø intérieur 4,5 mm'

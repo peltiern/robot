@@ -291,7 +291,8 @@ def controler(piece, exclure=('cloison',), tourne=False):
     garde que les voisins proches, et on teste « dedans / dehors » par paquets.
     """
     from recaler import modele
-    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
+    from epaule import unites                     # épaule et pivot reculés de 8 mm (epaule.py)
+    a = unites()
     v5 = json.load(open(os.path.join(SORTIE, 'v5.json')))
     masquees = {n for l in v5['masquer'].values() for n in l}
     lo, hi = piece.bounds
