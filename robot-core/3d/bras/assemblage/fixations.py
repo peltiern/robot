@@ -39,8 +39,7 @@ def echantillons(m, densite=3.0):
 
 
 def main():
-    from epaule import unites                     # épaule et pivot reculés de 8 mm (epaule.py)
-    a = unites()
+    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
     v5 = json.load(open(os.path.join(SORTIE, 'v5.json')))
     masquees = {n for l in v5['masquer'].values() for n in l}
     pieces = pieces_du_bras()

@@ -141,41 +141,6 @@
    "designation": "2305 Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 48 Tooth)"
   },
   {
-   "nom": "roue alu 90 dents de l'abduction, à la place de la couronne du bas",
-   "nature": "achetée",
-   "etat": "ajouté",
-   "ref": "2302-0014-0090",
-   "designation": "2302 Series Aluminum, MOD 0.8, Hub Mount Gear (14mm Bore, 90 Tooth)"
-  },
-  {
-   "nom": "entretoise 1502-0006-0050 — roue alu ↔ bloc d'épaule",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "1502-0006-0050",
-   "designation": "1502 Series 4mm ID Spacer (6mm OD, 5mm Length) - 4 Pack"
-  },
-  {
-   "nom": "entretoise 1502-0006-0050 — roue alu ↔ bloc d'épaule",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "1502-0006-0050",
-   "designation": "1502 Series 4mm ID Spacer (6mm OD, 5mm Length) - 4 Pack"
-  },
-  {
-   "nom": "entretoise 1502-0006-0050 — roue alu ↔ bloc d'épaule",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "1502-0006-0050",
-   "designation": "1502 Series 4mm ID Spacer (6mm OD, 5mm Length) - 4 Pack"
-  },
-  {
-   "nom": "entretoise 1502-0006-0050 — roue alu ↔ bloc d'épaule",
-   "nature": "visserie ajoutée",
-   "etat": "ajouté",
-   "ref": "1502-0006-0050",
-   "designation": "1502 Series 4mm ID Spacer (6mm OD, 5mm Length) - 4 Pack"
-  },
-  {
    "nom": "vis 2802-0004-0018 retournée — bloc 1201 → moyeu 1311 → goTUBE de flexion",
    "nature": "déplacée",
    "etat": "déplacé",
@@ -575,7 +540,7 @@
    "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
   },
   {
-   "nom": "câble du D85MG : 3 fils de Ø1.0 (237 mm dans le bras)",
+   "nom": "câble du D85MG : 3 fils de Ø1.0 (231 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du D85MG",
@@ -589,7 +554,7 @@
    "designation": "prise de servo (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
   },
   {
-   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (275 mm dans le bras)",
+   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (269 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du HS-65MG",
@@ -603,7 +568,7 @@
    "designation": "prise à sertir (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
   },
   {
-   "nom": "câble du servo d'abduction : 3 fils de Ø1.5 (147 mm dans le bras)",
+   "nom": "câble du servo d'abduction : 3 fils de Ø1.5 (139 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du servo d'abduction",
@@ -900,13 +865,6 @@
    "2802-0004-0008#9",
    "2802-0004-0008#13",
    "2802-0004-0008#15"
-  ],
-  "couronne acétal du bas et ses entretoises de 4 mm, remplacées par la roue alu de 90 dents et des entretoises de 5 mm": [
-   "2312-0414-0072#2",
-   "1502-0006-0040#3",
-   "1502-0006-0040#6",
-   "1502-0006-0040#7",
-   "1502-0006-0040#8"
   ]
  }
 }

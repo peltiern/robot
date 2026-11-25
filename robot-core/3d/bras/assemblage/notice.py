@@ -198,23 +198,19 @@ def etapes(P):
             d, L = axe_de_vis(P[v]['maillage'])
             paire.append(glisse([v, r_], d, L + 4))
         at = 'couronne ' + nom
-        # en bas, la couronne acétal est remplacée par la roue alu de 90 dents de l'abduction (epaule.py)
-        roue = 'la couronne de 72 dents se pose dessous' if haut else (
-            'la roue alu de 90 dents (2302-0014-0090) se pose dessous, côté plat du moyeu contre le 1526, la '
-            'denture qui déborde tournée vers les blocs')
         etape(f'La couronne {nom}, à l\'établi',
-              'Le moyeu 1526 reçoit ses deux roulements à collerette 1601 (un de chaque côté). ' + roue[0].upper() +
-              roue[1:] + ' ; quatre vis M4 × 14 avec rondelles la serrent par l\'intérieur.',
+              'Le moyeu 1526 reçoit ses deux roulements à collerette 1601 (un de chaque côté). La couronne de '
+              '72 dents se pose dessous ; quatre vis M4 × 14 avec rondelles la serrent par l\'intérieur.',
               poser(cles(r'^1526-', cote)),
               [glisse([p], (0, 0, -s_), 15) for p in cles(r'^1601-0014-0004#', lambda c, s_=s_: 0 < c[2] * s_ < 26)],
               [glisse([p], (0, 0, s_), 15) for p in cles(r'^1601-0014-0004#', lambda c, s_=s_: c[2] * s_ > 26)],
-              glisse(cles(r'^(2312-0414-0072#|roue alu 90 dents)', cote), (0, 0, -s_), 15),
+              glisse(cles(r'^2312-0414-0072#', cote), (0, 0, -s_), 15),
               paire, atelier=at)
         etape(f'La couronne {nom} sur l\'épaule',
-              f'Une rondelle et une entretoise de {4 if haut else 5} mm sur chacun des quatre taraudages {sens} des '
-              f'blocs ; la {"couronne" if haut else "roue"} par-dessus, quatre vis M4 × 16.',
+              f'Une rondelle et une entretoise de 4 mm sur chacun des quatre taraudages {sens} des blocs ; la '
+              f'couronne par-dessus, quatre vis M4 × 16.',
               [glisse([r_], (0, 0, s_), 15) for r_ in cles(r'^2807-0407-0500#', lambda c, s_=s_: 10 < c[2] * s_ < 16)],
-              [glisse([e_], (0, 0, s_), 15) for e_ in cles(r'^(1502-0006-0040#|entretoise 1502-0006-0050)', cote)],
+              [glisse([e_], (0, 0, s_), 15) for e_ in cles(r'^1502-0006-0040#', cote)],
               dict(joindre=at, chemin=[[[0, 0, s_], 30]]),
               visser(cles(r'^2802-0004-0016#', cote)))
     etape('Les plaques du caisson sur le pivot',
@@ -319,10 +315,7 @@ def etapes(P):
           atelier='module')
     etape('Le module rejoint l\'épaule',
           'Le module glisse vers l\'arrière entre les deux plaques 1108, jusqu\'à ce que le pignon de 48 dents engrène '
-          'avec la roue alu de 90 dents (tourner légèrement le pignon pour engager les dents). Réglage de '
-          'l\'engrènement : desserrer les six vis du cadre du servo dans les plaques latérales, pousser le cadre vers '
-          'l\'épaule (0,65 mm dans ses trous oblongs) jusqu\'à ce que le bras ne prenne plus de jeu sans que les '
-          'dents ne forcent, resserrer.',
+          'avec la couronne du bas (tourner légèrement le pignon pour engager les dents).',
           dict(joindre='module', chemin=[[[1, 0, 0], 60]]))
     etape('Les profilés',
           'Les deux profilés 1121 glissent depuis l\'avant, sous les plaques 1108 et par-dessus le module, jusqu\'à '
@@ -334,14 +327,9 @@ def etapes(P):
            '2802-0004-0010#7': '2812-0004-0007#16', '2802-0004-0010#8': '2812-0004-0007#8'}
     etape('Les profilés sur les plaques 1108',
           'Huit vis M4 × 10 traversent plaques 1108 et fonds des profilés ; les écrous Nylstop se tiennent par '
-          'l\'intérieur du caisson, de part et d\'autre du servo d\'abduction. Dans le profilé du bas, ils passent '
-          'sous le pignon du servo (4 mm au-dessus d\'eux) : les glisser à plat sur le fond depuis l\'avant, et les '
-          'tenir à la clé plate fine pendant le serrage. Puis quatre vis M4 × 12 relient les '
+          'l\'intérieur du caisson, de part et d\'autre du servo d\'abduction. Puis quatre vis M4 × 12 relient les '
           'profilés aux écrous de la cloison.',
-          # en bas, le pignon du servo (plus près de l'épaule depuis le 2026-11-24) passe à 4,2 mm au-dessus des écrous :
-          # ils arrivent à plat sur le fond, par l'avant, et non d'en haut
-          [[ecrou([e_], (1, 0, 0) if P[e_]['maillage'].bounds.mean(0)[2] < 0 else (0, 0, -1), 12 if P[e_]['maillage'].bounds.mean(0)[2] < 0 else 6),
-            visser([v])] for v, e_ in ecr.items()],
+          [[ecrou([e_], (0, 0, -np.sign(P[e_]['maillage'].bounds.mean(0)[2])), 6), visser([v])] for v, e_ in ecr.items()],
           visser(cles(r'^vis 2802-0004-0012 — profilé')))
     etape('Les câbles',
           'Les trois câbles de servo partent vers l\'épaule. Le fil du HS-65MG sort de la liaison par l\'arrière, '
@@ -355,11 +343,7 @@ def etapes(P):
           'L\'arbre REX de 8 mm entre par le goTUBE de flexion, traverse les deux moyeux 1311 sous les câbles, profil '
           'aligné sur celui des moyeux. Les deux vis de serrage de chaque moyeu le bloquent.',
           glisse(cles(r'^arbre REX'), mY, 120),
-          # #1 et #3 sortent vers l'arrière et le bas, vers le bord de la roue alu : 19 mm libres le long de leur axe
-          # (2026-11-24) ; la vis de 18 mm prend dans son trou tête à 14 mm, et le petit bras d'une clé de 3 mm (20 mm,
-          # 17,5 hors de l'empreinte) passe. Sans la marge de 4 mm au-delà de la vis, donc.
-          visser(k('2800-0004-0014#2')), visser(k('2800-0004-0014#1'), marge=0.0),
-          visser(cles(r'2800-0004-0014#4 retourné')), visser(cles(r'2800-0004-0014#3 retourné'), marge=0.0))
+          visser(k('2800-0004-0014#1', '2800-0004-0014#2')), visser(cles(r'2800-0004-0014#[34] retourné')))
     etape('La plaque de bout, à l\'établi',
           'Un écrou Nylstop dans chacune des quatre poches des pattes, par la face libre (un morceau de ruban '
           'adhésif les retient le temps de la pose).',

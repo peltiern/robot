@@ -62,14 +62,6 @@ PIVOT = (-23.6, -29.6)
 DESSUS = [(91.0, -16.0, 9.0), (60.0, -16.0, 9.0), (32.0, -16.0, 9.0), (27.5, -12.0, 7.0), (25.5, -7.0, 3.0),
           (22.0, -6.0, -3.0)]
 
-# L'épaule et ses passages ont reculé de 8 mm le 2026-11-24 (epaule.py) : les points côté épaule (x < 23, là où
-# commence le caisson) suivent. Le miroir du tronc (câble du servo d'abduction) se prend sur le tronc d'origine.
-from epaule import RECUL as _RECUL
-def _epaule(pts):
-    return [(x - _RECUL, y, z) if x < 23 else (x, y, z) for x, y, z in pts]
-_TRONC_MIROIR = [(-x, y, z) for x, y, z in TRONC[9:]]
-TRONC, DESSUS = _epaule(TRONC), _epaule(DESSUS)
-
 CABLES = {
     'D85MG': dict(servo='D85MG', points=[
         (98.5, 10.5, -24.5), (99.5, 10.5, -28.5), (95.0, 10.0, -28.5), (93.5, 8.0, -20.0), (93.5, 0.0, 6.0),
@@ -89,9 +81,9 @@ CABLES = {
     # entre les couronnes, de x −21 à +27 ; on le traverse, puis le chemin est le miroir de celui des Hitec :
     # lumière −x du bloc 1201 (x −17 → −10), contour du moyeu, canal −x du goTUBE de flexion. L'arbre REX de
     # flexion (Ø8, axe y) occupant le milieu, la traversée passe au-dessus, à z = +6.
-    'servo d\'abduction': dict(servo='2000-0025-0002', points=_epaule([
+    'servo d\'abduction': dict(servo='2000-0025-0002', points=[
         (33.0, 0.0, 19.3), (31.5, -2.0, 14.0), (29.0, -4.0, 8.0), (24.0, -3.0, 4.0), (16.0, -3.5, 6.0),
-        (6.0, -5.0, 6.0), (-6.0, -7.0, 6.0), (-11.5, -9.5, 3.0), (-13.5, -12.0, 0.0)] + _TRONC_MIROIR), prise_au_bout=True),
+        (6.0, -5.0, 6.0), (-6.0, -7.0, 6.0), (-11.5, -9.5, 3.0), (-13.5, -12.0, 0.0)] + [(-x, y, z) for x, y, z in TRONC[9:]], prise_au_bout=True),
 }
 
 

@@ -27,8 +27,7 @@ TARAUDAGE = (2.9, 3.85)
 
 def pieces_nouveau_bras():
     """nom -> (maillage, référence, rôle) pour toutes les pièces du nouveau bras."""
-    from epaule import unites                     # épaule et pivot reculés de 8 mm (epaule.py)
-    a = unites()
+    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
     v5 = json.load(open(os.path.join(SORTIE, 'v5.json')))
     retirees = {n for l in v5['masquer'].values() for n in l}
     out = {}

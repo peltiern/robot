@@ -34,8 +34,7 @@ def axe_de_vis(m):
 
 
 def main():
-    from epaule import unites                     # épaule et pivot reculés de 8 mm (epaule.py)
-    a = unites()
+    a = json.load(open(os.path.join(SORTIE, 'assemblage.json')))
     pieces = pieces_du_bras()
     U = {u['nom']: u for u in a['unites']}
     M = {n: maillage(u, pieces) for n, u in U.items()}
