@@ -291,7 +291,13 @@
   "nom": "2305 Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 48 Tooth)",
   "url": "https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-25-tooth-spline-48-tooth/",
   "prix": 12.99,
-  "paquet": 1
+  "paquet": 1,
+  "steplab": {
+   "prix": 18.23,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/serie-2305-ottone-mod-0-8-servo-gear-25-denti-spline-48-denti/",
+   "nom": "Serie 2305 Ottone- MOD 0.8- Servo Gear (25 denti spline- 48 denti)"
+  }
  },
  "2312-0414-0048": {
   "fournisseur": "goBILDA",
@@ -324,7 +330,13 @@
   "nom": "Slip-Fit Steel Pinion Gear (8mm REX® Bore, MOD 0.8, 20T)",
   "url": "https://www.gobilda.com/slip-fit-steel-pinion-gear-8mm-rex-bore-mod-0-8-20t/",
   "prix": 8.59,
-  "paquet": 1
+  "paquet": 1,
+  "steplab": {
+   "prix": 11.53,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/pignone-slip-fit-in-acciaio-foro-rex-da-8-mm-mod-0-8-20-denti/",
+   "nom": "Pignone Slip-Fit in acciaio (foro REX® da 8 mm, MOD 0.8, 20 denti)"
+  }
  },
  "2800-0004-0010": {
   "fournisseur": "goBILDA",
@@ -335,7 +347,7 @@
   "paquet_suppose": true,
   "steplab": {
    "prix": 4.55,
-   "dispo": false,
+   "dispo": true,
    "url": "https://www.steplab.net/p/viti-a-brugola-zincate-m4-10mm-25-pezzi/",
    "nom": "Viti a brugola zincate M4  10mm (25 pezzi)"
   }
@@ -349,7 +361,7 @@
   "paquet_suppose": true,
   "steplab": {
    "prix": 4.95,
-   "dispo": false,
+   "dispo": true,
    "url": "https://www.steplab.net/p/viti-a-brugola-zincate-m4-14mm-25-pezzi/",
    "nom": "Viti a brugola zincate M4  14mm (25 pezzi)"
   }

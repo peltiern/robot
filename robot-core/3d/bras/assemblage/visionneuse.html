@@ -47,6 +47,13 @@
   .manque { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
   .manque.ok { color: #2e8b4a; } .manque.ko { color: #c83232; }
   .des .four { color: var(--accent); }
+  /* la pièce cliquée dans la vue : sa ligne défile au milieu et clignote ; de quoi copier la référence et la retrouver */
+  .ligne.eclair { animation: eclair 1.4s ease-out; }
+  @keyframes eclair { 0%, 35% { background: rgba(200,100,42,.45); } 100% { background: rgba(200,100,42,.12); } }
+  .actions { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin-top: 3px; font-size: 12px; }
+  .actions button { font: inherit; padding: 1px 7px; border: 1px solid var(--accent); color: var(--accent); background: #fff; border-radius: 4px; cursor: pointer; }
+  .actions a { color: var(--accent); }
+  @media (prefers-reduced-motion: reduce) { .ligne.eclair { animation: none; } }
   @media (max-width: 760px) { #legende { top: auto; left: 12px; width: auto; height: 38%; } #commandes { width: auto; right: 12px; } }
 </style>
 <script type="importmap">
@@ -70,7 +77,7 @@
     <label><input type="checkbox" id="demo"> démonstration (les quatre servos en boucle)</label>
     <button id="zero">tout à zéro</button>
   </div>
-  <div id="info">Survole une pièce, ou une ligne de la nomenclature. Un clic sur une ligne la met en évidence.</div>
+  <div id="info">Survole une pièce, ou une ligne de la nomenclature. Un clic sur une pièce de la vue la retrouve dans la liste, avec de quoi copier sa référence.</div>
 </div>
 <div id="legende" class="panneau"></div>
 <script type="module">
@@ -226,7 +233,8 @@ function construireLegende() {
     html += `<div class="groupe">${titre}<span class="compte">${total} pièce${total > 1 ? 's' : ''}</span></div>`;
     for (const l of liste.sort((a, b) => a.ref.localeCompare(b.ref))) {
       const pastille = `<div class="pastille" style="background:#${couleurDe(l.o).getHexString()}"></div>`;
-      const nom = `<div><span class="ref">${affiche(l.ref)}</span><span class="des">${designation(l.ref)}${inv ? conditionnement(l.ref) : ''}</span></div>`;
+      const nom = `<div><span class="ref">${affiche(l.ref)}</span><span class="des">${designation(l.ref)}${inv ? conditionnement(l.ref) : ''}</span>`
+        + (l.ref === etat.choix ? actions(l.ref) : '') + '</div>';
       html += inv
         ? `<div class="ligne inv" data-k="${l.ref}">${pastille}<div class="nombre" title="j'ai tout">×${l.n}</div>${nom}
            <input type="number" min="0" value="${stock.ai[l.ref] ?? 0}" title="j'ai"><div class="manque"></div></div>`
@@ -235,6 +243,15 @@ function construireLegende() {
   }
   boite.innerHTML = html;
   boite.querySelectorAll('.onglets button').forEach(b => b.onclick = () => { etat.inventaire = b.dataset.o === '1'; tout(); });
+  boite.querySelectorAll('.actions').forEach(a => a.onclick = e => e.stopPropagation());
+  boite.querySelectorAll('.copier-ref').forEach(b => b.onclick = async e => {
+    e.stopPropagation();
+    try { await navigator.clipboard.writeText(b.dataset.code); b.textContent = 'copié ✓'; }
+    catch {          // presse-papiers refusé : on sélectionne la référence, Ctrl+C suffit
+      const ref = b.closest('.ligne').querySelector('.ref'), r = document.createRange(); r.selectNodeContents(ref);
+      getSelection().removeAllRanges(); getSelection().addRange(r); b.textContent = 'Ctrl+C';
+    }
+  });
   boite.querySelectorAll('.ligne').forEach(l => {
     l.classList.toggle('choisie', l.dataset.k === etat.choix);
     l.onmouseenter = () => { etat.survol = l.dataset.k; decrire(l.dataset.k); appliquer(); };
@@ -341,6 +358,22 @@ function brancherInventaire() {
   document.getElementById('raz').onclick = () => { if (confirm("Effacer tout l'inventaire ?")) { stock.ai = {}; garder(); tout(); } };
   majInventaire();
 }
+// Ce qu'on fait d'une pièce choisie : copier sa référence (pour la chercher sur goBILDA ou chez steplab), ou y aller.
+function actions(r) {
+  const c = catalogue[r] ?? {}, liens = [];
+  if (c.fournisseur === 'goBILDA' && c.url) liens.push(`<a href="${c.url}" target="_blank" rel="noopener">goBILDA ↗</a>`);
+  if (c.steplab?.url) liens.push(`<a href="${c.steplab.url}" target="_blank" rel="noopener">steplab ↗</a>`);
+  if (c.fournisseur !== 'goBILDA' && c.url) liens.push(`<a href="${c.url}" target="_blank" rel="noopener">${c.fournisseur ?? 'lien'} ↗</a>`);
+  return `<span class="actions"><button class="copier-ref" data-code="${affiche(r)}">copier ${affiche(r)}</button>${liens.join('')}</span>`;
+}
+// Choisir une pièce depuis la vue : sa ligne, dans l'onglet ouvert, défile au milieu de la liste et clignote.
+function choisir(ref) {
+  etat.choix = ref; construireLegende(); appliquer();
+  const l = [...boite.querySelectorAll('.ligne')].find(x => x.dataset.k === ref);
+  if (!l) { info.innerHTML += '<br><i>pas dans la liste affichée (rien ne manque pour cette pièce ?)</i>'; return; }
+  l.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  l.classList.remove('eclair'); void l.offsetWidth; l.classList.add('eclair');
+}
 function decrire(ref) { info.innerHTML = `<b>${affiche(ref)}</b> — ${famille(ref).toLowerCase()}<br>${designation(ref)}`; }
 function tout() { etat.choix = null; construireLegende(); appliquer(); }
 
@@ -360,6 +393,18 @@ rendu.domElement.addEventListener('pointermove', ev => {
   const u = t.object.userData;
   info.innerHTML = `<b>${affiche(u.ref)}</b> — ${famille(u.ref).toLowerCase()}<br>${designation(u.ref)}`
     + (!u.origine ? `<br><i>${u.nom}</i>` : '');
+});
+// Clic sur une pièce (un glisser fait tourner la vue : on ne choisit que si le pointeur n'a presque pas bougé).
+// Les pièces estompées par un choix restent cliquables, après celles qui sont bien visibles.
+let appui = null;
+rendu.domElement.addEventListener('pointerdown', ev => { appui = [ev.clientX, ev.clientY]; });
+rendu.domElement.addEventListener('pointerup', ev => {
+  if (!appui || Math.hypot(ev.clientX - appui[0], ev.clientY - appui[1]) > 4) return;
+  souris.set(ev.clientX / innerWidth * 2 - 1, -ev.clientY / innerHeight * 2 + 1);
+  rayon.setFromCamera(souris, camera);
+  const t = rayon.intersectObjects(objets.filter(o => o.visible && o.material.opacity > 0.3), false)[0]
+         ?? rayon.intersectObjects(objets.filter(o => o.visible), false)[0];
+  if (t) choisir(t.object.userData.ref);
 });
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); rendu.setSize(innerWidth, innerHeight); });
 // ── mouvements : chaque pièce suit son ensemble (épaule, caisson, tube, palonnier…) ──
