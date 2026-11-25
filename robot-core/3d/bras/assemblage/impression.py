@@ -13,6 +13,7 @@ plateau.
     coupe, il n'a plus de pont au-dessus de la poche ;
   - plaque de bout : face extérieure (x = 192) sur le plateau ; les poches d'écrous font des ponts de 7 mm ;
   - bague fendue du goTUBE : face large (x = 169,55, contre le berceau) sur le plateau, la lèvre en haut ;
+  - entretoise de la roue et collier de butée du goTUBE de flexion (jonction.py) : face large sur le plateau, lèvre en haut ;
 
 Écrit impression/*.stl sur le disque externe.
 """
@@ -31,6 +32,9 @@ PIECES = [
     ('liaison/liaison_berceau_position.stl', (1, 0, 0), 'liaison_berceau_IMPRESSION.stl'),
     ('plaque_bout/plaque_bout_position.stl', (1, 0, 0), 'plaque_bout_IMPRESSION.stl'),
     ('liaison/bague_tube_position.stl', (-1, 0, 0), 'bague_tube_IMPRESSION.stl'),
+    # butées du goTUBE de flexion (jonction.butees) : chacune sur sa face large, la lèvre Ø34 en haut
+    ('jonction/entretoise_roue_position.stl', (0, -1, 0), 'entretoise_roue_IMPRESSION.stl'),
+    ('jonction/collier_butee_position.stl', (0, 1, 0), 'collier_butee_IMPRESSION.stl'),
 ]
 
 

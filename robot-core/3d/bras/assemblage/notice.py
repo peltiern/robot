@@ -127,7 +127,10 @@ def verifier(etapes, P):
 def etapes(P):
     def cles(motif, ou=lambda c: True):
         """Les pièces dont le nom ou la référence répond au motif, filtrées par la position de leur centre."""
+        # La jonction (jonction.py) reprend des références du bras (1604, 1802, vis) : ses pièces ne répondent qu'aux
+        # motifs qui la nomment, sinon les étapes du bras les poseraient aussi.
         r = [k for k, p in P.items() if (re.search(motif, p['nom']) or re.search(motif, p['ref']))
+             and p['nom'].startswith('jonction') == ('jonction' in motif)
              and ou(p['maillage'].bounds.mean(0))]
         assert r, motif
         return r
@@ -181,10 +184,10 @@ def etapes(P):
           glisse(k('2812-0004-0007#9', '2812-0004-0007#10', '2812-0004-0007#17', '2812-0004-0007#18'), mY, 10),
           visser(k('2802-0004-0018#2', '2802-0004-0018#4', '2802-0004-0018#7', '2802-0004-0018#8')))
     etape('Le moyeu retourné et le goTUBE de flexion',
-          'Côté corps, le moyeu 1311 est retourné : son bossage vers l\'extérieur entre dans l\'alésage du goTUBE 48. '
+          'Côté corps, le moyeu 1311 est retourné : son bossage vers l\'extérieur entre dans l\'alésage du goTUBE de flexion (72 mm). '
           'Les quatre vis M4 × 18 se posent tête dans le bloc, depuis l\'intérieur de l\'épaule, traversent bloc '
           'et moyeu et se vissent dans le goTUBE. Clé Allen coudée, petit bras : l\'autre bloc est à 24 mm.',
-          glisse(cles(r'1311-0016-4008#2 retourné'), mY, 20), glisse(cles(r'^goTUBE 48'), mY, 30),
+          glisse(cles(r'1311-0016-4008#2 retourné'), mY, 20), glisse(cles(r'^goTUBE de flexion'), mY, 30),
           visser(cles(r'retournée — bloc 1201')))
     for haut, nom, sens in ((True, 'haute', 'au-dessus'), (False, 'basse', 'au-dessous')):
         s_ = 1 if haut else -1
@@ -258,11 +261,11 @@ def etapes(P):
           glisse(cles(r'^1601-0039-0032#2'), X, 15), ecrou(cles(r'^écrou .*— palier'), X),
           [ecrou([e_], mX) for e_ in cles(r'^écrou .*— plaque 96 y−')], atelier='module')
     etape('Le goTUBE sur le berceau de la liaison, à l\'établi',
-          'Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 96 mm : '
+          'Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 72 mm : '
           'quatre vis M4 × 12 par l\'intérieur, clé coudée par l\'arrière du berceau, encore ouvert. La bague fendue '
           'imprimée se clipse de côté sur le goTUBE, contre le berceau, lèvre vers l\'avant : c\'est elle qui empêche '
           'le tube de glisser vers la main. Elle se pose aussi plus tard, bras monté, sans rien démonter.',
-          poser(cles(r'^liaison, berceau')), glisse(cles(r'^bague '), X, 100), glisse(cles(r'^4103-0032-0096'), X, 100),
+          poser(cles(r'^liaison, berceau')), glisse(cles(r'^bague '), X, 100), glisse(cles(r'^4103-0032-0072 goTUBE du bras'), X, 100),
           [dict(glisse([v], mX, 16, (Z, 30)), tol=5.0) for v in cles(r'liaison ↔ goTUBE')], atelier='liaison')
     etape('Le servo de pince (HS-65MG), à l\'établi',
           'Le servo entre dans le berceau par l\'arrière, comme un tiroir, oreilles sur le haut des parois : le passe-fil '
@@ -289,8 +292,11 @@ def etapes(P):
     etape('Les paliers avant',
           'Chaque roulement dans son palier 1604, collerette à l\'avant ; les deux paliers s\'enfilent sur le tube '
           'par l\'avant.',
-          dict(glisse(k('1604-0043-0032#2', '1601-0039-0032#1'), X, 100), tol=5.0),
-          dict(glisse(k('1604-0043-0032#1', '1601-0039-0032#3'), X, 100), tol=5.0), atelier='module')
+          # Roulement Ø32 sur goTUBE Ø32 : le volume commun des deux maillages facettés monte jusqu'à 8,1 mm³ selon la
+          # position (même courbe avec le goTUBE de 96 et de 72, décalée de 24 mm). Avec le 72, la pose de repos n'en
+          # garde que 1,2 mm³ au lieu de 4,0 : l'écart dépasse 5 sans qu'aucune pièce ne gêne (2026-11-25).
+          dict(glisse(k('1604-0043-0032#2', '1601-0039-0032#1'), X, 100), tol=7.5),
+          dict(glisse(k('1604-0043-0032#1', '1601-0039-0032#3'), X, 100), tol=7.5), atelier='module')
 
     # ── le caisson ──
     etape('La plaque latérale y−',
@@ -337,7 +343,9 @@ def etapes(P):
           'des deux Hitec, empilés, passent côté +x de l\'épaule ; celui du servo d\'abduction côté −x. Tous '
           'passent au-dessus de l\'emplacement de l\'arbre et ressortent par le goTUBE de flexion, prises comprises : '
           'l\'arbre n\'est pas encore là. La prise du HS-65MG se sertit à la sortie.',
-          poser(cles(r'^câble du (D85MG|HS-65MG|servo d)') + cles(r'^prise du câble') + cles(r'^bout du câble du HS-65MG')
+          # Les prises ne sont posées qu'à l'étape de la roue de flexion : jusque-là elles pendent et passent au milieu
+          # des roulements de la jonction (Ø32) ; leur place dessinée est dans les fenêtres de la roue.
+          poser(cles(r'^câble du (D85MG|HS-65MG|servo d)') + cles(r'^bout du câble du HS-65MG')
                 + cles(r'^soudure du fil')))
     etape('L\'arbre de flexion',
           'L\'arbre REX de 8 mm entre par le goTUBE de flexion, traverse les deux moyeux 1311 sous les câbles, profil '
@@ -466,6 +474,66 @@ def etapes(P):
           dict(glisse(cles(r'^main, doigts : rondelle du cache, côté B'), Z, 10), tol=3.0),
           dict(glisse(cles(r'^main, doigts : (cache de l\'axe|aimant du cache), côté A'), mZ, 10), tol=3.0),
           dict(glisse(cles(r'^main, doigts : (cache de l\'axe|aimant du cache), côté B'), Z, 10), tol=3.0))
+
+    # ── la jonction bras ↔ corps (jonction.py), montée à part puis enfilée sur le goTUBE de flexion ──
+    # Elle est posée dans le corps, horizontale : dans le repère du bras, le haut du robot est penché comme le bras.
+    from jonction import R_BRAS
+    HAUT = tuple(float(v) for v in R_BRAS.T @ [0, 0, 1])
+    BAS = tuple(-v for v in HAUT)
+    etape('Le servo de flexion dans son cadre, à l\'établi',
+          'Le servo 25-2 cinq tours entre dans le cadre 1802 par le côté de la cannelure, corps en premier, et s\'y '
+          'visse par ses oreilles. Le pignon laiton de 40 dents se pousse sur la cannelure jusqu\'au bout.',
+          poser(cles(r'^jonction, cadre du servo')), glisse(cles(r'^jonction, servo de flexion'), mY, 45),
+          glisse(cles(r'^jonction, pignon laiton'), mY, 20), atelier='jonction')
+    etape('La jonction, à l\'établi',
+          'Chaque roulement dans son palier 1604. Sur la plaque 1123 du bas : les deux paliers (rangées de trous à ±16 mm '
+          'du milieu de la plaque) et le cadre du servo (rangée +16, trois trous de l\'avant), chacun par deux ou trois vis '
+          'M4 × 8 dans ses chants taraudés. La plaque du haut se pose par-dessus et se visse de même.',
+          glisse(cles(r'^jonction, plaque du bas'), BAS, 30),
+          glisse(cles(r'^jonction, (palier 1604|roulement du palier) extérieur'), HAUT, 60),
+          glisse(cles(r'^jonction, (palier 1604|roulement du palier) intérieur'), HAUT, 60),
+          visser(cles(r'^jonction, vis .*plaque du bas ↔')),
+          glisse(cles(r'^jonction, plaque du haut'), HAUT, 30),
+          visser(cles(r'^jonction, vis .*plaque du haut ↔')), atelier='jonction')
+    etape('La jonction sous le goRAIL du haut du flanc',
+          'Trois écrous Hurricane entrent dans la fente du dessous du rail et se tournent d\'un quart de tour. Trois '
+          'entretoises de 16 mm entre le rail et la plaque du haut ; les vis M4 × 25 viennent par-dessous la plaque du '
+          'haut, entre les deux plaques (clé coudée par les trous de la plaque du bas), traversent plaque et entretoise et '
+          'se vissent dans les écrous.',
+          [dict(glisse([e_], BAS, 12), tol=3.0) for e_ in cles(r'^jonction, écrou Hurricane .*du rail')],
+          glisse(cles(r'^jonction, entretoise .*rail'), (0, 1, 0), 20),
+          visser(cles(r'^jonction, vis .*écrou du rail')), atelier='jonction')
+    etape('La traverse sous la jonction',
+          'Un second goRAIL de 288 mm se monte entre les montants avant et arrière du flanc, juste sous la jonction : '
+          'trois écrous Hurricane dans la fente de son dessus, un gousset 1137 sur chaque angle, côté extérieur, comme '
+          'aux coins du cadre. Trois entretoises de 8 mm entre la traverse et la plaque du bas ; les vis M4 × 16 se '
+          'glissent par le côté entre les deux plaques, tête sur la plaque du bas, et se serrent à la clé coudée par les '
+          'trous libres de la plaque du haut. Le haut et le bas tenus, la jonction ne peut plus pivoter autour du rail.',
+          [dict(glisse([e_], BAS, 12), tol=3.0) for e_ in cles(r'^jonction, écrou Hurricane .*traverse')],
+          glisse(cles(r'^jonction, entretoise .*traverse'), (0, 1, 0), 20),
+          visser(cles(r'^jonction, vis .*traverse')), atelier='jonction')
+    etape('Le bras dans la jonction',
+          'Les prises des câbles d\'abord : elles passent dans les roulements. Le goTUBE de flexion entre par le flanc '
+          'du corps, traverse le palier extérieur puis le palier intérieur, jusqu\'à ce que son bout arrive au droit du '
+          'pignon du servo.',
+          dict(joindre='jonction', chemin=[[[0, -1, 0], 90]]))
+    etape('Le collier de butée',
+          'Le collier imprimé, enfilé sur le goTUBE avant qu\'il entre dans la jonction, se pousse contre le palier '
+          'extérieur : son col de Ø34 entre dans le bloc et n\'appuie que sur la bague intérieure du roulement. Une vis '
+          'M3 × 12 dans son oreille le serre sur le tube (elle se visse dans le plastique). Bras poussé vers le corps, '
+          'c\'est lui qui bute.',
+          glisse(cles(r'^collier de butée'), Y, 10), visser(cles(r'^vis M3 × 12 du collier')))
+    etape('La roue de flexion',
+          'L\'entretoise imprimée s\'enfile sur le bout du goTUBE, lèvre de Ø34 contre la bague intérieure du roulement '
+          'du palier intérieur : bras tiré, la roue la pousse contre le roulement. Avant de poser la roue, chaque prise passe par une des fenêtres de la roue (8,7 × 4 mm), en face du canal du goTUBE '
+          'par où sort son câble : roue vissée, il ne reste que 5,9 × 4 mm, assez pour les nappes mais pas pour les prises. '
+          'La roue alu de 90 dents se visse au bout du goTUBE par quatre vis M4 × 12 dans ses taraudages, et engrène '
+          'avec le pignon du servo.',
+          glisse(cles(r'^entretoise de la roue de flexion'), mY, 30),
+          poser(cles(r'^prise du câble')),
+          # La prise (7,85 × 2,42) passe dans l'oblong (8,7 × 4, bouts ronds de r 2) avec 0,4 mm de jeu en longueur, 0,8
+          # par côté en largeur : les facettes des deux maillages s'y recouvrent d'environ 1 mm³.
+          dict(glisse(cles(r'^roue alu 90 dents de flexion'), mY, 15), tol=3.0), visser(cles(r'roue de flexion ↔ goTUBE')))
     return E
 
 

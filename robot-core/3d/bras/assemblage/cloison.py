@@ -344,6 +344,6 @@ if __name__ == '__main__':
         # ce qui tourne avec la liaison n'est pas un obstacle : pignon, micro-servo, goTUBE du bras
         controler(trimesh.util.concatenate([trimesh.load(os.path.join(SORTIE, 'liaison', 'liaison_%s_position.stl' % p))
                                             for p in ('arriere', 'berceau')]),
-                  exclure=('liaison', 'moyeu', 'pignon Slip-Fit', 'HS-65MG', 'vis vis M2 du HS-65MG', '4103-0032-0096'), tourne=True)
+                  exclure=('liaison', 'moyeu', 'pignon Slip-Fit', 'HS-65MG', 'vis vis M2 du HS-65MG', '4103-0032-0072'), tourne=True)
     else:
         main()

@@ -44,7 +44,9 @@ ECHELLE = 0.7
 # Dans l'assemblage du Motion Arm : axe des doigts en (x 88,93 ; z 371,06), le long de y ; milieu des doigts en y
 MA_AXE = (88.93, -7.15, 371.06)
 
-BOUT_TUBE = 265.6
+# Bout du goTUBE du bras : 241,6 depuis le passage au goTUBE de 72 mm (v5.TUBE_BRAS, proportions des plans, 2026-11-25) ;
+# 265,6 avec le goTUBE de 96 d'origine. Même valeur dans animation.BOUT_TUBE.
+BOUT_TUBE = 241.6
 COTE_POUCE = -1                                   # pouce côté corps (y−) ; +1 = pose du Motion Arm
 # Le long du bras, depuis l'axe des doigts : fond du poignet (contre le bout du goTUBE), chambre du fléau, plancher
 # de la paume. Le plancher reste sous le bas des jointures (u −15,7) et entre elles (|w| < 17).

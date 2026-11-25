@@ -28,7 +28,8 @@ PIECES = [
     # raccourcie ni d'origine).
     # Le pignon Slip-Fit et l'engrenage du D85MG étaient deux disques approximatifs de la v5 : ils sont pris au
     # catalogue (voir PIGNON_TUBE, ENGRENAGE_D85).
-    ('REF_gotube_flexion_position_assemblage.stl', 'goTUBE 48 mm de flexion', 'achetée', '4103-0032-0048'),
+    # Le goTUBE de flexion de 48 mm de la v5 (REF_gotube_flexion) est remplacé par celui de 72 mm de la jonction
+    # (jonction.pieces_cote_bras, 2026-11-25).
     ('REF_servo_rose_position_assemblage.stl', 'D85MG déplacé', 'déplacée', 'D85MG'),
     # Le HS-65MG de la v5 (REF_micro_servo) n'avait pas de passe-fil et ses oreilles étaient 3 mm trop bas : on prend
     # le modèle Hitec du catalogue (2026-10-17, voir POCHE_HS65).
@@ -60,7 +61,13 @@ REMPLACEES = {
     # Cylindre de Ø6 qui occupe le même volume que la cannelure du servo d'abduction : un doublon du
     # modèle de Nicolas (« pas certain que ça serve »), retiré.
     'entretoise 1501 en doublon de la cannelure du servo, retirée': [102],
+    'goTUBE du bras de 96 mm, remplacé par celui de 72': [182],
 }
+
+# Le bras ramené aux proportions des plans de Nicolas (2026-11-25) : l'épaule → poignet faisait 303 mm pour 269 visés.
+# Le goTUBE du bras passe de 96 à 72 mm ; il part toujours de la liaison (x 169,55) et la main recule de 24 mm avec son
+# bout (pince.BOUT_TUBE). Même modèle goBILDA, origine au bout côté main : on reprend la matrice du 96 et on recule.
+TUBE_BRAS = dict(sku='4103-0032-0072', remplace='4103-0032-0096#1', recul=24.0)
 
 
 def charger(f):
@@ -144,7 +151,7 @@ FOND_LAMAGE_LIAISON = 167.0
 # (y = −32,1), dont les 4 trous sont au motif taraudé du bout du goTUBE. Les 4 vis M4 × 18 qui tenaient le
 # moyeu au bloc d'épaule sont retournées : tête à la place de l'écrou dans le bloc, elles traversent bloc
 # et moyeu et se vissent dans le goTUBE (≈ 5,8 mm de filet). Les écrous disparaissent.
-GOTUBE_FLEXION_RECUL = 4.9                     # v5 : y −37 → −85 (place de la bride) ; maintenant −32,1 → −80,1
+# Le goTUBE de flexion fait 72 mm depuis la jonction (y −32,1 → −104,1, jonction.GOTUBE_FLEXION) ; 48 mm avant.
 VIS_RETOURNEES = {'2802-0004-0018#1': '2812-0004-0007#3', '2802-0004-0018#3': '2812-0004-0007#12',
                   '2802-0004-0018#5': '2812-0004-0007#14', '2802-0004-0018#6': '2812-0004-0007#1'}
 # Retirées par leur nom (pas de numéro de pièce simple) : vis du moyeu côté corps retournées, écrous supprimés
@@ -273,9 +280,6 @@ def pieces_v5():
                         trimesh.load(os.path.join(CLOISON, 'cloison_structurelle_position.stl')), 'IMPRIME:cloison structurelle'))
             continue
         m = charger(f); m.apply_transform(T)
-        if ref == '4103-0032-0048':
-            m.apply_translation([0, GOTUBE_FLEXION_RECUL, 0])       # contre le moyeu, sans bride
-            nom = 'goTUBE 48 mm de flexion, vissé sur le moyeu'
         out.append((nom, nature, m, ref))
     m = modele(ARBRE_FLEXION['sku'], None)
     m.apply_translation(-m.bounds.mean(0))
@@ -292,6 +296,9 @@ def pieces_v5():
         u = U[n]; m = modele(u['source'], u['filtre']); m.apply_transform(np.array(u['matrice']))
         m.apply_translation([AVANCE, 0, 0])
         out.append(('%s avancé de 8 mm' % n, 'déplacée', m, n.split('#')[0]))
+    u = U[TUBE_BRAS['remplace']]
+    m = modele(TUBE_BRAS['sku'], None); m.apply_transform(np.array(u['matrice'])); m.apply_translation([-TUBE_BRAS['recul'], 0, 0])
+    out.append(('%s goTUBE du bras, 72 mm (au lieu de 96)' % TUBE_BRAS['sku'], 'achetée', m, TUBE_BRAS['sku']))
     out.append(('bague fendue du goTUBE — retenue du tube vers l\'avant', 'imprimée', bague_tube(),
                 'IMPRIME:bague fendue du goTUBE'))
     for (sku, (y, z), face, tour), nom in ((ENGRENAGE_D85, 'engrenage laiton 2305, 20 dents'),
@@ -353,6 +360,12 @@ def pieces_v5():
     for y, z in VIS_LIAISON_GOTUBE:
         out.append(('vis 2802-0004-0012 — liaison ↔ goTUBE du bras', 'visserie ajoutée',
                     poser_vis('2802-0004-0012', [FOND_LAMAGE_LIAISON - 2.2, y, z], [1, 0, 0]), '2802-0004-0012'))
+    # La jonction bras ↔ corps (jonction.py) : ce qui tourne avec la flexion (goTUBE de 72, roue vissée à son bout) et,
+    # pour la visionneuse et la notice, le côté corps ramené dans le repère du bras droit.
+    import jonction
+    for nom, ref, m in jonction.pieces_cote_bras() + jonction.butees() + jonction.pieces_bras():
+        nature = 'imprimée' if ref.startswith('IMPRIME:') else 'visserie ajoutée' if ref.startswith(('28', '15', 'VIS:')) else 'achetée'
+        out.append((nom, nature, m, ref))
     from cables import pieces_cables
     for nom, m, ref in pieces_cables():
         out.append((nom, 'câblage', m, ref))

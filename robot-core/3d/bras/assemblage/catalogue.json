@@ -64,6 +64,19 @@
    "nom": "Piastra serie 1123 (1 x 3 foro- 43 x 96 mm)"
   }
  },
+ "1123-0043-0144": {
+  "fournisseur": "goBILDA",
+  "nom": "1123 Series Pattern Plate (1 x 5 Hole, 43 x 144mm)",
+  "url": "https://www.gobilda.com/1123-series-pattern-plate-1-x-5-hole-43-x-144mm/",
+  "prix": 4.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 6.7,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/piatto-modello-serie-1123-1-x-5-foro-48-x-144-mm/",
+   "nom": "Piastra serie 1123 (1 x 5 foro- 43 x 144 mm)"
+  }
+ },
  "1147-0001-0005": {
   "fournisseur": "goBILDA",
   "nom": "Threaded Steel L-Bracket (5 Hole) - 4 Pack",
@@ -147,6 +160,32 @@
    "dispo": true,
    "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-7mm-length-4-pack/",
    "nom": "Distanziale ID 4 mm serie 1502 (lunghezza 6 mm diametro esterno 7 mm) &#8211; 4 pezzi"
+  }
+ },
+ "1502-0006-0080": {
+  "fournisseur": "goBILDA",
+  "nom": "1502 Series 4mm ID Spacer (6mm OD, 8mm Length) - 4 Pack",
+  "url": "https://www.gobilda.com/1502-series-4mm-id-spacer-6mm-od-8mm-length-4-pack/",
+  "prix": 2.14,
+  "paquet": 4,
+  "steplab": {
+   "prix": 2.87,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-8mm-length-4-pack/",
+   "nom": "Distanziale ID 4 mm serie 1502 (lunghezza 6 mm diametro esterno 8 mm) &#8211; 4 pezzi"
+  }
+ },
+ "1502-0006-0160": {
+  "fournisseur": "goBILDA",
+  "nom": "1502 Series 4mm ID Spacer (6mm OD, 16mm Length) - 4 Pack",
+  "url": "https://www.gobilda.com/1502-series-4mm-id-spacer-6mm-od-16mm-length-4-pack/",
+  "prix": 2.69,
+  "paquet": 4,
+  "steplab": {
+   "prix": 3.61,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/1502-series-4mm-id-spacer-6mm-od-16mm-length-4-pack/",
+   "nom": "1502 Series 4mm ID Spacer (6mm OD  16mm Length) &#8211; 4 Pack"
   }
  },
  "1526-0032-0100": {
@@ -266,12 +305,38 @@
    "nom": "2000 Series Dual Mode Servo (25-2, Torque)"
   }
  },
+ "2000-0025-0502": {
+  "fournisseur": "goBILDA",
+  "nom": "2000 Series 5-Turn, Dual Mode Servo (25-2, Torque)",
+  "url": "https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-2-torque/",
+  "prix": 49.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 67.09,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/servo-dual-mode-5-giri-25-2-torque/",
+   "nom": "Servo dual mode  5- giri  25-2 Torque"
+  }
+ },
  "2102-0008-0110": {
   "fournisseur": "goBILDA",
   "nom": "2102 Series Stainless Steel REX® Shaft (8mm Diameter, 110mm Length)",
   "url": "https://www.gobilda.com/2102-series-stainless-steel-rex-shaft-8mm-diameter-110mm-length/",
   "prix": 3.99,
   "paquet": 1
+ },
+ "2302-0014-0090": {
+  "fournisseur": "goBILDA",
+  "nom": "2302 Series Aluminum, MOD 0.8, Hub Mount Gear (14mm Bore, 90 Tooth)",
+  "url": "https://www.gobilda.com/2302-series-aluminum-mod-0-8-hub-mount-gear-14mm-bore-90-tooth/",
+  "prix": 14.89,
+  "paquet": 1,
+  "steplab": {
+   "prix": 19.98,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/serie-2302-alluminio-mod-0-8-supporto-per-montaggio-su-mozzo-alesaggio-14-mm90-denti/",
+   "nom": "Ingranaggio in alluminio serie 2302 MOD 0.8 per montaggio su mozzo (foro 14 mm, 90 denti)"
+  }
  },
  "2305-0024-0020": {
   "fournisseur": "goBILDA",
@@ -284,6 +349,19 @@
    "dispo": true,
    "url": "https://www.steplab.net/p/serie-2305-ottone-mod-0-8-servo-gear-24-denti-spline-20-denti/",
    "nom": "Serie 2305 Ottone- MOD 0.8- Servo Gear (24 denti spline- 20 denti)"
+  }
+ },
+ "2305-0025-0040": {
+  "fournisseur": "goBILDA",
+  "nom": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 40 Tooth)",
+  "url": "https://www.gobilda.com/2305-series-brass-mod-0-8-servo-gear-25-tooth-spline-40-tooth/",
+  "prix": 11.99,
+  "paquet": 1,
+  "steplab": {
+   "prix": 16.09,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/serie-2305-ottone-mod-0-8-servo-gear-25-denti-spline-40-denti/",
+   "nom": "Serie 2305 Ottone- MOD 0.8- Servo Gear (25 denti spline- 40 denti)"
   }
  },
  "2305-0025-0048": {
@@ -484,6 +562,19 @@
    "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 18 mm) &#8211; Confezione da 25 pezzi"
   }
  },
+ "2802-0004-0025": {
+  "fournisseur": "goBILDA",
+  "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 25mm Length) - 25 Pack",
+  "url": "https://www.gobilda.com/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-25mm-length-25-pack/",
+  "prix": 4.19,
+  "paquet": 25,
+  "steplab": {
+   "prix": 5.62,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-25mm-length-25-pack-2/",
+   "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 25 mm) &#8211; Confezione da 25 pezzi"
+  }
+ },
  "2802-0004-0050": {
   "fournisseur": "goBILDA",
   "nom": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 50mm Length) - 25 Pack",
@@ -495,6 +586,19 @@
    "dispo": true,
    "url": "https://www.steplab.net/p/2802-series-zinc-plated-steel-button-head-screw-m4-x-0-7mm-50mm-length-25-pack/",
    "nom": "Vite a testa bombata in acciaio zincato serie 2802 (M4 x 0,7 mm, lunghezza 50 mm) &#8211; Confezione da 25 pezzi"
+  }
+ },
+ "2805-0004-0108": {
+  "fournisseur": "goBILDA",
+  "nom": "Hurricane Nut for goRAIL® - 25 Pack",
+  "url": "https://www.gobilda.com/hurricane-nut-for-gorail-25-pack/",
+  "prix": 12.99,
+  "paquet": 25,
+  "steplab": {
+   "prix": 17.43,
+   "dispo": true,
+   "url": "https://www.steplab.net/p/dado-gorail-in-acciaio-zincato-serie-2805-4-8-4-pezzi/",
+   "nom": "Dado goRAIL in acciaio inox serie 2805 (4-8) &#8211; 25 pezzi"
   }
  },
  "2807-0407-0500": {
@@ -550,17 +654,17 @@
    "nom": "2912 Series Neodymium Magnet (5mm Diameter  1.5mm Thickness) &#8211; 2 Pack"
   }
  },
- "4103-0032-0048": {
+ "4103-0032-0072": {
   "fournisseur": "goBILDA",
-  "nom": "4103 Series goTUBE (48mm Length)",
-  "url": "https://www.gobilda.com/4103-series-gotube-48mm-length/",
-  "prix": 4.19,
+  "nom": "4103 Series goTUBE (72mm Length)",
+  "url": "https://www.gobilda.com/4103-series-gotube-72mm-length/",
+  "prix": 4.79,
   "paquet": 1,
   "steplab": {
-   "prix": 5.62,
+   "prix": 6.43,
    "dispo": true,
-   "url": "https://www.steplab.net/p/serie-4103-gotube-lunghezza-48mm/",
-   "nom": "Serie 4103 goTUBE (lunghezza 48mm)"
+   "url": "https://www.steplab.net/p/serie-4103-gotube-lunghezza-72-mm/",
+   "nom": "Serie 4103 goTUBE (lunghezza 72 mm)"
   }
  },
  "4103-0032-0096": {
@@ -634,6 +738,12 @@
  "IMPRIME:cloison structurelle": {
   "fournisseur": "à imprimer"
  },
+ "IMPRIME:collier de butée du goTUBE de flexion": {
+  "fournisseur": "à imprimer"
+ },
+ "IMPRIME:entretoise de la roue de flexion": {
+  "fournisseur": "à imprimer"
+ },
  "IMPRIME:liaison, berceau": {
   "fournisseur": "à imprimer"
  },
@@ -683,5 +793,8 @@
  "VIS:vis M2 × 6 autotaraudeuse, comme celles des servos": {
   "fournisseur": "fourni avec le servo",
   "achat": "sachets des servos Hitec (2 vis, déjà posées le 2026-11-18)"
+ },
+ "VIS:vis M3 × 12 à tête cylindrique, vissée dans le plastique (avant-trou Ø2,5)": {
+  "fournisseur": "inconnu"
  }
 }

@@ -147,7 +147,9 @@ def main():
         if np.any(ma.bounds[0] > mb.bounds[1] + tol) or np.any(mb.bounds[0] > ma.bounds[1] + tol):
             return False
         pts, _ = trimesh.sample.sample_surface(ma, 3000, seed=4)
-        _, dist, _ = trimesh.proximity.closest_point(mb, pts)
+        # Par paquets : sur les longs triangles minces d'un goTUBE, chaque point a des milliers de triangles candidats,
+        # et les 3000 points d'un coup ont dépassé 10 Go une fois la jonction ajoutée (2026-11-25).
+        dist = np.concatenate([trimesh.proximity.closest_point(mb, pts[i:i + 200])[1] for i in range(0, len(pts), 200)])
         return (dist < tol).sum() > 20
     # Contacts qui tiennent une pièce sans vis : roulement dans son bloc, pignon sur son embout, engrenage
     # sur la cannelure, servo dans sa poche, tube dans ses roulements.

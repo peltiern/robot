@@ -31,6 +31,13 @@ GLB_COMPLET = DOSSIER + '/full.glb'
 PLAN_SYMETRIE = 24.7                     # x du plan de symétrie du robot, mm
 GARDE_CORPS = 144.7                      # ce qui est à moins de cette distance du plan reste (côté corps)
 ANCIENS_BRAS = ('Long Right Arm <1>', 'Long Right Arm <2>')
+# L'épaule ramenée aux proportions des plans de Nicolas (2026-11-25, échelle ≈ 0,80 du cadre de 336 mm) : elle est à
+# 56 % de la profondeur du corps depuis l'avant (243,5 / 434 mm), soit 30 mm plus en avant que sur l'arbre de l'export,
+# Dans l'export, −y est l'avant du robot. La hauteur et l'écart au flanc viennent de la jonction (jonction.py) : axe de
+# flexion à 40 mm sous le goRAIL du haut du flanc (64 mm sous le haut du cadre, comme sur les plans), épaule écartée
+# jusqu'à ce que le bout du goTUBE de flexion de 72 mm vienne contre la roue (10,6 mm de plus que l'arbre de l'export ;
+# les plans en demandaient environ 8).
+EPAULE_AVANT = 30.0
 
 
 def charger_complet():
@@ -71,6 +78,10 @@ def epaule(pieces, bras):
     if np.dot(main - O, X) < 0:
         X = -X
     vers_corps = np.array([np.sign(PLAN_SYMETRIE - O[0]), 0.0, 0.0])
+    import jonction
+    cible = jonction.epaule('droit' if O[0] < PLAN_SYMETRIE else 'gauche')
+    assert abs(O[1] - EPAULE_AVANT - cible[1]) < 0.01, (O, cible)    # jonction.Y_AXE suit l'arbre de l'export
+    O = cible
     Y = -a if np.dot(a, vers_corps) > 0 else a                       # −Y vers le corps
     Z = np.cross(X, Y)
     T = np.eye(4); T[:3, 0], T[:3, 1], T[:3, 2], T[:3, 3] = X, Y, Z, O
@@ -103,17 +114,57 @@ def main():
     scene = trimesh.Scene()
     groupes = {}
     retirees = 0
+    def unique(nom):
+        # Deux nœuds du même nom s'écrasent dans la scène : les vis identiques d'une même liaison disparaissaient
+        # toutes sauf une (14 par jonction, 44 par bras, vu le 2026-11-25).
+        k, n = 2, nom
+        while n in groupes:
+            n = '%s (%d)' % (nom, k); k += 1
+        return n
     for p in pieces:
         if any(b in p['chaine'] for b in ANCIENS_BRAS) and \
                 abs(p['maillage'].bounds.mean(0)[0] - PLAN_SYMETRIE) > GARDE_CORPS:
             retirees += 1
             continue
-        haut = p['chaine'][1] if len(p['chaine']) > 1 else p['nom']
+        # Le côté corps de l'ancien bras (servo dans l'axe, cadre, accouplement 4001) ne tenait à rien : la jonction le
+        # remplace.
         if any(b in p['chaine'] for b in ANCIENS_BRAS):
-            haut = 'flexion côté corps'
-        nom = scene.add_geometry(p['maillage'], node_name=p['nom'], geom_name=p['nom'])
+            retirees += 1
+            continue
+        haut = p['chaine'][1] if len(p['chaine']) > 1 else p['nom']
+        nom = unique(p['nom'])
+        nom = scene.add_geometry(p['maillage'], node_name=nom, geom_name=nom)
         groupes[nom] = haut
-    bras = nouveau_bras()
+    # La jonction, posée dans le corps : à droite telle quelle, à gauche en miroir par le plan médian des rails. Elle
+    # n'est pas reprise du repère du bras : le bras gauche est le droit retourné d'un demi-tour, pas son miroir.
+    import jonction
+    for nom_j, ref, m in jonction.pieces_robot():
+        for cote in ('droit', 'gauche'):
+            mm = m.copy()
+            if cote == 'gauche':
+                mm.apply_transform(np.diag([-1.0, 1.0, 1.0, 1.0])); mm.apply_translation([2 * jonction.PLAN, 0, 0]); mm.invert()
+            n = unique('%s %s' % (nom_j, cote))
+            n = scene.add_geometry(mm, node_name=n, geom_name=n)
+            groupes[n] = 'jonction ' + cote
+    # La traverse sous la jonction (jonction.TRAVERSE_HAUT) : le rail du haut du flanc et ses deux angles (gousset 1137,
+    # barrettes d'écrous 2805-0004-0038 dans les fentes extérieures, vis M4 × 6), recopiés plus bas. Les vis M4 × 14 des
+    # angles restent : elles entrent dans le bout des traverses avant et arrière, que la traverse n'a pas.
+    dz = jonction.TRAVERSE_HAUT - (jonction.RAIL_BAS + 24.0)
+    def de_l_angle(p):
+        lo, hi = p['maillage'].bounds
+        return (p['nom'].startswith(('1137-0001-0002', '2805-0004-0038', '2802-0004-0006')) and lo[0] > -150 and hi[0] < -118
+                and lo[2] > 270 and hi[2] < 342 and (hi[1] < -70 or lo[1] > 128))
+    traverse = [p for p in pieces if p['nom'] == '1109-0024-0288_2' or de_l_angle(p)]
+    assert len(traverse) == 15, [p['nom'] for p in traverse]
+    for p in traverse:
+        for cote in ('droit', 'gauche'):
+            mm = p['maillage'].copy(); mm.apply_translation([0, 0, dz])
+            if cote == 'gauche':
+                mm.apply_transform(np.diag([-1.0, 1.0, 1.0, 1.0])); mm.apply_translation([2 * jonction.PLAN, 0, 0]); mm.invert()
+            n = unique('traverse, %s %s' % (re.sub(r'_\d+$', '', p['nom']), cote))
+            n = scene.add_geometry(mm, node_name=n, geom_name=n)
+            groupes[n] = 'traverse ' + cote
+    bras = [b for b in nouveau_bras() if not b[1].startswith('jonction')]
     # l'export est vu de face : son x négatif est la droite du robot
     for cote, ancien in (('droit', ANCIENS_BRAS[0]), ('gauche', ANCIENS_BRAS[1])):
         T = epaule(pieces, ancien)
@@ -121,7 +172,8 @@ def main():
             cote, T[:3, 3].round(1).tolist(), T[:3, 0].round(3).tolist(), T[:3, 1].round(3).tolist()))
         for cle, nom, ref, m in bras:
             m = m.copy(); m.apply_transform(T)
-            n = scene.add_geometry(m, node_name='bras %s : %s' % (cote, nom), geom_name='bras %s : %s' % (cote, nom))
+            n = unique('bras %s : %s' % (cote, nom))
+            n = scene.add_geometry(m, node_name=n, geom_name=n)
             groupes[n] = 'bras ' + cote
     scene.export(os.path.join(DOSSIER, 'robot-complet.glb'))
     json.dump(dict(groupes=groupes), open(os.path.join(DOSSIER, 'robot-complet.json'), 'w'), ensure_ascii=False, indent=0)

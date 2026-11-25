@@ -29,7 +29,7 @@ HS65_AXE = (154.5, -5.7)                           # x, y de la cannelure du HS-
 SOMMET_CANNELURE_HS65 = 15.0
 PALONNIER = dict(longueur=8.0, z=SOMMET_CANNELURE_HS65 + 1.0)   # bras unique de 8 mm (rester dans Ø39 de la liaison)
 FENTE_LIAISON = (166.5, 0.0, 12.0)                 # lumière de la bride avant vers le canal +z du goTUBE
-BOUT_TUBE = 265.6
+BOUT_TUBE = 241.6                                  # goTUBE du bras de 72 mm (pince.BOUT_TUBE)
 # Abduction bornée à −12° et non −16° : au-delà, la plaque 1123 du caisson vient sur le faisceau de câbles
 # dans l'épaule (balayer_cables, 2026-10-03). Et à +22° et non +23° : à +23°, la plaque 1123 touche le moyeu
 # 1311 côté y+, c'est la butée mécanique (0,45 mm de jeu à +22° ; vu le 2026-10-04, le balayage au pas de 5°
@@ -39,9 +39,9 @@ BOUT_TUBE = 265.6
 COURSES = dict(flexion=(-45, 180), abduction=(-12, 22), tube=(-135, 135), pince=(0, 60))
 RAPPORT_ABDUCTION = 72 / 48
 
-EPAULE = ('1201-', '1311-', '2312-0414-0072', '1526-', '1601-0014', '1116-', '4103-0032-0048',
+EPAULE = ('1201-', '1311-', '2312-0414-0072', '1526-', '1601-0014', '1116-', '2302-0014-0090',
           '2800-0004-0014', '1502-0006-0040', '2102-')
-TUBE = ('liaison', 'HS-65MG', 'pignon Slip-Fit', '4103-0032-0096', 'bague ', 'vis M2 du HS-65MG',
+TUBE = ('liaison', 'HS-65MG', 'pignon Slip-Fit', '4103-0032-0072', 'bague ', 'vis M2 du HS-65MG',
         'palonnier', 'câble de pince', 'main')
 
 
@@ -59,13 +59,21 @@ def groupe(nom, ref, centre):
         return 'caisson'
     if 'palonnier' in nom:
         return 'palonnier'
+    # la jonction (jonction.py) : fixe dans le corps, sauf le pignon du servo de flexion qui tourne sur sa cannelure ;
+    # le goTUBE de flexion et la roue vissée à son bout tournent avec l'épaule
+    court_ = re.sub(r'^v5 \d+ ', '', nom)
+    if court_.startswith('jonction'):
+        return 'pignon_flexion' if 'pignon' in court_ else 'corps'
+    if court_.startswith(('goTUBE de flexion', 'roue alu 90 dents de flexion', 'entretoise de la roue de flexion',
+                          'collier de butée', 'vis M3 × 12 du collier')) or 'roue de flexion ↔ goTUBE' in court_:
+        return 'epaule'
     # la main : doigts et pouce tournent sur l'axe de la paume, le reste (poignet, paume, axe) tourne avec le tube
     court = re.sub(r'^v5 \d+ ', '', nom)             # clés d'audit.pieces_nouveau_bras : « v5 <k> <nom> »
     if court.startswith('main, doigts'):
         return 'doigts'
     if court.startswith('main, pouce'):
         return 'pouce'
-    if any(t in nom for t in TUBE) or ref in ('4103-0032-0096', '2322-4008-0020', 'HS-65MG') \
+    if any(t in nom for t in TUBE) or ref in ('4103-0032-0072', '2322-4008-0020', 'HS-65MG') \
             or 'liaison' in ref:
         return 'tube'
     if ref == '2305-0025-0048':
@@ -148,11 +156,17 @@ def ecrire():
     cables.append(dict(nom='câble de pince', points=[list(map(float, p)) for p in pince],
                        groupes=['palonnier'] + ['tube'] * (len(pince) - 1), rayon=0.2))
     from pince import brins, X_AXE, COTE_POUCE, RAPPORT as RAPPORT_MAIN
+    from jonction import axe_pignon_bras
+    AXE_PIGNON_FLEXION = axe_pignon_bras()
     for nom, pts in brins().items():
         cables.append(dict(nom='câble de pince, brin %s' % nom, points=[list(map(float, p)) for p in pts],
                            groupes=['tube'] * len(pts), rayon=0.2))
     groupes = {
         'epaule': dict(parent=None, point=[0, 0, 0], axe=[0, 1, 0], commande='flexion', rapport=1),
+        # la jonction ne bouge pas ; le pignon du servo de flexion tourne de −90/40 de la flexion (roue de 90 dents)
+        'corps': dict(parent=None, point=[0, 0, 0], axe=[0, 1, 0], commande='flexion', rapport=0),
+        'pignon_flexion': dict(parent=None, point=[float(v) for v in AXE_PIGNON_FLEXION], axe=[0, 1, 0], commande='flexion',
+                               rapport=-90 / 40),
         'caisson': dict(parent='epaule', point=[0, 0, 0], axe=[0, 0, 1], commande='abduction', rapport=1),
         'pignon': dict(parent='caisson', point=[AXE_SERVO_ABDUCTION[0], AXE_SERVO_ABDUCTION[1], 0], axe=[0, 0, 1],
                        commande='abduction', rapport=RAPPORT_ABDUCTION),

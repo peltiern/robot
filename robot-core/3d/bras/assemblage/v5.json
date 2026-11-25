@@ -36,13 +36,6 @@
    "designation": "pièce imprimée : cloison structurelle"
   },
   {
-   "nom": "goTUBE 48 mm de flexion, vissé sur le moyeu",
-   "nature": "achetée",
-   "etat": "ajouté",
-   "ref": "4103-0032-0048",
-   "designation": "4103 Series goTUBE (48mm Length)"
-  },
-  {
    "nom": "D85MG déplacé",
    "nature": "déplacée",
    "etat": "déplacé",
@@ -111,6 +104,13 @@
    "etat": "déplacé",
    "ref": "1601-0039-0032",
    "designation": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)"
+  },
+  {
+   "nom": "4103-0032-0072 goTUBE du bras, 72 mm (au lieu de 96)",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "4103-0032-0072",
+   "designation": "4103 Series goTUBE (72mm Length)"
   },
   {
    "nom": "bague fendue du goTUBE — retenue du tube vers l'avant",
@@ -540,7 +540,357 @@
    "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
   },
   {
-   "nom": "câble du D85MG : 3 fils de Ø1.0 (231 mm dans le bras)",
+   "nom": "goTUBE de flexion, 72 mm, vissé sur le moyeu",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "4103-0032-0072",
+   "designation": "4103 Series goTUBE (72mm Length)"
+  },
+  {
+   "nom": "roue alu 90 dents de flexion, vissée au bout du goTUBE",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2302-0014-0090",
+   "designation": "2302 Series Aluminum, MOD 0.8, Hub Mount Gear (14mm Bore, 90 Tooth)"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — roue de flexion ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — roue de flexion ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — roue de flexion ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "vis 2802-0004-0012 — roue de flexion ↔ goTUBE",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0012",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 12mm Length) - 25 Pack"
+  },
+  {
+   "nom": "entretoise de la roue de flexion",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:entretoise de la roue de flexion",
+   "designation": "pièce imprimée : entretoise de la roue de flexion"
+  },
+  {
+   "nom": "collier de butée du goTUBE de flexion",
+   "nature": "imprimée",
+   "etat": "imprimé",
+   "ref": "IMPRIME:collier de butée du goTUBE de flexion",
+   "designation": "pièce imprimée : collier de butée du goTUBE de flexion"
+  },
+  {
+   "nom": "vis M3 × 12 du collier de butée",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "VIS:vis M3 × 12 à tête cylindrique, vissée dans le plastique (avant-trou Ø2,5)",
+   "designation": "vis M3 × 12 à tête cylindrique, vissée dans le plastique (avant-trou Ø2,5)"
+  },
+  {
+   "nom": "jonction, plaque du haut",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1123-0043-0144",
+   "designation": "1123 Series Pattern Plate (1 x 5 Hole, 43 x 144mm)"
+  },
+  {
+   "nom": "jonction, plaque du bas",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1123-0043-0144",
+   "designation": "1123 Series Pattern Plate (1 x 5 Hole, 43 x 144mm)"
+  },
+  {
+   "nom": "jonction, palier 1604 extérieur",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1604-0043-0032",
+   "designation": "32mm Bore 2-Side, 2-Post Pillow Block (43mm Width)"
+  },
+  {
+   "nom": "jonction, roulement du palier extérieur",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1601-0039-0032",
+   "designation": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ palier extérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ palier extérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ palier extérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ palier extérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, palier 1604 intérieur",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1604-0043-0032",
+   "designation": "32mm Bore 2-Side, 2-Post Pillow Block (43mm Width)"
+  },
+  {
+   "nom": "jonction, roulement du palier intérieur",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1601-0039-0032",
+   "designation": "32mm ID Flanged Ball Bearing (39mm OD, 5mm Thickness)"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ palier intérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ palier intérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ palier intérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ palier intérieur",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, servo de flexion 25-2 cinq tours",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2000-0025-0502",
+   "designation": "2000 Series 5-Turn, Dual Mode Servo (25-2, Torque)"
+  },
+  {
+   "nom": "jonction, cadre du servo de flexion",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "1802-0043-0001",
+   "designation": "1802  Series Servo Frame (43mm Width, for Standard Size Servos)"
+  },
+  {
+   "nom": "jonction, pignon laiton 40 dents sur le servo de flexion",
+   "nature": "achetée",
+   "etat": "ajouté",
+   "ref": "2305-0025-0040",
+   "designation": "2305  Series Brass, MOD 0.8, Servo Gear (25 Tooth Spline, 40 Tooth)"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ cadre du servo",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ cadre du servo",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ cadre du servo",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ cadre du servo",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du haut ↔ cadre du servo",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0008 — plaque du bas ↔ cadre du servo",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0008",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 8mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0025 — plaque du haut → écrou du rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0025",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 25mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, entretoise 1502-0006-0160 — plaque du haut ↔ rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1502-0006-0160",
+   "designation": "1502 Series 4mm ID Spacer (6mm OD, 16mm Length) - 4 Pack"
+  },
+  {
+   "nom": "jonction, écrou Hurricane 2805-0004-0108 dans la fente du rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2805-0004-0108",
+   "designation": "Hurricane Nut for goRAIL® - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0025 — plaque du haut → écrou du rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0025",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 25mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, entretoise 1502-0006-0160 — plaque du haut ↔ rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1502-0006-0160",
+   "designation": "1502 Series 4mm ID Spacer (6mm OD, 16mm Length) - 4 Pack"
+  },
+  {
+   "nom": "jonction, écrou Hurricane 2805-0004-0108 dans la fente du rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2805-0004-0108",
+   "designation": "Hurricane Nut for goRAIL® - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0025 — plaque du haut → écrou du rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0025",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 25mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, entretoise 1502-0006-0160 — plaque du haut ↔ rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1502-0006-0160",
+   "designation": "1502 Series 4mm ID Spacer (6mm OD, 16mm Length) - 4 Pack"
+  },
+  {
+   "nom": "jonction, écrou Hurricane 2805-0004-0108 dans la fente du rail",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2805-0004-0108",
+   "designation": "Hurricane Nut for goRAIL® - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0016 — plaque du bas → écrou de la traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0016",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, entretoise 1502-0006-0080 — plaque du bas ↔ traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1502-0006-0080",
+   "designation": "1502 Series 4mm ID Spacer (6mm OD, 8mm Length) - 4 Pack"
+  },
+  {
+   "nom": "jonction, écrou Hurricane 2805-0004-0108 dans la fente de la traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2805-0004-0108",
+   "designation": "Hurricane Nut for goRAIL® - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0016 — plaque du bas → écrou de la traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0016",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, entretoise 1502-0006-0080 — plaque du bas ↔ traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1502-0006-0080",
+   "designation": "1502 Series 4mm ID Spacer (6mm OD, 8mm Length) - 4 Pack"
+  },
+  {
+   "nom": "jonction, écrou Hurricane 2805-0004-0108 dans la fente de la traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2805-0004-0108",
+   "designation": "Hurricane Nut for goRAIL® - 25 Pack"
+  },
+  {
+   "nom": "jonction, vis 2802-0004-0016 — plaque du bas → écrou de la traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2802-0004-0016",
+   "designation": "2802 Series Zinc-Plated Steel Button Head Screw (M4 x 0.7mm, 16mm Length) - 25 Pack"
+  },
+  {
+   "nom": "jonction, entretoise 1502-0006-0080 — plaque du bas ↔ traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "1502-0006-0080",
+   "designation": "1502 Series 4mm ID Spacer (6mm OD, 8mm Length) - 4 Pack"
+  },
+  {
+   "nom": "jonction, écrou Hurricane 2805-0004-0108 dans la fente de la traverse",
+   "nature": "visserie ajoutée",
+   "etat": "ajouté",
+   "ref": "2805-0004-0108",
+   "designation": "Hurricane Nut for goRAIL® - 25 Pack"
+  },
+  {
+   "nom": "câble du D85MG : 3 fils de Ø1.0 (256 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du D85MG",
@@ -554,7 +904,7 @@
    "designation": "prise de servo (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
   },
   {
-   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (269 mm dans le bras)",
+   "nom": "câble du HS-65MG : 3 fils de Ø1.0 (294 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du HS-65MG",
@@ -568,7 +918,7 @@
    "designation": "prise à sertir (3 fils ; prise JR/TJC8 de 7,85 × 2,42 × 15 mm)"
   },
   {
-   "nom": "câble du servo d'abduction : 3 fils de Ø1.5 (139 mm dans le bras)",
+   "nom": "câble du servo d'abduction : 3 fils de Ø1.5 (164 mm dans le bras)",
    "nature": "câblage",
    "etat": "câble",
    "ref": "CABLE:câble du servo d'abduction",
@@ -842,6 +1192,9 @@
   ],
   "entretoise 1501 en doublon de la cannelure du servo, retirée": [
    "1501-0006-0080#1"
+  ],
+  "goTUBE du bras de 96 mm, remplacé par celui de 72": [
+   "4103-0032-0096#1"
   ],
   "vis du moyeu 1311 côté corps, retournées pour tenir le goTUBE ; écrous supprimés": [
    "2802-0004-0018#1",

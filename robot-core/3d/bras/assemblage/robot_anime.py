@@ -404,7 +404,35 @@ def main():
     scene = trimesh.Scene()
     noeuds = {}
     k = 0
+    # La jonction est posée dans le corps par robot_complet.py, en miroir à gauche : elle ne se reprend pas du repère
+    # du bras, où le bras gauche est le droit retourné d'un demi-tour. Elle reste fixe, sauf le pignon de flexion.
+    import jonction
+    du_robot = json.load(open(os.path.join(rc.DOSSIER, 'robot-complet.json')))['groupes']
+    pignon = np.array([jonction.debut_roue(), jonction.Y_AXE - jonction.ENTRAXE, jonction.Z_AXE, 1.0])
+    pignons = {}
+    for cote, ancien in (('droit', rc.ANCIENS_BRAS[0]), ('gauche', rc.ANCIENS_BRAS[1])):
+        p_ = pignon.copy()
+        if cote == 'gauche':
+            p_[0] = 2 * jonction.PLAN - p_[0]
+        pignons[cote] = (np.linalg.inv(rc.epaule(pieces, ancien)) @ p_)[:3]
+    assert np.allclose(pignons['droit'], jonction.axe_pignon_bras(), atol=0.01), pignons
     for n in leger.graph.nodes_geometry:
+        if du_robot.get(n, '').startswith('jonction '):
+            cote = du_robot[n].split()[1]
+            T, g = leger.graph[n]
+            m = leger.geometry[g].copy(); m.apply_transform(VERS_MAQUETTE @ T)
+            nom = 'p%d' % k; k += 1
+            scene.add_geometry(m, node_name=nom, geom_name=nom)
+            art = ('corps' if 'pignon laiton' not in n else 'pignon_flexion' if cote == 'droit' else 'pignon_flexion_gauche')
+            noeuds[nom] = dict(groupe='bras_' + cote, piece=n, articulation=art)
+            continue
+        if du_robot.get(n, '').startswith('traverse '):        # la traverse sous la jonction : du cadre de la caisse
+            T, g = leger.graph[n]
+            m = leger.geometry[g].copy(); m.apply_transform(VERS_MAQUETTE @ T)
+            nom = 'p%d' % k; k += 1
+            scene.add_geometry(m, node_name=nom, geom_name=nom)
+            noeuds[nom] = dict(groupe='caisse', piece=n)
+            continue
         if n not in groupe:
             continue                                               # les bras, refaits ci-dessous
         T, g = leger.graph[n]
@@ -413,11 +441,17 @@ def main():
         scene.add_geometry(m, node_name=nom, geom_name=nom)
         noeuds[nom] = dict(groupe=groupe[n], piece=n, **({'chenille': roles[n]} if n in roles else {}))
     anim = json.load(open(os.path.join(SORTIE, 'animation.json')))
+    # Le pignon de gauche est au miroir de celui de droite, pas au demi-tour : son axe, dans le repère du bras, n'est
+    # pas celui de droite.
+    anim['groupes']['pignon_flexion_gauche'] = dict(anim['groupes']['pignon_flexion'],
+                                                    point=[float(v) for v in pignons['gauche']])
     bras = {}
     for cote, ancien in (('droit', rc.ANCIENS_BRAS[0]), ('gauche', rc.ANCIENS_BRAS[1])):
         M = VERS_MAQUETTE @ rc.epaule(pieces, ancien)
         bras[cote] = M.round(6).tolist()
         for cle, nom_piece, ref, m in rc.nouveau_bras():
+            if nom_piece.startswith('jonction'):
+                continue                                           # posée dans le corps, ci-dessus
             m = m.copy(); m.apply_transform(M)
             nom = 'p%d' % k; k += 1
             scene.add_geometry(m, node_name=nom, geom_name=nom)

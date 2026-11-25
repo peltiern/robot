@@ -38,13 +38,18 @@ DISPOSITION = {'D85MG': (0.0, 0.6), 'HS-65MG': (0.0, -0.6), "servo d'abduction":
 SOUDURE_HS65 = dict(x=(68.0, 86.0), section=(4.2, 2.2), decalage_z=-0.6)
 
 # Tronc commun, du dessous du servo d'abduction jusqu'au corps : chemin calculé dans les voxels de l'épaule,
-# puis le canal +x du goTUBE de flexion (centre à x = 11,2, z = 0), jusqu'au bout du tube (y = −80) et au-delà.
+# puis le canal +x du goTUBE de flexion (centre à x = 11,2, z = 0), jusqu'au bout du tube (y = −104,1 avec le goTUBE de 72
+# de la jonction), à travers la fenêtre de la roue de flexion vissée à son bout (oblong r 9,35 → 18,05 sur 4 mm), et au-delà.
 # Tronc commun : on remonte hors de la couronne du bas, on rentre entre les deux couronnes, puis on file
 # dans la lumière de 8,7 × 4,1 du bloc d'épaule 1201 (x = 13,6, z = 0), dans le prolongement du canal +x
 # du goTUBE — passage proposé par Nicolas le 2026-10-03, plus direct que le contournement du bloc.
 TRONC = [(28, -9, -26), (29.5, -12.5, -22), (30, -13, -17), (27, -11, -14), (25, -8, -11), (22, -6, -8),
          (18, -7, -4), (15, -10, -0.5), (14.5, -14, 0), (14, -20, 0), (14.0, -23.5, 0), (15.6, -25.0, 0), (16.2, -26.5, 0), (15.9, -28.0, 0), (14.7, -29.6, 0),
-         (13.73, -31.24, 0), (12.2, -33.8, 0), (11.5, -36, 0), (11.5, -40, 0), (11.5, -80, 0), (11.5, -88, 0)]
+         (13.73, -31.24, 0), (12.2, -33.8, 0), (11.5, -36, 0), (11.5, -40, 0), (11.5, -96, 0),
+         # remise à plat (RETOUR) par petits pas, puis vers r 13,7 : le milieu des fenêtres de la roue de flexion (r 9,35 →
+         # 18,05), où la prise de 7,85 mm passe aussi ; le canal du goTUBE s'arrête à r 15,5, d'où r 12,5 à son bout
+         (11.75, -97.5, 0), (12.0, -99, 0), (12.25, -100.5, 0), (12.5, -102, 0), (12.5, -104, 0), (13.7, -110, 0),
+         (13.7, -113, 0)]
 # Recentrés le 2026-10-04 pour trois nappes (carte d'occupation au pas de 0,5 mm) : lumière du bloc 1201
 # libre de x 10 à 18 ; puis le moyeu 1311 et sa vis de serrage occupent tout jusqu'à x 12,5 (y −24 à −31) ;
 # puis le canal du goTUBE, une lentille libre de x 7,5 à 15,5 sur ±5 mm de haut. Le faisceau traverse la
@@ -54,6 +59,16 @@ TRONC = [(28, -9, -26), (29.5, -12.5, -22), (30, -13, -17), (27, -11, -14), (25,
 # Le faisceau pivote de 90° (à plat → sur la tranche) entre y −23,6 et −29,6, par étapes : d'un coup, d'un
 # point au suivant, les fils des nappes se croisaient au milieu du segment.
 PIVOT = (-23.6, -29.6)
+# Au bout du goTUBE de flexion, les nappes repassent à plat (largeur selon le rayon) pour traverser les fenêtres de la
+# roue de flexion (jonction.py) : 4 mm de large seulement, quand la nappe du servo d'abduction (3 × 1,5) en fait 4,5 sur
+# la tranche. Le canal du goTUBE (8 mm selon le rayon, ±5 en hauteur) laisse la place de tourner.
+RETOUR = (-96.0, -102.0)
+
+
+def angle_nappe(y):
+    """Rotation de la nappe autour du câble : 0 à plat, 90° sur la tranche (entre moyeu et goTUBE, puis dans le tube)."""
+    return np.pi / 2 * (float(np.clip((PIVOT[0] - y) / (PIVOT[0] - PIVOT[1]), 0, 1))
+                        - float(np.clip((RETOUR[0] - y) / (RETOUR[0] - RETOUR[1]), 0, 1)))
 # Vers l'avant-bras, les câbles passent AU-DESSUS du cadre 1802 du servo d'abduction (Nicolas, 2026-10-03 :
 # au fond du caisson ils passaient à 5 mm du pignon laiton, qui tourne avec le servo). Couloir entre le
 # servo (y ±10,3) et la plaque y− (−21,4), à z ≈ 9 : au-dessus du cadre (z 3) et sous les entretoises de
@@ -67,7 +82,7 @@ CABLES = {
         (98.5, 10.5, -24.5), (99.5, 10.5, -28.5), (95.0, 10.0, -28.5), (93.5, 8.0, -20.0), (93.5, 0.0, 6.0),
         (93.0, -10.0, 9.5)] + DESSUS + TRONC[6:],
         prise_au_bout=True),
-    'HS-65MG': dict(servo='HS-65MG', tourne=('liaison', 'HS-65MG', 'pignon Slip-Fit', '4103-0032-0096'), points=[
+    'HS-65MG': dict(servo='HS-65MG', tourne=('liaison', 'HS-65MG', 'pignon Slip-Fit', '4103-0032-0072'), points=[
         # sortie du passe-fil, montée dans la fente, 1er pli vers l'arrière dans le couloir, face de la bride
         # arrière vers le centre, 2e pli vers l'alésage
         (154.5, -13.5, -11.0), (154.5, -14.85, -10.4), (154.5, -14.85, -6.5), (151.0, -13.55, -6.5),
@@ -116,7 +131,7 @@ def reperes(p, w_prec=None):
 _CHEMIN = np.asarray(DESSUS + TRONC[6:], float)
 REPERE_COMMUN = {}
 for _q, (_w, _h) in zip(_CHEMIN, reperes(_CHEMIN)):
-    _a = np.pi / 2 * float(np.clip((PIVOT[0] - _q[1]) / (PIVOT[0] - PIVOT[1]), 0, 1))
+    _a = angle_nappe(_q[1])
     REPERE_COMMUN[tuple(map(float, _q))] = (np.cos(_a) * _w + np.sin(_a) * _h, np.cos(_a) * _h - np.sin(_a) * _w)
 
 
@@ -134,7 +149,7 @@ def fils(nom):
             q = q + a * w + b * h
         elif abs(q[0]) < 25:
             # même pivot que le faisceau commun : sur la tranche pour passer entre moyeu et goTUBE
-            r = np.pi / 2 * float(np.clip((PIVOT[0] - q[1]) / (PIVOT[0] - PIVOT[1]), 0, 1))
+            r = angle_nappe(q[1])
             w, h = np.cos(r) * w + np.sin(r) * h, np.cos(r) * h - np.sin(r) * w
         centres.append(q); largeurs.append(w)
     centres, largeurs = np.array(centres), np.array(largeurs)
@@ -152,10 +167,13 @@ def cordon(pts, r):
 
 
 def prise(bout, avant):
-    """Boîtier de prise au bout du câble, dans l'axe du dernier segment."""
+    """Boîtier de prise au bout du câble, dans l'axe du dernier segment, sa largeur (7,85) selon le rayon de l'axe de
+    flexion : c'est ainsi qu'elle passe dans une fenêtre de la roue de flexion (8,7 × 4 mm, jonction.py)."""
     d = np.asarray(bout, float) - np.asarray(avant, float); d /= np.linalg.norm(d)
+    r = np.array([bout[0], 0.0, bout[2]], float); r -= np.dot(r, d) * d
+    r = r / np.linalg.norm(r) if np.linalg.norm(r) > 1e-6 else np.cross(d, [0, 0, 1.0]) / np.linalg.norm(np.cross(d, [0, 0, 1.0]))
     b = trimesh.creation.box(extents=(PRISE[0], PRISE[1], PRISE[2]))
-    b.apply_transform(trimesh.geometry.align_vectors([0, 0, 1], d))
+    b.apply_transform(np.vstack([np.c_[np.column_stack([r, np.cross(d, r), d]), [0, 0, 0]], [0, 0, 0, 1]]))
     b.apply_translation(np.asarray(bout, float) + d * PRISE[2] / 2)
     return b
 

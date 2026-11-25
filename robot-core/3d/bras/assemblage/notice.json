@@ -217,11 +217,11 @@
   },
   {
    "titre": "Le moyeu retourné et le goTUBE de flexion",
-   "texte": "Côté corps, le moyeu 1311 est retourné : son bossage vers l'extérieur entre dans l'alésage du goTUBE 48. Les quatre vis M4 × 18 se posent tête dans le bloc, depuis l'intérieur de l'épaule, traversent bloc et moyeu et se vissent dans le goTUBE. Clé Allen coudée, petit bras : l'autre bloc est à 24 mm.",
+   "texte": "Côté corps, le moyeu 1311 est retourné : son bossage vers l'extérieur entre dans l'alésage du goTUBE de flexion (72 mm). Les quatre vis M4 × 18 se posent tête dans le bloc, depuis l'intérieur de l'épaule, traversent bloc et moyeu et se vissent dans le goTUBE. Clé Allen coudée, petit bras : l'autre bloc est à 24 mm.",
    "mouvements": [
     {
      "cles": [
-      "v5-9"
+      "v5-8"
      ],
      "chemin": [
       [
@@ -236,7 +236,7 @@
     },
     {
      "cles": [
-      "v5-5"
+      "v5-77"
      ],
      "chemin": [
       [
@@ -1397,7 +1397,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-6"
+      "v5-5"
      ],
      "chemin": [
       [
@@ -1468,7 +1468,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-12"
+      "v5-11"
      ],
      "chemin": [
       [
@@ -1515,7 +1515,7 @@
     },
     {
      "cles": [
-      "v5-15"
+      "v5-14"
      ],
      "chemin": [
       [
@@ -1584,7 +1584,7 @@
   },
   {
    "titre": "Le goTUBE sur le berceau de la liaison, à l'établi",
-   "texte": "Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 96 mm : quatre vis M4 × 12 par l'intérieur, clé coudée par l'arrière du berceau, encore ouvert. La bague fendue imprimée se clipse de côté sur le goTUBE, contre le berceau, lèvre vers l'avant : c'est elle qui empêche le tube de glisser vers la main. Elle se pose aussi plus tard, bras monté, sans rien démonter.",
+   "texte": "Le berceau de la liaison (la pièce imprimée qui portera le HS-65MG) se visse sur le bout du goTUBE de 72 mm : quatre vis M4 × 12 par l'intérieur, clé coudée par l'arrière du berceau, encore ouvert. La bague fendue imprimée se clipse de côté sur le goTUBE, contre le berceau, lèvre vers l'avant : c'est elle qui empêche le tube de glisser vers la main. Elle se pose aussi plus tard, bras monté, sans rien démonter.",
    "mouvements": [
     {
      "cles": [
@@ -1609,7 +1609,7 @@
     },
     {
      "cles": [
-      "4103-0032-0096#1"
+      "v5-15"
      ],
      "chemin": [
       [
@@ -1729,7 +1729,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-7"
+      "v5-6"
      ],
      "chemin": [
       [
@@ -1776,7 +1776,7 @@
     },
     {
      "cles": [
-      "v5-84"
+      "v5-134"
      ],
      "chemin": [
       [
@@ -1906,7 +1906,7 @@
        100.0
       ]
      ],
-     "tol": 5.0
+     "tol": 7.5
     },
     {
      "cles": [
@@ -1923,7 +1923,7 @@
        100.0
       ]
      ],
-     "tol": 5.0
+     "tol": 7.5
     }
    ],
    "atelier": "module",
@@ -2297,7 +2297,7 @@
     },
     {
      "cles": [
-      "v5-13"
+      "v5-12"
      ],
      "chemin": [
       [
@@ -2313,7 +2313,7 @@
     },
     {
      "cles": [
-      "v5-14"
+      "v5-13"
      ],
      "chemin": [
       [
@@ -2794,13 +2794,11 @@
    "mouvements": [
     {
      "cles": [
-      "v5-77",
-      "v5-79",
-      "v5-81",
-      "v5-78",
-      "v5-82",
-      "v5-80",
-      "v5-83"
+      "v5-127",
+      "v5-129",
+      "v5-131",
+      "v5-130",
+      "v5-133"
      ],
      "chemin": []
     }
@@ -2815,7 +2813,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-8"
+      "v5-7"
      ],
      "chemin": [
       [
@@ -2862,7 +2860,7 @@
     },
     {
      "cles": [
-      "v5-10"
+      "v5-9"
      ],
      "chemin": [
       [
@@ -2878,7 +2876,7 @@
     },
     {
      "cles": [
-      "v5-11"
+      "v5-10"
      ],
      "chemin": [
       [
@@ -3068,7 +3066,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-85"
+      "v5-135"
      ],
      "chemin": []
     }
@@ -3083,7 +3081,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-86"
+      "v5-136"
      ],
      "chemin": [
       [
@@ -3098,64 +3096,64 @@
     },
     {
      "cles": [
-      "v5-106"
+      "v5-156"
      ],
      "chemin": [
       [
        [
-        0.9998016907745785,
-        -0.017698128858215048,
-        -0.009129915619113976
+        0.9998065861368485,
+        -0.01746095904080782,
+        -0.009050150648248023
        ],
-       14.256422819339594
+       14.255659018470876
       ]
      ],
      "tol": 5.0
     },
     {
      "cles": [
-      "v5-107"
+      "v5-157"
      ],
      "chemin": [
       [
        [
-        0.9998016904061388,
-        -0.017698160910298025,
-        -0.009129893834043902
+        0.9998065862871515,
+        -0.017460947781248213,
+        -0.009050155767353326
        ],
-       14.25642296173283
+       14.255659021552813
       ]
      ],
      "tol": 5.0
     },
     {
      "cles": [
-      "v5-108"
+      "v5-158"
      ],
      "chemin": [
       [
        [
-        0.9998016904798688,
-        -0.01769815421951604,
-        -0.009129898729942397
+        0.9998065855069902,
+        -0.017460979412934962,
+        -0.009050180926072522
        ],
-       14.2564229026392
+       14.255659074825143
       ]
      ],
      "tol": 5.0
     },
     {
      "cles": [
-      "v5-109"
+      "v5-159"
      ],
      "chemin": [
       [
        [
-        0.9998016894729187,
-        -0.017698211476610666,
-        -0.009129898007461525
+        0.9998065856753223,
+        -0.017460972452234026,
+        -0.009050175759437961
        ],
-       14.256423118687087
+       14.255659076931117
       ]
      ],
      "tol": 5.0
@@ -3171,13 +3169,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-93"
+      "v5-143"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-98"
+      "v5-148"
      ],
      "chemin": [
       [
@@ -3193,7 +3191,7 @@
     },
     {
      "cles": [
-      "v5-97"
+      "v5-147"
      ],
      "chemin": [
       [
@@ -3209,7 +3207,7 @@
     },
     {
      "cles": [
-      "v5-100"
+      "v5-150"
      ],
      "chemin": [
       [
@@ -3225,7 +3223,7 @@
     },
     {
      "cles": [
-      "v5-94"
+      "v5-144"
      ],
      "chemin": [
       [
@@ -3250,13 +3248,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-89"
+      "v5-139"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-96"
+      "v5-146"
      ],
      "chemin": [
       [
@@ -3272,7 +3270,7 @@
     },
     {
      "cles": [
-      "v5-101"
+      "v5-151"
      ],
      "chemin": [
       [
@@ -3297,13 +3295,13 @@
    "mouvements": [
     {
      "cles": [
-      "v5-90"
+      "v5-140"
      ],
      "chemin": []
     },
     {
      "cles": [
-      "v5-95"
+      "v5-145"
      ],
      "chemin": [
       [
@@ -3328,7 +3326,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-88"
+      "v5-138"
      ],
      "chemin": [
       [
@@ -3353,7 +3351,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-87"
+      "v5-137"
      ],
      "chemin": [
       [
@@ -3368,32 +3366,32 @@
     },
     {
      "cles": [
-      "v5-112"
+      "v5-162"
      ],
      "chemin": [
       [
        [
-        0.999984502013092,
-        -0.005388070595664819,
-        0.0014015808520395831
+        0.9999845031030018,
+        -0.0053878767218172715,
+        0.001401548526904476
        ],
-       16.246965697470042
+       16.24698092051822
       ]
      ],
      "tol": 5.0
     },
     {
      "cles": [
-      "v5-113"
+      "v5-163"
      ],
      "chemin": [
       [
        [
-        0.999984502013092,
-        -0.005388070595664819,
-        0.0014015808520395831
+        0.9999845031030018,
+        -0.0053878767218172715,
+        0.001401548526904476
        ],
-       16.246965697470042
+       16.24698092051822
       ]
      ],
      "tol": 5.0
@@ -3457,7 +3455,7 @@
     },
     {
      "cles": [
-      "v5-110"
+      "v5-160"
      ],
      "chemin": [
       [
@@ -3473,7 +3471,7 @@
     },
     {
      "cles": [
-      "v5-111"
+      "v5-161"
      ],
      "chemin": [
       [
@@ -3489,8 +3487,8 @@
     },
     {
      "cles": [
-      "v5-114",
-      "v5-115"
+      "v5-164",
+      "v5-165"
      ],
      "chemin": []
     }
@@ -3505,7 +3503,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-99"
+      "v5-149"
      ],
      "chemin": [
       [
@@ -3530,7 +3528,7 @@
    "mouvements": [
     {
      "cles": [
-      "v5-102"
+      "v5-152"
      ],
      "chemin": [
       [
@@ -3543,6 +3541,221 @@
       ]
      ],
      "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-154"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-141",
+      "v5-153"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        -1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-142",
+      "v5-155"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        0.0,
+        1.0
+       ],
+       10.0
+      ]
+     ],
+     "tol": 3.0
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le servo de flexion dans son cadre, à l'établi",
+   "texte": "Le servo 25-2 cinq tours entre dans le cadre 1802 par le côté de la cannelure, corps en premier, et s'y visse par ses oreilles. Le pignon laiton de 40 dents se pousse sur la cannelure jusqu'au bout.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-101"
+     ],
+     "chemin": []
+    },
+    {
+     "cles": [
+      "v5-100"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        -1.0,
+        0.0
+       ],
+       45.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-102"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        -1.0,
+        0.0
+       ],
+       20.0
+      ]
+     ]
+    }
+   ],
+   "atelier": "jonction",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La jonction, à l'établi",
+   "texte": "Chaque roulement dans son palier 1604. Sur la plaque 1123 du bas : les deux paliers (rangées de trous à ±16 mm du milieu de la plaque) et le cadre du servo (rangée +16, trois trous de l'avant), chacun par deux ou trois vis M4 × 8 dans ses chants taraudés. La plaque du haut se pose par-dessus et se visse de même.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-87"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       30.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-88",
+      "v5-89"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3543606059720689,
+        0.0,
+        -0.9351088497790554
+       ],
+       60.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-94",
+      "v5-95"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3543606059720689,
+        0.0,
+        -0.9351088497790554
+       ],
+       60.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-91"
+     ],
+     "chemin": [
+      [
+       [
+        0.37061971527891663,
+        0.009050355731791582,
+        0.9287406084088835
+       ],
+       14.255670565883552
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-93"
+     ],
+     "chemin": [
+      [
+       [
+        0.3706198071576698,
+        0.009050547489560804,
+        0.9287405698754367
+       ],
+       14.255668430338503
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-97"
+     ],
+     "chemin": [
+      [
+       [
+        0.37061953455353397,
+        0.00905047422929084,
+        0.9287406793737134
+       ],
+       14.255668843753472
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-99"
+     ],
+     "chemin": [
+      [
+       [
+        0.3706196415181628,
+        0.009050630808387194,
+        0.928740635162971
+       ],
+       14.255669330637062
+      ]
+     ],
+     "tol": 5.0
     },
     {
      "cles": [
@@ -3551,48 +3764,590 @@
      "chemin": [
       [
        [
-        0.0,
-        0.0,
-        1.0
+        0.3706196423242995,
+        0.009050509719795263,
+        0.9287406360212846
        ],
-       10.0
+       14.25566942193791
       ]
      ],
-     "tol": 3.0
+     "tol": 5.0
     },
     {
      "cles": [
-      "v5-91",
+      "v5-106"
+     ],
+     "chemin": [
+      [
+       [
+        0.37061952682657556,
+        0.009050375789963483,
+        0.9287406834164776
+       ],
+       14.255671743739336
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-108"
+     ],
+     "chemin": [
+      [
+       [
+        0.3718081783152624,
+        0.0024842252498761264,
+        0.9283062572032971
+       ],
+       14.266642463455394
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-86"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3543606059720689,
+        0.0,
+        -0.9351088497790554
+       ],
+       30.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-90"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3379643611230873,
+        -0.009050431975856088,
+        -0.9411153915921862
+       ],
+       14.255670380907205
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-92"
+     ],
+     "chemin": [
+      [
+       [
+        -0.33796429253125804,
+        -0.009050302631582352,
+        -0.9411154174680825
+       ],
+       14.255669152826176
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-96"
+     ],
+     "chemin": [
+      [
+       [
+        -0.33678642302131356,
+        -0.00248446935135327,
+        -0.941577788969425
+       ],
+       14.266640364511554
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-98"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3367863547141432,
+        -0.0024843357211056243,
+        -0.9415778137543303
+       ],
+       14.266639903833447
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
       "v5-103"
      ],
      "chemin": [
       [
        [
-        0.0,
-        0.0,
-        -1.0
+        -0.33678632026718175,
+        -0.002484275686811642,
+        -0.9415778262338187
        ],
-       10.0
+       14.266640595400734
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-105"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3398158744920711,
+        0.0,
+        -0.940491983720855
+       ],
+       14.267554104590857
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-107"
+     ],
+     "chemin": [
+      [
+       [
+        -0.33796456240944245,
+        -0.009050546149455996,
+        -0.9411153182101495
+       ],
+       14.255668619422103
+      ]
+     ],
+     "tol": 5.0
+    }
+   ],
+   "atelier": "jonction",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La jonction sous le goRAIL du haut du flanc",
+   "texte": "Trois écrous Hurricane entrent dans la fente du dessous du rail et se tournent d'un quart de tour. Trois entretoises de 16 mm entre le rail et la plaque du haut ; les vis M4 × 25 viennent par-dessous la plaque du haut, entre les deux plaques (clé coudée par les trous de la plaque du bas), traversent plaque et entretoise et se vissent dans les écrous.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-111"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       12.0
       ]
      ],
      "tol": 3.0
     },
     {
      "cles": [
-      "v5-92",
-      "v5-105"
+      "v5-114"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       12.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-117"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       12.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-110",
+      "v5-113",
+      "v5-116"
      ],
      "chemin": [
       [
        [
         0.0,
-        0.0,
-        1.0
+        1.0,
+        0.0
        ],
-       10.0
+       20.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-109"
+     ],
+     "chemin": [
+      [
+       [
+        0.3514957352777018,
+        -0.0,
+        0.936189483000951
+       ],
+       31.208130583280706
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-112"
+     ],
+     "chemin": [
+      [
+       [
+        0.35133248159132036,
+        -0.0,
+        0.9362507609496958
+       ],
+       31.20848592633645
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-115"
+     ],
+     "chemin": [
+      [
+       [
+        0.3513721029863785,
+        -0.0,
+        0.9362358918792474
+       ],
+       31.208351540991796
+      ]
+     ],
+     "tol": 5.0
+    }
+   ],
+   "atelier": "jonction",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La traverse sous la jonction",
+   "texte": "Un second goRAIL de 288 mm se monte entre les montants avant et arrière du flanc, juste sous la jonction : trois écrous Hurricane dans la fente de son dessus, un gousset 1137 sur chaque angle, côté extérieur, comme aux coins du cadre. Trois entretoises de 8 mm entre la traverse et la plaque du bas ; les vis M4 × 16 se glissent par le côté entre les deux plaques, tête sur la plaque du bas, et se serrent à la clé coudée par les trous libres de la plaque du haut. Le haut et le bas tenus, la jonction ne peut plus pivoter autour du rail.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-120"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       12.0
       ]
      ],
      "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-123"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       12.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-126"
+     ],
+     "chemin": [
+      [
+       [
+        0.3543606059720689,
+        -0.0,
+        0.9351088497790554
+       ],
+       12.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-119",
+      "v5-122",
+      "v5-125"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        1.0,
+        0.0
+       ],
+       20.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-118"
+     ],
+     "chemin": [
+      [
+       [
+        -0.34991139117315306,
+        0.0019644011709113447,
+        -0.9367807424660843
+       ],
+       22.23063944199446
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-121"
+     ],
+     "chemin": [
+      [
+       [
+        -0.3508296330964652,
+        0.0017375715311332973,
+        -0.9364376911394448
+       ],
+       22.22930283010176
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-124"
+     ],
+     "chemin": [
+      [
+       [
+        -0.35119729205874506,
+        0.0014794937133802977,
+        -0.9363003114113316
+       ],
+       22.22816625147755
+      ]
+     ],
+     "tol": 5.0
+    }
+   ],
+   "atelier": "jonction",
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le bras dans la jonction",
+   "texte": "Les prises des câbles d'abord : elles passent dans les roulements. Le goTUBE de flexion entre par le flanc du corps, traverse le palier extérieur puis le palier intérieur, jusqu'à ce que son bout arrive au droit du pignon du servo.",
+   "mouvements": [
+    {
+     "joindre": "jonction",
+     "chemin": [
+      [
+       [
+        0,
+        -1,
+        0
+       ],
+       90
+      ]
+     ]
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "Le collier de butée",
+   "texte": "Le collier imprimé, enfilé sur le goTUBE avant qu'il entre dans la jonction, se pousse contre le palier extérieur : son col de Ø34 entre dans le bloc et n'appuie que sur la bague intérieure du roulement. Une vis M3 × 12 dans son oreille le serre sur le tube (elle se visse dans le plastique). Bras poussé vers le corps, c'est lui qui bute.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-84"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        1.0,
+        0.0
+       ],
+       10.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-85"
+     ],
+     "chemin": [
+      [
+       [
+        -1.0,
+        0.0,
+        0.0
+       ],
+       19.0
+      ]
+     ],
+     "tol": 5.0
+    }
+   ],
+   "atelier": null,
+   "outils": null,
+   "heurts": []
+  },
+  {
+   "titre": "La roue de flexion",
+   "texte": "L'entretoise imprimée s'enfile sur le bout du goTUBE, lèvre de Ø34 contre la bague intérieure du roulement du palier intérieur : bras tiré, la roue la pousse contre le roulement. Avant de poser la roue, chaque prise passe par une des fenêtres de la roue (8,7 × 4 mm), en face du canal du goTUBE par où sort son câble : roue vissée, il ne reste que 5,9 × 4 mm, assez pour les nappes mais pas pour les prises. La roue alu de 90 dents se visse au bout du goTUBE par quatre vis M4 × 12 dans ses taraudages, et engrène avec le pignon du servo.",
+   "mouvements": [
+    {
+     "cles": [
+      "v5-83"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        -1.0,
+        0.0
+       ],
+       30.0
+      ]
+     ]
+    },
+    {
+     "cles": [
+      "v5-128",
+      "v5-132"
+     ],
+     "chemin": []
+    },
+    {
+     "cles": [
+      "v5-78"
+     ],
+     "chemin": [
+      [
+       [
+        0.0,
+        -1.0,
+        0.0
+       ],
+       15.0
+      ]
+     ],
+     "tol": 3.0
+    },
+    {
+     "cles": [
+      "v5-79"
+     ],
+     "chemin": [
+      [
+       [
+        -0.018372960331033857,
+        -0.999329573605217,
+        0.03166761195116436
+       ],
+       18.330913898011854
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-80"
+     ],
+     "chemin": [
+      [
+       [
+        -0.018372956797973482,
+        -0.9993295738859505,
+        0.03166760514192359
+       ],
+       18.330913886410976
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-81"
+     ],
+     "chemin": [
+      [
+       [
+        -0.01837298377102979,
+        -0.9993295735718698,
+        0.031667599404035796
+       ],
+       18.330913914423135
+      ]
+     ],
+     "tol": 5.0
+    },
+    {
+     "cles": [
+      "v5-82"
+     ],
+     "chemin": [
+      [
+       [
+        -0.018372967182643765,
+        -0.9993295740735764,
+        0.031667593196039255
+       ],
+       18.330913857722557
+      ]
+     ],
+     "tol": 5.0
     }
    ],
    "atelier": null,
